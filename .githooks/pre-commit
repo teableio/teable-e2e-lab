@@ -1,0 +1,28 @@
+#!/bin/sh
+# Block a commit that would put a literal credential into the history.
+#
+# Scope is deliberately narrow: this hook checks for secrets and nothing else.
+# A hook that also enforced catalog agreement or formatting would fire while
+# you are mid-refactor, and the first thing anyone learns in that situation is
+# `--no-verify`. A hook people routinely bypass protects nothing.
+#
+# Secrets are the one class of mistake that is not recoverable by a follow-up
+# commit: making a repository public exposes its entire history, and a key that
+# was committed once stays reachable by SHA even after it is removed. Everything
+# else the project checks is enforced by `lab check` and by CI.
+#
+# Enable (once per clone):
+#     git config core.hooksPath .githooks
+#
+# Bypass when you genuinely need to:  git commit --no-verify
+# CI runs the same check, so a bypass shows up there rather than being final.
+
+set -e
+
+root=$(git rev-parse --show-toplevel)
+
+if command -v uv >/dev/null 2>&1; then
+    uv run --project "$root" python "$root/scripts/check_no_secrets.py" --staged
+else
+    python3 "$root/scripts/check_no_secrets.py" --staged
+fi

@@ -6,7 +6,7 @@ quiet on ordinary code — a scanner people start ignoring protects nothing.
 
 from __future__ import annotations
 
-from framework.secret_scan import scan_line, scan_text
+from framework.secret_scan import scan_files, scan_line, scan_text
 
 
 def test_a_pasted_literal_is_caught() -> None:
@@ -54,6 +54,25 @@ def test_a_placeholder_marker_does_not_excuse_a_real_key() -> None:
     # A real base64/hex key contains none of the marker substrings, so this
     # still has to be caught.
     assert scan_line("LICENSE_KEY: eyJhbGciOiJSUzI1NiJ9.abcdef0123456789") == "LICENSE_KEY"
+
+
+def test_scan_files_only_looks_at_scannable_paths() -> None:
+    findings = scan_files(
+        {
+            "docker/compose.yaml": "LICENSE_KEY: real-value-here-0123",
+            "artifacts/run/x.result.json": "LICENSE_KEY: whatever-0123456",
+            "some/binary.png": "LICENSE_KEY: whatever-0123456",
+        }
+    )
+    # artifacts/ is a run output, and .png is not scanned.
+    assert [f.path for f in findings] == ["docker/compose.yaml"]
+
+
+def test_scan_files_is_what_the_hook_feeds_staged_content_to() -> None:
+    # The hook passes staged blobs, not disk contents; this is the seam that
+    # makes "stage a key, then edit the file" impossible to sneak through.
+    assert scan_files({"docker/compose.yaml": "LICENSE_KEY: ${LICENSE_KEY:-}"}) == []
+    assert len(scan_files({"docker/compose.yaml": "LICENSE_KEY: sk-live-abcdef012345"})) == 1
 
 
 def test_findings_carry_the_line_number() -> None:

@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import secrets
+import subprocess
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
@@ -39,6 +40,17 @@ def _registered_case_ids() -> list[str]:
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return list(module.CASES)
+
+
+def _hooks_path() -> str:
+    result = subprocess.run(
+        ["git", "config", "core.hooksPath"],
+        cwd=project_root(),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return result.stdout.strip()
 
 
 def _new_run_id() -> str:
@@ -113,6 +125,16 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     print(f"  catalog           {len(registered)} registered  {'ok' if diff.ok else 'FAILED'}")
     if not diff.ok:
         problems.append("catalog disagrees:\n" + diff.render())
+
+    # Advisory, not fatal: a missing hook does not break a run, it just removes
+    # the guard that stops a credential from reaching the history.
+    hooks_enabled = _hooks_path() == ".githooks"
+    print(f"  commit hook       {'enabled' if hooks_enabled else 'NOT ENABLED'}")
+    if not hooks_enabled:
+        print(
+            "                    enable with:  git config core.hooksPath .githooks",
+            file=sys.stderr,
+        )
 
     if healthy:
         try:

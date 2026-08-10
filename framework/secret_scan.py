@@ -14,6 +14,7 @@ by accident.
 from __future__ import annotations
 
 import re
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -124,6 +125,27 @@ def scan_text(path: str, text: str) -> list[Finding]:
         name = scan_line(line)
         if name:
             findings.append(Finding(path=path, line_number=number, name=name))
+    return findings
+
+
+def is_scannable(path: str) -> bool:
+    return path.endswith(SCANNED_SUFFIXES) and not any(
+        part in SKIP_DIRS for part in Path(path).parts
+    )
+
+
+def scan_files(files: Mapping[str, str]) -> list[Finding]:
+    """Scan a path -> content mapping.
+
+    Kept separate from any filesystem or git access so the pre-commit path can
+    feed it *staged* content. Scanning the working tree would be the wrong
+    check: staging a file with a key and then editing the file on disk would
+    slip straight past it.
+    """
+    findings: list[Finding] = []
+    for path in sorted(files):
+        if is_scannable(path):
+            findings.extend(scan_text(path, files[path]))
     return findings
 
 

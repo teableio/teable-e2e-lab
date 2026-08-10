@@ -1,6 +1,11 @@
 """Fail when a sensitive-looking assignment carries a literal value.
 
-Part of `lab check`; also runnable alone:  uv run python scripts/check_no_secrets.py
+    uv run python scripts/check_no_secrets.py             # the working tree
+    uv run python scripts/check_no_secrets.py --staged    # what is about to be committed
+
+`--staged` is what the pre-commit hook runs. It reads content out of the index
+rather than off disk, because staging a file with a key and then editing the
+file afterwards would otherwise slip past the check.
 """
 
 from __future__ import annotations
@@ -11,24 +16,36 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from framework.secret_scan import scan_tree  # noqa: E402
+from framework.secret_scan import Finding, is_scannable, scan_files, scan_tree  # noqa: E402
 
-# Paths that may exist locally but must never be tracked by git. Having them
-# locally is normal; having them in a commit is the accident this catches.
+# Paths that may exist locally but must never be tracked by git.
 FORBIDDEN_TRACKED = ("docker/.env", ".lab/session.json", ".env.local", ".env")
 
 
-def tracked_files(root: Path) -> set[str]:
+def _git(root: Path, *args: str) -> str:
     result = subprocess.run(
-        ["git", "ls-files"], cwd=root, capture_output=True, text=True, check=False
+        ["git", *args], cwd=root, capture_output=True, text=True, check=False
     )
-    if result.returncode != 0:
-        return set()
-    return set(result.stdout.split())
+    return result.stdout if result.returncode == 0 else ""
 
 
-def main() -> int:
+def tracked_files(root: Path) -> set[str]:
+    return set(_git(root, "ls-files").split())
+
+
+def staged_findings(root: Path) -> list[Finding]:
+    # ACM: added, copied, modified. Deletions cannot introduce a secret.
+    names = _git(root, "diff", "--cached", "--name-only", "--diff-filter=ACM").split("\n")
+    contents = {}
+    for name in (n for n in names if n and is_scannable(n)):
+        # `git show :path` reads the staged blob, not the file on disk.
+        contents[name] = _git(root, "show", f":{name}")
+    return scan_files(contents)
+
+
+def main(argv: list[str]) -> int:
     root = Path(__file__).resolve().parent.parent
+    staged_only = "--staged" in argv
     problems = 0
 
     tracked = tracked_files(root)
@@ -37,7 +54,8 @@ def main() -> int:
             print(f"FAIL {relative} is tracked by git and must not be", file=sys.stderr)
             problems += 1
 
-    for finding in scan_tree(root):
+    findings = staged_findings(root) if staged_only else scan_tree(root)
+    for finding in findings:
         print(f"FAIL {finding.render()}", file=sys.stderr)
         problems += 1
 
@@ -50,9 +68,11 @@ def main() -> int:
             file=sys.stderr,
         )
         return 1
-    print("no literal secrets found")
+
+    scope = "staged changes" if staged_only else "working tree"
+    print(f"no literal secrets found ({scope})")
     return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    raise SystemExit(main(sys.argv[1:]))

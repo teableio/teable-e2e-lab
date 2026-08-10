@@ -10,6 +10,7 @@ Teable 接口功能验收。用例是数据，执行是共享 runner，结果是
 
 ```bash
 uv sync
+git config core.hooksPath .githooks   # 启用 pre-commit 密钥拦截，每个 clone 一次
 uv run lab up          # Docker 起一套一次性 Teable，签入，缓存会话
 uv run lab doctor      # 环境自检
 uv run lab run         # 跑全部注册用例
@@ -123,6 +124,10 @@ LAB_ENDPOINT=https://your-teable-instance.example.com uv run lab run smoke
   `framework/secret_scan.py` 的 `KNOWN_THROWAWAY` 里——登记是一个有意识的动作。
 - **`lab check` 会拦住误提交。** 任何名字像密钥的赋值，值必须是 `${ENV}` 占位符、
   GitHub secret 引用，或已登记的抛弃值，否则报错。
+- **pre-commit hook 是第一道。** `git config core.hooksPath .githooks` 之后，
+  每次 commit 自动扫**暂存区内容**（不是工作树——否则 `git add` 带 key 的版本再
+  改掉磁盘文件就能绕过）。它只查密钥，不查别的：密钥进 history 是不可逆的，
+  其它问题下次 commit 修就行，混进来只会让人开始用 `--no-verify`。
 - **artifact 落盘前统一脱敏。** 结果文件会上传到 CI、也可能贴进报告，所以写盘前会
   把环境里的敏感值（如授权 key）从整份 JSON 里替换掉——包括错误响应体和堆栈里被
   服务端回显的那种。请求日志本身不记录任何 header。
