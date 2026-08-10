@@ -1,0 +1,20 @@
+.venv/
+__pycache__/
+*.pyc
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# Run outputs and local secrets never enter git. This repository is public, so
+# these patterns are a safety net, not a convenience — `lab check` additionally
+# fails when a sensitive-looking assignment carries a literal value.
+artifacts/
+.lab/
+.env
+.env.*
+!.env.example
+docker/.env
+*.local.json
+*.key
+*.pem
+.DS_Store

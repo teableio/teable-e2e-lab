@@ -1,0 +1,101 @@
+# One-shot Teable stack for API acceptance runs.
+#
+# This is NOT a deployment. Every value below is tuned for a disposable test
+# environment: no persistent volumes, fixed throwaway secrets, and a health gate
+# strict enough that `lab up` can block until the API really answers.
+#
+#   docker compose -f docker/compose.yaml up -d --wait
+#   docker compose -f docker/compose.yaml down -v
+#
+# `lab up` / `lab down` wrap both commands and add the token bootstrap.
+#
+# The secrets here are public, fixed, and identical on every machine. That is
+# deliberate — it makes a run reproducible with zero local config. Never point
+# this compose file at a database or origin you care about.
+
+name: teable-api-lab
+
+services:
+  teable:
+    # Public images by default so a fresh clone works anywhere. Mainland-China
+    # users can point these at a nearer mirror:
+    #   TEABLE_IMAGE=registry.cn-shenzhen.aliyuncs.com/teable/teable \
+    #   LAB_POSTGRES_IMAGE=registry.cn-shenzhen.aliyuncs.com/teable/postgres:15.4 \
+    #   LAB_REDIS_IMAGE=registry.cn-shenzhen.aliyuncs.com/teable/redis:7.2.4 lab up
+    image: ${TEABLE_IMAGE:-teableio/teable}:${TEABLE_IMAGE_TAG:-latest}
+    restart: "no"
+    ports:
+      - "${LAB_PORT:-3100}:3000"
+    networks: [lab]
+    depends_on:
+      teable-db:
+        condition: service_healthy
+      teable-cache:
+        condition: service_healthy
+    environment:
+      PUBLIC_ORIGIN: http://127.0.0.1:${LAB_PORT:-3100}
+      SECRET_KEY: teable-api-lab-secret-key-not-a-real-one
+      PRISMA_DATABASE_URL: postgresql://teable:teable@teable-db:5432/teable
+      BACKEND_CACHE_PROVIDER: redis
+      BACKEND_CACHE_REDIS_URI: redis://default:teable@teable-cache:6379/0
+      NEXT_ENV_IMAGES_ALL_REMOTE: "true"
+      # Optional. Left empty the instance runs at its default entitlement level,
+      # which is what the committed cases are written against. Supply a value
+      # only from the environment — never edit one in here, and never commit
+      # one. `smoke/instance-capabilities` asserts the level the suite expects,
+      # so a change in either direction shows up as a failing case instead of
+      # silently shifting what the suite covers.
+      LICENSE_KEY: ${LICENSE_KEY:-}
+      # Encryption keys must be 32 chars and IVs 16 chars; these are throwaway.
+      SANDBOX_JWT_SECRET: teable_api_lab_sandbox_jwt_secret
+      BACKEND_MAIL_ENCRYPTION_KEY: teable_api_lab_mail_encryption_k
+      BACKEND_MAIL_ENCRYPTION_IV: teableapilabmail
+      BACKEND_STORAGE_ENCRYPTION_KEY: teable_api_lab_store_encryption_
+      BACKEND_STORAGE_ENCRYPTION_IV: teableapilabstor
+      BACKEND_ACCESS_TOKEN_ENCRYPTION_KEY: teable_api_lab_token_encryption_
+      BACKEND_ACCESS_TOKEN_ENCRYPTION_IV: teableapilabtokn
+      BACKEND_DATA_DB_URL_ENCRYPTION_KEY: teable_api_lab_dburl_encryption_
+      BACKEND_DATA_DB_URL_ENCRYPTION_IV: teableapilabdbur
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      start_period: 20s
+      interval: 3s
+      timeout: 3s
+      retries: 40
+
+  teable-db:
+    image: ${LAB_POSTGRES_IMAGE:-postgres:15.4}
+    restart: "no"
+    networks: [lab]
+    # Published so a failing case can be inspected with psql while the stack is
+    # still up. Nothing in the framework talks to Postgres directly — cases
+    # assert through the public API only.
+    ports:
+      - "${LAB_DB_PORT:-42400}:5432"
+    environment:
+      POSTGRES_DB: teable
+      POSTGRES_USER: teable
+      POSTGRES_PASSWORD: teable
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U teable -d teable"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  teable-cache:
+    image: ${LAB_REDIS_IMAGE:-redis:7.2.4}
+    restart: "no"
+    networks: [lab]
+    command: redis-server --requirepass teable
+    healthcheck:
+      test: ["CMD", "redis-cli", "--pass", "teable", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+networks:
+  lab:
+    name: teable-api-lab-net
+
+# No volumes on purpose. `down` drops every byte of state, so the next `up`
+# starts from a fresh database and cases never inherit yesterday's data.

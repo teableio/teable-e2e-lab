@@ -1,0 +1,93 @@
+name: API acceptance
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      teable_image_tag:
+        description: "被测 Teable 镜像 tag"
+        required: false
+        default: "latest"
+      case_filter:
+        description: "用例过滤：case id、group，或 all"
+        required: false
+        default: "all"
+
+jobs:
+  # Static checks need no target and no Docker, so they fail in under a minute
+  # instead of after a five-minute stack boot.
+  check:
+    name: Static checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv sync --frozen
+      - run: uv run ruff check .
+      - run: uv run mypy
+      - run: uv run pytest -q
+      - run: uv run lab check
+
+  acceptance:
+    name: Acceptance run
+    runs-on: ubuntu-latest
+    needs: check
+    timeout-minutes: 45
+    env:
+      # Docker Hub on CI; the aliyun mirror in compose.yaml is the local default.
+      TEABLE_IMAGE: teableio/teable
+      LAB_POSTGRES_IMAGE: postgres:15.4
+      LAB_REDIS_IMAGE: redis:7.2.4
+      # Pinned on purpose: a run has to be able to answer "which build was this".
+      TEABLE_IMAGE_TAG: ${{ inputs.teable_image_tag || 'latest' }}
+      # Optional. Absent in forks and in PRs from forks, where the suite simply
+      # runs at the default entitlement level. Actions masks registered secrets
+      # in logs, and the artifact writer scrubs this value from every result
+      # file before it is uploaded — see framework/artifacts.py.
+      LICENSE_KEY: ${{ secrets.TEABLE_LICENSE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv sync --frozen
+
+      - name: Start the target stack
+        run: uv run lab up
+
+      - name: Doctor
+        run: uv run lab doctor
+
+      - name: Run cases
+        id: run
+        # Keep going on a red case: the acceptance gate below is what decides,
+        # and the artifacts have to be uploaded either way.
+        continue-on-error: true
+        run: uv run lab run "${{ inputs.case_filter || 'all' }}"
+
+      - name: Acceptance gate
+        run: |
+          set -euo pipefail
+          run_dir=$(ls -td artifacts/*/ | head -1)
+          echo "gating on ${run_dir}"
+          uv run python scripts/verify_run_acceptance.py "${run_dir}"
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: acceptance-artifacts-${{ github.run_id }}
+          path: artifacts/
+          retention-days: 14
+
+      - name: Target logs on failure
+        if: failure()
+        run: docker compose -f docker/compose.yaml logs --tail 200
+
+      - name: Tear down
+        if: always()
+        run: uv run lab down
