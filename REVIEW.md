@@ -111,20 +111,35 @@ commit、不进 CI 日志、不进结果文件——四道拦截各有单测，�
 **infra 验收进第二期。** Docker 版和 k8s 版的部署本身也要纳入验收，
 已开 [#1](https://github.com/teableio/teable-api-lab/issues/1) 跟踪，一期先铺接口用例覆盖面。
 
-## 需要你拍板的三件事
+**自动触发已提 PR。** [teable-enterprise#92](https://github.com/teableio/teable-enterprise/pull/92)：
+在提升完成后派发验收，带上刚推的确切 release id。纯插入 50 行，没动任何现有 job。
+合并前要加 secret `API_LAB_DISPATCH_TOKEN`（对本仓库有 Actions 写权限）；没配也不影响
+发布，那个 job 会单独失败并打印缺什么。
 
-**1. 能不能改 `teable-enterprise`？**
+**用例按"回归代价"排。** 写路径和计算字段错了最贵，读路径次之。
 
-自动触发缺的就是这一步：在它的 `promote-latest-ee.yaml` 里加一个 job，加一个 secret
-（`API_LAB_DISPATCH_TOKEN`，对本仓库有 Actions 写权限）。
+**开源时间点：先跑一段时间再定。** 开源前把提交历史清一次、重新提交一次，再转 public。
+执行时有两点要注意：
 
-挂在这个位置的理由写在那个文件自己的注释里——构建不往 Docker Hub 推任何东西，提升是
-唯一的写入方。那里已经有一个同样形状的 `notify-infra`，验收就排在它旁边。
+- **在原仓库上 force push 清不干净。** 被覆盖的对象在 GitHub 上仍可按 SHA 取到，转
+  public 之后同样如此。要真清干净，只能**新建一个仓库**推一个初始提交。
+- **提交历史本身是文档。** 每条 commit message 记的是某个设计为什么这么定，清掉就没了。
+  目前历史里没有密钥、没有内部主机名、没有私有仓库名（全历史扫过，0 命中），所以清历史
+  是可选的保险，不是必需的补救——真到那天可以重新权衡。
 
-**不加也能用**，只是每次发布要有人手动点一下 Run workflow。
+## 需要你拍板的两件事
+
+**1. 合并 [teable-enterprise#92](https://github.com/teableio/teable-enterprise/pull/92)，并配 secret**
+
+PR 已开，等审。要配的是 `API_LAB_DISPATCH_TOKEN`。合并之后每次正式发布自动跑一轮验收。
+
+挂在提升而不是构建，理由写在那个文件自己的注释里——构建不往 Docker Hub 推任何东西，
+提升是唯一的写入方。那里已经有一个同样形状的 `notify-infra`，验收就排在它旁边。
+
+**没合也能用**，只是每次发布要有人手动点一下 Run workflow。
 
 <details>
-<summary>要加的 job（放在 <code>notify-infra</code> 后面）</summary>
+<summary>PR 里加的 job，留档备查</summary>
 
 ```yaml
   trigger-api-lab:
@@ -170,19 +185,10 @@ commit、不进 CI 日志、不进结果文件——四道拦截各有单测，�
 
 </details>
 
-**2. 开源的时间点？**
+**2. 什么时候转 public？**
 
-仓库从第一个 commit 就按开源标准写（无内部路径、无内部主机名、无字面密钥，`lab check`
-里有防误提交的密钥扫描，pre-commit hook 扫暂存区）。
-
-关键约束：**private 转 public 时整个 git history 一起公开**，所以"先随便写、转之前清
-一遍"是清不干净的。
-
-建议：private 开发到用例有规模、CI 稳定绿，再转 public。
-
-**3. 用例优先级铺哪一块？**
-
-建议按"回归代价"排序，而不是按功能模块——写路径和计算字段错了最贵，读路径次之。
+已定"先跑一段时间再决定"，所以这条是等数据，不是等意见。判断依据建议是：用例有规模、
+CI 连续绿、自动触发跑顺。转的方式和注意事项写在上面"已定"一节。
 
 ## 密钥怎么防
 
