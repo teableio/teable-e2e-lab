@@ -89,11 +89,23 @@ jobs:
       # by the recorded digest, not by the tag — see "Record the image under
       # test". A caller that knows the exact published tag should pass it.
       TEABLE_IMAGE_TAG: ${{ inputs.teable_image_tag || 'latest' }}
-      # Optional. Absent in forks and in PRs from forks, where the suite simply
-      # runs at the default entitlement level. Actions masks registered secrets
-      # in logs, and the artifact writer scrubs this value from every result
-      # file before it is uploaded — see framework/artifacts.py.
-      LICENSE_KEY: ${{ secrets.TEABLE_LICENSE_KEY }}
+      # The licence that puts the target at the entitlement level the suite is
+      # written against. Three things keep it out of anything published:
+      #
+      #   1. Actions masks a registered secret everywhere it would print, so it
+      #      cannot surface in the run log.
+      #   2. The artifact writer scrubs this value out of every result file
+      #      before the file is written, which covers the one path care at the
+      #      call site cannot — an error body or a stack trace quoting it back
+      #      at us. See SECRET_ENV_NAMES in framework/artifacts.py.
+      #   3. `lab check` and the pre-commit hook refuse a literal value under
+      #      any name that looks like this one, so it cannot reach a commit.
+      #
+      # Only reachable from a dispatch, which a fork cannot perform.
+      BACKEND_ENTERPRISE_LICENSE_KEY: ${{ secrets.BACKEND_ENTERPRISE_LICENSE_KEY }}
+      # Every run is a fresh instance with a fresh instance id; without this the
+      # licence would bind to the first run and be rejected by all the rest.
+      BACKEND_ENTERPRISE_LICENSE_AUTO_RESET_INSTANCE_ID: "true"
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5

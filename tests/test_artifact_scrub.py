@@ -45,6 +45,16 @@ def test_longer_secrets_are_replaced_before_shorter_ones(monkeypatch) -> None:  
     assert secret_values()[0] == "abcdefgh-extended"
 
 
+def test_the_enterprise_licence_variable_is_covered(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    # The name the target actually reads. Wiring a new secret into compose and
+    # forgetting SECRET_ENV_NAMES is precisely how a live key ends up inside an
+    # artifact that CI then uploads — so pin the name, not just the mechanism.
+    fake = "eyJhbGciOiJSUzI1NiJ9.ZmFrZS1wYXlsb2Fk.bm90LWEtcmVhbC1zaWduYXR1cmU"
+    monkeypatch.setenv("BACKEND_ENTERPRISE_LICENSE_KEY", fake)
+    assert fake in secret_values()
+    assert fake not in scrub(f'{{"error":"licence {fake} rejected"}}')
+
+
 def test_a_secret_quoted_in_an_error_never_reaches_disk(tmp_path, monkeypatch) -> None:  # type: ignore[no-untyped-def]
     # The realistic leak: the server echoes the key back inside a 400 body, and
     # the client faithfully records that body as evidence.

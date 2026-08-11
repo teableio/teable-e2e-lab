@@ -39,13 +39,21 @@ services:
       BACKEND_CACHE_PROVIDER: redis
       BACKEND_CACHE_REDIS_URI: redis://default:teable@teable-cache:6379/0
       NEXT_ENV_IMAGES_ALL_REMOTE: "true"
-      # Optional. Left empty the instance runs at its default entitlement level,
-      # which is what the committed cases are written against. Supply a value
-      # only from the environment — never edit one in here, and never commit
-      # one. `smoke/instance-capabilities` asserts the level the suite expects,
-      # so a change in either direction shows up as a failing case instead of
-      # silently shifting what the suite covers.
-      LICENSE_KEY: ${LICENSE_KEY:-}
+      # Optional. Left empty, the instance runs at its default entitlement
+      # level. Supply a value only from the environment — never edit one in
+      # here and never commit one: `lab check` and the pre-commit hook both
+      # refuse a literal on this line, and the artifact writer scrubs the value
+      # out of every result file before it is written.
+      #
+      # `smoke/instance-capabilities` asserts the level the suite expects, so a
+      # licence that expired or was never supplied shows up as a failing case
+      # rather than as coverage quietly shrinking.
+      BACKEND_ENTERPRISE_LICENSE_KEY: ${BACKEND_ENTERPRISE_LICENSE_KEY:-}
+      # A licence is issued against one instance id, and every `lab up` creates
+      # a brand-new instance with a brand-new id — without this the licence
+      # would bind to the first run and be rejected by every run after it.
+      # Only defensible because this stack is disposable by construction.
+      BACKEND_ENTERPRISE_LICENSE_AUTO_RESET_INSTANCE_ID: "true"
       # Encryption keys must be 32 chars and IVs 16 chars; these are throwaway.
       SANDBOX_JWT_SECRET: teable_api_lab_sandbox_jwt_secret
       BACKEND_MAIL_ENCRYPTION_KEY: teable_api_lab_mail_encryption_k

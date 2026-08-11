@@ -13,9 +13,23 @@ def test_a_pasted_literal_is_caught() -> None:
     assert scan_line("      LICENSE_KEY: eyJhbGciOi-real-looking-key") == "LICENSE_KEY"
 
 
+def test_a_pasted_enterprise_licence_is_caught() -> None:
+    # A signed JWT under the name the target actually reads — the exact shape
+    # of the mistake this whole check exists to prevent.
+    line = "      BACKEND_ENTERPRISE_LICENSE_KEY: eyJhbGciOiJSUzI1NiJ9.ZmFrZQ.c2lnbmF0dXJl"
+    assert scan_line(line) == "BACKEND_ENTERPRISE_LICENSE_KEY"
+
+
+def test_the_auto_reset_flag_is_not_mistaken_for_a_secret() -> None:
+    # Sits next to the licence and shares its prefix, but carries no credential.
+    assert scan_line('      BACKEND_ENTERPRISE_LICENSE_AUTO_RESET_INSTANCE_ID: "true"') is None
+
+
 def test_an_environment_placeholder_is_fine() -> None:
     assert scan_line("      LICENSE_KEY: ${LICENSE_KEY:-}") is None
     assert scan_line("      LICENSE_KEY: ${LICENSE_KEY}") is None
+    line = "      BACKEND_ENTERPRISE_LICENSE_KEY: ${BACKEND_ENTERPRISE_LICENSE_KEY:-}"
+    assert scan_line(line) is None
 
 
 def test_a_github_actions_secret_is_fine() -> None:

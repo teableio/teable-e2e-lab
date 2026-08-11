@@ -22,6 +22,7 @@ ARTIFACT_SUFFIX = ".result.json"
 # care at the call site can rule out. Scrubbing at the write boundary is the one
 # place that catches all of them.
 SECRET_ENV_NAMES = (
+    "BACKEND_ENTERPRISE_LICENSE_KEY",
     "LICENSE_KEY",
     "TEABLE_LICENSE_KEY",
     "LAB_TOKEN",
