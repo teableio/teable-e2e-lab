@@ -91,9 +91,22 @@ review 一个测试框架时最该问的问题，多数项目答不上来。
 
 ## 已定（2026-08-11 review 反馈）
 
-**授权已给。** 走 `BACKEND_ENTERPRISE_LICENSE_KEY` + `BACKEND_ENTERPRISE_LICENSE_AUTO_RESET_INSTANCE_ID`
-两个环境变量，值放在仓库 secret 里，compose 和 CI 都已接好。密钥不进代码、不进 commit、
-不进 CI 日志、不进结果文件——四道拦截各有单测，见下方"密钥怎么防"。
+**授权已给，并且已经在 CI 上跑通。** 走 `BACKEND_ENTERPRISE_LICENSE_KEY` +
+`BACKEND_ENTERPRISE_LICENSE_AUTO_RESET_INSTANCE_ID` 两个环境变量，前者的值放在仓库
+secret 里，后者不是密钥、写在 compose 里并注明了为什么必须开。密钥不进代码、不进
+commit、不进 CI 日志、不进结果文件——四道拦截各有单测，见下方"密钥怎么防"。
+
+实测的授权面（`level: business`，读自真实运行的 artifact，不是照授权推的）：
+
+- **17 项能力开启**，含高级权限、App、自动化、AI 填充、审计日志、用户组、按钮字段、
+  行着色、自定义域名等。
+- **1 项关闭**：`organizationEnable`。这是当前唯一的覆盖边界。
+- **9 项数值限制全部无限**（`-1`），包括 `maxRows` 和 `apiRateLimit`，所以大数据量
+  用例不会因为限流失败。
+
+`smoke/instance-capabilities` 把这份清单钉死并每次运行原样记录整个 `limit` 对象，所以
+授权到期（**2026-09-26**）或档位变化会先红在这里、指名是哪一项，而不是让下游一堆用例
+各自失败。
 
 **infra 验收进第二期。** Docker 版和 k8s 版的部署本身也要纳入验收，
 已开 [#1](https://github.com/teableio/teable-api-lab/issues/1) 跟踪，一期先铺接口用例覆盖面。

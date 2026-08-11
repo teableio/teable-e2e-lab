@@ -4,10 +4,10 @@ from framework.runners.http_endpoint import HttpEndpointConfig, HttpEndpointRunn
 # The capability set the rest of the suite is written against, and the single
 # place where "what we are allowed to test" is written down.
 #
-# Every value below was read off a licensed target rather than inferred. That
-# distinction earned its keep immediately: the licence's own payload says its
-# plan level is `pro`, and the instance reports `business`. Asserting what the
-# licence claims would have failed against the instance that licence produces.
+# Every value below was read off a licensed target rather than inferred, and
+# that habit is worth keeping: the licence in effect is a business licence, but
+# its payload names the plan `pro` — the product it was sold as, not the level
+# the instance reports. Only the instance can answer what `level` is.
 #
 # A target without the licence answers `free` with the four flags off, so this
 # case is also the suite's "is the licence actually in effect" check. It failing
@@ -32,6 +32,12 @@ case = define_case(
             "limit.appEnable": True,
             "limit.automationEnable": True,
             "limit.fieldAIEnable": True,
+            # The one capability this licence does not grant, asserted off so
+            # the boundary is stated rather than remembered. A case covering
+            # organisations would be exercising a feature that is not enabled;
+            # if this ever turns on, that is a coverage decision to make on
+            # purpose, and it arrives here as a red case.
+            "limit.organizationEnable": False,
             # Not gated: the core surface this suite actually covers must stay
             # unlimited, or row-count-heavy cases would fail for the wrong reason.
             "limit.maxRows": -1,
