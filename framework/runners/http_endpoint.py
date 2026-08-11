@@ -21,6 +21,12 @@ class HttpEndpointConfig(BaseModel):
     # (`limit.appEnable`), so a nested capability flag can be asserted without a
     # bespoke runner. `None` means "must exist, any value".
     expect_fields: dict[str, Any] = Field(default_factory=dict)
+    # Body sub-trees copied into the artifact verbatim, as dotted paths. For
+    # state worth having on the record even though nothing asserts it: a run
+    # that recorded only what it asserted can say a flag it named has changed,
+    # but not that a flag it never named appeared. Values pass through the same
+    # scrub as the rest of the artifact.
+    record_fields: list[str] = Field(default_factory=list)
 
 
 MISSING = object()
@@ -90,8 +96,15 @@ class HttpEndpointRunner(Runner[HttpEndpointConfig, None, Observation]):
         fixture: None,
         observation: Observation | None,
     ) -> dict[str, Any]:
+        recorded: dict[str, Any] = {}
+        body = observation.body if observation else None
+        for dotted in config.record_fields:
+            value = dig(body, dotted) if body else MISSING
+            recorded[dotted] = "<missing>" if value is MISSING else value
+
         return {
             "path": config.path,
             "status": observation.status if observation else None,
             "body_keys": sorted((observation.body or {}).keys()) if observation else [],
+            "recorded": recorded,
         }
