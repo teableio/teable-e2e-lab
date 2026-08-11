@@ -53,8 +53,12 @@ jobs:
     # one, a step that hangs rather than fails burns the default six hours.
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@v7
+      # Pinned exactly, unlike the actions around it, because this one stopped
+      # publishing a floating major tag: `v7` is the highest that exists and the
+      # current release is v9.0.0, so following the convention here would park
+      # the workflow two majors back on an unmaintained line.
+      - uses: astral-sh/setup-uv@v9.0.0
         with:
           enable-cache: true
       - run: uv sync --frozen
@@ -107,8 +111,12 @@ jobs:
       # licence would bind to the first run and be rejected by all the rest.
       BACKEND_ENTERPRISE_LICENSE_AUTO_RESET_INSTANCE_ID: "true"
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@v7
+      # Pinned exactly, unlike the actions around it, because this one stopped
+      # publishing a floating major tag: `v7` is the highest that exists and the
+      # current release is v9.0.0, so following the convention here would park
+      # the workflow two majors back on an unmaintained line.
+      - uses: astral-sh/setup-uv@v9.0.0
         with:
           enable-cache: true
       - run: uv sync --frozen
@@ -157,7 +165,7 @@ jobs:
 
       - name: Upload artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: acceptance-artifacts-${{ github.run_id }}
           path: artifacts/
