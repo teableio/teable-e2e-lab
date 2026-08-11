@@ -25,6 +25,7 @@ uv run lab down        # 停掉并清空所有状态
 - 加或改用例：先读 [.agents/README.md](.agents/README.md)，按流程先写 case spec。
 - 想知道断言该写到什么程度：读 [.agents/checklist.md](.agents/checklist.md)。
 - 想知道结果文件长什么样：读 [framework/types.py](framework/types.py) 的 `CaseResult`。
+- 想从发布流水线自动触发验收：读 [docs/dispatching.md](docs/dispatching.md)。
 - 术语（Case / Runner / Check / Verdict / Evidence 等）：读 [CONTEXT.md](CONTEXT.md)。
 
 ## File Map
@@ -103,8 +104,13 @@ uv run python scripts/verify_run_acceptance.py artifacts/<run-id>
 被测版本由镜像 tag 决定：
 
 ```bash
-TEABLE_IMAGE_TAG=1.9.0 uv run lab up     # CI 必须钉死具体 tag
+TEABLE_IMAGE_TAG=release.2026-08-10T07-45-10Z.2574 uv run lab up
 ```
+
+默认的 `latest` 会动——两次相隔一周的运行可能测的是不同构建。所以 CI 的验收运行由
+发布方派发，并带上它刚推的**确切 tag**（见 [docs/dispatching.md](docs/dispatching.md)）。
+不管传的是什么，每次运行都会把镜像的 digest 记到运行页面上，事后总能回答"那次测的
+到底是哪个构建"。
 
 也可以打一个已有环境（会跳过 Docker）：
 

@@ -1,177 +1,174 @@
 # 项目导读（给第一次看这个仓库的人）
 
-十分钟看完，判断这套组织方式对不对。不需要读代码实现。
+Teable 接口功能验收。一句话概括设计：**用例是数据，执行是共享 runner，结果是可解释
+的证据。** 框架思想来自 `teable-perf-lab`——同一套纪律，目标换成覆盖度和可诊断性。
 
-## 这是什么
-
-Teable 接口功能验收。框架思想来自 `teable-perf-lab`——同一套纪律，不同目标：
-perf-lab 追求**可比性**（同一个操作跨版本的耗时能不能比），这里追求**覆盖度和
-可诊断性**（功能对不对，错了能不能立刻定位）。
-
-一句话概括设计：**用例是数据，执行是共享 runner，结果是可解释的证据。**
-
-## 十分钟怎么看
-
-| 顺序 | 看什么 | 想回答的问题 |
-|---|---|---|
-| 1 | [README.md](README.md) 的"执行模型"和"Hard Rules" | 设计取舍是什么 |
-| 2 | [cases/record/create-100-mixed.case.py](cases/record/create-100-mixed.case.py) | 加一个用例的成本有多低 |
-| 3 | 同名的 [.md](cases/record/create-100-mixed.md) | 用例的意图是否说得清 |
-| 4 | 本文"怎么证明它真在断言"一节 | 这套断言是不是摆设 |
+现状：框架闭环、3 个用例真跑通过、42 个框架单测、静态检查链、CI 已接。
+**需要你拍四件事，在最后一节。**
 
 ## 三个关键决策
 
-### 1. 被测环境用 Docker 起一次性实例，不打 staging
+**1. Docker 起一次性实例，不打 staging**
 
 `docker/compose.yaml` 起一整套（Teable + Postgres + Redis），跑完 `down -v` 清空。
 
-- **换来**：每次全新无脏数据、可以做破坏性用例、被测版本 = 镜像 tag、
-  本地和 CI 跑同一份 compose，所以"本地能跑通"和"CI 能跑通"之间没有缝。
-- **代价**：每次启动几十秒；测不了未发布的分支代码（需要时可以让 CI 先构建镜像）。
-- **放弃的方案**：打共享 staging。它有脏数据、并发互相踩、不能做破坏性测试、
-  失败没法复现——最后一条是决定性的。
+- 换来：每次全新无脏数据、可做破坏性用例、被测版本 = 镜像 tag、本地和 CI 跑同一份
+  compose，所以"本地能跑通"和"CI 能跑通"之间没有缝。
+- 代价：每次启动几十秒；测不了未发布的分支代码。
+- 放弃 staging 的决定性理由：**失败没法复现**。
 
-### 2. 自研 CLI，不架在 pytest 上
+**2. 自研 CLI，不架在 pytest 上**
 
-四段式生命周期、软断言收集、artifact 落盘，这三样都不吃 pytest 的红利，反而
-要绕开它的 assert-即停和 fixture 模型。
+四段式生命周期、软断言收集、artifact 落盘，这三样都不吃 pytest 的红利，反而要绕开
+它的 assert-即停和 fixture 模型。
 
-- **代价说清楚**：`-k` 过滤、并发调度、失败重试、junit xml 要自己写。
-  目前实现了过滤和 artifact，**并发和重试还没有**。
-- pytest 仍然在用，跑框架自己的 40 个单测——检查纯函数正是它擅长的。
+- 代价说清楚：并发调度和失败重试要自己写，**目前都还没有**。
+- pytest 仍在用，跑框架自己的 42 个单测——检查纯函数正是它擅长的。
 
-### 3. 四段式 + 软断言
+**3. 四段式 + 软断言**
 
-每个用例固定四阶段：`seed` → `execute` → `verify` → `cleanup`。
-
-perf-lab 只有 seed/execute。这里把 **verify 单独拆出来**，是为了让"别信 200"
-成为框架的性质，而不是每个 runner 作者要记住的习惯——一个空的 verify 在 review
-时一眼可见。
+每个用例固定 `seed` → `execute` → `verify` → `cleanup`。perf-lab 只有前两段，这里把
+**verify 单独拆出来**，是为了让"别信 200"成为框架的性质，而不是每个 runner 作者要记住
+的习惯——一个空的 verify 在 review 时一眼可见。
 
 三条判定规则：
 
-1. **软断言**：runner 不因期望不满足而抛异常，而是往 `ctx.checks` 追加一条。
-   一次运行要把所有问题说完，而不是停在第一个。
-2. **失败的期望 ≠ 崩掉的用例**：前者是产品做错了，后者是用例自己没跑完。
-   两者在结果文件里是不同字段，不会都糊成"红了"。
-3. **零断言 = 失败**：runner 跑完一条 check 都没记，判定为 fail。
-   一个什么都不断言却显示绿色的用例，比没有用例更糟。
+- **软断言**：期望不满足不抛异常，往 `ctx.checks` 追加一条。一次运行把所有问题说完，
+  而不是停在第一个。
+- **失败的期望 ≠ 崩掉的用例**：前者是产品做错了，后者是用例自己没跑完。两者在结果
+  文件里是不同字段，不会都糊成"红了"。
+- **零断言 = 失败**：一条 check 都没记就判 fail。什么都不断言却显示绿色的用例，比没有
+  用例更糟。
 
-## 加一个用例长什么样
+## 加一个用例的成本
 
-完整的用例文件，26 行，没有任何执行逻辑：
+一个 26 行的配置文件（[例子](cases/record/create-100-mixed.case.py)），**没有任何执行
+逻辑**，配套同名 `.md` 和 `registry.py` 里的一行，缺一个 `lab check` 就红。
 
-```python
-case = define_case(
-    id="record/create-100-mixed",
-    title="一次请求批量创建 100 条混合类型记录，并逐行回验落库结果",
-    runner=RecordCreateRunner,
-    owner="qa",
-    timeout_s=120,
-    config=RecordCreateConfig(
-        table_name_prefix="lab-record-create-100",
-        fields=[
-            FieldSpec(name="Title", type="singleLineText"),
-            FieldSpec(name="Description", type="longText"),
-            FieldSpec(name="Score", type="number"),
-            FieldSpec(name="Active", type="checkbox"),
-        ],
-        record_count=100,
-        sample_rows=[1, 50, 100],
-    ),
-)
-```
+数据由行号确定性推导，所以同一个函数既构造请求又算期望值，两边不可能对不上——不用
+快照，不用黄金文件，重跑逐字节可比。
 
-配套两件事，缺一不可，`lab check` 会红：同名的 `.md` 描述文档、`registry.py`
-里的一行注册。
+## 怎么证明这套断言不是摆设
 
-**数据是确定性的**：第 N 行的每个值都由 N 推导（`Title-N`、`float(N)`、
-偶数行才勾 checkbox）。同一个函数既构造请求又算期望值，两边不可能对不上——
-不用快照，不用黄金文件，重跑逐字节可比。
+review 一个测试框架时最该问的问题，多数项目答不上来。
 
-## 怎么证明它真在断言
-
-这是 review 一个测试框架时最该问的问题，多数项目答不上来。
-
-实测：建 20 行数据，然后**背着 runner 篡改**——把第 10 行的 `Score` 改成 999，
-删掉第 20 行，再跑同一个 verify：
+实测：建 20 行数据，然后**背着 runner 篡改**——把第 10 行的 `Score` 改成 999，删掉第
+20 行，再跑同一个 verify：
 
 ```
-[ok  ] create.all_batches_accepted: expected=True actual=True
-[ok  ] create.returned_ids: expected=20 actual=20
 [FAIL] scan.record_count: expected=20 actual=19
 [FAIL] scan.cell_values_match: expected=[] actual=[{'row': 10, 'field': 'Score',
                                                     'expected': 10.0, 'actual': 999}]
 ```
 
-两处都抓到，并且精确到行和字段。这依赖两件事：全量分页扫描（抽样看不见
-"1000 行落了 997 行"），以及期望值本地推导。
+两处都抓到，精确到行和字段。靠的是全量分页扫描（抽样看不见"1000 行落了 997 行"）和
+期望值本地推导。
 
-## 验收门禁：不看退出码，看证据
+**验收门不看退出码，看证据。** 它从*计划*出发，要求每个计划内用例恰好产出一条能解释
+的结果；少一条、多一条、重复、无理由跳过、零断言通过，任意一条都拒绝整轮运行。实测
+抽掉一条结果 → `REJECTED`，并指名是哪个用例。**"没有红"不等于验收通过。**
 
-CI 真正 gate 的是这一步：
+## 什么时候跑
 
-```bash
-uv run python scripts/verify_run_acceptance.py artifacts/<run-id>
-```
+不定时跑，也不是改了 lab 代码就跑，而是**每次正式发布跑一次**。
 
-它从**计划**出发，要求每个计划内用例恰好产出一条能解释的结果。以下任意一条
-都拒绝整轮运行：
+`teableio/teable` 这个公开镜像只有"提升"（promote）那一刻才写入 Docker Hub，那是唯一
+能拉到镜像的时刻。验收接在那里，测的正好是自托管用户马上要拉的东西。频率低，但每次
+都有意义。
 
-- 计划内的用例没产出结果（**用例悄悄不跑了**）
-- 出现计划外的结果
-- 同一用例产出多条结果
-- 跳过但没声明理由
-- 判定为通过但一条 blocking 断言都没有
+接线方式沿用 perf-lab：**实验室只开一个 dispatch 口，由发布方带着确切的 release id 来
+调**，实验室不去读任何其它仓库的事件。好处是这个仓库一个跨仓库权限都不需要——它要开源。
 
-"没有红" 不等于验收通过。实测拒绝场景：抽掉一条结果 → `REJECTED`，并指名
-`record/create-100-mixed <- planned but produced no result`。
+## 已知限制
 
-## 现状与已知限制
-
-**已完成**：框架闭环、3 个用例真跑通过、40 个框架单测、静态检查链
-（ruff / mypy --strict / catalog 三方一致 / 文档格式 / 密钥扫描）、CI workflow。
-
-**已知限制，写在这里而不是等人发现**：
+写在这里，而不是等人发现：
 
 - **用例只有 3 个**。框架能力已验证，覆盖面还没开始铺。
-- **串行执行**，没有并发。用例自带隔离（每个自建 space），架构上支持并发，
-  但调度还没写。
-- **超时是记录不强杀**。Python 没法安全中断同步 runner，真正兜底的是 HTTP 层
-  timeout。等并发改成多进程时可以做成硬超时。
-- **企业功能测不了**。当前实例跑在默认授权档位，高级权限、App、自动化、AI
-  这四类能力是关闭的——见下。
+- **串行执行**。用例自带隔离（各自建 space），架构上支持并发，调度还没写。
+- **超时是记录不强杀**。真正兜底的是 HTTP 层 timeout。
+- **企业功能测不了**。当前实例跑在默认授权档位，高级权限、App、自动化、AI 填充这四类
+  能力关闭。
 
-## 需要拍板的三件事
+## 需要你拍板的四件事
 
-### 1. 验收范围包不包括企业功能？
+**1. 要不要给一条测试用授权？**
 
-当前实例授权档位默认，四类能力关闭：高级权限、App、自动化、AI 填充。这几类恰好
-是之前调研里投入最多的方向。
+上面那四类关闭的能力，恰好是之前调研里投入最多的方向。架构已经备好（授权走环境变量
+注入，`smoke/instance-capabilities` 会在档位变化时报红提醒更新覆盖清单）。
 
-架构上已经准备好（授权走环境变量注入，compose 已接好，`smoke/instance-capabilities`
-会在档位变化时报红提醒更新覆盖清单）。**需要的是一条测试用授权。**
-
-建议：**不要等**。核心功能（表/字段/记录/视图/导入导出/公式/关联）用例量最大，
+建议**不要等**：核心功能（表 / 字段 / 记录 / 视图 / 导入导出 / 公式 / 关联）用例量最大，
 当前档位完全够测，先铺起来。
 
-### 2. 开源的时间点？
+**2. 能不能改 `teable-enterprise`？**
 
-仓库按开源标准写：无内部路径、无内部主机名、无字面密钥，`lab check` 里有防误提交
-的密钥扫描。
+自动触发缺的就是这一步：在它的 `promote-latest-ee.yaml` 里加一个 job，加一个 secret
+（`API_LAB_DISPATCH_TOKEN`，对本仓库有 Actions 写权限）。
 
-关键约束：**private 转 public 时整个 git history 一起公开**，所以"先随便写、转之前
-清一遍"是清不干净的。目前仓库零 commit，起点最干净——从第一个 commit 起按 public
-标准写，转的那天不需要任何补救。
+挂在这个位置的理由写在那个文件自己的注释里——构建不往 Docker Hub 推任何东西，提升是
+唯一的写入方。那里已经有一个同样形状的 `notify-infra`，验收就排在它旁边。
+
+**不加也能用**，只是每次发布要有人手动点一下 Run workflow。
+
+<details>
+<summary>要加的 job（放在 <code>notify-infra</code> 后面）</summary>
+
+```yaml
+  trigger-api-lab:
+    name: Trigger teable-api-lab acceptance
+    needs: [promote-latest, sync-aliyun]
+    # 跟 notify-infra 同样的门槛：两条都成功，才说明 teableio/teable 上这个
+    # tag 确实存在。提前派发等于让实验室去拉一个还没推上去的镜像。
+    if: needs.promote-latest.result == 'success' && needs.sync-aliyun.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Dispatch acceptance run to teable-api-lab
+        env:
+          DISPATCH_TOKEN: ${{ secrets.API_LAB_DISPATCH_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${DISPATCH_TOKEN}" ]; then
+            echo "::error::Missing API_LAB_DISPATCH_TOKEN. It needs Actions write access to teableio/teable-api-lab."
+            exit 1
+          fi
+
+          # 传不出确切的 release id 就别派发：实验室的默认值是 latest，而 latest
+          # 会动——一次说不清测了什么的运行，不如不跑。
+          if [ -z "${RELEASE_ID}" ]; then
+            echo "::error::No release id to test."
+            exit 1
+          fi
+
+          curl -fsS -X POST \
+            -H "Authorization: Bearer ${DISPATCH_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/teableio/teable-api-lab/actions/workflows/acceptance.yml/dispatches \
+            -d "{\"ref\":\"main\",\"inputs\":{\"teable_image_tag\":\"${RELEASE_ID}\",\"case_filter\":\"all\"}}"
+
+          echo "dispatched teable-api-lab acceptance teable_image_tag=${RELEASE_ID}"
+```
+
+单开一个 job 而不是往 `notify-infra` 里塞一步，是因为两件事的失败含义不同：通知平台
+失败意味着发布没送达，派发验收失败只意味着这一轮没测。混在一起，一个 curl 挂了会让
+另一件事看起来也挂了。
+
+</details>
+
+**3. 开源的时间点？**
+
+仓库从第一个 commit 就按开源标准写（无内部路径、无内部主机名、无字面密钥，`lab check`
+里有防误提交的密钥扫描，pre-commit hook 扫暂存区）。
+
+关键约束：**private 转 public 时整个 git history 一起公开**，所以"先随便写、转之前清
+一遍"是清不干净的。
 
 建议：private 开发到用例有规模、CI 稳定绿，再转 public。
 
-### 3. 用例优先级铺哪一块？
+**4. 用例优先级铺哪一块？**
 
-之前的调研沉淀了一份场景清单（表格能力若干节）。建议按"回归代价"排序而不是按
-功能模块——写路径和计算字段错了最贵，读路径次之。
-
----
+建议按"回归代价"排序，而不是按功能模块——写路径和计算字段错了最贵，读路径次之。
 
 ## 自己跑一遍
 
@@ -179,5 +176,5 @@ uv run python scripts/verify_run_acceptance.py artifacts/<run-id>
 uv sync && uv run lab up && uv run lab run && uv run lab report
 ```
 
-`lab up` 起环境并自动签入，`lab down` 清空一切。全过程不碰任何共享环境——
-不显式传 `LAB_ENDPOINT` 的话，默认只打 `127.0.0.1`。
+`lab up` 起环境并自动签入，`lab down` 清空一切。不显式传 `LAB_ENDPOINT` 的话默认只打
+`127.0.0.1`，全程不碰任何共享环境。

@@ -1,13 +1,24 @@
 name: API acceptance
 
 on:
+  # Push and pull_request run the static checks only — those are about this
+  # repository's own code and need no target.
   push:
     branches: [main]
   pull_request:
+
+  # The acceptance run is dispatched, never scheduled. It answers "does this
+  # build of Teable behave?", so it belongs to the build, not to the clock and
+  # not to whoever happened to edit the lab today. This repository cannot see a
+  # publish event; the publisher can, and calls in here with the tag it just
+  # produced. See docs/dispatching.md for the caller's side.
+  #
+  # A run with nobody to dispatch it is still dispatchable by hand, which is how
+  # the suite is exercised while that caller does not exist yet.
   workflow_dispatch:
     inputs:
       teable_image_tag:
-        description: "被测 Teable 镜像 tag"
+        description: "被测 Teable 镜像 tag（推荐传确切的 release id，而不是 latest）"
         required: false
         default: "latest"
       case_filter:
@@ -15,12 +26,32 @@ on:
         required: false
         default: "all"
 
+# The token this run is handed can do nothing but read the checkout. Nothing
+# here writes to the repository, and the suite is meant to accept pull requests
+# from strangers once this is public.
+permissions:
+  contents: read
+
+concurrency:
+  # Keyed by the target, so two runs against different builds proceed in
+  # parallel while a second run against the same build queues behind the first.
+  #
+  # Never cancel in progress. A cancelled run leaves a partial artifact set, and
+  # the acceptance gate reads artifacts — it would have to tell "this case was
+  # never planned" apart from "this case was killed mid-flight", which is
+  # exactly the ambiguity the gate exists to remove.
+  group: acceptance-${{ inputs.teable_image_tag || github.ref }}
+  cancel-in-progress: false
+
 jobs:
   # Static checks need no target and no Docker, so they fail in under a minute
   # instead of after a five-minute stack boot.
   check:
     name: Static checks
     runs-on: ubuntu-latest
+    # Well above the minute this takes. A bound at all is the point: without
+    # one, a step that hangs rather than fails burns the default six hours.
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
@@ -36,13 +67,27 @@ jobs:
     name: Acceptance run
     runs-on: ubuntu-latest
     needs: check
+    # Dispatch only. A merge to this repository does not re-run acceptance: the
+    # target did not change, so the result would be a rerun of the same
+    # question. What guards a change to the lab itself is the static checks
+    # above plus the real local run the README requires before delivery.
+    if: github.event_name == 'workflow_dispatch'
     timeout-minutes: 45
     env:
       # Docker Hub on CI; the aliyun mirror in compose.yaml is the local default.
       TEABLE_IMAGE: teableio/teable
       LAB_POSTGRES_IMAGE: postgres:15.4
       LAB_REDIS_IMAGE: redis:7.2.4
-      # Pinned on purpose: a run has to be able to answer "which build was this".
+      # `inputs` is null on push and pull_request, so the value off the dispatch
+      # path has to be spelled out rather than assumed. Both paths agree today,
+      # which is why this stays the short form; if they ever diverge, write the
+      # trigger out explicitly rather than letting one default leak into the
+      # other path.
+      #
+      # `latest` is a moving target: two runs a week apart can test different
+      # builds under the same tag. Which build a run actually tested is answered
+      # by the recorded digest, not by the tag — see "Record the image under
+      # test". A caller that knows the exact published tag should pass it.
       TEABLE_IMAGE_TAG: ${{ inputs.teable_image_tag || 'latest' }}
       # Optional. Absent in forks and in PRs from forks, where the suite simply
       # runs at the default entitlement level. Actions masks registered secrets
@@ -59,6 +104,23 @@ jobs:
       - name: Start the target stack
         run: uv run lab up
 
+      # A tag alone cannot say what was tested, because a tag moves. This is the
+      # counterpart to perf-lab pinning `github.sha` at dispatch time: the target
+      # gets an identity that still means something a month later, when `latest`
+      # points somewhere else.
+      - name: Record the image under test
+        run: |
+          set -euo pipefail
+          ref="${TEABLE_IMAGE}:${TEABLE_IMAGE_TAG}"
+          digest=$(docker image inspect "$ref" --format '{{if .RepoDigests}}{{index .RepoDigests 0}}{{end}}')
+          {
+            echo "### Target under test"
+            echo
+            echo "- trigger: \`${GITHUB_EVENT_NAME}\`"
+            echo "- tag: \`${ref}\`"
+            echo "- digest: \`${digest:-unresolved}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Doctor
         run: uv run lab doctor
 
@@ -67,7 +129,12 @@ jobs:
         # Keep going on a red case: the acceptance gate below is what decides,
         # and the artifacts have to be uploaded either way.
         continue-on-error: true
-        run: uv run lab run "${{ inputs.case_filter || 'all' }}"
+        env:
+          # Through the environment rather than interpolated into the script.
+          # A `${{ }}` expression is pasted in before the shell ever sees the
+          # line, so a dispatch input spliced there runs as shell.
+          CASE_FILTER: ${{ inputs.case_filter || 'all' }}
+        run: uv run lab run "$CASE_FILTER"
 
       - name: Acceptance gate
         run: |
