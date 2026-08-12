@@ -15,7 +15,7 @@
 - 可运行的用例必须注册进 `registry.py`。
 - 共享执行逻辑属于 `framework/`，用例文件里不写逻辑。
 - 数据保持确定性，期望值本地推导，让重跑逐字节可比。
-- 断言只走公共 API。框架不提供数据库连接，不要绕过这一点。
+- 断言只走公共 API 的真实读路径。
 
 ## 这几件事看起来像疏漏，其实是设计
 
@@ -68,13 +68,3 @@ uv run lab report
 - `requests` 里能看到完整的请求链，且没有意料之外的 4xx/5xx
 
 只看 `lab run` 的退出码就交付，等于没验证。
-
-## 加一个用例要动的文件
-
-```text
-cases/<group>/<name>.case.py     # define_case() 的配置
-cases/<group>/<name>.md          # 同名描述，格式见 .agents/case-spec.md
-registry.py                      # CASES 里加一行
-```
-
-三处缺一，`lab check` 就红。
