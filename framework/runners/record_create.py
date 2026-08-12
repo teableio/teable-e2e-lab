@@ -2,15 +2,20 @@
 
 This runner is where the borrowed discipline actually shows up:
 
-- **Deterministic data.** Every cell value is a pure function of its row number
-  and the field spec, so `verify` recomputes the expected value locally instead
-  of trusting a snapshot. Nothing has to be recorded between runs, and a
-  re-run compares byte-for-byte with the last one.
+- **Deterministic data.** Every cell value is a pure function of its row number,
+  its field spec, and a revision number, so `verify` recomputes the expected
+  value locally instead of trusting a snapshot. Nothing has to be recorded
+  between runs, and a re-run compares byte-for-byte with the last one.
 - **Seed readiness.** `seed` does not hand back a fixture it has not proved is
   empty. A table that silently arrives with Teable's three default rows would
   turn the row-count assertion into a lie in the most confusing possible way.
 - **Full scan.** Sampling three rows cannot catch "997 of 1000 landed". The scan
   reads every row through the same endpoint a user's grid would.
+
+The value formula and the batched create loop live here rather than in a runner
+of their own because this is where they are defined and tested. Sibling record
+runners import them, so a case that writes rows and a case that rewrites them
+are provably talking about the same 100 rows.
 """
 
 from __future__ import annotations
@@ -19,6 +24,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
+from framework.client import TeableClient
 from framework.types import RunContext, Runner
 from framework.verify import scan_records
 
@@ -52,28 +58,84 @@ class Observation(BaseModel):
     batch_statuses: list[int] = Field(default_factory=list)
 
 
-def expected_cell(field: FieldSpec, row: int) -> Any:
-    """The single source of truth for what row N should contain.
+def expected_cell(field: FieldSpec, row: int, revision: int = 1) -> Any:
+    """The single source of truth for what row N should contain at revision R.
 
     Used to build the request *and* to check the response, so the two can never
     drift apart. Keep it total and side-effect free.
+
+    `revision` exists so a case can rewrite the same rows and prove the rewrite
+    landed. It carries one load-bearing property, pinned by a unit test: for a
+    given row, **no two revisions agree on any cell**. A revision that left even
+    one cell unchanged would make "this row was never updated" invisible on that
+    cell, which is precisely the failure an update case exists to catch.
+
+    Revision 1 is the unsuffixed original, so adding this parameter did not move
+    a single value the create case had already asserted.
     """
+    suffix = "" if revision == 1 else f"-r{revision}"
     if field.type == "singleLineText":
-        return f"{field.name}-{row}"
+        return f"{field.name}-{row}{suffix}"
     if field.type == "longText":
-        return f"{field.name} row {row}\nline two"
+        return f"{field.name} row {row}{suffix}\nline two"
     if field.type == "number":
-        return float(row)
+        # Rows are 1-based, so scaling by the revision moves every cell.
+        return float(row * revision)
     if field.type == "checkbox":
         # Teable stores an unchecked box as absent rather than false, so the
-        # expectation for odd rows is "no value", not "False".
-        return True if row % 2 == 0 else None
+        # expectation for an unchecked row is "no value", not "False". The
+        # parity flips with each revision: at revision 1 the even rows are
+        # checked, at revision 2 the odd ones are.
+        return True if (row + revision) % 2 == 1 else None
     raise ValueError(f"unsupported field type {field.type!r}")
 
 
-def expected_row(fields: list[FieldSpec], row: int) -> dict[str, Any]:
-    values = {f.name: expected_cell(f, row) for f in fields}
+def expected_row(fields: list[FieldSpec], row: int, revision: int = 1) -> dict[str, Any]:
+    """What the read path should hand back for row N — empty cells omitted.
+
+    This is the *read* shape. A create payload happens to share it (an absent
+    checkbox means unchecked), but an update payload does not: see
+    `record_update.update_payload_row`.
+    """
+    values = {f.name: expected_cell(f, row, revision) for f in fields}
     return {k: v for k, v in values.items() if v is not None}
+
+
+def create_rows(
+    client: TeableClient,
+    table_id: str,
+    fields: list[FieldSpec],
+    count: int,
+    *,
+    batch_size: int,
+    revision: int = 1,
+) -> tuple[list[str], list[int]]:
+    """POST `count` deterministic rows in batches; return (ids, statuses).
+
+    Shared with the update runner, whose seed needs exactly these rows. One
+    implementation means the rows a rewrite starts from are byte-for-byte the
+    rows the create case asserts.
+
+    Stops at the first rejected batch and reports what happened rather than
+    raising: the caller decides whether a short write is a product failure to
+    verify against, or a fixture that never got built.
+    """
+    created_ids: list[str] = []
+    statuses: list[int] = []
+    for start in range(1, count + 1, batch_size):
+        end = min(start + batch_size - 1, count)
+        payload = {
+            "fieldKeyType": "name",
+            "records": [
+                {"fields": expected_row(fields, row, revision)} for row in range(start, end + 1)
+            ],
+        }
+        response = client.post(f"/api/table/{table_id}/record", json=payload)
+        statuses.append(response.status_code)
+        if response.status_code >= 400:
+            break
+        created_ids.extend(record["id"] for record in response.json().get("records", []))
+    return created_ids, statuses
 
 
 class RecordCreateRunner(Runner[RecordCreateConfig, Fixture, Observation]):
@@ -126,27 +188,16 @@ class RecordCreateRunner(Runner[RecordCreateConfig, Fixture, Observation]):
     def execute(
         self, ctx: RunContext, config: RecordCreateConfig, fixture: Fixture
     ) -> Observation:
-        observation = Observation()
-        for start in range(1, config.record_count + 1, config.batch_size):
-            end = min(start + config.batch_size - 1, config.record_count)
-            payload = {
-                "fieldKeyType": "name",
-                "records": [
-                    {"fields": expected_row(config.fields, row)} for row in range(start, end + 1)
-                ],
-            }
-            response = ctx.client.post(
-                f"/api/table/{fixture.table_id}/record", json=payload
-            )
-            observation.batch_statuses.append(response.status_code)
-            if response.status_code >= 400:
-                # Recorded, not raised: verify still runs and reports how much
-                # of the intended state actually exists.
-                break
-            observation.created_ids.extend(
-                record["id"] for record in response.json().get("records", [])
-            )
-        return observation
+        # A rejected batch is recorded, not raised: verify still runs and
+        # reports how much of the intended state actually exists.
+        created_ids, statuses = create_rows(
+            ctx.client,
+            fixture.table_id,
+            config.fields,
+            config.record_count,
+            batch_size=config.batch_size,
+        )
+        return Observation(created_ids=created_ids, batch_statuses=statuses)
 
     def verify(
         self,

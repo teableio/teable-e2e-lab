@@ -14,4 +14,5 @@ CASES = [
     "smoke/auth-user",
     "smoke/instance-capabilities",
     "record/create-100-mixed",
+    "record/update-100-mixed",
 ]
