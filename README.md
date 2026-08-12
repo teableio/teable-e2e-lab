@@ -23,6 +23,7 @@ uv run lab down        # 停掉并清空所有状态
 - **第一次看这个项目**：读 [REVIEW.md](REVIEW.md)——十分钟看完设计取舍、
   加一个用例的成本、以及怎么证明这套断言不是摆设。
 - 加或改用例：先读 [.agents/README.md](.agents/README.md)，按流程先写 case spec。
+- 想知道现在允许测什么（授权档位、能力开关）：读 [.agents/target.md](.agents/target.md)。
 - 想知道断言该写到什么程度：读 [.agents/checklist.md](.agents/checklist.md)。
 - 想知道结果文件长什么样：读 [framework/types.py](framework/types.py) 的 `CaseResult`。
 - 想从发布流水线自动触发验收：读 [docs/dispatching.md](docs/dispatching.md)。

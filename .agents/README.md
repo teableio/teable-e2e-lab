@@ -3,15 +3,16 @@
 你在帮人给 Teable 加一条接口验收用例。对方通常知道要测的产品行为，但不熟这个仓库。
 你来驱动流程，不要先让他学内部结构。
 
-从上往下读这一篇，需要时再翻另外两篇：
+从上往下读这一篇，需要时再翻另外三篇：
 
+- [target.md](target.md) —— 被测环境允许你测什么。**动手前先读**。
 - [case-spec.md](case-spec.md) —— 写代码前先确认的那份 spec。
 - [checklist.md](checklist.md) —— 写的时候必须守住的硬规则。
 
 ## 流程
 
 ```text
-intake -> 写 spec -> 确认 -> 选 runner -> 写 -> 注册 -> check -> 真跑 -> 汇报
+intake -> 查能力 -> 写 spec -> 确认 -> 选 runner -> 写 -> 注册 -> check -> 真跑 -> 汇报
 ```
 
 交付物不是"能通过 `lab check` 的文件"，而是**一个真跑过、artifact 证据完整的
@@ -29,12 +30,19 @@ intake -> 写 spec -> 确认 -> 选 runner -> 写 -> 注册 -> check -> 真跑 -
 接口信息够写 spec 就别去翻产品代码。只有在确实不知道某个行为怎么表现时，才去看
 `framework/runners/*.py` 或产品实现。
 
-### 2. 写 spec
+### 2. 查能力
+
+确认你要测的能力在被测实例上是**开着的**，方法见 [target.md](target.md)。
+
+这一步花一分钟，省的是"用例写完跑红了，才发现测的东西压根没启用"。授权档位变化时，
+`smoke/instance-capabilities` 会红并指名哪一项——看到它红，先怀疑授权，别怀疑产品。
+
+### 3. 写 spec
 
 用 [case-spec.md](case-spec.md) 的模板，缺的部分你自己补全，**每一条你推断的都
 标成假设**。对方负责确认或纠正，不该由他来写 spec。
 
-### 3. 确认
+### 4. 确认
 
 把 spec 给对方看。只有当答案会改变实现时才提问（比如行数会不会让产品走另一条
 代码路径、某个字段的空值语义是什么）。
@@ -42,7 +50,7 @@ intake -> 写 spec -> 确认 -> 选 runner -> 写 -> 注册 -> check -> 真跑 -
 例外：对方明确要求端到端交付，或人不在，就按合理默认往下做，把每个假设标出来，
 最后在汇报里重复一遍，方便事后纠正。
 
-### 4. 选 runner
+### 5. 选 runner
 
 ```text
 复用现有 runner -> 扩展现有 runner -> 新写 runner
@@ -51,7 +59,7 @@ intake -> 写 spec -> 确认 -> 选 runner -> 写 -> 注册 -> check -> 真跑 -
 优先复用。只有当现有 runner 表达不了这个场景时才扩展；只有当扩展会扭曲现有 runner
 的行为时才新写。新 runner 必须实现完整四段式，且 `verify` 不能是空的。
 
-### 5. 写
+### 6. 写
 
 两个同名文件：
 
@@ -71,11 +79,11 @@ cases/<group>/<name>.md         # 描述文档
 `Seed Phase`、`Execute Phase`、`Expectations`、`Cleanup` 五节。`Expectations`
 那节要写清楚**每条断言在证明什么**，不是复述代码。
 
-### 6. 注册
+### 7. 注册
 
 在 `registry.py` 的 `CASES` 里加一行。少这一行，用例就是死的——`lab check` 会红。
 
-### 7. Check
+### 8. Check
 
 ```bash
 uv run lab check && uv run ruff check . && uv run mypy && uv run pytest -q
@@ -83,7 +91,7 @@ uv run lab check && uv run ruff check . && uv run mypy && uv run pytest -q
 
 这一步**不碰真实 Teable**，只验证目录一致性、配置合法性、文档格式和框架自测。
 
-### 8. 真跑
+### 9. 真跑
 
 ```bash
 uv run lab up
@@ -97,7 +105,7 @@ uv run lab run <case-id>
 一个已知有问题的版本），确认它真的报红且报在对的地方。一个从来没见过它失败的用例，
 不能证明它有用。
 
-### 9. 汇报
+### 10. 汇报
 
 - 一句话说清这个用例测什么，用产品语言。
 - 一张小表：用例 -> 判定 + 关键断言的实际值。
