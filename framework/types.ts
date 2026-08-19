@@ -11,6 +11,7 @@ export interface BugCaseConfigByRunner {
   "record-flow": RecordFlowCaseConfig;
   "group-collapse": GroupCollapseCaseConfig;
   "share-save": ShareSaveCaseConfig;
+  "view-filter-roundtrip": ViewFilterRoundtripCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -195,4 +196,24 @@ export interface ShareSaveCaseConfig {
   // reproduces.
   settleTimeoutMs: number;
   settlePollIntervalMs: number;
+}
+
+// Save a view filter that holds one finished condition and one the user has
+// not finished yet -> checkpoint: the filter reads back verbatim AND the
+// unfinished condition filters nothing. Two assertions because the fix has two
+// halves that pull against each other: keep the condition for the panel,
+// ignore it for the query.
+export interface ViewFilterRoundtripCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Choices on the multiple-select field the unfinished condition points at.
+  // Their names never appear in an assertion - the condition carries no value,
+  // which is the entire point of it.
+  choices: string[];
+  // Rows seeded before the filter is saved. More than one, so "the finished
+  // condition still selects" and "the unfinished one hid everything" cannot
+  // look the same.
+  rowTitles: string[];
+  // The one title the finished condition matches. Must be in rowTitles.
+  matchedTitle: string;
 }
