@@ -1,0 +1,17 @@
+node_modules/
+
+# Run outputs never enter git.
+e2e-lab-artifacts/
+e2e-lab-report/
+.localrun-artifacts/
+
+.env
+.env.*
+!.env.example
+*.local.json
+*.key
+*.pem
+.DS_Store
+
+# Local Claude Code setup (the skills symlink); machine-specific, never committed.
+.claude/

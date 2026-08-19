@@ -1,0 +1,284 @@
+name: Teable EE bug regression
+
+on:
+  workflow_dispatch:
+    inputs:
+      teable_ee_commits:
+        description: >-
+          Comma-separated teable-ee commits (branch, tag, or SHA), OLDEST
+          FIRST. The LAST one is the gating column: only there does a
+          reproduced fixed-status bug fail the run — on earlier columns it is
+          the world before the fix. At most 8 per dispatch.
+        required: false
+        default: develop
+        type: string
+      case_filter:
+        description: Case id, comma-separated case ids, or all
+        required: false
+        default: all
+        type: string
+
+permissions:
+  contents: read
+
+# No concurrency group on purpose. perf-lab serializes full runs because
+# overlapping perf runs measure each other's noise; bug observations are
+# deterministic and every job here owns its own database and containers, so
+# parallel dispatches cannot corrupt each other.
+
+env:
+  NODE_ENV: test
+  PRISMA_DATABASE_URL: "postgresql://teable:teable@127.0.0.1:25432/e2e_test_teable?schema=public&statement_cache_size=0&connection_limit=20"
+  PRISMA_META_DATABASE_URL: "postgresql://teable:teable@127.0.0.1:25432/e2e_test_teable?schema=public&statement_cache_size=0&connection_limit=20"
+  PRISMA_TRANSACTION_TIMEOUT: "30000"
+  BACKEND_CACHE_PROVIDER: redis
+  BACKEND_CACHE_REDIS_URI: "redis://default:teable@127.0.0.1:6379/1"
+  BACKEND_PERFORMANCE_CACHE: "redis://default:teable@127.0.0.1:6379/1"
+  TEABLE_SSRF_PROTECTION_DISABLED: "true"
+  # Bug observations need no traces; keep the engine from trying to export to
+  # an endpoint no job runs.
+  OTEL_EXPORT_RATIO: "0"
+  OTEL_EXPORTER_OTLP_ENDPOINT: ""
+  OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: ""
+  OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: ""
+  # Workflow-level so step `if:` conditions can see them — a step's own env
+  # block is not visible to its own condition.
+  TEABLE_E2E_LAB_TOKEN: ${{ secrets.TEABLE_E2E_LAB_TOKEN }}
+  FEISHU_E2E_WEBHOOK_URL: ${{ secrets.FEISHU_E2E_WEBHOOK_URL }}
+
+jobs:
+  resolve_inputs:
+    name: Resolve commits and plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      execute_plan: ${{ steps.plan.outputs.execute_plan }}
+      case_ids: ${{ steps.plan.outputs.case_ids }}
+      plan_summary: ${{ steps.plan.outputs.plan_summary }}
+
+    steps:
+      - name: Checkout e2e-lab
+        uses: actions/checkout@v5
+        with:
+          path: e2e-lab
+
+      # The whole commit graph without a byte of source: refs are resolved with
+      # rev-parse, which never looks at a tree. `fetch-depth: 0` is
+      # load-bearing and `filter: tree:0` is what makes it cheap — a shallow
+      # clone silently fails to resolve anything but its tip, which is the trap
+      # perf-lab's shadow analysis walked into before writing this down.
+      - name: Checkout teable-ee commit graph
+        uses: actions/checkout@v5
+        with:
+          repository: teableio/teable-ee
+          path: teable-ee-graph
+          token: ${{ secrets.TEABLE_EE_CHECKOUT_TOKEN }}
+          fetch-depth: 0
+          filter: tree:0
+
+      - name: Resolve refs to pinned SHAs
+        id: resolve
+        working-directory: teable-ee-graph
+        env:
+          TEABLE_EE_COMMITS: ${{ inputs.teable_ee_commits }}
+        run: |
+          set -euo pipefail
+          resolved="[]"
+          IFS=',' read -ra refs <<< "$TEABLE_EE_COMMITS"
+          for raw in "${refs[@]}"; do
+            ref="$(echo "$raw" | xargs)"
+            [ -z "$ref" ] && continue
+            # A branch name exists locally only as origin/<name> after a
+            # non-checkout fetch, so try both spellings before failing.
+            if sha=$(git rev-parse --verify --quiet "${ref}^{commit}"); then
+              :
+            elif sha=$(git rev-parse --verify --quiet "origin/${ref}^{commit}"); then
+              :
+            else
+              echo "Cannot resolve teable-ee ref: ${ref}" >&2
+              exit 1
+            fi
+            resolved=$(node -e '
+              const [json, ref, sha] = process.argv.slice(1);
+              const list = JSON.parse(json);
+              list.push({ ref, sha });
+              console.log(JSON.stringify(list));
+            ' "$resolved" "$ref" "$sha")
+          done
+          echo "commits=$resolved" >> "$GITHUB_OUTPUT"
+          echo "Resolved: $resolved"
+
+      - name: Build run plan
+        id: plan
+        env:
+          E2E_LAB_RESOLVED_COMMITS: ${{ steps.resolve.outputs.commits }}
+          E2E_LAB_CASE_FILTER: ${{ inputs.case_filter }}
+        run: node e2e-lab/scripts/run-plan.mjs
+
+  execute:
+    name: Run cases (${{ matrix.plan.name }})
+    needs: resolve_inputs
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        plan: ${{ fromJSON(needs.resolve_inputs.outputs.execute_plan) }}
+
+    env:
+      CI_JOB_ID: ${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.plan.name }}
+      NETWORK_MODE: teablenet-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.plan.name }}
+      TEST_PG_CONTAINER_NAME: teable-postgres-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.plan.name }}
+
+    steps:
+      - name: Checkout e2e-lab
+        uses: actions/checkout@v5
+        with:
+          path: e2e-lab
+
+      - name: Checkout teable-ee at pinned revision
+        uses: actions/checkout@v5
+        with:
+          repository: teableio/teable-ee
+          ref: ${{ matrix.plan.sha }}
+          path: teable-ee
+          token: ${{ secrets.TEABLE_EE_CHECKOUT_TOKEN }}
+
+      - name: Bootstrap e2e runtime
+        uses: ./e2e-lab/.github/actions/e2e-runtime
+        with:
+          operation: bootstrap
+
+      # Every commit builds its own database from its own migrations. Dumps are
+      # deliberately NOT shared across columns — different commits can carry
+      # different Prisma migrations, which is exactly why perf-lab's seed cache
+      # key hashes the schema. Bug fixtures are built inside each case, so
+      # there is no seed job to cache in the first place.
+      - name: Prepare e2e database
+        working-directory: teable-ee
+        run: |
+          set -euo pipefail
+          docker exec "$TEST_PG_CONTAINER_NAME" dropdb -U teable --if-exists e2e_test_teable
+          docker exec "$TEST_PG_CONTAINER_NAME" createdb -U teable e2e_test_teable
+          make postgres.mode
+          pnpm -F @teable/db-main-prisma-ee prisma-db-seed -- --e2e
+
+      - name: Run bug cases through teable-ee e2e
+        working-directory: teable-ee
+        run: |
+          set -euo pipefail
+
+          export E2E_LAB_ARTIFACT_DIR="${GITHUB_WORKSPACE}/e2e-lab-artifacts/${{ matrix.plan.artifactSuffix }}"
+          export E2E_LAB_RUN_ID="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          export E2E_LAB_CASE_FILTER="${{ inputs.case_filter }}"
+          export E2E_LAB_COMMIT_SHA="${{ matrix.plan.sha }}"
+          export E2E_LAB_GATING="${{ matrix.plan.gating }}"
+
+          pnpm -F @teable/backend-ee exec vitest run \
+            --config ./vitest-e2e-lab.config.ts \
+            ../../community/apps/nestjs-backend/test/e2e-lab/e2e-lab.e2e-spec.ts \
+            --silent=false
+
+      # Named without run_attempt and with overwrite, the same trick perf-lab
+      # uses for seed dumps: "Re-run failed jobs" replaces only the failed
+      # column's artifact, and the report job still sees one artifact per
+      # column without attempt-selection logic.
+      - name: Upload case payloads
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: e2e-lab-results-${{ matrix.plan.artifactSuffix }}-${{ github.run_id }}
+          path: e2e-lab-artifacts/${{ matrix.plan.artifactSuffix }}
+          if-no-files-found: warn
+          overwrite: true
+          retention-days: 30
+
+      - name: Publish job summary
+        if: always()
+        run: |
+          shopt -s nullglob
+          summaries=(e2e-lab-artifacts/${{ matrix.plan.artifactSuffix }}/summary-*.md)
+          if [ "${#summaries[@]}" -gt 0 ]; then
+            for summary in "${summaries[@]}"; do
+              cat "$summary" >> "$GITHUB_STEP_SUMMARY"
+              printf '\n' >> "$GITHUB_STEP_SUMMARY"
+            done
+          else
+            echo "No case summaries were generated for ${{ matrix.plan.name }}." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Cleanup e2e runtime
+        if: always()
+        uses: ./e2e-lab/.github/actions/e2e-runtime
+        with:
+          operation: cleanup
+
+  report:
+    name: Bug x commit comparison
+    needs:
+      - resolve_inputs
+      - execute
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout e2e-lab
+        uses: actions/checkout@v5
+        with:
+          path: e2e-lab
+
+      - name: Download case payloads
+        uses: actions/download-artifact@v7
+        with:
+          pattern: e2e-lab-results-*-${{ github.run_id }}
+          path: e2e-lab-artifacts
+          merge-multiple: false
+
+      - name: Build comparison table
+        env:
+          E2E_LAB_ARTIFACT_DIR: ${{ github.workspace }}/e2e-lab-artifacts
+          E2E_LAB_EXECUTE_PLAN: ${{ needs.resolve_inputs.outputs.execute_plan }}
+          E2E_LAB_CASE_FILTER: ${{ inputs.case_filter }}
+          E2E_LAB_COMPARISON_PATH: ${{ github.workspace }}/e2e-lab-report/comparison.json
+        run: node e2e-lab/scripts/build-comparison.mjs
+
+      - name: Upload comparison
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: e2e-lab-comparison-${{ github.run_id }}-${{ github.run_attempt }}
+          path: e2e-lab-report
+          if-no-files-found: warn
+          retention-days: 90
+
+      # One row per case x commit into the Regression Track table, upserted by
+      # Run Key. Best-effort and independent of acceptance: the artifacts are
+      # the source of truth, the table is the queryable history. Gated on the
+      # secret so forks and token-less setups skip cleanly.
+      - name: Report results to Teable
+        if: always() && env.TEABLE_E2E_LAB_TOKEN != ''
+        continue-on-error: true
+        env:
+          E2E_LAB_ARTIFACT_DIR: ${{ github.workspace }}/e2e-lab-artifacts
+          E2E_LAB_EXECUTE_PLAN: ${{ needs.resolve_inputs.outputs.execute_plan }}
+        run: node e2e-lab/scripts/report-teable-track.mjs
+
+      # The run's card, built from the same comparison.json the acceptance
+      # gate judges. Independent report steps by design — a Feishu outage must
+      # not hide the Teable rows, and vice versa.
+      - name: Send Feishu summary
+        if: always() && env.FEISHU_E2E_WEBHOOK_URL != ''
+        continue-on-error: true
+        env:
+          E2E_LAB_COMPARISON_PATH: ${{ github.workspace }}/e2e-lab-report/comparison.json
+        run: node e2e-lab/scripts/send-feishu-summary.mjs
+
+      # The fail-closed gate, and the only step that turns this job red:
+      # missing/duplicate/unplanned payloads, unknown verdicts, errors anywhere,
+      # regressions on the gating column. Runs after the table and the upload so
+      # a failing run still publishes its evidence.
+      - name: Enforce run acceptance
+        env:
+          E2E_LAB_COMPARISON_PATH: ${{ github.workspace }}/e2e-lab-report/comparison.json
+        run: node e2e-lab/scripts/verify-run-acceptance.mjs
