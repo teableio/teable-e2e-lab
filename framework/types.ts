@@ -12,6 +12,7 @@ export interface BugCaseConfigByRunner {
   "group-collapse": GroupCollapseCaseConfig;
   "share-save": ShareSaveCaseConfig;
   "view-filter-roundtrip": ViewFilterRoundtripCaseConfig;
+  "lookup-filter-view": LookupFilterViewCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -216,4 +217,23 @@ export interface ViewFilterRoundtripCaseConfig {
   rowTitles: string[];
   // The one title the finished condition matches. Must be in rowTitles.
   matchedTitle: string;
+}
+
+// Reference table with a single-select -> host table linking to it -> scalar
+// lookup of that select -> a view that filters, sorts and groups on the lookup
+// -> checkpoint: the view loads and returns exactly the rows it describes.
+export interface LookupFilterViewCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // The category the saved view keeps.
+  allowedCategory: string;
+  // The categories the saved view excludes with isNoneOf. More than one: a
+  // single-element list can be compiled to an equality test and would skip the
+  // array path the failure lives on.
+  excludedCategories: string[];
+  // Host rows. `category: null` links to nothing, which is what the isNotEmpty
+  // half of the filter removes.
+  rows: { task: string; category: string | null }[];
+  // The tasks the saved view must return, in the order the view sorts them.
+  expectedTasks: string[];
 }

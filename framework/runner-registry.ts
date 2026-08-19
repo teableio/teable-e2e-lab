@@ -1,4 +1,5 @@
 import { runGroupCollapseCase } from "./runners/group-collapse.runner";
+import { runLookupFilterViewCase } from "./runners/lookup-filter-view.runner";
 import { runHttpCheckCase } from "./runners/http-check.runner";
 import { runRecordFlowCase } from "./runners/record-flow.runner";
 import { runShareSaveCase } from "./runners/share-save.runner";
@@ -25,6 +26,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "group-collapse": runGroupCollapseCase,
   "share-save": runShareSaveCase,
   "view-filter-roundtrip": runViewFilterRoundtripCase,
+  "lookup-filter-view": runLookupFilterViewCase,
 };
 
 export const executeRegisteredRunner = (
