@@ -1,22 +1,25 @@
 # smoke/auth-user
 
-## 这是什么
+## What this is
 
-哨兵用例（`sentinel/`），不对应任何历史 bug。它断言的是"这套 harness 在这个
-revision 上是可信的"：注入成功、Nest app 起得来、seed 用户登录态有效、checkpoint
-和 verdict 映射都工作。
+A sentinel case (`sentinel/`), tied to no historical bug. What it asserts is
+that **the harness itself is trustworthy on this revision**: injection worked,
+the Nest app came up, the seeded user's session is valid, and the checkpoint
+and verdict mapping do what they claim.
 
-对比表里如果某一列的哨兵是 💥 或 ❌，那一列的其余格子一概不要相信。
+If the sentinel reads 💥 or ❌ in some column of the comparison table, do not
+trust any other cell in that column.
 
-## 复现步骤
+## Reproduction
 
-`GET /api/auth/user`（`USER_ME`），带 seed 用户的会话 cookie。
+`GET /api/auth/user` (`USER_ME`), carrying the seeded user's session cookie.
 
-## 期望行为（checkpoint 断言）
+## What the checkpoint asserts
 
-- 返回 200
-- 返回体的 `id` 和 `email` 与 e2e seed 用户（`test@e2e.com`）一致
+- The response is 200.
+- Its `id` and `email` match the e2e seed user (`test@e2e.com`).
 
-## 期望状态
+## Expected status
 
-`status: fixed` —— 正确行为必须成立，任何 revision 上复现失败都判 regression。
+`status: fixed`. The correct behavior has to hold; failing to observe it on any
+revision is a regression.

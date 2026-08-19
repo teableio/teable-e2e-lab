@@ -79,8 +79,8 @@ const payload = (caseId, commitSha, observed, verdict) => ({
   ]);
 
   const markdown = renderComparisonMarkdown(comparison);
-  assert.match(markdown, /修复落在/);
-  assert.match(markdown, /意外修复/);
+  assert.match(markdown, /fixed between/);
+  assert.match(markdown, /Unexpectedly fixed/);
 }
 
 // A regression IS a failure when it sits on the gating column.
@@ -142,7 +142,7 @@ const payload = (caseId, commitSha, observed, verdict) => ({
   });
   assert.equal(missing.passed, false);
   assert.equal(missing.failures.missing.length, 1);
-  assert.match(renderComparisonMarkdown(missing), /结果缺失/);
+  assert.match(renderComparisonMarkdown(missing), /Missing results/);
 
   const duplicated = buildComparison({
     caseCatalog: CATALOG,

@@ -7,10 +7,10 @@ can see at a glance which two revisions a fix landed between, and whether
 anything that was fixed has come back.
 
 ```
-| bug 用例          | issue | 声明  | `3f2a1c...` | `8b4e77...` | `a1c9f0...` | 变化点                |
-| record/t1481-...  | T1481 | fixed |     ❌      |     ❌      |     ✅      | 修复落在 8b4e77..a1c9f0 |
-| record/t1502-...  | T1502 | open  |     ⬜      |     ⬜      |     ⬜      |                       |
-| field/t1520-...   | T1520 | fixed |     ✅      |     ✅      |     ❌      | 回归出现在 8b4e77..a1c9f0 |
+| case              | issue | status | `3f2a1c` | `8b4e77` | `a1c9f0` | transition               |
+| record/t1481-...  | T1481 | fixed  |    ❌    |    ❌    |    ✅    | fixed 8b4e77..a1c9f0     |
+| record/t1502-...  | T1502 | open   |    ⬜    |    ⬜    |    ⬜    |                          |
+| field/t1520-...   | T1520 | fixed  |    ✅    |    ✅    |    ❌    | regressed 8b4e77..a1c9f0 |
 ```
 
 ## How it works

@@ -1,13 +1,13 @@
 import { defineBugCase } from "../../framework/types";
 
-// T6751: "排序+分组情况下，排序混乱" - one user group, sorted by date
+// T6751, reported as "sorting is scrambled when grouped": one user group,
 // descending, and the years came out 2026, 2025, 2026. The group header folded
 // every stored snapshot of the collaborator into one bucket, but the SQL still
 // ordered by the raw stored JSON, so the sort silently restarted at each
 // snapshot variant.
 export default defineBugCase({
   id: "lookup/user-snapshot-date-sort-spans-group",
-  title: "同一个协作者的多份快照折成一组后，组内日期倒序要一路贯通",
+  title: "Date sort runs through a group folded from several stored snapshots",
   runner: "lookup-user-snapshot-sort",
   timeoutMs: 180_000,
   bug: {

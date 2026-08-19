@@ -6,7 +6,7 @@ const sha = (seed) => seed.repeat(40).slice(0, 40);
 // A representative payload, shaped exactly like framework/artifacts.ts writes.
 const payload = {
   caseId: "record/bulk-update-100-mixed-lands",
-  title: "批量更新 100 行的每一个字段后，每一格都真的落库",
+  title: "Bulk-updating 100 rows lands on every single cell",
   bug: { issue: "sentinel/record-bulk-update-lands", status: "fixed" },
   runId: "123-1",
   commitSha: sha("a"),

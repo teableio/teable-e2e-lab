@@ -1,62 +1,81 @@
 # view/incomplete-filter-condition-survives
 
-## Bug 来源
+## Where the bug came from
 
-T6568。用户在筛选面板点「添加筛选」、选好字段之后，这条筛选条件**自己消失了**，operator
-和值根本没机会填。2026-08-09 用户复查确认仍在。
+T6568. In the filter panel, a user clicked "add filter", picked a field, and the
+condition **disappeared on its own** — no chance to choose an operator or a
+value. The user confirmed on 2026-08-09 that it was still happening.
 
-修复：[teable-ee 3f15439a3](https://github.com/teableio/teable-ee/commit/3f15439a3) /
-PR #2860。
+Fixed by [teable-ee 3f15439a3](https://github.com/teableio/teable-ee/commit/3f15439a3)
+(PR #2860).
 
-根因在 `ViewSourceFilter`：v1 会把「用户还没填完」的列表型条件（`value` 是 `null` 或
-`[]`）照原样存下来，查询时跳过；v2 的 schema 反过来在**读写两端都把这类条件删掉**，于是
-面板刚写进去的那条，下一次读回来就没了——在用户眼里就是「刚选的字段自己不见了」。
+The cause is in `ViewSourceFilter`. v1 stores a list-operator condition the user
+has not finished (`value` is `null` or `[]`) exactly as written and skips it at
+query time; v2's schema instead **dropped that shape on both read and write**,
+so the condition the panel had just written was gone by the next read — which
+looks, to the user, like the field they picked vanished under the cursor.
 
-## 为什么断言是两条，而且方向相反
+## Two assertions, pulling against each other
 
-修复的两半是互相拉扯的，只做一半会造出另一个更糟的 bug：
+The fix has two halves, and doing only one of them creates a worse bug:
 
-| 断言                         | 保证                   | 只做另一半会怎样                  |
-| ---------------------------- | ---------------------- | --------------------------------- |
-| 存进去的 filter 原样读得回来 | 面板能继续编辑这条条件 | 就是 T6568 本身                   |
-| 没填完的条件不参与取数       | 视图在编辑期间照常可用 | 一条 `hasAnyOf []` 会把所有行筛没 |
+| assertion                                | what it protects                         | doing only the other half            |
+| ---------------------------------------- | ---------------------------------------- | ------------------------------------ |
+| the saved filter reads back unchanged    | the panel can keep editing the condition | this is T6568 itself                 |
+| the unfinished condition filters nothing | the view stays usable while being edited | a `hasAnyOf []` would hide every row |
 
-所以 checkpoint 里两条都断言。只留第一条的话，一个「保留条件 + 拿它去查」的实现会让整张
-表变空，而用例照样绿。
+So the checkpoint asserts both. With only the first, an implementation that
+keeps the condition _and_ queries with it would empty the whole table while the
+case stayed green.
 
-## 夹具
+## Fixture
 
-一张两列的表：`Title` 单行文本、`Tags` 多选（选项名不参与任何断言——没填完的条件本来就
-不带值，这才是重点）。种 3 行，只有 `kept` 会被完整的那半条件选中。
+A two-column table: `Title` (single line text) and `Tags` (multiple select —
+the choice names take part in no assertion, since the unfinished condition
+carries no value, which is the entire point). Three rows, of which only `kept`
+is selected by the finished half of the filter.
 
-种 3 行而不是 1 行是有讲究的：只有一行时，「完整条件仍然生效」和「没填完的条件把所有行
-都藏了」在断言上长得一模一样。
+Three rows rather than one is deliberate: with a single row, "the finished
+condition still selects" and "the unfinished one hid everything" look identical.
 
-保存的 filter 是固定形状，写在 runner 里而不是用例里：
+The saved filter has a fixed shape, written in the runner rather than in the
+case:
 
 ```
 and
-├── Title  is        "kept"        ← 填完的那半
-└── Tags   hasAnyOf  null          ← 面板刚选完字段时写下的那半
+├── Title  is        "kept"        ← the finished half
+└── Tags   hasAnyOf  null          ← what the panel writes on picking a field
 ```
 
-## 阶段与判定边界
+## About v2
 
-**setup（失败 = 💥 error）**：建表、种 3 行、拿默认视图，然后**在还没存 filter 时**读一次
-视图，断言 3 行都在。下面所有结论都是「视图返回了哪些行」，如果空 filter 的视图就已经少
-行了，那是另一个故障，该判 💥。
+The code that dropped the condition is v2's `ViewSourceFilter`. There is one
+engine here and the case does not declare it; the runner proves it in setup by
+saving an ordinary filter first and asserting
+`x-teable-v2-feature=updateViewFilter` on that response. That does two things at
+once: it shows saving a filter works at all (otherwise the question below is
+unanswerable), and it shows the request went to the v2 feature the bug lives in.
+The first version of this case ran on v1 and was meaningless green in every
+column. See `framework/engine.ts`.
 
-**checkpoint `incomplete-condition-survives-and-filters-nothing`（失败 = ❌ bug 复现）**：
-存 filter → 读视图，比对 filter 与发出去的完全一致 → 按视图取数，断言只回来 `kept`。
+## Phases and the verdict boundary
 
-## 关于 v2
+**Setup (failure = 💥 error).** Create the table, seed 3 rows, take the default
+view, and read it **before any filter is saved**, asserting all 3 rows are
+there. Every conclusion below is "which rows did the view return", so a view
+that already hid rows would make the checkpoint answer a different question.
 
-丢条件的是 v2 的 `ViewSourceFilter`。这里只有 v2 一个引擎，用例不用声明；runner 在
-setup 里先存一次**没有半截条件**的普通 filter，对那个响应断言
-`x-teable-v2-feature=updateViewFilter`——它同时证明两件事：存 filter 这条路本身是通的
-（否则下面的问题无从问起），以及走的确实是出 bug 的那个 v2 feature。这条用例的第一版正是
-在走 v1 的时候，在每一列都给出了毫无意义的绿。见 `framework/engine.ts`。
+**Checkpoint `incomplete-condition-survives-and-filters-nothing` (failure = ❌
+bug reproduced).** Save the filter, read the view back and compare it to what
+was sent, then read rows through the view and assert only `kept` comes back.
 
-## 期望状态
+The filter comparison canonicalises each condition to a
+`(fieldId, operator, value)` triple: the product answers the same conditions
+with its own key ordering, so comparing raw JSON would report "the filter came
+back changed" on every run. What is compared is what the filter _means_, which
+is exactly what the bug destroyed — a whole condition going missing.
 
-`status: fixed`。修复已在 develop 上（3f15439a3），此后再复现就是回归。
+## Expected status
+
+`status: fixed`. The fix is on develop (3f15439a3); reproducing it again is a
+regression.

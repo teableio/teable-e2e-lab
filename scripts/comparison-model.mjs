@@ -159,16 +159,16 @@ const renderCell = (cell) =>
 
 const describeTransition = (transition) =>
   transition.kind === "fixed-between"
-    ? `修复落在 ${transition.fromShort}..${transition.toShort}`
-    : `回归出现在 ${transition.fromShort}..${transition.toShort}`;
+    ? `fixed between ${transition.fromShort}..${transition.toShort}`
+    : `regressed between ${transition.fromShort}..${transition.toShort}`;
 
 export const renderComparisonMarkdown = (comparison) => {
   const header = [
     "## Bug × commit",
     "",
-    `| bug 用例 | issue | 声明 | ${comparison.commits
+    `| case | issue | status | ${comparison.commits
       .map(({ short }) => `\`${short}\``)
-      .join(" | ")} | 变化点 |`,
+      .join(" | ")} | transition |`,
     `|---|---|---|${comparison.commits.map(() => "---").join("|")}|---|`,
   ];
   const body = comparison.rows.map(
@@ -181,16 +181,17 @@ export const renderComparisonMarkdown = (comparison) => {
   );
   const legend = [
     "",
-    "图例：✅ 修复成立 · ⬜ 已知未修（符合预期） · 💡 声明 open 但未复现 · ❌ 该版本上 bug 复现 · 💥 用例未跑成 · ❓ 结果缺失",
+    "Legend: ✅ fix holds · ⬜ known-unfixed, as declared · 💡 declared open but did not reproduce · ❌ bug reproduced on this revision · 💥 case could not run · ❓ result missing",
     "",
-    "列顺序即 dispatch 传入顺序，系统不按 git 图重排。只有最右的 gating 列执行判定：" +
-      "❌ 出现在 gating 列才算回归判失败，出现在历史列只是修复前的事实；💥 在任何列都判失败。",
+    "Columns are in the order they were dispatched; nothing is reordered by the git graph. " +
+      "Only the rightmost gating column is judged: ❌ there is a regression and fails the run, " +
+      "while ❌ on an older column is simply the world before the fix. 💥 fails on every column.",
   ];
 
   const sections = [...header, ...body, ...legend];
 
   if (comparison.failures.regressions.length > 0) {
-    sections.push("", "### ❌ 回归");
+    sections.push("", "### ❌ Regressions");
     for (const failure of comparison.failures.regressions) {
       sections.push(
         `- ${failure.caseId} @ \`${failure.sha.slice(0, 10)}\`${
@@ -200,7 +201,7 @@ export const renderComparisonMarkdown = (comparison) => {
     }
   }
   if (comparison.failures.errors.length > 0) {
-    sections.push("", "### 💥 用例未跑成");
+    sections.push("", "### 💥 Cases that could not run");
     for (const failure of comparison.failures.errors) {
       sections.push(
         `- ${failure.caseId} @ \`${failure.sha.slice(0, 10)}\`${
@@ -212,7 +213,7 @@ export const renderComparisonMarkdown = (comparison) => {
   if (comparison.failures.missing.length > 0) {
     sections.push(
       "",
-      "### ❓ 结果缺失（fail-closed：缺格即失败）",
+      "### ❓ Missing results (fail-closed: a missing cell fails the run)",
       ...comparison.failures.missing.map(
         (failure) => `- ${failure.caseId} @ \`${failure.sha.slice(0, 10)}\``,
       ),
@@ -221,7 +222,7 @@ export const renderComparisonMarkdown = (comparison) => {
   if (comparison.notices.unexpectedlyFixed.length > 0) {
     sections.push(
       "",
-      "### 💡 意外修复 — 请人工确认并把用例的 bug.status 改为 fixed",
+      "### 💡 Unexpectedly fixed — confirm the fix, then set the case's bug.status to fixed",
       ...comparison.notices.unexpectedlyFixed.map(
         (notice) =>
           `- ${notice.caseId} (${notice.issue}) @ \`${notice.sha.slice(0, 10)}\``,

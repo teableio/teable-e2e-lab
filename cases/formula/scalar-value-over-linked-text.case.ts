@@ -7,7 +7,7 @@ import { defineBugCase } from "../../framework/types";
 // and the user's cell just stayed empty forever.
 export default defineBugCase({
   id: "formula/scalar-value-over-linked-text",
-  title: "公式 VALUE() 读关联表的文本数字，结果要真的落到单元格",
+  title: "A formula reading a linked text number reaches the cell",
   runner: "computed-value-lands",
   timeoutMs: 180_000,
   bug: {

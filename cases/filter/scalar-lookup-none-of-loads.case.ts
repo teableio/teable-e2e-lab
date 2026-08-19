@@ -6,7 +6,8 @@ import { defineBugCase } from "../../framework/types";
 // with isNoneOf, and that path compiled the lookup as if it held a JSON array.
 export default defineBugCase({
   id: "filter/scalar-lookup-none-of-loads",
-  title: "视图对标量 lookup 用 isNoneOf 筛选时，记录列表仍然加载得出来",
+  title:
+    "A view filtering a scalar lookup with isNoneOf still loads its records",
   runner: "lookup-filter-view",
   timeoutMs: 180_000,
   bug: {

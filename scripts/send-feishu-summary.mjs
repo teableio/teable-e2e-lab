@@ -46,7 +46,7 @@ const columnLabel = ({ ref, short }) =>
   /^[0-9a-f]{7,40}$/i.test(ref) ? short : ref;
 
 export const buildComparisonGrid = (comparison) => {
-  const header = ["用例", ...comparison.commits.map(columnLabel)];
+  const header = ["case", ...comparison.commits.map(columnLabel)];
   const rows = comparison.rows.map((row) => [
     row.caseId,
     ...row.cells.map((cell) =>
@@ -79,17 +79,17 @@ export const buildFeishuCard = ({ comparison, runUrl }) => {
   const failureLines = [];
   for (const failure of comparison.failures.regressions) {
     failureLines.push(
-      `❌ **回归** ${failure.caseId} @ ${failure.sha.slice(0, 10)}`,
+      `❌ **Regression** ${failure.caseId} @ ${failure.sha.slice(0, 10)}`,
     );
   }
   for (const failure of comparison.failures.errors) {
     failureLines.push(
-      `💥 未跑成 ${failure.caseId} @ ${failure.sha.slice(0, 10)}`,
+      `💥 Could not run ${failure.caseId} @ ${failure.sha.slice(0, 10)}`,
     );
   }
   for (const failure of comparison.failures.missing) {
     failureLines.push(
-      `❓ 结果缺失 ${failure.caseId} @ ${failure.sha.slice(0, 10)}`,
+      `❓ Result missing ${failure.caseId} @ ${failure.sha.slice(0, 10)}`,
     );
   }
   if (failureLines.length > 0) {
@@ -97,14 +97,14 @@ export const buildFeishuCard = ({ comparison, runUrl }) => {
   }
   if (comparison.notices.unexpectedlyFixed.length > 0) {
     lines.push(
-      "💡 **声明 open 但未复现，请确认修复并把用例 status 改为 fixed：**",
+      "💡 **Declared open but did not reproduce — confirm the fix, then set status to fixed:**",
       ...comparison.notices.unexpectedlyFixed.map(
-        (notice) => `- ${notice.caseId}（${notice.issue}）`,
+        (notice) => `- ${notice.caseId} (${notice.issue})`,
       ),
       "",
     );
   }
-  lines.push(`[查看运行与完整对比表](${runUrl})`);
+  lines.push(`[Open the run and the full comparison table](${runUrl})`);
 
   return {
     msg_type: "interactive",
@@ -114,8 +114,8 @@ export const buildFeishuCard = ({ comparison, runUrl }) => {
         title: {
           tag: "plain_text",
           content: failed
-            ? "❌ e2e-lab 回归检查未通过"
-            : "✅ e2e-lab 回归检查通过",
+            ? "❌ e2e-lab regression check failed"
+            : "✅ e2e-lab regression check passed",
         },
         template: failed ? "red" : "green",
       },

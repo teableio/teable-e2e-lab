@@ -9,7 +9,7 @@ import { defineBugCase } from "../../framework/types";
 // live in one checkpoint.
 export default defineBugCase({
   id: "base-share/save-into-existing-base-twice",
-  title: "同一个分享连续转存进同一个 Base 两次，都成功且都看得见",
+  title: "Saving one share into the same base twice succeeds and stays visible",
   runner: "share-save",
   timeoutMs: 180_000,
   bug: {

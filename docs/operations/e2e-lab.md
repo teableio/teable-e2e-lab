@@ -59,8 +59,8 @@ status without verifying, which is how the metadata rots.
 ## Reading the table
 
 ```
-| bug 用例          | issue | 声明  | `aaaa...` | `bbbb...` | `cccc...` | 变化点              |
-| record/t1481-...  | T1481 | fixed |    ❌     |    ❌     |    ✅     | 修复落在 bbbb..cccc |
+| case              | issue | status | `aaaa` | `bbbb` | `cccc` | transition             |
+| record/t1481-...  | T1481 | fixed  |   ❌   |   ❌   |   ✅   | fixed between bbbb..cccc |
 ```
 
 Column order is the dispatch order — pass commits oldest-first; the system

@@ -14,7 +14,7 @@ import { defineBugCase } from "../../framework/types";
 // configuration of every deployment east of UTC.
 export default defineBugCase({
   id: "record/collapsed-date-group-stays-hidden",
-  title: "折叠日期分组后，该组的行不再出现在行列表里",
+  title: "Collapsing a date group hides exactly that group's rows",
   runner: "group-collapse",
   timeoutMs: 120_000,
   bug: {

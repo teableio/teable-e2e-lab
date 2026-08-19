@@ -1,79 +1,100 @@
 # lookup/user-snapshot-date-sort-spans-group
 
-## Bug 来源
+## Where the bug came from
 
-T6751「排序分组下回款日期排序混乱」。用户按人分组、按回款日期倒序，同一个人的组里日期
-依次出现 **26 年、25 年、26 年**。
+T6751, reported as "sorting is scrambled when grouped": grouped by person and
+sorted by payment date descending, the dates inside one person's group ran
+**2026, 2025, 2026**.
 
-修复：[teable-ee 89477a9bd](https://github.com/teableio/teable-ee/commit/89477a9bd) /
-PR #3026。
+Fixed by [teable-ee 89477a9bd](https://github.com/teableio/teable-ee/commit/89477a9bd)
+(PR #3026).
 
-根因：分组头把同一个协作者的**多份存储快照**折成一个 bucket（认的是 id + title），但生成
-的 SQL 仍然按**原始 JSON** 排序。协作者的快照里除了 id/title 还带 email、avatarUrl，这些
-在 base 的生命周期里会漂移——每行留着它上次计算时的那一份。于是「按日期倒序」实际上是
-「先按快照 JSON 排，再在每份快照内部按日期排」，一个视觉上的组里出现了两段各自倒序的
-日期。
+The group header folds **several stored snapshots** of the same collaborator
+into one bucket, keyed on id and title, but the generated SQL still ordered by
+the **raw JSON**. A collaborator's snapshot carries email and avatarUrl
+alongside id and title, and those drift over a base's lifetime — every row keeps
+whatever the snapshot looked like the last time it was computed. So "sort by
+date descending" was really "sort by snapshot JSON, then by date within each
+snapshot", and one visually single group contained two separately descending
+runs of dates.
 
-## 为什么夹具要写数据库
+## Why the fixture is written to the database
 
-快照漂移不是任何一个 API 能造出来的状态：它是协作者换头像、改邮箱之后，老行留着旧快照
-自然形成的。想纯靠 API 复现，只能在用例中途去改真实用户账号——更慢，而且会把种子用户改
-掉，污染后面每一个用例。
+Snapshot drift is not a state any API produces: it is what accumulates after a
+collaborator changes their avatar or email while old rows keep the old
+snapshot. Reproducing it through the API alone would mean mutating a real user
+account mid-case — slower, and it would leave the seed user changed for every
+case that runs afterwards.
 
-所以这条用例用 `framework/fixture-db.ts` 直接写库注入漂移。规则在那个文件里写着，简述：
-**数据库只用于搭夹具，观察一律走公共 API**。这条规则是被强制的，不是靠自觉——在
-`bugCheckpoint()` 里面拿数据库句柄会直接抛错，而 setup 阶段抛错判 💥（用例没跑成），
-不会被误读成「bug 复现」。
+So this case injects the drift with `framework/fixture-db.ts`. The rule lives in
+that file; in short: **the database is for building fixtures, the observation
+always goes through the public API**. It is enforced rather than trusted —
+asking for a database handle inside `bugCheckpoint()` throws, and a setup-phase
+throw is 💥 (the case could not run), never mistaken for the bug.
 
-理由也简单：用户报的故障永远是 API 干的事（500、行序不对、值没了）。一个既写库又读库的
-用例证明的是 SQL 的性质，不是产品的性质。
+The reasoning is simple: what a user reports is always something the API did (a
+500, a wrong row order, a value that came back missing). A case that both writes
+and reads the database proves something about SQL, not about the product.
 
-## 夹具
+## Fixture
 
 ```
-Source 表                    Host 表
+Source table                 Host table
 ──────────────               ─────────────────────────────
-Order (文本)          ←──    Order (link, manyOne)
-Owner (成员, 单选)    ←──    Owner Lookup (lookup)
-                             Name (文本)
-                             Payment Date (日期)
+Order (text)          ←──    Order (link, manyOne)
+Owner (user, single)  ←──    Owner Lookup (lookup)
+                             Name (text)
+                             Payment Date (date)
 ```
 
-Source 表两行 `older-orders` / `newer-orders`，Owner 都是同一个种子用户。Host 表 5 行，
-3 行链到 older、2 行链到 newer。
+The source table holds `older-orders` and `newer-orders`, both owned by the same
+seeded user. The host table holds 5 rows: 3 linked to older, 2 to newer.
 
-然后往 Host 表的 lookup 列直接写两份快照——**id 和 title 完全相同**，只有 extras 不同：
+Then two snapshots are written directly into the host table's lookup column —
+**identical id and title**, differing only in the extras:
 
-| 组           | 快照 extras                          | 行                        |
+| group        | snapshot extras                      | rows                      |
 | ------------ | ------------------------------------ | ------------------------- |
-| older-orders | `email: a@example.com`               | 2025-07、2025-04、2024-11 |
-| newer-orders | `email: z@example.com` + `avatarUrl` | 2026-02、2026-01          |
+| older-orders | `email: a@example.com`               | 2025-07, 2025-04, 2024-11 |
+| newer-orders | `email: z@example.com` + `avatarUrl` | 2026-02, 2026-01          |
 
-id/title 相同是关键：那是分组折叠认的身份，改了它就是两个真的不同的人，问题不成立。
+Identical id and title is the crux: that is the identity the group folds on.
+Change it and they are genuinely two different people, and the question does not
+arise.
 
-**日期必须跨组交错**：older 组全是 2024–2025，newer 组全是 2026，正确的整体倒序是
-`2026-02, 2026-01, 2025-07, 2025-04, 2024-11`，而「每份快照内部各自倒序」是
-`2025-07, 2025-04, 2024-11, 2026-02, 2026-01`——两者不同，用例才有分辨力。runner 会在
-建表之前就把这条性质算出来验一遍，不成立直接判用例不可跑。
+**The dates must interleave across the groups.** The older group is all
+2024–2025 and the newer group all 2026, so the correct overall descending order
+is `2026-02, 2026-01, 2025-07, 2025-04, 2024-11`, while "descending within each
+snapshot" is `2025-07, 2025-04, 2024-11, 2026-02, 2026-01`. The two differ,
+which is what gives the case its discriminating power. The runner computes and
+checks that property before creating anything, and refuses to run a fixture
+where it does not hold.
 
-行是**按组、老日期在前**插入的，所以插入顺序恰好是正确结果的反面：一个悄悄退回行号排序
-的实现不可能蒙混过关。
+Rows are inserted group by group, oldest dates first, so insertion order is the
+exact opposite of the required result: an implementation quietly falling back to
+row order cannot pass by accident.
 
-## 阶段与判定边界
+## Phases and the verdict boundary
 
-**夹具校验（失败 = 💥 error）**：注入漂移后按 lookup 分组读一次，断言两件事——5 行都读得
-回来，且**只有 1 个分组头**。如果漂移把组拆开了，「组内日期是否贯通」这个问题就不存在
-了，那是另一个故障。
+**Fixture verification (failure = 💥 error).** After injecting the drift, read
+grouped by the lookup once and assert two things: all 5 rows come back, and
+there is **exactly one group header**. If the drift had split the group, "do the
+dates run straight down inside the group" is a question about something that no
+longer exists.
 
-**路由校验（失败 = 💥 error）**：对上面那次分组读的响应断言 `x-teable-v2=true` 且
-`x-teable-v2-feature=getRecords`——就是 bug 拼 ORDER BY 的那次读本身。v1 还在、还会应答，
-少了这一步，悄悄退回 v1 的一次运行会给出一行毫无意义的绿；这个坑是真踩过的，见
-`framework/engine.ts`。
+**Routing check (failure = 💥 error).** Assert on that same grouped read that
+`x-teable-v2=true` and `x-teable-v2-feature=getRecords` — the very read whose
+ORDER BY the bug builds. v1 is still present and still answers; without this, a
+run that quietly fell back to it would produce one meaningless green row. That
+is not hypothetical; see `framework/engine.ts`.
 
-**checkpoint `date-sort-spans-the-whole-group`（失败 = ❌ bug 复现）**：按 lookup 分组 +
-按日期倒序取数，断言顺序正好是整体倒序。顺序不对时，报错会额外判断一句「是不是正好等于
-每份快照各自倒序」，把这个 bug 和其它排序故障区分开。
+**Checkpoint `date-sort-spans-the-whole-group` (failure = ❌ bug reproduced).**
+Read grouped by the lookup and sorted by date descending, and assert the order
+is exactly the overall descending one. When it is wrong, the error additionally
+reports whether the order matches "descending within each snapshot", which
+separates this bug from other sorting faults.
 
-## 期望状态
+## Expected status
 
-`status: fixed`。修复已在 develop 上（89477a9bd），此后再复现就是回归。
+`status: fixed`. The fix is on develop (89477a9bd); reproducing it again is a
+regression.

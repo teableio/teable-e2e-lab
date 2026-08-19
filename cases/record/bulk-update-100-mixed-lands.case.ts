@@ -9,7 +9,7 @@ import { defineBugCase } from "../../framework/types";
 // not about the data model.
 export default defineBugCase({
   id: "record/bulk-update-100-mixed-lands",
-  title: "批量更新 100 行的每一个字段后，每一格都真的落库",
+  title: "Bulk-updating 100 rows lands on every single cell",
   runner: "record-flow",
   timeoutMs: 180_000,
   bug: {

@@ -1,78 +1,97 @@
 # base-share/save-into-existing-base-twice
 
-## Bug 来源
+## Where the bug came from
 
-T6840。用户从分享页把一个 App 转存到**已有的 Base**（`Save to my space` →
-`Existing base`），点完 `Duplicate` 页面提示成功，打开目标 Base 却什么都没看到；再转存
-一次，直接弹 `Internal server error`。
+T6840. A user saved a shared app into an **existing base** (`Save to my space`
+→ `Existing base`), the page reported success after `Duplicate`, and the target
+base showed nothing. Saving it a second time answered `Internal server error`.
 
-修复：[teable-ee 3b1bfd0d7](https://github.com/teableio/teable-ee/commit/3b1bfd0d7) /
-PR #3071。
+Fixed by [teable-ee 3b1bfd0d7](https://github.com/teableio/teable-ee/commit/3b1bfd0d7)
+(PR #3071).
 
-同一个用户动作下面压着两个独立故障，用例把它们放在一个 checkpoint 里，因为对用户来说
-它们是同一件事没做成：
+One user action, two independent faults. The case puts them in a single
+checkpoint, because to the user they are one thing that did not work:
 
-1. **第二次转存 500。** v2 的转存路径 `createFoldersV2` 直接按原名 insert 文件夹，
-   撞上 `base_node_folder (base_id, name)` 唯一索引。v1 那条路径早就用 `getUniqName`
-   去重了，v2 漏了。
-2. **第一次转存看不见。** v2 转存用裸 SQL 写 `base_node` 行，不发任何 per-resource
-   事件，目标 Base 的节点列表缓存于是一直是转存前那份——直到有别的节点变更顺手把缓存
-   冲掉。修复给 `BaseNodeListener` 加了 `BASE_SHARE_COPY_COMPLETE` 监听。
+1. **The second save answered 500.** The v2 copy path `createFoldersV2`
+   inserted folders under their original names and hit the
+   `base_node_folder (base_id, name)` unique index. The v1 path had deduplicated
+   with `getUniqName` for a long time; v2 never did.
+2. **The first save was invisible.** The v2 copy writes `base_node` rows with
+   raw SQL and emits no per-resource events, so the target base's node-list
+   cache kept serving its pre-copy contents until some unrelated node change
+   happened to flush it. The fix adds a `BASE_SHARE_COPY_COMPLETE` listener to
+   `BaseNodeListener`.
 
-## 夹具为什么只分享一个文件夹，不带表
+## Why the fixture shares a folder and nothing else
 
-第 2 个故障是被缓存藏起来的，而**建表会发 `TABLE_CREATE` 事件，顺手把同一份缓存冲掉**。
-分享里只要带一张表，"转存成功但不可见"就永远观察不到——用例会在有 bug 的版本上照样绿。
-所以夹具是一个空文件夹、一张表都没有：这份缓存要么被转存路径自己冲掉，要么没人冲。
+The second fault is hidden by a cache, and **creating a table emits
+`TABLE_CREATE`, which flushes that same cache**. Put one table in the share and
+"saved but invisible" becomes unobservable — the case would be green on a
+version that has the bug. So the fixture is one empty folder and no tables at
+all: either the copy path flushes that cache itself or nobody does.
 
-这也正是线上现场的形状——用户转存的是**文件夹里的一个 App**，不是表。
+That is also the shape of the production report — what the user was saving was
+**an app inside a folder**, not a table.
 
-## 阶段与判定边界
+## Phases and the verdict boundary
 
-**setup（失败 = 💥 error）**
+**Setup (failure = 💥 error)**
 
-1. 在种子 space 里建一个源 Base，建一个名为 `Shared Folder` 的文件夹节点；
-2. 对这个文件夹建分享，并 `allowSave: true`——转存进别人的 Base 默认是关的，不打开的话
-   每次转存都是 403，用例根本问不到它要问的问题；
-3. 再建一个目标 Base。
+1. Create a source base in the seed space and a folder node named
+   `Shared Folder`.
+2. Share that folder and set `allowSave: true` — saving into someone else's
+   base is off by default, and without it every save answers 403 and the case
+   never reaches its question.
+3. Create the target base.
 
-**夹具校验（失败 = 💥 error）**：读一次目标 Base 的节点列表，断言里面还没有任何叫
-`Shared Folder*` 的文件夹。这一步同时干两件事——证明初始状态干净（否则"转存的文件夹出现
-了"无从判断），并且**把节点列表缓存热起来**：忘记冲缓存的转存路径能继续拿来糊弄人的，
-就是这一份。
+**Fixture verification (failure = 💥 error).** Read the target base's node list
+and assert it holds no folder named like `Shared Folder`. This does two jobs:
+it proves the starting state is clean (otherwise "the saved folders showed up"
+is unanswerable), and it **warms the node-list cache** — that cached list is
+the only thing a copy that forgets to flush it can keep serving.
 
-**checkpoint `repeated-save-into-same-base-lands`（失败 = ❌ bug 复现）**
+**Checkpoint `repeated-save-into-same-base-lands` (failure = ❌ bug reproduced)**
 
-- 用同一个 shareId、同一个 `baseId` 连续转存 2 次，每次都必须是 200。两次的结果是**先
-  收集再判定**，不是遇到第一个坏的就抛：failed 在第几次、什么状态码，是这类故障最有用的
-  事实，先抛就把后面的序列丢了。
-- 然后**轮询**目标 Base 的节点列表，直到文件夹名正好是 `["Shared Folder", "Shared
-Folder 2"]`。缓存冲刷发生在转存响应之后，读一次会误判；轮询超时（15s）就是"转存说它
-  成功了、Base 看上去没变"这个用户视角故障的判定形式。
+- Save the same share into the same `baseId` twice; both must answer 200. The
+  outcomes are **collected first and judged after**, rather than throwing on
+  the first bad one: which save broke and with what status is the most useful
+  fact about this failure, and throwing discards the rest of the sequence.
+- Then **poll** the target base's node list until the folder names are exactly
+  `["Shared Folder", "Shared Folder 2"]`. The cache flush runs after the copy
+  has already answered, so reading once would misjudge it; exhausting the 15s
+  budget is how "the save said it worked and the base looks unchanged" — the
+  user's view of this failure — reproduces.
 
-checkpoint 里抛的任何东西——500、断言不过、轮询超时——都算 bug 复现。setup 和夹具校验
-放在外面，是为了让老版本上"分享 API 还不长这样"之类的问题判 💥 而不是误判成这个 bug。
+Anything thrown inside the checkpoint counts as the bug: a 500, a failed
+assertion, or the poll timing out. Setup and fixture verification stay outside
+so that problems like "the share API did not look like this yet on an old
+revision" are judged 💥 rather than mistaken for this bug.
 
-## 期望名字为什么是 "Shared Folder 2"
+## Why the expected name is "Shared Folder 2"
 
-`getUniqName`（`@teable/core`）的规则：名字没被占就原样用，占了就从 2 开始往后找第一个
-空位，拼成 `<名字> <n>`。所以 N 次转存的期望是 `名字, 名字 2, ..., 名字 N`。用例里
-`expectedFolderNames` 就是这条规则的复刻，`saveCount` 调大也仍然成立。
+`getUniqName` (`@teable/core`): an unused name is kept as is; a taken one gets
+the first free `<name> <n>` starting from 2. So N saves expect
+`name, name 2, ..., name N`, and `expectedFolderNames` in the runner is a
+restatement of that rule, still correct if `saveCount` is raised.
 
-断言比对的是**排序后的名字集合**，不是某一个名字存在——"两次转存只落了一次"和"第二次
-覆盖了第一次"在"存在 Shared Folder 2"这种断言下长得一样。
+The assertion compares the **sorted set of names**, not the presence of one
+name: "only one of the two saves landed" and "the second overwrote the first"
+are indistinguishable under an assertion like "Shared Folder 2 exists".
 
-## 数据确定性
+## Deterministic data
 
-两个 Base 的名字都带 runId 防撞；文件夹名是固定字面量，因为期望值就是它的函数。转存
-`withRecords: false`——这个 bug 与记录内容无关，带记录只会让用例更慢更脆。
+Both base names carry the runId to avoid collisions; the folder name is a fixed
+literal, because the expected value is a function of it. The copy runs with
+`withRecords: false` — this bug has nothing to do with record content, and
+carrying records would only make the case slower and more fragile.
 
-## 清理
+## Cleanup
 
-finally 里按 target → source 的顺序 `permanentDeleteBase`，清理失败只记 warning——那是
-测试自己的家务事，产品没错。
+`permanentDeleteBase` in a `finally`, target before source. A failed cleanup is
+only a warning — that is the test's own housekeeping, not the product being
+wrong.
 
-## 期望状态
+## Expected status
 
-`status: fixed`。修复已合入 develop（3b1bfd0d7，2026-08-19），此后再复现就是回归，在
-gating 列判红。
+`status: fixed`. The fix is on develop (3b1bfd0d7, 2026-08-19); reproducing it
+again is a regression.

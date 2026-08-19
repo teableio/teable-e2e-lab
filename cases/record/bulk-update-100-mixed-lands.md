@@ -1,70 +1,88 @@
 # record/bulk-update-100-mixed-lands
 
-移植自本仓库前身（Python 版接口验收系统）的 `record/update-100-mixed`，那份设计的
-完整论证保留在下面。
+Ported from `record/update-100-mixed` in this repository's predecessor (a
+Python acceptance system). The full argument for its design is kept below.
 
-## 目标
+## What it covers
 
-覆盖批量更新这条写路径：100 行已有记录，分四批把每一行的**每一个字段**改成新值，
-然后逐格证明改的都落了。
+The bulk-update write path: 100 existing rows, four batches, **every field of
+every row** changed to a new value, then a cell-by-cell proof that all of it
+landed.
 
-它要抓的回归是**「更新只落了一部分」**——接口返回 200，行数一个没少，抽样还可能
-正好抽到改对了的那几行，但实际有一批或某一列没跟上。这类故障用状态码、用行数、
-用抽样都看不见，只有全量逐格比对能看见。
+The regression it exists to catch is **"the update answered 200 and only part
+of it landed"** — no rows missing, and sampling may well hit the rows that did
+update, while one batch or one column silently did not. Status codes, row
+counts, and sampling are all blind to that class of failure. Only a full scan
+sees it.
 
-## 阶段与判定边界
+## Phases and the verdict boundary
 
-checkpoint 之前的任何失败都是 💥 error（用例没跑成），checkpoint 内的失败才是
-bug 复现：
+Anything failing before the checkpoint is 💥 error (the case could not run);
+only a failure inside it is the bug reproducing.
 
-**setup（失败 = error）**：在 seed base 里建独立表（四种字段：singleLineText /
-longText / number / checkbox），显式传 `records: []`；按 revision 1 建 100 行；
-全量扫描逐格证明 100 行**都停在 revision 1**。这一步不是形式主义——所有结论都
-建立在「行的初始值不等于目标值」上，如果行一开始就是目标值，一个完全坏掉的更新
-也能扫得干干净净。扫描顺序同时建立行号 → record id 的映射。
+**Setup (failure = error).** Create a dedicated table in the seed base with
+four field types (singleLineText / longText / number / checkbox), passing
+`records: []` explicitly; seed 100 rows at revision 1; full-scan them to prove
+every row and every cell **sits at revision 1**. That step is not ceremony:
+every conclusion below rests on the rows starting at values that differ from
+the targets, and if a row already held its target value, a completely broken
+update would still scan clean. The scan also establishes the row-number →
+record-id mapping.
 
-**操作（失败被记录，不抛）**：按 `batchSize=25` 分四批 `updateRecords` 把每行改成
-revision 2。批次非 2xx 不抛异常，记下状态码继续——「100 行里改了几行」是排查这类
-失败时最有用的事实。
+**The measured write (failures recorded, not thrown).** Four `updateRecords`
+calls of `batchSize=25`, taking every row to revision 2. A non-2xx batch is
+recorded and the run continues — "how many of the 100 rows were updated" is the
+single most useful fact when diagnosing this failure, and throwing on the first
+bad batch discards it.
 
-**checkpoint `every-cell-landed`（失败 = bug 复现）**：
+**Checkpoint `every-cell-landed` (failure = ❌ bug reproduced):**
 
-- 四批全部 2xx；
-- 四批响应回声的记录数合计等于 100——实测这个接口对不认识的 record id 不报错，
-  而是从返回数组里悄悄剔掉，所以「响应里回来了几条」比状态码早一步暴露服务端
-  跳过了行；
-- 全量扫描：每一行每一列等于按 revision 2 本地推导的期望值（不匹配最多列前 10 条）；
-- 整行仍停在 revision 1 的行数为 0——它回答截断列表回答不了的问题：「3 行没更新」
-  和「100 行全没更新」在前 10 条里长得一模一样；
-- 行数仍为 100；record id 顺序与 seed 记录的完全一致——证明更新是原地改而不是
-  删了重建。
+- all four batches answered 2xx;
+- the record counts echoed back by the four responses sum to 100 — this
+  endpoint does not error on a record id it does not recognize, it quietly
+  drops it from the returned array, so "how many came back" exposes a
+  server-side skip one step earlier than the status code does;
+- the full scan: every cell of every row equals the value derived locally for
+  revision 2 (at most the first 10 mismatches are printed);
+- the number of rows still entirely at revision 1 is zero — it answers what a
+  truncated list cannot: "3 rows were not updated" and "none of the 100 were
+  updated" look identical in the first 10 lines;
+- the row count is still 100, and the record-id order matches the seeded one
+  exactly, proving the update edited in place rather than deleting and
+  recreating.
 
-## 数据确定性
+## Deterministic data
 
-值是 (行号, revision) 的纯函数，公式在
-[`framework/runners/record-values.ts`](../../framework/runners/record-values.ts)：
+Values are a pure function of (row number, revision); the formula lives in
+[`framework/runners/record-values.ts`](../../framework/runners/record-values.ts):
 
-| 类型           | revision 1（seed）            | revision 2（update 后）          |
+| type           | revision 1 (seed)             | revision 2 (after update)        |
 | -------------- | ----------------------------- | -------------------------------- |
 | singleLineText | `Title-7`                     | `Title-7-r2`                     |
 | longText       | `Description row 7\nline two` | `Description row 7-r2\nline two` |
 | number         | `7 × 1`                       | `7 × 2`                          |
-| checkbox       | 偶数行 `true`，奇数行空       | **奇偶反转**                     |
+| checkbox       | even rows `true`, odd empty   | **parity inverted**              |
 
-承重性质：对任意一行的任意一格，revision 1 ≠ revision 2。少了它，「这一行没被
-更新」在那一格上就是隐形的。由 `record-values.test.js` 的
-`no cell survives a revision bump` 守着，不是靠读代码相信。
+The load-bearing property: for every row and every field, revision 1 ≠ revision 2. Without it, "this row was never updated" is invisible on any cell where the
+two revisions coincide. It is guarded by the `no cell survives a revision bump`
+test in `record-values.test.js` rather than trusted by reading the code.
 
-**写显式 null，读回来是没有这个键**：PATCH body 里省略字段则保持原值，清空
-checkbox 必须显式传 `null`；清掉之后读回来整个键不存在。所以请求形状
-（`updatePayloadRow`，每个字段都写）和期望形状（`expectedRow`，空格子不出现）
-不对称，且比对是双向的——扫描结果里出现期望中不存在的键同样算不匹配，否则会漏掉
-「该清空的格子没被清空」这一整类故障。
+**Writing an explicit null reads back as an absent key.** Omitting a field in
+the PATCH body keeps its current value, so clearing a checkbox requires an
+explicit `null` — and once cleared, the key is gone from the response entirely.
+That makes the request shape (`updatePayloadRow`, which writes every field) and
+the expected shape (`expectedRow`, where empty cells are absent) asymmetric,
+and the comparison runs both ways: a key present in the scan but absent from
+the expectation is a mismatch too. Without that direction, "the cell that
+should have been cleared was not" would be an entire class of failure the case
+cannot see.
 
-## 清理
+## Cleanup
 
-finally 删除建出来的表；清理失败只记 warning——那是测试自己的家务事，产品没错。
+The table is deleted in a `finally`. A failed cleanup is only a warning — that
+is the test's own housekeeping, not the product being wrong.
 
-## 期望状态
+## Expected status
 
-`status: fixed`（哨兵语义）：这条写路径在任何被测 revision 上都必须正确。
+`status: fixed` (sentinel semantics): this write path must be correct on every
+revision under test.

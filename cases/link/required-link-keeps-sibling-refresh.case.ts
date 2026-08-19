@@ -8,7 +8,8 @@ import { defineBugCase } from "../../framework/types";
 // which the admin console will not replay.
 export default defineBugCase({
   id: "link/required-link-keeps-sibling-refresh",
-  title: "必填关联的外键被清空后，同批刷新的另一个关联字段仍然要更新到",
+  title:
+    "A required link with no foreign key does not block its sibling's refresh",
   runner: "required-link-refresh",
   timeoutMs: 180_000,
   bug: {

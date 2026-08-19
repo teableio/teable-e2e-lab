@@ -1,8 +1,8 @@
 # filter/scalar-lookup-none-of-loads
 
-## Bug 来源
+## Where the bug came from
 
-T6571。app.teable.cn 的一张 Customer 表**整个打不开**，页面报：
+T6571. A customer table on app.teable.cn **would not open at all**:
 
 ```
 Socket Error
@@ -10,64 +10,79 @@ internal_server_error: Failed to load table records:
 error: COALESCE types text and jsonb cannot be matched
 ```
 
-修复：[teable-ee d45bf6f32](https://github.com/teableio/teable-ee/commit/d45bf6f32) /
-PR #2865。
+Fixed by [teable-ee d45bf6f32](https://github.com/teableio/teable-ee/commit/d45bf6f32)
+(PR #2865).
 
-根因：标量 lookup（lookup 的目标是单选这类单值字段）在库里存成普通标量，但筛选路径按
-「多值 lookup 的 JSON 数组」去编译它，`isNoneOf` 于是拼出一个 text 和 jsonb 相比的
-COALESCE，Postgres 直接拒绝。用户看不到任何筛选报错——**表就是不出数**。
+A scalar lookup — one whose target is a single-value field such as a select — is
+stored as a plain scalar, but the filter path compiled it as the JSON array a
+multi-value lookup would be. `isNoneOf` therefore built a COALESCE comparing
+text against jsonb, which Postgres refuses. The user sees no filter error at
+all: **the table simply returns no records**.
 
-## 夹具形状
+## Fixture shape
 
 ```
-Reference 表            Host 表
-─────────────           ──────────────────────────────
-Reference (文本)   ←──  Reference (link, manyOne)
-Category (单选)    ←──  Reference Category (lookup, 标量)
+Reference table              Host table
+─────────────                ──────────────────────────────
+Reference (text)      ←──    Reference (link, manyOne)
+Category (select)     ←──    Reference Category (lookup, scalar)
 ```
 
-Reference 表每个分类一行，行名就叫分类名，这样从 link 一眼就能看出某行属于哪个分类，读
-报告不用再查一次映射。
+The reference table holds one row per category, named after the category, so a
+row's category is readable straight off the link — nobody reading the report
+has to consult a second mapping.
 
-Host 表 4 行：`Allowed` / `Excluded A` / `Excluded B` 各一行，外加一行**什么都没链**。
-最后这行是必须的——它是「筛选太狠」和「筛选坏了」的分界：`isNotEmpty` 那半必须把它去掉，
-而 `isNoneOf` 那半不该碰它。
+The host table holds 4 rows: one each for `Allowed`, `Excluded A`,
+`Excluded B`, plus one that **links to nothing**. That last row is required: it
+is what separates "the filter is too eager" from "the filter is broken" — the
+`isNotEmpty` half must remove it, and the `isNoneOf` half must not touch it.
 
-保存的视图对**同一个 lookup 字段**同时做三件事：
+The saved view does three things with **the same lookup field**:
 
-| 用法 | 条件                                                   |
-| ---- | ------------------------------------------------------ |
-| 筛选 | `isNotEmpty` + `isNoneOf ["Excluded A", "Excluded B"]` |
-| 排序 | lookup 升序，再按 `Task` 升序                          |
-| 分组 | 按 lookup 升序                                         |
+| use    | condition                                              |
+| ------ | ------------------------------------------------------ |
+| filter | `isNotEmpty` + `isNoneOf ["Excluded A", "Excluded B"]` |
+| sort   | lookup ascending, then `Task` ascending                |
+| group  | lookup ascending                                       |
 
-三者是同一个表达式的三个独立消费者，线上出问题的那个视图三样都有。
+Those are three independent consumers of the same expression, and the view that
+broke in production had all three.
 
-`excludedCategories` 声明了**两个**分类不是凑数：单元素的 `isNoneOf` 有可能被编译成一个
-等值判断，绕开出问题的数组路径。
+Declaring **two** excluded categories is not padding: a single-element
+`isNoneOf` can be compiled to an equality test, which would route around the
+array path the failure lives on.
 
-## 阶段与判定边界
+## About v2
 
-**setup（失败 = 💥 error）**：建两张表、建 link、建 lookup、种 4 行，然后**不带视图**读一
-次，断言 4 行都在、且每个有链接的行 lookup 已经算出正确的分类值。故障是「视图加载不出
-来」，如果连普通读都读不出来，那是另一回事，该判 💥 而不是误判成本 bug。
+This failure is on v2's record query path only, and the first version of this
+case was caught by exactly that: the lab defaulted to v1 back then, v1 never had
+the bug, and all four columns were green while proving nothing.
 
-**checkpoint `saved-lookup-view-loads`（失败 = ❌ bug 复现）**：存 filter / sort / group，
-然后按 viewId 取数，断言正好回来 `["allowed-task"]`。
+There is one engine here now and the case does not declare it. The runner
+asserts on **the record read itself** that `x-teable-v2=true` and
+`x-teable-v2-feature=getRecords` — the very read whose SQL the bug breaks. A
+separate probe would not be enough: a probe reaching v2 while the read under
+test does not is precisely the shape worth catching. See
+`framework/engine.ts`.
 
-这一步有两种失败形态，checkpoint 都算复现：500（bug 的原始形态，`bugCheckpoint` 会把抛出
-的异常直接算作复现），以及视图能加载但行选错了——后者更安静，只有比对行列表才看得见。
+## Phases and the verdict boundary
 
-## 关于 v2
+**Setup (failure = 💥 error).** Build both tables, the link, the lookup, and 4
+rows, then read **without a view** and assert all 4 rows are present with the
+lookup resolved to the right category on every linked row. The failure below is
+"the view will not load"; if the plain read cannot load either, that is a
+different fault and must be judged 💥 rather than mistaken for this bug.
 
-这个故障只存在于 v2 的记录查询路径上。这条用例的第一版就栽在这里：当时 lab 默认走 v1，
-而 v1 从来没有这个 bug，四列全绿、什么都没证明。
+**Checkpoint `saved-lookup-view-loads` (failure = ❌ bug reproduced).** Save the
+filter, sort and group, then read by `viewId` and assert exactly
+`["allowed-task"]` comes back.
 
-现在这里只有 v2 一个引擎，用例不用声明。runner 在 setup 里对**读记录那个响应本身**
-断言 `x-teable-v2=true` 且 `x-teable-v2-feature=getRecords`——就是 bug 会弄坏 SQL 的那次
-读。另发一个探针不够：探针走到 v2、被测的读没走到，正是要抓的形状。见
-`framework/engine.ts`。
+Two failure shapes count as reproduction here: a 500 (the original form —
+`bugCheckpoint` counts anything thrown as a reproduction) and the quieter one
+where the view loads but selected the wrong rows, which only a row-by-row
+comparison catches.
 
-## 期望状态
+## Expected status
 
-`status: fixed`。修复已在 develop 上（d45bf6f32），此后再复现就是回归。
+`status: fixed`. The fix is on develop (d45bf6f32); reproducing it again is a
+regression.

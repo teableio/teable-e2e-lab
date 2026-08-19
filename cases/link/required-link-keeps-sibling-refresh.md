@@ -1,75 +1,99 @@
 # link/required-link-keeps-sibling-refresh
 
-## Bug 来源
+## Where the bug came from
 
-T6861「计算刷新将必填 manyOne 展示列写 NULL 致死信」。线上现场：app.teable.ai 的一个计算
-任务，某行必填关联的外键（`__fk_*`）已经是空的，展示列还留着旧 JSON；被关联表一更新，
-同一步要刷新两个关联字段，生成的 SQL 在 FK 为空时走 ELSE 分支，把 NULL 写进必填展示列，
-Postgres 报 23502，任务以 `data_constraint` 进死信——**管理端拒绝重放这一类**，只能人工处理。
+T6861: a computed refresh wrote NULL into the display column of a required
+manyOne link and dead-lettered. In production, a row's required-link foreign key
+(`__fk_*`) was already empty while its display column still held the old JSON;
+an update to the foreign table triggered a refresh of both link fields in one
+step, and the generated SQL took its ELSE branch on the empty foreign key and
+wrote NULL into the required display column. Postgres answered 23502 and the
+task dead-lettered as `data_constraint` — **which the admin console refuses to
+replay**, so every occurrence needed a human.
 
-修复：[teable-ee 1fc507346](https://github.com/teableio/teable-ee/commit/1fc507346) /
-PR #3088。根因是 `UpdateFromSelectBuilder` 对必填 link 的 COALESCE 只覆盖了「FK 非空但
-join 没命中」，FK 本身为空时故意传播 NULL。
+Fixed by [teable-ee 1fc507346](https://github.com/teableio/teable-ee/commit/1fc507346)
+(PR #3088). The cause is that `UpdateFromSelectBuilder`'s COALESCE for a
+required link only covered "foreign key present but the join missed", and
+deliberately propagated NULL when the foreign key itself was empty.
 
-## 两条断言，哪条会响取决于环境
+## Two assertions, and which one fires depends on the environment
 
-用例同时断言两件事，都在一个 checkpoint 里：
+The checkpoint asserts two things at once:
 
-1. **多选关联刷新到了新标题**；
-2. **必填关联没有被清空**。
+1. the manyMany link picked up the new title;
+2. the required link was not emptied.
 
-写第 1 条是因为线上的形态是整条 UPDATE 一起失败（23502），那个本身完全没问题的多选关联
-也永远刷不到新值——用户丢的是这个。写第 2 条是因为一个"靠把必填关联写空来成功"的实现是
-另一个 bug，该红而不是悄悄绿。
+The first exists because the production shape is the whole UPDATE failing
+together (23502), so the manyMany link — which had nothing wrong with it — never
+gets its new value either. That is what the user loses. The second exists
+because an implementation that "succeeds" by blanking the required link is a
+different bug, and should be red rather than quietly green.
 
-实测在修复前的 commit（d3bf3f4fb）上响的是**第 2 条**：
+On the pre-fix commit (d3bf3f4fb) the one that actually fires is **the second**:
 
 ```
 the manyMany link refreshed but the required link was emptied: undefined
 ```
 
-也就是说在这套 e2e 环境里，那次刷新没有整体失败，而是**直接把必填关联的值抹掉了**——
-同一个根因（FK 为空时 ELSE 分支传播 NULL），暴露形态不同。两条断言都留着：线上那种
-"整批死掉"的形态和这里这种"值被抹掉"的形态，都该判复现。
+So in this e2e environment the refresh did not fail as a unit — it simply wiped
+the required link's value. Same root cause (NULL propagated on the ELSE branch
+when the foreign key is empty), different surface. Both assertions stay: the
+production "the whole batch died" shape and this "the value was wiped" shape
+should both count as reproduction.
 
-## 夹具
+## Fixture
 
 ```
-Foreign 表                     Host 表
+Foreign table                  Host table
 ──────────────                 ─────────────────────────────────────
-Name = "linked-title"    ←──   Required Link (manyOne, notNull, 单向)
-Name = "other-title"     ←──   Many Links   (manyMany, 单向)
+Name = "linked-title"    ←──   Required Link (manyOne, notNull, one-way)
+Name = "other-title"     ←──   Many Links    (manyMany, one-way)
 ```
 
-Host 一行：必填关联指向 linked，多选关联指向 [linked, other]。
+One host row: required link → linked, manyMany → [linked, other].
 
-多选关联放**两行**而不是一行：只放一行的话，「整个字段没刷新」和「这一项没刷新」在断言上
-分不开。
+The manyMany link holds **two** rows rather than one: with a single row, "the
+whole field failed to refresh" and "this one entry failed to refresh" are
+indistinguishable.
 
-必填关联在**建行之前**建：把关联设成必填，只有在还没有行可能违反它的时候才会被接受。
+The required link is created **before any row exists**: making a link required
+is only accepted while nothing could already violate it.
 
-### 为什么要写数据库
+### Why the database is written
 
-「FK 已空、展示列还在」是**残骸**，不是产品会应要求产生的状态——它是某条更早的写入路径
-留下的。API 造不出来，所以用 `framework/fixture-db.ts` 直接清掉那一列。
+"Foreign key gone, display column still populated" is **wreckage**, not a state
+the product will produce on request — it is what some earlier write path left
+behind. No API produces it, so `framework/fixture-db.ts` clears that column
+directly.
 
-FK 列是**按模式找**的（`__fk\_%`），不是写死列名：`__fk_<fieldId>` 是内部命名细节，写死
-了哪天它变了，用例会以一个和这个 bug 毫无关系的理由失败。
+The foreign-key column is found **by pattern** (`__fk\_%`) rather than by a
+hard-coded name: `__fk_<fieldId>` is an internal naming detail, and hard-coding
+it would make the case start failing one day for a reason with nothing to do
+with this bug.
 
-观察全部走公共 API：就是用户那一行，按表格读它的方式读。
+Everything observed is public API: the user's row, read the way the grid reads
+it.
 
-## 阶段与判定边界
+## Phases and the verdict boundary
 
-**setup（失败 = 💥 error）**：建表、建两个关联字段、建行，读一次并断言 v2 应答
-（`x-teable-v2-feature=getRecords`）、必填关联在位、多选关联正好两项。然后清 FK，断言正好
-影响 1 行。这些全在 checkpoint 外面——夹具没搭起来时该判 💥，不是误判成 bug。
+**Setup (failure = 💥 error).** Build the tables, both link fields and the row;
+read once and assert v2 answered (`x-teable-v2-feature=getRecords`), the
+required link is in place, and the manyMany link holds exactly two entries. Then
+clear the foreign key and assert exactly 1 row was touched. All of this sits
+outside the checkpoint — a fixture that did not come up should be judged 💥, not
+mistaken for the bug.
 
-**checkpoint `sibling-link-refresh-survives-cleared-fk`（失败 = ❌ bug 复现）**：改 foreign
-表里 other 那行的名字触发重算，然后轮询 host 行，直到多选关联里 other 那项的标题变成新值。
-超时即复现——因为写请求返回 200、失败发生在计算管道里，用户侧唯一的信号就是"值永远不来"。
+**Checkpoint `sibling-link-refresh-survives-cleared-fk` (failure = ❌ bug
+reproduced).** Rename the `other` row in the foreign table to trigger the
+recompute, then poll the host row until the `other` entry in the manyMany link
+carries the new title. A timeout counts as reproduction, because the write
+answers 200 and the failure happens inside the computed pipeline — the only
+signal on the user's side is that the value never arrives.
 
-超时（30s）就是断言本身：太短会把慢但正常的管道判成 bug。
+The 30s timeout is the assertion itself: too short and a slow-but-working
+pipeline reads as the bug.
 
-## 期望状态
+## Expected status
 
-`status: fixed`。修复已在 develop 上（1fc507346），此后再复现就是回归。
+`status: fixed`. The fix is on develop (1fc507346); reproducing it again is a
+regression.

@@ -1,75 +1,104 @@
-# 术语
+# Vocabulary
 
-这套术语的目的是让人、agent 和报告说同一种话。歧义最贵的地方是"通过"到底指什么，
-所以 Verdict、Check、Acceptance 三个词必须严格区分。
+The point of this list is that people, agents, and reports say the same thing.
+The most expensive ambiguity is what "passed" means, so **Observation**,
+**Verdict**, and **Acceptance** are kept strictly apart: a case observes, the
+framework judges the observation against a declaration, and acceptance asks
+whether the whole run produced the evidence it planned to.
 
-每条给出定义，以及**不要用**的说法——不是文风洁癖，是这些近义词会在讨论里悄悄
-改变结论。
+Each entry gives the definition and the words to avoid. The avoided words are
+not a style preference — each one quietly changes a conclusion when it turns up
+in a discussion.
 
-**Case（用例）**
-一个被测场景的完整声明：一个 runner、一份配置、一组期望。纯数据，没有自己的行为。
-_不要用_：test、script、脚本
+**Case**
+The complete declaration of one reproduction: a runner, a config, and the bug
+it is about. Pure data, no behavior of its own.
+_Avoid_: test, script, scenario.
 
 **Runner**
-一族用例共享的执行实现，分 seed / execute / verify / cleanup 四个阶段。
-_不要用_：executor、driver、handler
+The execution shared by a family of cases. It builds the fixture, verifies the
+fixture stands up, observes the bug inside a checkpoint, and cleans up. Cases
+pair with exactly one runner kind, and the type system enforces the pairing.
+_Avoid_: executor, driver, handler.
 
-**Group（分组）**
-用例 id 里斜杠前的那一段，对应 `cases/` 下的一层目录，也是 CLI 过滤的单位。
-_不要用_：suite、scope、folder
+**Group**
+The segment before the slash in a case id, matching one directory under
+`cases/`, and the unit the case filter selects on.
+_Avoid_: suite, scope, folder.
 
 **Fixture**
-seed 阶段建出来、execute 阶段依赖的状态（space、base、table、字段、行）。
-_不要用_：test data、种子数据、环境
+The state a case builds before it can ask its question: tables, fields, rows,
+and — where the API cannot express it — state written straight to the database
+(see `framework/fixture-db.ts`). Built and torn down inside the case.
+_Avoid_: test data, seed data, environment.
 
-**Expectation（期望）**
-用例声明的、从外部可见的正确结果。写在用例配置或 runner 的 verify 里。
-_不要用_：assertion、断言语句
+**Checkpoint**
+The region of a runner where the bug is observed, marked by `bugCheckpoint()`.
+Anything thrown inside it counts as the bug reproducing, including a 500 from
+the endpoint under test; anything thrown outside it is setup trouble. This
+boundary is the single most important convention in the repository — it is what
+separates "the bug is present" from "the case is broken".
+_Avoid_: assertion block, test body.
 
-**Check**
-一条期望的执行结果：名字、期望值、实际值、通过与否、严重级别。是数据，不是异常。
-_不要用_：assert、log、错误
+**Observation**
+What a run saw: `absent`, `present`, or `error`. A case never "passes" — it
+observes, and the observation is judged separately.
+_Avoid_: result, outcome, status.
 
-**Blocking / Warning**
-Check 的两个级别。blocking 决定 verdict；warning 只出现在报告里，永远不把运行判红。
-清理失败是典型的 warning——产品没错，是测试自己的家务事没做干净。
-_不要用_：error/info、严重/轻微
+**Bug status**
+The human-maintained declaration on a case: `open` (known, unfixed) or `fixed`
+(the correct behavior is expected to hold). The only judgment input a person
+maintains, and the reason an observation can be judged at all.
+_Avoid_: expected result, state.
 
-**Verdict（判定）**
-框架对一个用例算出的确定性结论：`pass` / `fail` / `skipped`。由 checks 推导，
-不由人解释。
-_不要用_：结果、状态、结论
+**Verdict**
+The label the framework computes from observation × status: `pass`,
+`expected-fail`, `unexpected-pass`, `regression`, `error`. Derived, never
+interpreted by a person. The table is in `framework/verdict.ts`.
+_Avoid_: result, conclusion, pass/fail.
 
-**Case Error**
-用例自身没能跑完（网络断了、fixture 建不起来、runner 有 bug），区别于"期望没满足"。
-两者在 artifact 里是不同字段。
-_不要用_：failure、报错
+**Gating column**
+The revision a comparison actually judges — the newest commit of a comparison,
+or the single commit of a targeted run. A `regression` turns the run red only
+here: on older columns, a fixed bug reproducing is history, not a regression.
+_Avoid_: baseline, main, latest.
 
-**Evidence（证据）**
-解释判定的结构化事实：资源 id、行数、抽样行、每个阶段耗时、完整请求链。
-_不要用_：日志、输出、debug 信息
+**Case error**
+The case never reached its checkpoint: the fixture would not build, the engine
+would not route, the harness broke. Distinct from observing the bug, stored as
+a different field in the artifact, and red on every column — a case that
+observed nothing must never be counted as agreeing with anything.
+_Avoid_: failure, crash.
 
-**Artifact（结果文件）**
-一个用例在一次运行里产出的那份 JSON。无论通过、失败还是崩溃都会写。
-_不要用_：报告、log 文件
+**Evidence**
+The structured facts explaining a verdict: resource ids, the routing record,
+expected versus observed values, the server's own error body.
+_Avoid_: logs, output, debug info.
 
-**Acceptance（验收）**
-从**计划**出发对一整轮运行的 fail-closed 判定：每个计划内用例是否都产出了恰好一条
-能解释的结果。它比"有没有红"严格。
-_不要用_：通过率、成功率
+**Artifact**
+The JSON one case produces in one run, written before any assertion is allowed
+to throw — so a red run always leaves its evidence behind.
+_Avoid_: report, log file.
 
-**Skip（跳过）**
-用例主动声明的、有理由的不执行。没有理由的跳过会让整轮验收被拒。
-_不要用_：忽略、跳过失败
+**Comparison**
+The bug × commit table built from artifacts, plus the transitions read off it
+("fixed between these two", "regression appeared between these two").
+_Avoid_: matrix, summary.
 
-**Target（被测环境）**
-这一轮验收所指向的 Teable 部署，由镜像 tag 或 endpoint 确定。
-_不要用_：环境、实例、服务器
+**Acceptance**
+The fail-closed judgment over a whole run, starting from the plan: every
+planned (case × commit) cell must carry exactly one readable result. Stricter
+than "was anything red" — missing evidence fails, because an empty cell reads
+as green to whoever opens the table.
+_Avoid_: pass rate, success rate.
 
-**Session（会话）**
-对被测环境认证后的凭据。本地由 `lab up` 自动签入并缓存。
-_不要用_：token、账号
+**Engine**
+The record engine serving the requests, v1 or v2. teable-ee is migrating to v2
+and v1 bugs are not being fixed, so the lab runs v2 and every runner proves it
+(`framework/engine.ts`).
+_Avoid_: mode, version, backend.
 
-**Run（运行）**
-一次 `lab run` 的执行，有唯一 run id，对应 `artifacts/<run-id>/` 一个目录。
-_不要用_：批次、任务
+**Run**
+One dispatch of `e2e-lab.yml`: a pinned list of teable-ee commits, one job per
+commit, one artifact per case per commit.
+_Avoid_: batch, build, job.

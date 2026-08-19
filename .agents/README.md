@@ -1,60 +1,93 @@
-# 用例作业流程
+# Adding a case
 
-加一个 bug 用例的完整回路。这里是唯一的流程来源，别处不要复述。
+The full loop for adding a bug case. This is the only source for the process —
+do not restate it elsewhere.
 
-## 1. 先想清楚三件事
+## 1. Settle four things first
 
-- **这个 bug 用什么 API 序列复现？** 观察一律走公共 API 的真实读写路径——用户是通过
-  API 用产品的，绕过 API 会漏掉缓存、序列化、权限过滤这些最容易错的层。**搭夹具**可以
-  直接写库（`framework/fixture-db.ts`），用来造 API 造不出来的历史状态：漂移的存储快照、
-  和物理列对不上的字段元数据、被早已下线的路径清空的外键。这条边界是被强制的——在
-  `bugCheckpoint()` 里面拿数据库句柄会抛错。
-- **请求确实走到 v2 了吗？** 产品在往 v2 迁移，v1 的 bug 不再修，所以这里只有一个引擎、
-  不是选项：每条用例守的都是 v2，用例不需要声明。但 v1 还在、还会应答，**悄悄退回 v1
-  是这套 harness 最坏的故障**：用例问的是从来没有这个 bug 的那套代码，每一列都绿。
-  所以 runner 要在 setup 里用 `assertServedByV2()` 自证，而且是**对用例真正依赖的那个
-  请求的响应**断言，不是另发一个探针——探针走到了 v2、被测操作没走到，正是要抓的形状。
-  连 feature 一起断言（`x-teable-v2-feature`）：bug 在 getRecords 里，"某个 v2 端点能用"
-  说明不了任何事。setup 阶段失败判 💥，不会被误读成「bug 没了」。见
-  `framework/engine.ts`。
-- **checkpoint 在哪里？** `bugCheckpoint()` 里面抛出的任何异常都算「bug 复现」，
-  外面抛的都算「用例没跑成」。setup（建表、造数、验证夹具就位）放外面，对 bug 的
-  观察放里面。夹具验证放外面是有讲究的：结论都建立在初始状态正确上，夹具本身没
-  就位时判 error 而不是误判成 bug。
-- **status 是什么？** bug 还没修就是 `open`（复现是预期，不红）；已修就是
-  `fixed`（复现即回归，在 gating 列判红）。哨兵用例（守护当前正确行为、不对应
-  历史 bug）用 `issue: "sentinel/<name>"` + `status: "fixed"`。
+- **What API sequence reproduces it?** The observation always goes through the
+  public API, because that is how users reach the product, and going around it
+  skips the layers that break most often: caching, serialization, permission
+  filtering. **Building the fixture** may write to the database directly
+  (`framework/fixture-db.ts`) to reach state the API cannot produce on request:
+  a drifted stored snapshot, field metadata out of step with its physical
+  column, a foreign key some retired write path cleared. That boundary is
+  enforced, not merely documented — asking for a database handle inside a
+  `bugCheckpoint()` throws.
+- **Which engine is the bug on?** teable-ee has two record engines, and v1 bugs
+  are not being fixed, so there is one engine here rather than a choice: every
+  case guards v2. But v1 is still present and still answers, and **silently
+  falling back to it is the worst failure this harness can have** — the case
+  asks its question of code that never had the bug and is green on every
+  column. So runners prove it in setup with `assertServedByV2()`, asserting on
+  **the response to the request the case actually depends on** rather than a
+  separate probe: a probe that reaches v2 while the operation under test
+  quietly does not is exactly the shape worth catching. Assert the feature too
+  (`x-teable-v2-feature`) — a bug in `getRecords` learns nothing from "some v2
+  endpoint works". See `framework/engine.ts`.
+- **Where is the checkpoint?** Anything thrown inside `bugCheckpoint()` counts
+  as the bug reproducing; anything thrown outside it means the case never ran.
+  Setup — building tables, seeding rows, verifying the fixture stands up —
+  belongs outside. Keeping fixture verification outside is deliberate: every
+  conclusion rests on the starting state being right, so a fixture that did not
+  come up should be judged an error, not mistaken for the bug.
+- **What is the status?** Not yet fixed is `open` (reproducing is expected and
+  is not red); fixed is `fixed` (reproducing is a regression, red on the gating
+  column). Sentinel cases — guarding currently-correct behavior with no
+  historical bug behind them — use `issue: "sentinel/<name>"` with status
+  `fixed`.
 
-## 2. 写文件
+## 2. Write the files
 
-- 用例：`cases/<组>/<名字>.case.ts`，`id` 必须等于 `<组>/<名字>`（check 会验）。
-  `id`、`issue`、`status` 必须是字符串字面量——计划器和检查靠静态解析读它们。
-- 文档：同目录同名 `.md`，写清楚 bug 来源（issue 链接）、复现步骤、checkpoint
-  断言什么、数据为什么这样造。半年后没人记得 T1481 是什么，文档是给那时候的人看的。
-- 注册：`registry.ts` 里 import 并加进 `cases` 数组。
-- 执行逻辑属于 `framework/runners/`，用例文件里不写逻辑。现有 runner 覆盖不了时
-  新开一个 runner kind：`framework/types.ts` 加 config 接口和
-  `BugCaseConfigByRunner` 条目、`framework/runner-registry.ts` 加实现——漏任何
-  一步 `pnpm check:types` 会拦。
+- Case: `cases/<group>/<name>.case.ts`, where `id` must equal `<group>/<name>`
+  (checked). `id`, `issue`, and `status` must be string literals — the planner
+  and the checks read them by static parsing.
+- Doc: a same-name `.md` in the same directory. Name the issue, the
+  reproduction, what the checkpoint asserts, and why the data is shaped the way
+  it is. Nobody will remember what T1481 was in six months; the doc is for
+  them.
+- Register: import it in `registry.ts` and add it to the `cases` array.
+- Execution logic belongs in `framework/runners/`; case files carry none. When
+  no existing runner fits, add a runner kind: a config interface plus a
+  `BugCaseConfigByRunner` entry in `framework/types.ts`, and the implementation
+  in `framework/runner-registry.ts`. Miss any step and `pnpm check:types`
+  catches it.
 
-## 3. 数据规则
+## 3. Data rules
 
-- 数据保持确定性：期望值是 (行号, revision) 之类的纯函数，本地推导，让重跑
-  逐字节可比。共享公式放 `framework/runners/` 并配 `.test.js` 守住承重性质
-  （参考 `record-values.test.js` 的 no-cell-survives 测试）。
-- 夹具在用例内自建自清理（表名带 runId 防撞）；cleanup 失败只记 warning——那是
-  测试自己的家务事，产品没错。
+- Keep data deterministic: expected values are pure functions of things like
+  row number and revision, derived locally, so a rerun compares byte for byte.
+  Shared formulas live in `framework/runners/` with a `.test.js` guarding the
+  properties they carry (see `record-values.test.js` and its no-cell-survives
+  test).
+- Fixtures are built and cleaned up inside the case (table names carry the
+  runId to avoid collisions). A failed cleanup is only a warning — that is the
+  test's own housekeeping, not the product being wrong.
 
-## 4. 验证
+## 4. Verify
 
 ```bash
-pnpm check                 # 静态链，PR 的必要条件
-# 本地跑通（方向性验证）：见 .agents/skills/localrun/SKILL.md
-# 验收：dispatch e2e-lab.yml，GitHub Actions 是验收面
+pnpm check                 # static chain; necessary for a PR, not sufficient
+# local run (direction-finding): see .agents/skills/localrun/SKILL.md
+# acceptance: dispatch e2e-lab.yml — GitHub Actions is the acceptance surface
 ```
 
-## 5. 安全边界
+A new case is not verified until it has been run against a commit from **before
+its fix** and seen to reproduce there. A case that is green on every column
+proves nothing, and it has happened here more than once: the first v2 cases ran
+on v1, and a later one wrote the same value back where a real change was needed
+and so never triggered a recompute. Treat all-green as a broken case until
+proven otherwise.
 
-公开仓库。安全类 bug（越权、注入、认证绕过等）在修复发布之前**不进这个仓库**
-——一个 `status: open` 的用例就是一份公开可运行的漏洞复现。修复发布后以
-`status: fixed` 收录。规则在 CONTRIBUTING.md，别绕。
+## 5. Security boundary
+
+This is a public repository. Security-sensitive bugs (privilege escalation,
+injection, auth bypass, and the like) **do not land here before their fix
+ships** — a `status: open` case is a working, public reproduction of an unfixed
+vulnerability. After the fix ships they are accepted as `status: fixed`. The
+rule lives in CONTRIBUTING.md; do not route around it.
+
+## 6. Language
+
+Everything committed here is in English — code, comments, docs, case titles,
+and the strings the reports emit. `pnpm check:english` enforces it.

@@ -6,7 +6,7 @@ import { defineBugCase } from "../../framework/types";
 // schema, so the saved filter came back one condition short.
 export default defineBugCase({
   id: "view/incomplete-filter-condition-survives",
-  title: "筛选条件只选了字段还没填值，保存后仍然在，且不影响取数",
+  title: "A filter condition with no value yet survives being saved",
   runner: "view-filter-roundtrip",
   timeoutMs: 120_000,
   bug: {

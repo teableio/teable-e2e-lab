@@ -1,63 +1,90 @@
 # formula/scalar-value-over-linked-text
 
-## Bug 来源
+## Where the bug came from
 
-T6844「单值数字公式引用 link/lookup 触发 jsonb 数组转 double 22P02」。公式
-`VALUE({lookup})` 生成的计算 UPDATE 把 `jsonb_agg(...)` 直接包进 `::double precision`，
-Postgres 对 `[0.0003]` 这种值报 22P02（invalid input syntax for type double precision）。
+T6844: a single-valued number formula referencing a link/lookup produced a
+jsonb-array-to-double cast and Postgres answered 22P02. The computed UPDATE for
+`VALUE({lookup})` wrapped `jsonb_agg(...)` directly in `::double precision`,
+which fails for a value like `[0.0003]`.
 
-修复：[teable-ee 662cfde02](https://github.com/teableio/teable-ee/commit/662cfde02) /
-PR #3075。同一批还有 [ca79dcb9c](https://github.com/teableio/teable-ee/commit/ca79dcb9c)
-（T6845）把 22P02 归类为不可重试——因为重试一个语法错误只是在浪费时间。
+Fixed by [teable-ee 662cfde02](https://github.com/teableio/teable-ee/commit/662cfde02)
+(PR #3075). The same batch includes
+[ca79dcb9c](https://github.com/teableio/teable-ee/commit/ca79dcb9c) (T6845),
+classifying 22P02 as non-retryable — retrying a syntax error only wastes time.
 
-## 用户看到的是什么：什么都没看到
+## What the user sees: nothing
 
-这是这条用例的形状由来。故障发生在计算管道里：写请求返回 200，计算任务失败、重试、进
-死信，**没有任何东西回到调用方**。用户看到的就是那一格永远是空的。
+That is where this case's shape comes from. The failure happens inside the
+computed pipeline: the write answers 200, the task fails, retries, and
+dead-letters, and **nothing comes back to the caller**. What the user sees is a
+cell that stays empty forever.
 
-所以整条用例——包括观察——全走公共 API：像用户的表格那样等那个值，**值没等到就是 bug**。
-不用读 `computed_update_dead_letter`，不用驱动内部队列。
+So the whole case — observation included — goes through the public API: it waits
+for the value the way the user's grid does, and **a value that never arrives is
+the bug**. No `computed_update_dead_letter` to read, no internal queue to drain.
 
-这也意味着**超时就是断言本身**，不是随手写的一个数：太短会把「管道慢但正常」判成 bug，
-足够长时才能保证只有「永远不来」会失败。这里给 30s，实测在 develop 上不到 1s 就落库。
+It also means **the timeout is the assertion**, not an incidental number: too
+short and a slow-but-working pipeline reads as the bug; long enough and "never"
+is the only thing that fails. 30s here, against under 1s observed on develop.
 
-## 夹具
+## Fixture
 
 ```
-Source 表                      Host 表
-──────────────                 ────────────────────────────────
-Title (单行文本) = "0.0003"  ←── Rates (link, oneMany)
-                                Rate Titles (lookup of Title)
-                                Conversion Rate (formula VALUE({lookup}))
+Source table                       Host table
+──────────────                     ────────────────────────────────
+Title (text) = "0.0002"     ←──    Rates (link, oneMany)
+                                   Rate Titles (lookup of Title)
+                                   Conversion Rate (formula VALUE({lookup}))
 ```
 
-三个决定都是承重的：
+Three decisions are load-bearing:
 
-- **oneMany**，不是 manyOne——link 和它的 lookup 因此存成 **json 数组**，正是那次失败的
-  cast 读不动的形状。
-- **Title 是文本字段**，不是数字字段。值要以「json 数组里的文本」到达公式；换成数字字段
-  就存成数字，用例问的就是另一件事了。
-- **公式在行建好之后才建**，所以第一次计算是一次 backfill——线上报的就是 backfill 这条
-  路径。
+- **oneMany**, not manyOne — the link and its lookup are therefore stored as
+  **json arrays**, the shape the failing cast could not read.
+- **Title is a text field**, not a number field. The value has to reach the
+  formula as text inside a json array; a number field would store a number and
+  the case would be about something else.
+- **The formula is created after the row exists**, so the first computed pass is
+  a backfill, which is the path the production failure was reported from.
 
-`sourceValue: "0.0003"` 取自线上报告。前导零的小数让故障可读：`[0.0003]` 是 Postgres
-读不成 double 的字符串，而 `3` 这种值可能在某些坏 cast 下侥幸活下来，用例就失去分辨力。
+## Phases and the verdict boundary
 
-## 阶段与判定边界
+**Setup (failure = 💥 error).** Build both tables, the link, the lookup and the
+formula, read the host row once, and assert on **that read's response** that
+`x-teable-v2=true` and `x-teable-v2-feature=getRecords`. Every conclusion below
+is "did the computed value arrive", which is unanswerable if the row is not
+there or a different engine is answering.
 
-**setup（失败 = 💥 error）**：建两张表、link、lookup、formula，读一次 host 行，并对**这次
-读的响应**断言 `x-teable-v2=true` 且 `x-teable-v2-feature=getRecords`。下面所有结论都是
-「计算值来没来」，行本身不在、或者换了引擎应答，这个问题就无从问起。
+**Checkpoint `computed-value-arrives` (failure = ❌ bug reproduced).** Change the
+source row from `0.0002` to `0.0003` to force a recompute, then poll the host
+row until the formula reads 0.0003.
 
-**checkpoint `computed-value-arrives`（失败 = ❌ bug 复现）**：往 source 行**写回同一个
-值**触发重算，然后轮询 host 行直到公式值等于 0.0003，超时即复现。
+**Changing** the value rather than rewriting the same one is a lesson paid for:
+the first version wrote the same value back, which is a no-op update that queues
+no computed task at all, so the case kept reading the successful backfill from
+when the formula field was created — green on both sides of the fix, proving
+nothing. The runner now refuses a config where `sourceValue === sourceValueAfter`.
 
-写回同一个值是有意的：这条用例问的不是「值变了没有」，而是「算得出来吗」；写回原值让期望
-结果保持是个常量，用例不必跨着那次写去追踪它。
+On the pre-fix commit that change fails outright with a 500:
 
-## 期望状态
+```
+Failed to update record: error: invalid input syntax for type double precision: "[0.0003]"
+```
 
-`status: fixed`。修复已在 develop 上（662cfde02），此后再复现就是回归。
+— the same sentence as the production report. The polling and the timeout stay
+because this path can also present as "the write succeeded and the value never
+arrives" (the task dead-letters and the caller is told nothing); the checkpoint
+counts both shapes as reproduction.
 
-Issues 表里 T6844 当时还挂在「Entered development workflow」，但判断 `bug.status` 看的是
-代码现状而不是流程标签——修复已经合进 develop，所以是 `fixed`。
+`0.0003` comes from the report. A leading-zero decimal is what makes the failure
+legible: `[0.0003]` is a string Postgres will not read as a double, while a
+value like `3` can survive a broken cast by accident.
+
+## Expected status
+
+`status: fixed`. The fix is on develop (662cfde02); reproducing it again is a
+regression.
+
+T6844 was still filed under "Entered development workflow" in the issues table,
+but `bug.status` is judged from the state of the code, not from a workflow
+label — the fix is merged into develop, so it is `fixed`.

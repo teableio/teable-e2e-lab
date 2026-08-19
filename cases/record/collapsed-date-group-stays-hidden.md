@@ -1,88 +1,120 @@
 # record/collapsed-date-group-stays-hidden
 
-## Bug 来源
+## Where the bug came from
 
-T6856。用户按日期字段分组后折叠了某一组，该组的记录并没有消失，而是被画到了**下一个
-分组的表头底下**；同时相邻那一天的记录凭空少了。分组本身是正确的——组标题的值和顺序
-都对，只有"折叠"这个动作出错。
+T6856. A user grouped by a date field and collapsed one group; its records did
+not disappear but were drawn **under the next group's header**, while the
+neighbouring day's records went missing. The grouping itself was correct — the
+header values and their order were right. Only the act of collapsing was wrong.
 
-触发条件是两个时区的**相对关系**，不是某个具体时区：
+What triggers it is the **relative offset between two time zones**, not any
+particular zone:
 
-- 日期字段有自己的展示时区（用户在字段里选，浏览器建字段或导入表格时会写成浏览器时区）；
-- 后端服务进程有自己的系统时区（官方镜像固定 UTC）。
+- the date field has its own display time zone (chosen in the field, and written
+  as the browser's zone when a field is created or a sheet imported);
+- the backend process has its own system time zone (the official image pins it
+  to UTC).
 
-折叠一个分组时，后端要生成一条"排除这个分组"的过滤条件，而它是从**分组键**推导出来的。
-分组键是一个绝对时刻（该组在字段时区里的当地零点），推导时却被当成"墙上时间"又换算了
-一次，于是整体平移了两个时区的时差。字段时区偏移大于服务进程偏移时，这一平移就跨过了
-日界，排除条件落到**前一天**：被折叠那组一行没排掉，前一天那组反而整组被藏起来。
+Collapsing a group makes the backend build an "exclude this group" filter
+condition, derived from the **group key**. The group key is an absolute instant
+(that group's local midnight in the field's zone), but the derivation treated it
+as wall-clock time and converted it again — shifting everything by the
+difference between the two zones. When the field's offset exceeds the process's,
+that shift crosses a day boundary and the exclusion lands on **the previous
+day**: not one row of the collapsed group is excluded, and the previous day's
+group is hidden instead.
 
-所以这个用例把服务进程时区（lab 固定 UTC）和字段时区（Asia/Shanghai）配成一对，让偏移
-差恒为 8 小时——是任何 UTC 部署 + 东八区用户的日常配置，不是构造出来的极端场景。
+So the case pairs the process zone (the lab pins UTC) with a field zone of
+Asia/Shanghai, making the difference a constant 8 hours — the everyday setup of
+any UTC deployment with UTC+8 users, not a constructed extreme.
 
-## 阶段与判定边界
+## Phases and the verdict boundary
 
-**夹具校验（失败 = 💥 error）**：`framework/runners/group-buckets.ts` 先纯函数地验证桶
-列表本身立得住（见下），再建表、造数、读回。
+**Fixture verification (failure = 💥 error).** `framework/runners/group-buckets.ts`
+first checks, as a pure function, that the bucket list itself holds up (below),
+then the table is created, seeded, and read back.
 
-**setup（失败 = 💥 error）**：建一张两列的表（`Title` 单行文本、`Day` 日期，时区取配置
-值、格式 YYYY-MM-DD 不显示时间），按桶造 4 行，然后按 `Day` 分组读一次，证明：
+**Setup (failure = 💥 error).** Create a two-column table (`Title` single line
+text, `Day` a date field in the configured zone, formatted YYYY-MM-DD with no
+time), seed 4 rows across the buckets, then read once grouped by `Day` and prove:
 
-- 4 行都读得回来；
-- 分组结果**正好是声明的那两个桶**，且每个组标题的值等于配置里的 instant。
+- all 4 rows come back;
+- the grouping is **exactly the declared buckets**, and every group header's
+  value equals the instant in the config.
 
-这一步放在 checkpoint 外面是有讲究的：下面所有结论都是"折叠某组之后还剩哪些行"，如果
-产品连分组都没按预期归桶，这个问题根本无从问起，那是另一个故障，应判 💥 而不是误判成
-本 bug。
+Keeping this outside the checkpoint matters: every conclusion below is "which
+rows remain after collapsing a group", and if the product did not even bucket
+the rows as expected, the question cannot be asked at all. That is a different
+fault and should be judged 💥 rather than mistaken for this bug.
 
-**checkpoint `collapsed-group-excluded`（失败 = ❌ bug 复现）**：依次折叠每一个分组，
-每次向表格视图真正加载行的接口 `POST /table/{tableId}/record/socket/doc-ids` 发一次
-请求（带 `groupBy` 和 `collapsedGroupIds`），断言返回的行**正好是**折叠组以外的行。
+**Checkpoint `collapsed-group-excluded` (failure = ❌ bug reproduced).** Collapse
+each group in turn, and for each one send a request to the endpoint the grid
+actually loads rows from — `POST /table/{tableId}/record/socket/doc-ids`, with
+`groupBy` and `collapsedGroupIds` — asserting the rows returned are **exactly**
+the rows outside the collapsed group.
 
-折叠顺序是**从最新的桶往回走**，这不是随意的：错位的排除条件落在"前一天"，所以折叠最新
-那个桶时两个方向会同时显形——它自己的行漏出来，前一天的行不见了。反过来先折叠最老的桶，
-第一条失败信息只会带"漏出来"这一半，另一半永远印不出来。
+The collapse order runs **from the newest bucket backwards**, which is not
+arbitrary: the misaimed exclusion lands on "the previous day", so collapsing the
+newest bucket shows both directions at once — its own rows leak out and the
+previous day's rows go missing. Starting from the oldest bucket, the first
+failure would carry only the "leaked" half and the other half would never be
+printed.
 
-用 REST 的 `GET /record` 问同一个问题会得到假信号：那条路径根本不携带
-`collapsedGroupIds`，无论有没有 bug 都会把所有行还给你。
+Asking the same question through the REST `GET /record` would give a false
+signal: that path does not carry `collapsedGroupIds` at all and returns every
+row whether or not the bug is present.
 
-## 断言为什么比对标题集合
+## Why the assertion compares title sets
 
-行按 `Title` 认，不按下标认。组内顺序不是这个用例要断言的东西，"回来的是哪几行"才是，
-所以两边都排序后整体比对。这样一次比对同时回答故障的两个方向：
+Rows are identified by `Title`, not by index. Order within a group is not what
+this case asserts; **which rows come back** is. So both sides are sorted and
+compared whole, which answers both directions of the failure in one comparison:
 
-| 症状               | 表现在断言上                   |
-| ------------------ | ------------------------------ |
-| 折叠组的行漏出来   | `leaked`：出现了折叠桶的标题   |
-| 相邻那天的行被误藏 | `hidden`：期望里的标题没有出现 |
+| symptom                             | how it shows in the assertion                        |
+| ----------------------------------- | ---------------------------------------------------- |
+| the collapsed group's rows leak out | `leaked`: a title from the collapsed bucket appeared |
+| the neighbouring day is hidden      | `hidden`: an expected title did not appear           |
 
-报错信息把 `leaked` / `hidden` / 实收 / 期望四份都打出来，排查时不用回头再跑一次。
+The error prints all four — `leaked`, `hidden`, received, expected — so
+diagnosing it does not require another run.
 
-## 数据确定性
+## Deterministic data
 
-行的值是 (桶, 行号) 的纯函数：标题就是 `<当地日期>#<行号>`，比如 `2025-11-30#1`。这样
-每一行证据自带它属于哪一天，读报告不需要另查映射表。
+A row's value is a pure function of (bucket, row number): the title is
+`<local date>#<row>`, e.g. `2025-11-30#1`. Every piece of evidence then carries
+the day it belongs to, and reading the report needs no second lookup table.
 
-桶列表有两条承重性质，由 `framework/runners/group-buckets.test.js` 守着，而不是靠读代码
-相信：
+The bucket list has two load-bearing properties, guarded by
+`framework/runners/group-buckets.test.js` rather than trusted by reading the
+code:
 
-1. **每个 instant 都是字段时区里的当地零点。** 当地零点才是"日桶"的键；instant 落在半夜
-   以外，产品给出的组标题就会和配置值不同，setup 会以一个与本 bug 无关的理由失败。
-2. **相邻两个桶是相邻两个当地日。** 错位的排除条件瞄准的是"前一天"，只有前一天正好是
-   上一个桶（且非空），"该留下的行被藏了"这半个故障才观察得到；中间隔一天，它就落在空
-   日子上，悄无声息。
+1. **Every instant is local midnight in the field's zone.** Local midnight is
+   what a day bucket is keyed on; an instant anywhere else and the product's
+   group header would differ from the configured value, failing setup for a
+   reason unrelated to this bug.
+2. **Adjacent buckets are adjacent local days.** The misaimed exclusion targets
+   "the previous day", so only when the previous day is exactly the previous
+   bucket (and non-empty) is the "rows that should have stayed were hidden" half
+   observable at all; with a gap it lands on an empty day, silently.
 
-第 2 条用"当地零点前 1 毫秒属于前一天"判定，而不是减 24 小时——DST 切换日的当地两日之
-间可能相差 23 或 25 小时，减 24 小时会误判。测试里用 America/New_York 2025-11-02 →
-11-03（相隔 25 小时）守住这一点。
+The second property is checked by "one millisecond before local midnight belongs
+to the previous day" rather than by subtracting 24 hours — across a DST
+transition two adjacent local days can be 23 or 25 hours apart, and subtracting
+24 hours would misjudge it. The test pins this with America/New_York
+2025-11-02 → 11-03 (25 hours apart).
 
-每个桶造 2 行：只造 1 行时，"这一组整个漏出来了"和"混进来一行"在断言上长得一样。
+Each bucket gets 2 rows: with only 1, "the whole group leaked out" and "one
+extra row slipped in" look the same in the assertion.
 
-## 清理
+## Cleanup
 
-finally 删掉建出来的表；清理失败只记 warning——那是测试自己的家务事，产品没错。
+The table is deleted in a `finally`. A failed cleanup is only a warning — that
+is the test's own housekeeping, not the product being wrong.
 
-## 期望状态
+## Expected status
 
-`status: open`。截至用例落地，teable-ee develop 上这个 bug 未修复：lab 的服务进程跑在
-UTC，字段时区是 Asia/Shanghai，折叠必然出错，复现是预期结果，不判红。修复合入后由人确认
-并把 `status` 翻成 `fixed`，此后再复现就是回归。
+`status: open`. As of the case landing, this bug is unfixed on teable-ee
+develop: the lab's process runs at UTC and the field zone is Asia/Shanghai, so
+collapsing necessarily goes wrong, reproduction is the expected outcome, and it
+is not red. Once the fix merges, a human confirms it and flips `status` to
+`fixed`; reproducing it after that is a regression.

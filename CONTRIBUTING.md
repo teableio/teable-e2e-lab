@@ -6,8 +6,16 @@
   `sentinel/` case guarding currently-correct behavior). The `.md` beside it
   names the issue, the reproduction, and what the checkpoint asserts — written
   for someone reading it six months from now.
-- **Public API only.** Cases exercise the product the way users reach it. No
-  database access, no internal imports beyond what the e2e harness provides.
+- **Observe through the public API.** Cases exercise the product the way users
+  reach it, because that is where a reported failure shows up. Building the
+  fixture may reach the database directly when the API cannot express the state
+  — drifted snapshots, metadata out of step with its physical column, a foreign
+  key some retired path cleared — and only there: `framework/fixture-db.ts`
+  throws if it is called inside a checkpoint.
+- **Guard v2.** teable-ee is migrating to v2 and v1 bugs are not being fixed,
+  so the lab runs v2 and runners prove which engine answered
+  (`framework/engine.ts`). A case that silently ran on v1 is green on every
+  column and means nothing.
 - **Deterministic data.** Expected values are pure functions of row numbers and
   revisions, derived locally, so a rerun is byte-comparable. Load-bearing data
   properties get their own test (see
