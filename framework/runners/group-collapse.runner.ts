@@ -159,7 +159,13 @@ export const runGroupCollapseCase = async (
 
     const probes = await bugCheckpoint("collapsed-group-excluded", async () => {
       const collected: CollapseProbe[] = [];
-      for (const [index, bucket] of config.buckets.entries()) {
+      // Newest bucket first, on purpose: the mis-aimed exclusion lands on the
+      // day BEFORE the collapsed one, so collapsing the newest bucket is the
+      // probe where both directions show up together - its own rows leak and
+      // the previous day's rows go missing. Starting with the oldest bucket
+      // would fail on a leak alone and never print the missing half.
+      for (let index = config.buckets.length - 1; index >= 0; index -= 1) {
+        const bucket = config.buckets[index];
         const collapsedTitles = new Set(bucketTitles(bucket));
         const expected = expectedTitles
           .filter((title) => !collapsedTitles.has(title))
