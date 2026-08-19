@@ -19,13 +19,19 @@ import type { RequiredLinkRefreshCaseConfig } from "../types";
 // display column populated -> rename a row the manyMany link points at ->
 // checkpoint: the renamed title reaches the manyMany cell.
 //
-// The two link fields are refreshed by one statement, and that is the whole
-// bug. With the foreign key gone, the generated SQL took its ELSE branch and
-// wrote NULL into the required link's display column, which is NOT NULL.
-// Postgres answered 23502, the statement failed as a unit, and the manyMany
-// field that had nothing wrong with it never updated either. The task went to
-// the dead-letter table classified as a data constraint violation, which the
-// admin console refuses to replay - so it needed a human, per occurrence.
+// Both link fields are refreshed by one statement, and that is the whole bug.
+// With the foreign key gone, the generated SQL takes its ELSE branch and
+// propagates NULL into the required link's display column. In production that
+// column is NOT NULL, so Postgres answered 23502, the statement failed as a
+// unit, and the manyMany field that had nothing wrong with it never updated
+// either - dead-lettered as a data constraint violation, which the admin
+// console refuses to replay, so it needed a human per occurrence.
+//
+// The checkpoint asserts both halves, because which one fires depends on
+// whether that column carries the constraint. On the pre-fix commit here the
+// statement did NOT fail: the manyMany link refreshed and the required link
+// was simply emptied. Same root cause, different surface - and a case that
+// only watched the sibling would have called that a pass.
 //
 // The cleared foreign key is written with SQL because it is wreckage, not a
 // state the product will produce on request: it is what an earlier write path
