@@ -10,6 +10,7 @@ export interface BugCaseConfigByRunner {
   "http-check": HttpCheckCaseConfig;
   "record-flow": RecordFlowCaseConfig;
   "group-collapse": GroupCollapseCaseConfig;
+  "share-save": ShareSaveCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -171,4 +172,27 @@ export interface GroupCollapseCaseConfig {
   timeZone: string;
   // Consecutive local days, oldest first.
   buckets: DayBucket[];
+}
+
+// Share one folder out of a throwaway base -> save that share into a second
+// base repeatedly -> checkpoint: every save answers 200 and every saved folder
+// is visible in the target base, with names deduplicated. Both halves of the
+// failure live in that one checkpoint: the second save answering 500 (the
+// unique index on (base_id, name)) and a save that answers 200 but leaves the
+// target base looking untouched (a node-list cache nobody flushed).
+export interface ShareSaveCaseConfig {
+  spaceId: "seed-space";
+  // Prefix for the two throwaway bases this case builds; the runId is appended.
+  baseNamePrefix: string;
+  // Name of the single shared folder. Every save after the first must land
+  // under a deduplicated variant of it.
+  folderName: string;
+  // How many times the same share is saved into the same target base. Must be
+  // at least 2 - one save can never express "saving it again broke".
+  saveCount: number;
+  // The copy answers before the target base's node list is flushed, so the
+  // list is polled. Exhausting this budget is how "saved but never visible"
+  // reproduces.
+  settleTimeoutMs: number;
+  settlePollIntervalMs: number;
 }
