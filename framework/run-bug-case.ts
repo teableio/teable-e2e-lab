@@ -2,6 +2,7 @@ import { performance } from "node:perf_hooks";
 import { writeBugArtifacts, type BugArtifactPayload } from "./artifacts";
 import { normalizeBugError, toBugTestFailure } from "./bug-error";
 import { executeRegisteredRunner } from "./runner-registry";
+import { LAB_ENGINE } from "./engine";
 import { resolveVerdict, verdictFailsCi } from "./verdict";
 import { BugPresentError } from "./types";
 import type { BugCase, BugProbeResult, BugRunContext } from "./types";
@@ -21,6 +22,7 @@ export const runBugCase = async (
     ...appContext,
     runId: process.env.E2E_LAB_RUN_ID ?? `local-${Date.now()}`,
     commitSha: process.env.E2E_LAB_COMMIT_SHA ?? "local",
+    engine: LAB_ENGINE,
     artifactDir: process.env.E2E_LAB_ARTIFACT_DIR,
   };
   // Default gating: a local or single-commit run is judging "does this bug
@@ -50,6 +52,7 @@ export const runBugCase = async (
     bug: bugCase.bug,
     runId: context.runId,
     commitSha: context.commitSha,
+    engine: context.engine,
     appUrl: context.appUrl,
     observed,
     verdict,

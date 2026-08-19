@@ -11,6 +11,9 @@ export interface BugCaseConfigByRunner {
   "record-flow": RecordFlowCaseConfig;
   "group-collapse": GroupCollapseCaseConfig;
   "share-save": ShareSaveCaseConfig;
+  "view-filter-roundtrip": ViewFilterRoundtripCaseConfig;
+  "lookup-filter-view": LookupFilterViewCaseConfig;
+  "lookup-user-snapshot-sort": LookupUserSnapshotSortCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -64,6 +67,9 @@ export interface BugRunContext {
   appUrl: string;
   cookie?: string;
   runId: string;
+  // The engine every case here guards. A constant, stamped into artifacts as
+  // provenance - see framework/engine.ts.
+  engine: string;
   // The teable-ee revision under test, stamped into every artifact so the
   // comparison table never has to infer a column from a directory name.
   commitSha: string;
@@ -195,4 +201,68 @@ export interface ShareSaveCaseConfig {
   // reproduces.
   settleTimeoutMs: number;
   settlePollIntervalMs: number;
+}
+
+// Save a view filter that holds one finished condition and one the user has
+// not finished yet -> checkpoint: the filter reads back verbatim AND the
+// unfinished condition filters nothing. Two assertions because the fix has two
+// halves that pull against each other: keep the condition for the panel,
+// ignore it for the query.
+export interface ViewFilterRoundtripCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Choices on the multiple-select field the unfinished condition points at.
+  // Their names never appear in an assertion - the condition carries no value,
+  // which is the entire point of it.
+  choices: string[];
+  // Rows seeded before the filter is saved. More than one, so "the finished
+  // condition still selects" and "the unfinished one hid everything" cannot
+  // look the same.
+  rowTitles: string[];
+  // The one title the finished condition matches. Must be in rowTitles.
+  matchedTitle: string;
+}
+
+// Reference table with a single-select -> host table linking to it -> scalar
+// lookup of that select -> a view that filters, sorts and groups on the lookup
+// -> checkpoint: the view loads and returns exactly the rows it describes.
+export interface LookupFilterViewCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // The category the saved view keeps.
+  allowedCategory: string;
+  // The categories the saved view excludes with isNoneOf. More than one: a
+  // single-element list can be compiled to an equality test and would skip the
+  // array path the failure lives on.
+  excludedCategories: string[];
+  // Host rows. `category: null` links to nothing, which is what the isNotEmpty
+  // half of the filter removes.
+  rows: { task: string; category: string | null }[];
+  // The tasks the saved view must return, in the order the view sorts them.
+  expectedTasks: string[];
+}
+
+// One collaborator, two stored snapshots of them, one group -> checkpoint: a
+// date sort inside that group runs straight down instead of restarting at the
+// snapshot boundary. The snapshots are written straight to the database
+// because nothing in the API produces them on demand - see
+// framework/fixture-db.ts for when that is allowed.
+export interface LookupUserSnapshotSortCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Display time zone of the sorted date field. Not load-bearing for this bug;
+  // it is pinned so the dates in the fixture read the same everywhere.
+  timeZone: string;
+  // At least two groups, each a distinct stored snapshot of the SAME
+  // collaborator. `snapshotExtras` are the keys that drift over a base's life
+  // - email, avatarUrl - never id or title, which are the identity the group
+  // header folds on.
+  snapshotGroups: {
+    key: string;
+    snapshotExtras: Record<string, string>;
+    // Dates must interleave ACROSS groups, or a sort that restarts at every
+    // snapshot would produce the same order as a correct one and the case
+    // would prove nothing. The runner refuses a fixture that fails this.
+    rows: { name: string; date: string }[];
+  }[];
 }

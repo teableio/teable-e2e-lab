@@ -6,6 +6,9 @@ import { overridePathResolvePlugin } from "./vitest-override-plugin";
 process.env.TZ = "UTC";
 // One serial spec against the job-managed database — no per-worker DB clones.
 process.env.E2E_WORKER_DB = "0";
+// The record engine is pinned in framework/engine.ts and applied by the spec —
+// this file is copied into teable-ee/enterprise/backend-ee/, where "./framework"
+// does not resolve.
 
 // This file is copied to teable-ee/enterprise/backend-ee/, so the relative
 // imports above and the setup files below resolve inside teable-ee, exactly
