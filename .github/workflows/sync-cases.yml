@@ -1,0 +1,38 @@
+name: Sync cases to Teable
+
+# Keeps the "E2E Bug Cases (readonly)" table mirroring the registry, upserted
+# by Case ID. Push-triggered on the files the catalog is parsed from; the
+# table is a read surface for humans, never an input to any run.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "cases/**"
+      - "registry.ts"
+      - "scripts/case-catalog.mjs"
+      - "scripts/teable-track.mjs"
+      - "scripts/sync-cases-to-teable.mjs"
+      - ".github/workflows/sync-cases.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  TEABLE_E2E_LAB_TOKEN: ${{ secrets.TEABLE_E2E_LAB_TOKEN }}
+
+jobs:
+  sync:
+    name: Upsert case catalog
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22.18.0
+
+      # Skips cleanly (and says so) when the token secret is absent, so forks
+      # stay green without one.
+      - run: node scripts/sync-cases-to-teable.mjs

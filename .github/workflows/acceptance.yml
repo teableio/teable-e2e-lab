@@ -1,0 +1,54 @@
+name: API acceptance
+
+# Compatibility shim — do not delete without retargeting the caller first.
+#
+# teable-enterprise's promote-latest-ee.yaml gained a `trigger-api-lab` job
+# (PR #92) that dispatches THIS workflow file, by name, with a
+# `teable_image_tag` input after every production promote. That cross-repo link
+# has never fired end-to-end; its first real test is the next release. This
+# repository has since been rewritten from the image-based API acceptance lab
+# into e2e-lab (commit-based bug regression), which takes commits, not image
+# tags — so the dispatch cannot be forwarded mechanically.
+#
+# This shim exists so the promote pipeline stays green and the dispatch leaves
+# evidence it fired, instead of 404ing on a missing workflow file. Retargeting
+# properly means a PR on teable-enterprise (that repository builds and ships
+# the product — changes go through PR, never direct push) that either drops the
+# job or maps the released tag to its commit and dispatches e2e-lab.yml.
+# See docs/dispatching.md.
+
+on:
+  workflow_dispatch:
+    inputs:
+      teable_image_tag:
+        description: "Teable image tag under test (an input of this repository's predecessor, the image acceptance system — see the header comment)"
+        required: false
+        default: "latest"
+      case_filter:
+        description: "The predecessor's case filter input, kept so existing dispatchers keep working"
+        required: false
+        default: "all"
+
+permissions:
+  contents: read
+
+jobs:
+  record-dispatch:
+    name: Record the release dispatch
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Explain
+        env:
+          TAG: ${{ inputs.teable_image_tag }}
+        run: |
+          {
+            echo "## Release acceptance dispatch received"
+            echo
+            echo "- image tag: \`${TAG}\`"
+            echo "- This repository is now **e2e-lab** (commit-based bug regression)."
+            echo "- The image-based acceptance suite this dispatch targeted was retired."
+            echo "- To run bug regression against the released build, dispatch"
+            echo "  \`e2e-lab.yml\` with the release's teable-ee commit."
+            echo "- Retargeting the caller needs a PR on teable-enterprise; see docs/dispatching.md."
+          } >> "$GITHUB_STEP_SUMMARY"

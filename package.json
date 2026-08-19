@@ -1,0 +1,26 @@
+{
+  "name": "e2e-lab",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "format": "prettier --write \"**/*.{ts,js,mjs,json,md,yml,yaml}\"",
+    "format:check": "prettier --check \"**/*.{ts,js,mjs,json,md,yml,yaml}\"",
+    "check:types": "node scripts/check-ts-types.mjs",
+    "check:case-docs": "node scripts/check-case-docs.mjs",
+    "check:english": "node scripts/check-english.mjs",
+    "check:run-plan": "node scripts/check-run-plan.mjs",
+    "check:comparison": "node scripts/check-comparison-model.mjs",
+    "check:track": "node scripts/check-track-model.mjs",
+    "check:verdict": "node --experimental-strip-types --test framework/verdict.test.js",
+    "check:engine": "node --experimental-strip-types --test framework/engine.test.js",
+    "check:feishu-card": "node --test scripts/send-feishu-summary.test.js",
+    "check:record-values": "node --experimental-strip-types --test framework/runners/record-values.test.js",
+    "check:group-buckets": "node --experimental-strip-types --test framework/runners/group-buckets.test.js",
+    "check": "pnpm format:check && pnpm check:types && pnpm check:case-docs && pnpm check:english && pnpm check:run-plan && pnpm check:comparison && pnpm check:track && pnpm check:verdict && pnpm check:engine && pnpm check:feishu-card && pnpm check:record-values && pnpm check:group-buckets"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.20",
+    "prettier": "3.6.2",
+    "typescript": "5.9.2"
+  }
+}

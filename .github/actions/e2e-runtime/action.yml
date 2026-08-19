@@ -1,0 +1,135 @@
+name: e2e-lab runtime
+description: Bootstrap or clean up the teable-ee runtime for one bug-regression job.
+# Ported from teable-perf-lab's perf-runtime action with the trace relay
+# removed. bootstrap = toolchain + deps + prisma clients + inject the lab into
+# the teable-ee checkout + start job-local Postgres/Redis; cleanup tears the
+# containers down. Everything is job-local on purpose — a shared long-lived
+# service is a single point of failure that takes every run red with it.
+
+inputs:
+  operation:
+    description: Runtime operation. Supported values are bootstrap and cleanup.
+    required: true
+  e2e-lab-path:
+    description: e2e-lab checkout path.
+    required: false
+    default: e2e-lab
+  teable-ee-path:
+    description: teable-ee checkout path.
+    required: false
+    default: teable-ee
+
+runs:
+  using: composite
+  steps:
+    - name: Validate operation
+      shell: bash
+      run: |
+        set -euo pipefail
+        case "${{ inputs.operation }}" in
+          bootstrap|cleanup) ;;
+          *)
+            echo "Unsupported e2e-lab runtime operation: ${{ inputs.operation }}" >&2
+            exit 1
+            ;;
+        esac
+
+    - name: Setup pnpm
+      if: inputs.operation == 'bootstrap'
+      uses: pnpm/action-setup@v5
+      with:
+        version: 9.13.0
+
+    - name: Setup Node.js
+      if: inputs.operation == 'bootstrap'
+      uses: actions/setup-node@v5
+      with:
+        node-version: 22.18.0
+        cache: pnpm
+        cache-dependency-path: ${{ inputs.teable-ee-path }}/pnpm-lock.yaml
+
+    - name: Install teable-ee dependencies
+      if: inputs.operation == 'bootstrap'
+      shell: bash
+      working-directory: ${{ inputs.teable-ee-path }}
+      run: pnpm install --frozen-lockfile
+
+    - name: Generate Prisma clients
+      if: inputs.operation == 'bootstrap'
+      shell: bash
+      working-directory: ${{ inputs.teable-ee-path }}
+      run: |
+        set -euo pipefail
+        pnpm -F @teable/db-main-prisma-ee prisma-generate-ci
+        pnpm -F @teable/db-data-prisma prisma-generate-ci
+
+    - name: Install e2e-lab cases
+      if: inputs.operation == 'bootstrap'
+      shell: bash
+      run: |
+        set -euo pipefail
+        target="${{ inputs.teable-ee-path }}/community/apps/nestjs-backend/test/e2e-lab"
+        rm -rf "$target"
+        mkdir -p "$target"
+        cp -R \
+          "${{ inputs.e2e-lab-path }}/cases" \
+          "${{ inputs.e2e-lab-path }}/framework" \
+          "${{ inputs.e2e-lab-path }}/e2e-lab.e2e-spec.ts" \
+          "${{ inputs.e2e-lab-path }}/registry.ts" \
+          "$target/"
+        cp \
+          "${{ inputs.e2e-lab-path }}/vitest-e2e-lab.config.ts" \
+          "${{ inputs.teable-ee-path }}/enterprise/backend-ee/vitest-e2e-lab.config.ts"
+
+    - name: Start e2e services
+      if: inputs.operation == 'bootstrap'
+      shell: bash
+      working-directory: ${{ inputs.teable-ee-path }}
+      run: |
+        set -euo pipefail
+        export DOCKER_UID="$(id -u)"
+        export DOCKER_GID="$(getent group docker | cut -d: -f3)"
+
+        make docker.create.network
+        docker rm -fv "$TEST_PG_CONTAINER_NAME" || true
+        docker rm -fv teable-cache || true
+
+        docker compose \
+          --env-file ./dockers/.env \
+          -f ./dockers/networks.yml \
+          -f ./dockers/database-postgres.yml \
+          -f ./dockers/cache-redis.yml \
+          run -p 25432:5432 -d -T --no-deps --rm \
+          --name "$TEST_PG_CONTAINER_NAME" teable-postgres
+
+        docker compose \
+          --env-file ./dockers/.env \
+          -f ./dockers/networks.yml \
+          -f ./dockers/cache-redis.yml \
+          up --no-recreate -d teable-cache
+
+        chmod +x scripts/wait-for
+        scripts/wait-for 127.0.0.1:25432 --timeout=60 -- echo 'pg database started successfully'
+        scripts/wait-for 127.0.0.1:6379 --timeout=60 -- echo 'redis cache started successfully'
+        until docker exec "$TEST_PG_CONTAINER_NAME" pg_isready -U teable -d postgres; do
+          sleep 1
+        done
+
+    - name: Cleanup e2e services
+      if: inputs.operation == 'cleanup'
+      shell: bash
+      working-directory: ${{ inputs.teable-ee-path }}
+      run: |
+        set +e
+        export DOCKER_UID="$(id -u)"
+        export DOCKER_GID="$(getent group docker | cut -d: -f3)"
+
+        docker rm -fv "$TEST_PG_CONTAINER_NAME" || true
+        docker rm -fv teable-cache || true
+        docker compose \
+          --env-file ./dockers/.env \
+          -f ./dockers/networks.yml \
+          -f ./dockers/database-postgres.yml \
+          -f ./dockers/cache-redis.yml \
+          down -v || true
+        docker network rm "$NETWORK_MODE" || true
