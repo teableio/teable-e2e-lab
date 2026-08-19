@@ -21,11 +21,24 @@ import { promisify } from "node:util";
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 const run = promisify(execFile);
 
-// CJK ideographs plus the full-width punctuation that comes with them — the
-// full-width forms matter on their own, because a stray "，" or "（）" left
-// behind by a half-finished translation is exactly the kind of thing that
-// survives a read-through.
-const CJK = /[　-〿㐀-䶿一-鿿豈-﫿！-｠]/;
+// CJK ideographs plus the full-width punctuation that travels with them. The
+// full-width forms matter on their own: a stray full-width comma or bracket
+// left behind by a half-finished translation is exactly what survives a
+// read-through.
+//
+// Written as escapes rather than literal characters so this file passes its own
+// check. That is not a technicality — the first version spelled the ranges out
+// literally, and CI failed on this very file. A checker that has to exempt
+// itself is one exemption away from being useless.
+const CJK = new RegExp(
+  [
+    "[\\u3000-\\u303F", // CJK symbols and punctuation
+    "\\u3400-\\u4DBF", // CJK extension A
+    "\\u4E00-\\u9FFF", // CJK unified ideographs
+    "\\uF900-\\uFAFF", // CJK compatibility ideographs
+    "\\uFF01-\\uFF60]", // full-width forms
+  ].join(""),
+);
 
 const SKIP_FILES = new Set(["pnpm-lock.yaml"]);
 const SKIP_EXTENSIONS = [
