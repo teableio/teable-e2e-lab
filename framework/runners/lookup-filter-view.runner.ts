@@ -17,6 +17,7 @@ import {
   updateViewFilter,
 } from "../../../utils/init-app";
 import { bugCheckpoint } from "../checkpoint";
+import { assertV2Routing } from "../v2-routing";
 import type { BugCaseFor, BugProbeResult, BugRunContext } from "../types";
 import type { LookupFilterViewCaseConfig } from "../types";
 
@@ -176,6 +177,11 @@ export const runLookupFilterViewCase = async (
       );
     }
 
+    // The failure lives on the v2 record path only. Proving v2 answers here,
+    // in setup, is what keeps a v1-routed run from reporting a green row that
+    // means nothing.
+    const routingReason = await assertV2Routing(hostTableId);
+
     const taskField = hostTable.fields.find(
       (field: { name: string }) => field.name === TASK_FIELD,
     );
@@ -238,6 +244,7 @@ export const runLookupFilterViewCase = async (
       details: {
         referenceTableId,
         hostTableId,
+        routingReason,
         allowedCategory: config.allowedCategory,
         excludedCategories: config.excludedCategories,
         expectedTasks: config.expectedTasks,

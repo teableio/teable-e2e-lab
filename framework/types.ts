@@ -48,6 +48,12 @@ interface BugCaseBase {
   title: string;
   bug: BugRef;
   timeoutMs: number;
+  // Which record engine must serve this case. Omitted means the harness
+  // default (v1 today). "force-v2" flips FORCE_V2_ALL around the whole case;
+  // a case that declares it must also prove it routed, with assertV2Routing()
+  // in its setup phase - see framework/v2-routing.ts for why both halves are
+  // required.
+  routing?: "force-v2";
 }
 
 // A runner-specific view of a bug case, keeping the runner literal and its

@@ -9,6 +9,7 @@ import {
   updateViewFilter,
 } from "../../../utils/init-app";
 import { bugCheckpoint } from "../checkpoint";
+import { assertV2Routing } from "../v2-routing";
 import type { BugCaseFor, BugProbeResult, BugRunContext } from "../types";
 import type { ViewFilterRoundtripCaseConfig } from "../types";
 
@@ -137,6 +138,11 @@ export const runViewFilterRoundtripCase = async (
       );
     }
 
+    // The view filter schema that dropped the condition is v2's. Proving v2
+    // answers here, in setup, is what keeps a v1-routed run from reporting a
+    // green row that means nothing.
+    const routingReason = await assertV2Routing(tableId);
+
     const filter = buildFilter(
       titleField.id,
       selectField.id,
@@ -179,6 +185,7 @@ export const runViewFilterRoundtripCase = async (
       details: {
         tableId,
         tableName,
+        routingReason,
         sentFilter: filter,
         savedFilter: probe.savedFilter,
         returnedTitles: probe.titles,

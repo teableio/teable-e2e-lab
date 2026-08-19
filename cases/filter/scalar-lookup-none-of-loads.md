@@ -60,10 +60,12 @@ Host 表 4 行：`Allowed` / `Excluded A` / `Excluded B` 各一行，外加一�
 
 ## 关于 v2
 
-这个故障在 v2 的记录查询路径上。teable-ee 自己的回归测试用 `withForceV2All` 强制 v2；
-e2e-lab 跑的是 harness 的默认配置，而 community e2e 自
-[bb87b1e7c](https://github.com/teableio/teable-ee/commit/bb87b1e7c)（T6703）起默认走 v2。
-在那之前的历史列上这个 bug 可能观察不到——对比表会把它显示成「那时还没有」，不是误判。
+这个故障只存在于 v2 的记录查询路径上。lab 的 harness **默认不走 v2**——不加声明的话，
+请求会被 v1 服务，而 v1 从来没有这个 bug，用例在每一列都是绿的、什么都没证明。这不是
+假设：这条用例第一版就是这么绿着过了自己的修复前 commit。
+
+所以用例声明 `routing: "force-v2"`，并在 setup 里用 `assertV2Routing()` 读响应头
+`x-teable-v2` 证明确实走了 v2。两半缺一不可，理由写在 `framework/v2-routing.ts`。
 
 ## 期望状态
 

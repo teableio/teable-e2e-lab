@@ -11,6 +11,7 @@ import type {
   BugRunContext,
   BugRunnerKind,
 } from "./types";
+import { withForcedV2 } from "./v2-routing";
 
 type RunnerFn<K extends BugRunnerKind> = (
   bugCase: BugCaseFor<K>,
@@ -37,5 +38,6 @@ export const executeRegisteredRunner = (
   if (!runner) {
     throw new Error(`No runner registered for kind "${bugCase.runner}"`);
   }
-  return runner(bugCase as never, context);
+  const run = () => runner(bugCase as never, context);
+  return bugCase.routing === "force-v2" ? withForcedV2(run) : run();
 };

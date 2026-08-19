@@ -49,6 +49,12 @@ and
 **checkpoint `incomplete-condition-survives-and-filters-nothing`（失败 = ❌ bug 复现）**：
 存 filter → 读视图，比对 filter 与发出去的完全一致 → 按视图取数，断言只回来 `kept`。
 
+## 关于 v2
+
+丢条件的是 v2 的 `ViewSourceFilter`，而 lab 的 harness 默认不走 v2。用例声明
+`routing: "force-v2"`，并在 setup 里用 `assertV2Routing()` 证明请求确实由 v2 服务——
+否则 v1 路由的一次运行会在每一列都给出毫无意义的绿。见 `framework/v2-routing.ts`。
+
 ## 期望状态
 
 `status: fixed`。修复已在 develop 上（3f15439a3），此后再复现就是回归。

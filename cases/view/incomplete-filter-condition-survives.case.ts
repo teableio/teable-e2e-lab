@@ -8,6 +8,7 @@ export default defineBugCase({
   id: "view/incomplete-filter-condition-survives",
   title: "筛选条件只选了字段还没填值，保存后仍然在，且不影响取数",
   runner: "view-filter-roundtrip",
+  routing: "force-v2",
   timeoutMs: 120_000,
   bug: {
     issue: "T6568",
