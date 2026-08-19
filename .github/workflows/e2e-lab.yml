@@ -41,6 +41,10 @@ env:
   OTEL_EXPORTER_OTLP_ENDPOINT: ""
   OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: ""
   OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: ""
+  # Workflow-level so step `if:` conditions can see them — a step's own env
+  # block is not visible to its own condition.
+  TEABLE_E2E_LAB_TOKEN: ${{ secrets.TEABLE_E2E_LAB_TOKEN }}
+  FEISHU_E2E_WEBHOOK_URL: ${{ secrets.FEISHU_E2E_WEBHOOK_URL }}
 
 jobs:
   resolve_inputs:
@@ -247,6 +251,28 @@ jobs:
           path: e2e-lab-report
           if-no-files-found: warn
           retention-days: 90
+
+      # One row per case x commit into the Regression Track table, upserted by
+      # Run Key. Best-effort and independent of acceptance: the artifacts are
+      # the source of truth, the table is the queryable history. Gated on the
+      # secret so forks and token-less setups skip cleanly.
+      - name: Report results to Teable
+        if: always() && env.TEABLE_E2E_LAB_TOKEN != ''
+        continue-on-error: true
+        env:
+          E2E_LAB_ARTIFACT_DIR: ${{ github.workspace }}/e2e-lab-artifacts
+          E2E_LAB_EXECUTE_PLAN: ${{ needs.resolve_inputs.outputs.execute_plan }}
+        run: node e2e-lab/scripts/report-teable-track.mjs
+
+      # The run's card, built from the same comparison.json the acceptance
+      # gate judges. Independent report steps by design — a Feishu outage must
+      # not hide the Teable rows, and vice versa.
+      - name: Send Feishu summary
+        if: always() && env.FEISHU_E2E_WEBHOOK_URL != ''
+        continue-on-error: true
+        env:
+          E2E_LAB_COMPARISON_PATH: ${{ github.workspace }}/e2e-lab-report/comparison.json
+        run: node e2e-lab/scripts/send-feishu-summary.mjs
 
       # The fail-closed gate, and the only step that turns this job red:
       # missing/duplicate/unplanned payloads, unknown verdicts, errors anywhere,

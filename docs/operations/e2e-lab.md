@@ -116,3 +116,31 @@ See [.agents/skills/localrun/SKILL.md](../../.agents/skills/localrun/SKILL.md).
 Same spec, same injection, long-lived local containers instead of job-local
 ones. Local runs are direction-finding; GitHub Actions is the acceptance
 surface.
+
+## Teable storage and Feishu card
+
+Two tables in the shared perf-lab base mirror teable-perf-lab's pattern
+(catalog + result stream):
+
+- **E2E Bug Cases (readonly)** (`tblgKLRoSAiKsIP7ZKi`): the registry published
+  for humans, upserted by Case ID from `sync-cases.yml` on every push to main
+  that touches cases or the registry. A read surface only — the registry in
+  git stays the single source of truth.
+- **Regression Track** (`tblhDr6yHUAkEMcJuNC`): one row per case × commit per
+  run attempt, upserted by the unique Run Key
+  (`<runId>-<attempt>-<caseId>-<teableEeShortSha>`) from the report job. Rows
+  carry the verdict, the observation, gating, the pinned teable-ee SHA, timing,
+  checkpoint evidence, the normalized error, and the per-case summary markdown.
+
+Both writers live behind `TEABLE_E2E_LAB_TOKEN` and skip cleanly (saying so)
+when it is absent. They are best-effort and independent of acceptance: the
+artifacts remain the source of truth; the tables exist so history is queryable
+without downloading them. Filters in the upsert address columns by FIELD ID,
+never by name — Teable silently drops a filter naming a missing field and
+answers 200, which would turn "find my row" into "the whole table".
+
+The report job also posts one Feishu card per run (`FEISHU_E2E_WEBHOOK_URL`),
+built from the same `comparison.json` the acceptance gate judges: verdict
+header, per-row cell strips with transition points, and the lists that need a
+human (regressions, errors, missing cells, unexpectedly-fixed). Teable and
+Feishu are independent report steps so one outage cannot hide the other.

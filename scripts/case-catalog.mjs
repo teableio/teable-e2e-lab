@@ -91,8 +91,21 @@ const literalField = (source, name, path) => {
   return match[1];
 };
 
+// Optional numeric literal (e.g. `timeoutMs: 60_000`). Returns undefined when
+// absent rather than throwing — only the identity fields are contractual.
+const numericField = (source, name) => {
+  const match = source.match(new RegExp(`${name}:\\s*([\\d_]+)`));
+  return match ? Number(match[1].replaceAll("_", "")) : undefined;
+};
+
+const optionalLiteralField = (source, name) => {
+  const match = source.match(new RegExp(`${name}:\\s*["']([^"']+)["']`));
+  return match ? match[1] : undefined;
+};
+
 // The catalog: one entry per REGISTERED case, in registry array order, each
-// carrying {id, path, issue, status}.
+// carrying {id, path, issue, status} plus the display extras the Teable case
+// sync publishes (title, timeoutMs, link).
 export const loadCaseCatalog = async (repoRoot) => {
   const { pathByImport, arrayEntries } = await loadRegistry(repoRoot);
   const catalog = [];
@@ -109,6 +122,11 @@ export const loadCaseCatalog = async (repoRoot) => {
       id: literalField(source, "id", path),
       issue: literalField(source, "issue", path),
       status: literalField(source, "status", path),
+      title: literalField(source, "title", path),
+      runner: literalField(source, "runner", path),
+      timeoutMs: numericField(source, "timeoutMs"),
+      link: optionalLiteralField(source, "link"),
+      appliesSince: optionalLiteralField(source, "appliesSince"),
     });
   }
   return catalog;

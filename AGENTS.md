@@ -50,5 +50,6 @@ pnpm check
 ## 公开仓库纪律
 
 - 安全类 bug 修复发布前不收录（详见 CONTRIBUTING.md）。
-- 用例和文档里不出现内部 URL、客户数据、任何凭据。唯一的 secret 是 CI 的
-  teable-ee 只读访问 token（`TEABLE_EE_CHECKOUT_TOKEN`），只活在 GitHub secret 里。
+- 用例和文档里不出现内部 URL、客户数据、任何凭据。仓库的三个 secret——
+  `TEABLE_EE_CHECKOUT_TOKEN`（拉 teable-ee 源码）、`TEABLE_E2E_LAB_TOKEN`
+  （写结果表）、`FEISHU_E2E_WEBHOOK_URL`（发卡片）——只活在 GitHub secret 里。
