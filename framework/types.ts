@@ -14,6 +14,8 @@ export interface BugCaseConfigByRunner {
   "view-filter-roundtrip": ViewFilterRoundtripCaseConfig;
   "lookup-filter-view": LookupFilterViewCaseConfig;
   "lookup-user-snapshot-sort": LookupUserSnapshotSortCaseConfig;
+  "computed-value-lands": ComputedValueLandsCaseConfig;
+  "required-link-refresh": RequiredLinkRefreshCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -265,4 +267,50 @@ export interface LookupUserSnapshotSortCaseConfig {
     // would prove nothing. The runner refuses a fixture that fails this.
     rows: { name: string; date: string }[];
   }[];
+}
+
+// Link a host row to a source row, look the source value up, run a scalar
+// formula over the lookup -> touch the source -> checkpoint: the formula's
+// result arrives. The failure is a computed UPDATE Postgres rejects, which the
+// pipeline dead-letters silently: the write answers 200 and the cell simply
+// never changes. So the whole case, observation included, is public API, and
+// the timeout is the assertion.
+export interface ComputedValueLandsCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Stored as text on the source row and read through a json-array lookup.
+  // The SHAPE of these strings is the fixture: a value that only survives the
+  // round trip if the computed SQL reads it out of the array before casting.
+  sourceValue: string;
+  // What the source row is changed to, to force a recompute. It must DIFFER
+  // from sourceValue: writing the same value back is a no-op, no computed task
+  // is queued, and the case would sit there reading the successful first
+  // backfill and calling it a pass. That is not hypothetical - it is what the
+  // first version of this case did, on both sides of the fix.
+  sourceValueAfter: string;
+  // How long the formula result may take to arrive. This is the assertion, so
+  // it has to sit above a slow-but-working pipeline and below "never".
+  settleTimeoutMs: number;
+  settlePollIntervalMs: number;
+}
+
+// A host row with a required manyOne link and a manyMany link to the same
+// table, its foreign key cleared behind the product's back -> rename a row the
+// manyMany link points at -> checkpoint: the new title reaches that cell, and
+// the required link is still there. Both links refresh in one statement, so a
+// NULL forced into the required link's NOT NULL display column takes the
+// innocent field down with it.
+export interface RequiredLinkRefreshCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Title of the row the required link points at.
+  linkedTitle: string;
+  // Title of the second row, before and after the rename that triggers the
+  // refresh. They must differ, or the refresh would be invisible.
+  otherTitle: string;
+  otherTitleAfter: string;
+  // How long the refreshed title may take to arrive. This is the assertion:
+  // above a slow-but-working pipeline, below "never".
+  settleTimeoutMs: number;
+  settlePollIntervalMs: number;
 }
