@@ -1,5 +1,6 @@
 import { runGroupCollapseCase } from "./runners/group-collapse.runner";
 import { runLookupFilterViewCase } from "./runners/lookup-filter-view.runner";
+import { runLookupUserSnapshotSortCase } from "./runners/lookup-user-snapshot-sort.runner";
 import { runHttpCheckCase } from "./runners/http-check.runner";
 import { runRecordFlowCase } from "./runners/record-flow.runner";
 import { runShareSaveCase } from "./runners/share-save.runner";
@@ -28,6 +29,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "share-save": runShareSaveCase,
   "view-filter-roundtrip": runViewFilterRoundtripCase,
   "lookup-filter-view": runLookupFilterViewCase,
+  "lookup-user-snapshot-sort": runLookupUserSnapshotSortCase,
 };
 
 export const executeRegisteredRunner = (

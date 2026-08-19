@@ -25,7 +25,12 @@ import ts from "typescript";
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 
-const EXTERNAL_MODULES = ["@nestjs/common", "@teable/core", "@teable/openapi"];
+const EXTERNAL_MODULES = [
+  "@nestjs/common",
+  "@teable/core",
+  "@teable/openapi",
+  "@teable/db-main-prisma",
+];
 
 const VITEST_GLOBALS = [
   "describe",

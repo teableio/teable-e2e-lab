@@ -17,10 +17,20 @@ import { normalizeBugError } from "./bug-error";
  * old revision where the bug lives from an old revision where the fixture API
  * did not exist yet.
  */
+// Set while a checkpoint is running, read by the fixture-DB seam so it can
+// refuse to hand out a database handle where the bug is being observed. Cases
+// run one at a time in one process, so a plain flag is enough; a counter would
+// only matter for nested checkpoints, which nothing builds.
+let insideCheckpoint = false;
+
+export const isInsideCheckpoint = () => insideCheckpoint;
+
 export const bugCheckpoint = async <T>(
   checkpoint: string,
   observe: () => Promise<T> | T,
 ): Promise<T> => {
+  const outer = insideCheckpoint;
+  insideCheckpoint = true;
   try {
     return await observe();
   } catch (error) {
@@ -43,5 +53,7 @@ export const bugCheckpoint = async <T>(
         },
       },
     );
+  } finally {
+    insideCheckpoint = outer;
   }
 };

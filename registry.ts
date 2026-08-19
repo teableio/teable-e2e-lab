@@ -4,6 +4,7 @@ import recordCollapsedDateGroupStaysHiddenCase from "./cases/record/collapsed-da
 import baseShareSaveIntoExistingBaseTwiceCase from "./cases/base-share/save-into-existing-base-twice.case";
 import viewIncompleteFilterConditionSurvivesCase from "./cases/view/incomplete-filter-condition-survives.case";
 import filterScalarLookupNoneOfLoadsCase from "./cases/filter/scalar-lookup-none-of-loads.case";
+import lookupUserSnapshotDateSortSpansGroupCase from "./cases/lookup/user-snapshot-date-sort-spans-group.case";
 import type { BugCase } from "./framework/types";
 
 // Every runnable case, registered explicitly. scripts/case-catalog.mjs parses
@@ -16,6 +17,7 @@ const cases = [
   baseShareSaveIntoExistingBaseTwiceCase,
   viewIncompleteFilterConditionSurvivesCase,
   filterScalarLookupNoneOfLoadsCase,
+  lookupUserSnapshotDateSortSpansGroupCase,
 ] satisfies BugCase[];
 
 const caseById = new Map<string, BugCase>(

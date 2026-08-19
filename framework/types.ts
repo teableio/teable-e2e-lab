@@ -13,6 +13,7 @@ export interface BugCaseConfigByRunner {
   "share-save": ShareSaveCaseConfig;
   "view-filter-roundtrip": ViewFilterRoundtripCaseConfig;
   "lookup-filter-view": LookupFilterViewCaseConfig;
+  "lookup-user-snapshot-sort": LookupUserSnapshotSortCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -242,4 +243,29 @@ export interface LookupFilterViewCaseConfig {
   rows: { task: string; category: string | null }[];
   // The tasks the saved view must return, in the order the view sorts them.
   expectedTasks: string[];
+}
+
+// One collaborator, two stored snapshots of them, one group -> checkpoint: a
+// date sort inside that group runs straight down instead of restarting at the
+// snapshot boundary. The snapshots are written straight to the database
+// because nothing in the API produces them on demand - see
+// framework/fixture-db.ts for when that is allowed.
+export interface LookupUserSnapshotSortCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Display time zone of the sorted date field. Not load-bearing for this bug;
+  // it is pinned so the dates in the fixture read the same everywhere.
+  timeZone: string;
+  // At least two groups, each a distinct stored snapshot of the SAME
+  // collaborator. `snapshotExtras` are the keys that drift over a base's life
+  // - email, avatarUrl - never id or title, which are the identity the group
+  // header folds on.
+  snapshotGroups: {
+    key: string;
+    snapshotExtras: Record<string, string>;
+    // Dates must interleave ACROSS groups, or a sort that restarts at every
+    // snapshot would produce the same order as a correct one and the case
+    // would prove nothing. The runner refuses a fixture that fails this.
+    rows: { name: string; date: string }[];
+  }[];
 }
