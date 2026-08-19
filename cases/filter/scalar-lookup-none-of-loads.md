@@ -60,12 +60,12 @@ Host 表 4 行：`Allowed` / `Excluded A` / `Excluded B` 各一行，外加一�
 
 ## 关于 v2
 
-这个故障只存在于 v2 的记录查询路径上。lab 的 harness **默认不走 v2**——不加声明的话，
-请求会被 v1 服务，而 v1 从来没有这个 bug，用例在每一列都是绿的、什么都没证明。这不是
-假设：这条用例第一版就是这么绿着过了自己的修复前 commit。
+这个故障只存在于 v2 的记录查询路径上。这条用例的第一版就栽在这里：当时 lab 默认走 v1，
+而 v1 从来没有这个 bug，四列全绿、什么都没证明。
 
-所以用例声明 `routing: "force-v2"`，并在 setup 里用 `assertV2Routing()` 读响应头
-`x-teable-v2` 证明确实走了 v2。两半缺一不可，理由写在 `framework/v2-routing.ts`。
+现在 lab 默认跑 v2，但用例仍然显式声明 `routing: "force-v2"`，并在 setup 里用
+`assertV2Routing()` 读响应头 `x-teable-v2` 证明确实走了 v2——默认值对了不等于用例可以
+拿它当前提。两半缺一不可，理由写在 `framework/v2-routing.ts`。
 
 ## 期望状态
 

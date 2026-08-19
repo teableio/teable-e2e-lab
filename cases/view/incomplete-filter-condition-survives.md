@@ -51,9 +51,10 @@ and
 
 ## 关于 v2
 
-丢条件的是 v2 的 `ViewSourceFilter`，而 lab 的 harness 默认不走 v2。用例声明
-`routing: "force-v2"`，并在 setup 里用 `assertV2Routing()` 证明请求确实由 v2 服务——
-否则 v1 路由的一次运行会在每一列都给出毫无意义的绿。见 `framework/v2-routing.ts`。
+丢条件的是 v2 的 `ViewSourceFilter`。lab 现在默认跑 v2，但用例仍然声明
+`routing: "force-v2"` 并在 setup 里用 `assertV2Routing()` 证明请求确实由 v2 服务——
+这条用例的第一版正是在默认走 v1 的时候，在每一列都给出了毫无意义的绿。见
+`framework/v2-routing.ts`。
 
 ## 期望状态
 

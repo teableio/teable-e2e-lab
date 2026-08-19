@@ -49,10 +49,13 @@ interface BugCaseBase {
   title: string;
   bug: BugRef;
   timeoutMs: number;
-  // Which record engine must serve this case. Omitted means the harness
-  // default (v1 today). "force-v2" flips FORCE_V2_ALL around the whole case;
-  // a case that declares it must also prove it routed, with assertV2Routing()
-  // in its setup phase - see framework/v2-routing.ts for why both halves are
+  // Which record engine this case NEEDS, as opposed to whichever one the
+  // harness happens to default to. vitest-e2e-lab.config.ts points the lab at
+  // v2, so today this is usually redundant - which is exactly why it is worth
+  // declaring: a case that is meaningless on v1 says so itself, and keeps
+  // saying it if the default ever moves or a run pins FORCE_V2_ALL=false. A
+  // case that declares it must also prove it routed, with assertV2Routing() in
+  // its setup phase; see framework/v2-routing.ts for why both halves are
   // required.
   routing?: "force-v2";
 }

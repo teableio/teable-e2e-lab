@@ -3,11 +3,13 @@ import { axios } from "@teable/openapi";
 /**
  * Which engine serves a case's requests.
  *
- * teable-ee runs two record engines behind the same API. Which one answers is
- * decided per request, and in the lab's harness the default is v1 — so a case
- * for a v2-only bug asks its question of code that never had the bug, passes
+ * teable-ee runs two record engines behind the same API, and which one answers
+ * is decided per request. The lab now points at v2 by default
+ * (vitest-e2e-lab.config.ts explains why), but "the default is right today" is
+ * not something a case should have to rely on: a case for a v2-only bug that
+ * gets routed to v1 asks its question of code that never had the bug, passes
  * on every commit, and reports a green row that means nothing. That is not a
- * hypothetical: the first two v2 cases written here passed on their own
+ * hypothetical — the first two v2 cases written here passed on their own
  * pre-fix commits before this module existed.
  *
  * Two things are needed to make such a case honest, and one without the other
