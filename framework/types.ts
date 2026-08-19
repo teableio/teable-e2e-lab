@@ -15,6 +15,7 @@ export interface BugCaseConfigByRunner {
   "lookup-filter-view": LookupFilterViewCaseConfig;
   "lookup-user-snapshot-sort": LookupUserSnapshotSortCaseConfig;
   "computed-value-lands": ComputedValueLandsCaseConfig;
+  "required-link-refresh": RequiredLinkRefreshCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -283,6 +284,27 @@ export interface ComputedValueLandsCaseConfig {
   sourceValue: string;
   // How long the formula result may take to arrive. This is the assertion, so
   // it has to sit above a slow-but-working pipeline and below "never".
+  settleTimeoutMs: number;
+  settlePollIntervalMs: number;
+}
+
+// A host row with a required manyOne link and a manyMany link to the same
+// table, its foreign key cleared behind the product's back -> rename a row the
+// manyMany link points at -> checkpoint: the new title reaches that cell, and
+// the required link is still there. Both links refresh in one statement, so a
+// NULL forced into the required link's NOT NULL display column takes the
+// innocent field down with it.
+export interface RequiredLinkRefreshCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Title of the row the required link points at.
+  linkedTitle: string;
+  // Title of the second row, before and after the rename that triggers the
+  // refresh. They must differ, or the refresh would be invisible.
+  otherTitle: string;
+  otherTitleAfter: string;
+  // How long the refreshed title may take to arrive. This is the assertion:
+  // above a slow-but-working pipeline, below "never".
   settleTimeoutMs: number;
   settlePollIntervalMs: number;
 }

@@ -4,6 +4,7 @@ import { runLookupFilterViewCase } from "./runners/lookup-filter-view.runner";
 import { runLookupUserSnapshotSortCase } from "./runners/lookup-user-snapshot-sort.runner";
 import { runHttpCheckCase } from "./runners/http-check.runner";
 import { runRecordFlowCase } from "./runners/record-flow.runner";
+import { runRequiredLinkRefreshCase } from "./runners/required-link-refresh.runner";
 import { runShareSaveCase } from "./runners/share-save.runner";
 import { runViewFilterRoundtripCase } from "./runners/view-filter-roundtrip.runner";
 import type {
@@ -31,6 +32,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "lookup-filter-view": runLookupFilterViewCase,
   "lookup-user-snapshot-sort": runLookupUserSnapshotSortCase,
   "computed-value-lands": runComputedValueLandsCase,
+  "required-link-refresh": runRequiredLinkRefreshCase,
 };
 
 export const executeRegisteredRunner = (
