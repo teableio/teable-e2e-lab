@@ -70,25 +70,29 @@ export const upsertRecordsByKey = async ({
   let updated = 0;
   for (let index = 0; index < records.length; index += WRITE_BATCH_SIZE) {
     const batch = records.slice(index, index + WRITE_BATCH_SIZE);
+    const params = new URLSearchParams({
+      fieldKeyType: "name",
+      take: String(batch.length),
+      // One OR across the batch keys — a single bounded read instead of a
+      // request per record.
+      filter: JSON.stringify({
+        conjunction: "or",
+        filterSet: batch.map((record) => ({
+          fieldId: keyFieldId,
+          operator: "is",
+          value: record.fields[keyFieldName],
+        })),
+      }),
+    });
+    // Repeated `projection[]` params, NOT a JSON-encoded array. Measured on
+    // 2026-08-19: `projection=["fldXXX"]` gets a 200 whose every record has
+    // `fields: {}` — the degraded read that made the first sync create
+    // duplicates instead of updating. Same silent-degradation family as
+    // filters naming a missing field.
+    params.append("projection[]", keyFieldId);
     const found = await request({
       method: "GET",
-      path:
-        `/table/${tableId}/record?` +
-        new URLSearchParams({
-          fieldKeyType: "name",
-          take: String(batch.length),
-          projection: JSON.stringify([keyFieldId]),
-          // One OR across the batch keys — a single bounded read instead of a
-          // request per record.
-          filter: JSON.stringify({
-            conjunction: "or",
-            filterSet: batch.map((record) => ({
-              fieldId: keyFieldId,
-              operator: "is",
-              value: record.fields[keyFieldName],
-            })),
-          }),
-        }).toString(),
+      path: `/table/${tableId}/record?${params.toString()}`,
     });
     const existingByKey = new Map(
       (found?.records ?? []).map((record) => [
