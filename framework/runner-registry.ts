@@ -1,3 +1,4 @@
+import { runComputedValueLandsCase } from "./runners/computed-value-lands.runner";
 import { runGroupCollapseCase } from "./runners/group-collapse.runner";
 import { runLookupFilterViewCase } from "./runners/lookup-filter-view.runner";
 import { runLookupUserSnapshotSortCase } from "./runners/lookup-user-snapshot-sort.runner";
@@ -29,6 +30,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "view-filter-roundtrip": runViewFilterRoundtripCase,
   "lookup-filter-view": runLookupFilterViewCase,
   "lookup-user-snapshot-sort": runLookupUserSnapshotSortCase,
+  "computed-value-lands": runComputedValueLandsCase,
 };
 
 export const executeRegisteredRunner = (

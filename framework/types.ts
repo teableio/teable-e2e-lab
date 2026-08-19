@@ -14,6 +14,7 @@ export interface BugCaseConfigByRunner {
   "view-filter-roundtrip": ViewFilterRoundtripCaseConfig;
   "lookup-filter-view": LookupFilterViewCaseConfig;
   "lookup-user-snapshot-sort": LookupUserSnapshotSortCaseConfig;
+  "computed-value-lands": ComputedValueLandsCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -265,4 +266,23 @@ export interface LookupUserSnapshotSortCaseConfig {
     // would prove nothing. The runner refuses a fixture that fails this.
     rows: { name: string; date: string }[];
   }[];
+}
+
+// Link a host row to a source row, look the source value up, run a scalar
+// formula over the lookup -> touch the source -> checkpoint: the formula's
+// result arrives. The failure is a computed UPDATE Postgres rejects, which the
+// pipeline dead-letters silently: the write answers 200 and the cell simply
+// never changes. So the whole case, observation included, is public API, and
+// the timeout is the assertion.
+export interface ComputedValueLandsCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Stored as text on the source row and read through a json-array lookup.
+  // The SHAPE of this string is the fixture: a value that only survives the
+  // round trip if the computed SQL reads it out of the array before casting.
+  sourceValue: string;
+  // How long the formula result may take to arrive. This is the assertion, so
+  // it has to sit above a slow-but-working pipeline and below "never".
+  settleTimeoutMs: number;
+  settlePollIntervalMs: number;
 }
