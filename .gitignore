@@ -13,3 +13,6 @@ e2e-lab-report/
 *.key
 *.pem
 .DS_Store
+
+# Local Claude Code setup (the skills symlink); machine-specific, never committed.
+.claude/
