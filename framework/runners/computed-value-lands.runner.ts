@@ -50,10 +50,15 @@ export const runComputedValueLandsCase = async (
   let sourceTableId = "";
   let hostTableId = "";
 
-  const expected = Number(config.sourceValue);
+  const expected = Number(config.sourceValueAfter);
   if (!Number.isFinite(expected)) {
     throw new Error(
-      `sourceValue "${config.sourceValue}" is not a number - the formula's expected result is undefined`,
+      `sourceValueAfter "${config.sourceValueAfter}" is not a number - the formula's expected result is undefined`,
+    );
+  }
+  if (config.sourceValue === config.sourceValueAfter) {
+    throw new Error(
+      "sourceValue and sourceValueAfter are identical - the write would be a no-op, no recompute would run, and the case would read the first backfill and pass",
     );
   }
 
@@ -150,15 +155,14 @@ export const runComputedValueLandsCase = async (
     });
 
     const probe = await bugCheckpoint("computed-value-arrives", async () => {
-      // Touch the source value to force a recompute. Writing the SAME value
-      // back is deliberate: the row's content is not what this case is about,
-      // and rewriting it keeps the expected result a constant rather than
-      // something the case has to track across the write.
+      // Change the source value - a real change, not a rewrite of the same
+      // string. A no-op write queues no computed task, and the cell would
+      // still hold the value the first backfill put there.
       await updateRecordByApi(
         sourceTableId,
         sourceRecordId,
         sourceTitleField.id,
-        config.sourceValue,
+        config.sourceValueAfter,
       );
 
       const deadline = Date.now() + config.settleTimeoutMs;
@@ -185,6 +189,7 @@ export const runComputedValueLandsCase = async (
         hostTableId,
         routing,
         sourceValue: config.sourceValue,
+        sourceValueAfter: config.sourceValueAfter,
         expected,
         observed: probe.value,
       },

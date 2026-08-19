@@ -279,9 +279,15 @@ export interface ComputedValueLandsCaseConfig {
   baseId: "seed-base";
   tableNamePrefix: string;
   // Stored as text on the source row and read through a json-array lookup.
-  // The SHAPE of this string is the fixture: a value that only survives the
+  // The SHAPE of these strings is the fixture: a value that only survives the
   // round trip if the computed SQL reads it out of the array before casting.
   sourceValue: string;
+  // What the source row is changed to, to force a recompute. It must DIFFER
+  // from sourceValue: writing the same value back is a no-op, no computed task
+  // is queued, and the case would sit there reading the successful first
+  // backfill and calling it a pass. That is not hypothetical - it is what the
+  // first version of this case did, on both sides of the fix.
+  sourceValueAfter: string;
   // How long the formula result may take to arrive. This is the assertion, so
   // it has to sit above a slow-but-working pipeline and below "never".
   settleTimeoutMs: number;

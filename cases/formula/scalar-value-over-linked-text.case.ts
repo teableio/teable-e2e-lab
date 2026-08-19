@@ -21,7 +21,12 @@ export default defineBugCase({
     // makes the failure legible: "[0.0003]" is a string Postgres will not read
     // as a double, while a value like "3" survives some of the broken casts by
     // accident.
-    sourceValue: "0.0003",
+    sourceValue: "0.0002",
+    // Changed, not rewritten: the same value back is a no-op that queues no
+    // recompute. Both are leading-zero decimals, the shape from the report -
+    // "[0.0003]" is a string Postgres will not read as a double, while a value
+    // like "3" can survive a broken cast by accident.
+    sourceValueAfter: "0.0003",
     settleTimeoutMs: 30_000,
     settlePollIntervalMs: 500,
   },
