@@ -3,7 +3,7 @@ name: Static checks
 # The secrets-free line: everything here validates this repository's own code
 # and runs on every push and every fork PR. The actual bug-regression run lives
 # in e2e-lab.yml behind workflow_dispatch, because it needs the private
-# teable-ee deploy key that fork PRs are (correctly) never handed.
+# teable-ee access token that fork PRs are (correctly) never handed.
 on:
   push:
     branches: [main]

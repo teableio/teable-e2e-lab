@@ -68,7 +68,7 @@ jobs:
         with:
           repository: teableio/teable-ee
           path: teable-ee-graph
-          ssh-key: ${{ secrets.TEABLE_EE_CHECKOUT_SSH_KEY }}
+          token: ${{ secrets.TEABLE_EE_CHECKOUT_TOKEN }}
           fetch-depth: 0
           filter: tree:0
 
@@ -138,7 +138,7 @@ jobs:
           repository: teableio/teable-ee
           ref: ${{ matrix.plan.sha }}
           path: teable-ee
-          ssh-key: ${{ secrets.TEABLE_EE_CHECKOUT_SSH_KEY }}
+          token: ${{ secrets.TEABLE_EE_CHECKOUT_TOKEN }}
 
       - name: Bootstrap e2e runtime
         uses: ./e2e-lab/.github/actions/e2e-runtime

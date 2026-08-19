@@ -35,7 +35,7 @@ reproduction of an unfixed vulnerability — so:
 ## Fork PRs and CI
 
 Fork PRs run the secrets-free `Static checks` workflow only. The actual
-regression run needs the private teable-ee deploy key, which fork PRs are
+regression run needs the private teable-ee access token, which fork PRs are
 never handed — a maintainer dispatches `e2e-lab.yml` to verify your case
 against real revisions before merging. Include in your PR description which
 commit the bug reproduces on (and which fixed it, if known), so that dispatch

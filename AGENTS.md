@@ -51,4 +51,4 @@ pnpm check
 
 - 安全类 bug 修复发布前不收录（详见 CONTRIBUTING.md）。
 - 用例和文档里不出现内部 URL、客户数据、任何凭据。唯一的 secret 是 CI 的
-  teable-ee 只读 deploy key，只活在 GitHub secret 里。
+  teable-ee 只读访问 token（`TEABLE_EE_CHECKOUT_TOKEN`），只活在 GitHub secret 里。

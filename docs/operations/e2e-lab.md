@@ -106,7 +106,9 @@ gh workflow run e2e-lab.yml \
 ```
 
 Because `teableio/teable-ee` is private, the repository needs a read-only
-deploy key stored as the `TEABLE_EE_CHECKOUT_SSH_KEY` secret.
+access token stored as the `TEABLE_EE_CHECKOUT_TOKEN` secret (a
+fine-grained PAT with read-only Contents access to that repository is the
+tight grant).
 
 ## Local runs
 
