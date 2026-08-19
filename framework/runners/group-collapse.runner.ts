@@ -106,14 +106,17 @@ export const runGroupCollapseCase = async (
     const groupBy = [{ fieldId: dateField.id, order: SortFunc.Asc }];
 
     await seedBuckets(tableId, config);
+    const expectedTitles = config.buckets.flatMap(bucketTitles);
 
     // Fixture verification, deliberately outside the checkpoint: if the
     // product bucketed these rows differently, the collapse question below is
-    // not even askable.
+    // not even askable. `take` is the exact seeded row count - this endpoint
+    // rejects "take everything", and a page smaller than the fixture would
+    // make the header check read a partial grouping.
     const seeded = await getRecords(tableId, {
       fieldKeyType: FieldKeyType.Name,
       groupBy,
-      take: -1,
+      take: expectedTitles.length,
     });
     const titleById = new Map<string, string>(
       seeded.records.map(
@@ -123,7 +126,6 @@ export const runGroupCollapseCase = async (
         ],
       ),
     );
-    const expectedTitles = config.buckets.flatMap(bucketTitles);
     if (titleById.size !== expectedTitles.length) {
       throw new Error(
         `Seed did not land: expected ${expectedTitles.length} rows, read back ${titleById.size}`,
