@@ -1,117 +1,50 @@
-# Agent Playbook: 加一个用例
+# 用例作业流程
 
-你在帮人给 Teable 加一条接口验收用例。对方通常知道要测的产品行为，但不熟这个仓库。
-你来驱动流程，不要先让他学内部结构。
+加一个 bug 用例的完整回路。这里是唯一的流程来源，别处不要复述。
 
-从上往下读这一篇，需要时再翻另外三篇：
+## 1. 先想清楚三件事
 
-- [target.md](target.md) —— 被测环境允许你测什么。**动手前先读**。
-- [case-spec.md](case-spec.md) —— 写代码前先确认的那份 spec。
-- [checklist.md](checklist.md) —— 写的时候必须守住的硬规则。
+- **这个 bug 用什么 API 序列复现？** 用例只走公共 API 的真实读写路径，框架没有
+  数据库连接——用户是通过 API 用产品的，绕过 API 会漏掉缓存、序列化、权限过滤这些
+  最容易错的层。
+- **checkpoint 在哪里？** `bugCheckpoint()` 里面抛出的任何异常都算「bug 复现」，
+  外面抛的都算「用例没跑成」。setup（建表、造数、验证夹具就位）放外面，对 bug 的
+  观察放里面。夹具验证放外面是有讲究的：结论都建立在初始状态正确上，夹具本身没
+  就位时判 error 而不是误判成 bug。
+- **status 是什么？** bug 还没修就是 `open`（复现是预期，不红）；已修就是
+  `fixed`（复现即回归，在 gating 列判红）。哨兵用例（守护当前正确行为、不对应
+  历史 bug）用 `issue: "sentinel/<name>"` + `status: "fixed"`。
 
-## 流程
+## 2. 写文件
 
-```text
-intake -> 查能力 -> 写 spec -> 确认 -> 选 runner -> 写 -> 注册 -> check -> 真跑 -> 汇报
-```
+- 用例：`cases/<组>/<名字>.case.ts`，`id` 必须等于 `<组>/<名字>`（check 会验）。
+  `id`、`issue`、`status` 必须是字符串字面量——计划器和检查靠静态解析读它们。
+- 文档：同目录同名 `.md`，写清楚 bug 来源（issue 链接）、复现步骤、checkpoint
+  断言什么、数据为什么这样造。半年后没人记得 T1481 是什么，文档是给那时候的人看的。
+- 注册：`registry.ts` 里 import 并加进 `cases` 数组。
+- 执行逻辑属于 `framework/runners/`，用例文件里不写逻辑。现有 runner 覆盖不了时
+  新开一个 runner kind：`framework/types.ts` 加 config 接口和
+  `BugCaseConfigByRunner` 条目、`framework/runner-registry.ts` 加实现——漏任何
+  一步 `pnpm check:types` 会拦。
 
-交付物不是"能通过 `lab check` 的文件"，而是**一个真跑过、artifact 证据完整的
-用例**，外加一份对方不用翻代码就能读懂的说明。
+## 3. 数据规则
 
-### 1. Intake
+- 数据保持确定性：期望值是 (行号, revision) 之类的纯函数，本地推导，让重跑
+  逐字节可比。共享公式放 `framework/runners/` 并配 `.test.js` 守住承重性质
+  （参考 `record-values.test.js` 的 no-cell-survives 测试）。
+- 夹具在用例内自建自清理（表名带 runId 防撞）；cleanup 失败只记 warning——那是
+  测试自己的家务事，产品没错。
 
-对方一般只会给出其中几项：
-
-- **场景**：被测的产品动作（"一次导入 1000 行 CSV 并保持字段类型"）。
-- **前置状态**：要先有什么数据。
-- **正确的定义**：怎样算对。这一项最常缺，也最重要——追这一项。
-- 接口细节：路径、payload、header。
-
-接口信息够写 spec 就别去翻产品代码。只有在确实不知道某个行为怎么表现时，才去看
-`framework/runners/*.py` 或产品实现。
-
-### 2. 查能力
-
-确认你要测的能力在被测实例上是**开着的**，方法见 [target.md](target.md)。
-
-这一步花一分钟，省的是"用例写完跑红了，才发现测的东西压根没启用"。授权档位变化时，
-`smoke/instance-capabilities` 会红并指名哪一项——看到它红，先怀疑授权，别怀疑产品。
-
-### 3. 写 spec
-
-用 [case-spec.md](case-spec.md) 的模板，缺的部分你自己补全，**每一条你推断的都
-标成假设**。对方负责确认或纠正，不该由他来写 spec。
-
-### 4. 确认
-
-把 spec 给对方看。只有当答案会改变实现时才提问（比如行数会不会让产品走另一条
-代码路径、某个字段的空值语义是什么）。
-
-例外：对方明确要求端到端交付，或人不在，就按合理默认往下做，把每个假设标出来，
-最后在汇报里重复一遍，方便事后纠正。
-
-### 5. 选 runner
-
-```text
-复用现有 runner -> 扩展现有 runner -> 新写 runner
-```
-
-优先复用。只有当现有 runner 表达不了这个场景时才扩展；只有当扩展会扭曲现有 runner
-的行为时才新写。新 runner 必须实现完整四段式，且 `verify` 不能是空的。
-
-### 6. 写
-
-两个同名文件：
-
-```text
-cases/<group>/<name>.case.py    # define_case() 的配置
-cases/<group>/<name>.md         # 描述文档
-```
-
-`.case.py` 规则：
-
-- `id` 必须等于路径：`cases/record/create-100-mixed.case.py` -> `record/create-100-mixed`。
-- 不要改已有用例的 `id`，那等于换了一个用例，历史就断了。
-- 模块级变量必须叫 `case`。
-- 用例里不写执行逻辑。要写逻辑，说明该动 runner。
-
-`.md` 规则：frontmatter（`owner`、`tags`、`enabled`）打头，然后是 `Goal`、
-`Seed Phase`、`Execute Phase`、`Expectations`、`Cleanup` 五节。`Expectations`
-那节要写清楚**每条断言在证明什么**，不是复述代码。
-
-### 7. 注册
-
-在 `registry.py` 的 `CASES` 里加一行。少这一行，用例就是死的——`lab check` 会红。
-
-### 8. Check
+## 4. 验证
 
 ```bash
-uv run lab check && uv run ruff check . && uv run mypy && uv run pytest -q
+pnpm check                 # 静态链，PR 的必要条件
+# 本地跑通（方向性验证）：见 .agents/skills/localrun/SKILL.md
+# 验收：dispatch e2e-lab.yml，GitHub Actions 是验收面
 ```
 
-这一步**不碰真实 Teable**，只验证目录一致性、配置合法性、文档格式和框架自测。
+## 5. 安全边界
 
-### 9. 真跑
-
-```bash
-uv run lab up
-uv run lab run <case-id>
-```
-
-跑完必须打开 `artifacts/<run-id>/<case>.result.json` 检查证据，只看退出码不算数。
-最低要求见 [../AGENTS.md](../AGENTS.md) 的 Verification 一节。
-
-**新用例还要做一次负向验证**：想办法让它应该失败（改期望值、篡改落库数据、指向
-一个已知有问题的版本），确认它真的报红且报在对的地方。一个从来没见过它失败的用例，
-不能证明它有用。
-
-### 10. 汇报
-
-- 一句话说清这个用例测什么，用产品语言。
-- 一张小表：用例 -> 判定 + 关键断言的实际值。
-- 你做过的每个假设，尤其是行数、字段形状、空值语义。
-- 改了哪些文件，以及怎么复现这次运行。
-
-## 只在被卡住时提问
-
-默认按合理默认往下做并标注假设。只有当答案会改变你要写的东西时才停下来问。
+公开仓库。安全类 bug（越权、注入、认证绕过等）在修复发布之前**不进这个仓库**
+——一个 `status: open` 的用例就是一份公开可运行的漏洞复现。修复发布后以
+`status: fixed` 收录。规则在 CONTRIBUTING.md，别绕。

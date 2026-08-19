@@ -1,70 +1,54 @@
 # Agent Guide
 
-这个仓库是 Teable 接口功能验收的控制面。
+这个仓库是 **e2e-lab**：Teable 的 bug 回归对比系统。传入一批 teable-ee commit，
+对每个 commit 跑同一批 bug 用例，输出 bug × commit 对比表，一眼看出某个 bug 在
+哪两个版本之间被修掉、或在哪两个版本之间回归。
 
-先读 [README.md](README.md) 拿项目全貌。要加或改用例，读 [.agents/README.md](.agents/README.md)
-并先写 case spec——那个目录是作业流程的唯一来源，不要在这里复述。
-
-动手写用例前先读 [.agents/target.md](.agents/target.md)：被测环境的授权档位决定了
-你被允许测什么，对着一个没开启的能力写用例是这里最浪费时间的做法。
+骨架移植自 teable-perf-lab（注入模型、case/runner/registry 三层、artifact 先落盘、
+fail-closed 验收），判定层是本仓库自己的：观察 vs 声明 vs gating 列。先读
+[README.md](README.md) 拿全貌；加改用例读 [.agents/README.md](.agents/README.md)；
+流水线细节读 [docs/operations/e2e-lab.md](docs/operations/e2e-lab.md)。
 
 ## Working Rules
 
-- 改动限制在本仓库内，除非用户明确要求动别的 checkout。
-- 用例定义在 `cases/**/*.case.py`，每个必须有同名 `.md`。
-- 可运行的用例必须注册进 `registry.py`。
+- 改动限制在本仓库内，除非用户明确要求动别的 checkout。`teable-ee` 只是运行时
+  宿主，不为 e2e-lab 的事改它、提交它。
+- 用例定义在 `cases/**/*.case.ts`，每个必须有同名 `.md`，必须注册进 `registry.ts`。
 - 共享执行逻辑属于 `framework/`，用例文件里不写逻辑。
 - 数据保持确定性，期望值本地推导，让重跑逐字节可比。
-- 断言只走公共 API 的真实读路径。
+- 断言只走公共 API 的真实读路径；框架没有数据库连接。
 
 ## 这几件事看起来像疏漏，其实是设计
 
 改之前先问，别顺手"修好"：
 
-- **CI 的验收运行只由 dispatch 触发**，不定时跑、不在 push 上跑。它测的是发布出来的
-  镜像，跟谁改了这个仓库无关。理由和接线方式见 [docs/dispatching.md](docs/dispatching.md)。
-- **框架没有数据库连接。** 用户是通过 API 用产品的，绕过 API 验证会漏掉缓存、序列化、
-  权限过滤这些最容易错的层。见 [.agents/target.md](.agents/target.md)。
-- **不显式传 `LAB_ENDPOINT` 就只打 `127.0.0.1`。** 别为了方便改默认值。
-- **`cleanup` 失败只记 warning。** 产品没错，是测试自己的家务事没做干净，不该把运行判红。
-
-## 密钥
-
-这个仓库是公开的，唯一的真实凭据是被测环境的授权 key，它只从环境变量来。
-
-- **任何时候都不要把密钥值写进文件**，包括"先试一下待会删掉"。`lab check` 和
-  pre-commit hook 都会拦，后者扫的是**暂存区内容**而不是工作树。
-- 扫描报错时，正确的做法是把值挪进环境变量、写成 `${NAME}`；只有确实是一次性容器的
-  抛弃值，才登记进 `framework/secret_scan.py` 的 `KNOWN_THROWAWAY`——登记是一个有意识
-  的动作，不是消除报错的手段。
-- 新增任何会带进敏感值的环境变量时，**同时**把变量名加进 `framework/artifacts.py` 的
-  `SECRET_ENV_NAMES`。漏了这一步，脱敏就是空转，而结果文件是会上传到 CI 的。
+- **status: fixed 的用例跑在老 commit 上复现了 bug 不判红。** 那是修复之前的
+  历史事实，只有最新的 gating 列上的复现才是回归。判定表在
+  `framework/verdict.ts`，一屏读完。
+- **意外修复（open 的 bug 突然不复现）只提醒不卡红。** 为好消息判红会教人不验证
+  就改 status，元数据就烂了。
+- **error（用例没跑成）在任何列都判红。** 一个跑不成的用例产出的是零观察，把它
+  当「符合预期」会让坏掉的 harness 永远冒充一个稳定的 bug。
+- **缺一格结果整个 run 判红（fail-closed）。** 空格子会被读表的人当成绿。
+- **acceptance.yml 是兼容垫片，不能直接删。** teable-enterprise 的发布流水线按
+  文件名派发它，见 [docs/dispatching.md](docs/dispatching.md)；退役它要先在
+  teable-enterprise 走 PR。
+- **checkpoint 里抛什么都算 bug 复现，包括 500。** 有些 bug 的形态就是接口 500；
+  区分「bug 在」和「用例坏了」的是 checkpoint 边界，不是异常类型。
 
 ## Verification
 
-改完代码或文档，先跑静态链：
+改完先跑静态链：
 
 ```bash
-uv run lab check && uv run ruff check . && uv run mypy && uv run pytest -q
+pnpm check
 ```
 
-`lab check` 会校验目录三方一致（磁盘 `.case.py` / `registry.py` 的 CASES /
-同名 `.md`）、每个用例能加载并通过配置校验、每份描述文档符合格式契约、以及全仓库
-没有字面密钥。任何一处对不上就失败。
+本地运行时验证见 [.agents/skills/localrun/SKILL.md](.agents/skills/localrun/SKILL.md)；
+`pnpm check` 不构成运行时验收，GitHub Actions 才是验收面。
 
-**静态全绿不等于完成。** 用例必须真跑过，并检查过 artifact 里的证据：
+## 公开仓库纪律
 
-```bash
-uv run lab up
-uv run lab run <case-id>
-uv run lab report
-```
-
-最低证据要求（在 `artifacts/<run-id>/<case>.result.json` 里看）：
-
-- `verdict` 为 `pass`
-- `checks` 里有实质断言，不是只有 `cleanup.completed`
-- 值类用例的 `scan.record_count` 等于配置的行数
-- `requests` 里能看到完整的请求链，且没有意料之外的 4xx/5xx
-
-只看 `lab run` 的退出码就交付，等于没验证。
+- 安全类 bug 修复发布前不收录（详见 CONTRIBUTING.md）。
+- 用例和文档里不出现内部 URL、客户数据、任何凭据。唯一的 secret 是 CI 的
+  teable-ee 只读 deploy key，只活在 GitHub secret 里。

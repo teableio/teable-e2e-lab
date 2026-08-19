@@ -1,39 +1,22 @@
----
-owner: qa
-tags:
-  - smoke
-  - auth
-enabled: true
----
-
 # smoke/auth-user
 
-## Goal
+## 这是什么
 
-确认这一轮验收所用的会话是真实可用的：能通过公共 API 读回自己的身份。它是所有
-其它用例的前置条件——会话失效时，后面每个用例都会以互相矛盾的方式失败，先在这里
-一次性暴露出来。
+哨兵用例（`sentinel/`），不对应任何历史 bug。它断言的是"这套 harness 在这个
+revision 上是可信的"：注入成功、Nest app 起得来、seed 用户登录态有效、checkpoint
+和 verdict 映射都工作。
 
-## Seed Phase
+对比表里如果某一列的哨兵是 💥 或 ❌，那一列的其余格子一概不要相信。
 
-无。这个用例不建任何数据。
+## 复现步骤
 
-## Execute Phase
+`GET /api/auth/user`（`USER_ME`），带 seed 用户的会话 cookie。
 
-以当前会话 `GET /api/auth/user/me`。
+## 期望行为（checkpoint 断言）
 
-## Expectations
+- 返回 200
+- 返回体的 `id` 和 `email` 与 e2e seed 用户（`test@e2e.com`）一致
 
-- `http.status` 为 200。
-- 响应体含 `id`（只断言存在，不断言具体值——用户 id 每次起环境都不同）。
-- 响应体 `email` 等于 `framework.environment.LAB_EMAIL`，证明拿到的是本轮签入的
-  那个账号，而不是某个残留会话。
+## 期望状态
 
-## Cleanup
-
-无。
-
-## Notes
-
-`email` 的期望值直接引用 `LAB_EMAIL` 常量而不是写死字符串：改签入账号时只有一处
-需要改，用例不会悄悄失配。
+`status: fixed` —— 正确行为必须成立，任何 revision 上复现失败都判 regression。
