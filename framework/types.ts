@@ -1,5 +1,6 @@
 import type { INestApplication } from "@nestjs/common";
 import type { IFieldRo } from "@teable/core";
+import type { DayBucket } from "./runners/group-buckets";
 
 // Single source of truth for the runner <-> config binding, mirroring
 // teable-perf-lab: BugRunnerKind is the keys of this map, and BugCase (below)
@@ -8,6 +9,7 @@ import type { IFieldRo } from "@teable/core";
 export interface BugCaseConfigByRunner {
   "http-check": HttpCheckCaseConfig;
   "record-flow": RecordFlowCaseConfig;
+  "group-collapse": GroupCollapseCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -151,4 +153,22 @@ export interface RecordFlowCaseConfig {
     kind: "bulk-update-all-fields";
   };
   fullScanPageSize?: number;
+}
+
+// Seed a date field grouped into consecutive local-day buckets -> collapse each
+// group in turn -> checkpoint: the rows the grid receives are exactly the rows
+// outside the collapsed group. The date field's display time zone is the whole
+// point of the config: a collapsed date group is excluded by a filter derived
+// from the group key, and that derivation is where a time-zone mistake sends
+// the exclusion at a neighbouring day. See framework/runners/group-buckets.ts
+// for the two properties the bucket list must hold.
+export interface GroupCollapseCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Display time zone of the grouped date field. The lab runs its server
+  // process at UTC, so a zone east of UTC is what makes the mis-aimed
+  // exclusion cross a day boundary and become observable at all.
+  timeZone: string;
+  // Consecutive local days, oldest first.
+  buckets: DayBucket[];
 }

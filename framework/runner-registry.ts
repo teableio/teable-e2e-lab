@@ -1,3 +1,4 @@
+import { runGroupCollapseCase } from "./runners/group-collapse.runner";
 import { runHttpCheckCase } from "./runners/http-check.runner";
 import { runRecordFlowCase } from "./runners/record-flow.runner";
 import type {
@@ -19,6 +20,7 @@ type RunnerFn<K extends BugRunnerKind> = (
 const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "http-check": runHttpCheckCase,
   "record-flow": runRecordFlowCase,
+  "group-collapse": runGroupCollapseCase,
 };
 
 export const executeRegisteredRunner = (

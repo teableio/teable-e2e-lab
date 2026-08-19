@@ -12,7 +12,8 @@
     "check:track": "node scripts/check-track-model.mjs",
     "check:verdict": "node --experimental-strip-types --test framework/verdict.test.js",
     "check:record-values": "node --experimental-strip-types --test framework/runners/record-values.test.js",
-    "check": "pnpm format:check && pnpm check:types && pnpm check:case-docs && pnpm check:run-plan && pnpm check:comparison && pnpm check:track && pnpm check:verdict && pnpm check:record-values"
+    "check:group-buckets": "node --experimental-strip-types --test framework/runners/group-buckets.test.js",
+    "check": "pnpm format:check && pnpm check:types && pnpm check:case-docs && pnpm check:run-plan && pnpm check:comparison && pnpm check:track && pnpm check:verdict && pnpm check:record-values && pnpm check:group-buckets"
   },
   "devDependencies": {
     "@types/node": "^22.19.20",
