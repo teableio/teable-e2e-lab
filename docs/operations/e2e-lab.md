@@ -88,7 +88,7 @@ Compare three revisions, all cases:
 
 ```bash
 gh workflow run e2e-lab.yml \
-  --repo teableio/e2e-lab \
+  --repo teableio/teable-e2e-lab \
   --ref main \
   -f teable_ee_commits="<sha-before-fix>,<sha-candidate>,develop" \
   -f case_filter=all
@@ -99,7 +99,7 @@ behave as declared here"):
 
 ```bash
 gh workflow run e2e-lab.yml \
-  --repo teableio/e2e-lab \
+  --repo teableio/teable-e2e-lab \
   --ref main \
   -f teable_ee_commits=develop \
   -f case_filter=record/bulk-update-100-mixed-lands

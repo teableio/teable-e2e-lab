@@ -95,7 +95,7 @@ is the gating column):
 
 ```bash
 gh workflow run e2e-lab.yml \
-  --repo teableio/e2e-lab \
+  --repo teableio/teable-e2e-lab \
   --ref main \
   -f teable_ee_commits="<older-sha>,<newer-sha>,develop" \
   -f case_filter=all

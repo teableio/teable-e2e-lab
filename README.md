@@ -45,7 +45,7 @@ and [docs/operations/e2e-lab.md](docs/operations/e2e-lab.md).
 
 ```bash
 gh workflow run e2e-lab.yml \
-  --repo teableio/e2e-lab \
+  --repo teableio/teable-e2e-lab \
   --ref main \
   -f teable_ee_commits="<sha-before-fix>,<sha-after-fix>,develop" \
   -f case_filter=all
