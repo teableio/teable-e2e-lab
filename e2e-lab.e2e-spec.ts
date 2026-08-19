@@ -2,7 +2,13 @@ import type { INestApplication } from "@nestjs/common";
 import { performance } from "node:perf_hooks";
 import { initApp } from "../utils/init-app";
 import { getBugCase, resolveBugCaseIds } from "./registry";
+import { applyEngineRuntimeEnv, LAB_ENGINE } from "./framework/engine";
 import { runBugCase } from "./framework/run-bug-case";
+
+// Before the app boots: pin the engine every case here guards. teable-ee is
+// migrating to v2 and v1 bugs are not being fixed, so there is one engine, not
+// a choice. See framework/engine.ts.
+applyEngineRuntimeEnv();
 
 // The single executable entry point, in the perf-lab mold: this file is copied
 // into teable-ee/community/apps/nestjs-backend/test/e2e-lab/ and run through
@@ -37,6 +43,7 @@ describe("e2e-lab bug regression runner (e2e)", () => {
   logPhase("module-loaded", {
     cases: caseIds.join(","),
     commitSha: process.env.E2E_LAB_COMMIT_SHA ?? "(local)",
+    engine: LAB_ENGINE,
   });
 
   let app: INestApplication;

@@ -8,7 +8,6 @@ export default defineBugCase({
   id: "filter/scalar-lookup-none-of-loads",
   title: "视图对标量 lookup 用 isNoneOf 筛选时，记录列表仍然加载得出来",
   runner: "lookup-filter-view",
-  routing: "force-v2",
   timeoutMs: 180_000,
   bug: {
     issue: "T6571",

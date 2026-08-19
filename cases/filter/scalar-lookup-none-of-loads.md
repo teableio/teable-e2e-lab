@@ -63,9 +63,10 @@ Host 表 4 行：`Allowed` / `Excluded A` / `Excluded B` 各一行，外加一�
 这个故障只存在于 v2 的记录查询路径上。这条用例的第一版就栽在这里：当时 lab 默认走 v1，
 而 v1 从来没有这个 bug，四列全绿、什么都没证明。
 
-现在 lab 默认跑 v2，但用例仍然显式声明 `routing: "force-v2"`，并在 setup 里用
-`assertV2Routing()` 读响应头 `x-teable-v2` 证明确实走了 v2——默认值对了不等于用例可以
-拿它当前提。两半缺一不可，理由写在 `framework/v2-routing.ts`。
+现在这里只有 v2 一个引擎，用例不用声明。runner 在 setup 里对**读记录那个响应本身**
+断言 `x-teable-v2=true` 且 `x-teable-v2-feature=getRecords`——就是 bug 会弄坏 SQL 的那次
+读。另发一个探针不够：探针走到 v2、被测的读没走到，正是要抓的形状。见
+`framework/engine.ts`。
 
 ## 期望状态
 

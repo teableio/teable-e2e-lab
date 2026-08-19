@@ -6,7 +6,7 @@ import {
   SortFunc,
   TimeFormatting,
 } from "@teable/core";
-import { GroupPointType } from "@teable/openapi";
+import { GroupPointType, getRecords as apiGetRecords } from "@teable/openapi";
 import {
   createField,
   createRecords,
@@ -16,7 +16,7 @@ import {
 } from "../../../utils/init-app";
 import { bugCheckpoint } from "../checkpoint";
 import { fixtureDb } from "../fixture-db";
-import { assertV2Routing } from "../v2-routing";
+import { assertServedByV2 } from "../engine";
 import type { BugCaseFor, BugProbeResult, BugRunContext } from "../types";
 import type { LookupUserSnapshotSortCaseConfig } from "../types";
 
@@ -212,11 +212,19 @@ export const runLookupUserSnapshotSortCase = async (
     // the drifted snapshots still fold into ONE group header. If the drift had
     // split the group, "the dates run straight down inside the group" would be
     // asking about something that no longer exists.
-    const grouped = await getRecords(hostTableId, {
+    // Read through the openapi client rather than the init-app wrapper: the
+    // wrapper returns .data, and the routing proof lives in the headers of
+    // this exact response - the grouped read whose ORDER BY the bug builds.
+    const groupedResponse = await apiGetRecords(hostTableId, {
       fieldKeyType: FieldKeyType.Name,
       groupBy: [{ fieldId: withLookup.id, order: SortFunc.Asc }],
       take: expectedNames.length,
     });
+    const routing = assertServedByV2(groupedResponse.headers, {
+      operation: "GET /table/{tableId}/record (grouped)",
+      feature: "getRecords",
+    });
+    const grouped = groupedResponse.data;
     if (grouped.records.length !== expectedNames.length) {
       throw new Error(
         `Seed did not land: read back ${grouped.records.length} rows, expected ${expectedNames.length}`,
@@ -230,11 +238,6 @@ export const runLookupUserSnapshotSortCase = async (
         `the drifted snapshots produced ${headers.length} group headers, expected 1 - the fixture is not in place`,
       );
     }
-
-    // The ordering is built by v2's stored-field order-by. Proving v2 answers
-    // here, in setup, is what keeps a v1-routed run from reporting a green row
-    // that means nothing.
-    const routingReason = await assertV2Routing(hostTableId);
 
     const probe = await bugCheckpoint(
       "date-sort-spans-the-whole-group",
@@ -266,7 +269,7 @@ export const runLookupUserSnapshotSortCase = async (
       details: {
         sourceTableId,
         hostTableId,
-        routingReason,
+        routing,
         snapshotGroups: groups.map((group) => ({
           key: group.key,
           extras: group.snapshotExtras,

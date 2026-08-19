@@ -49,15 +49,6 @@ interface BugCaseBase {
   title: string;
   bug: BugRef;
   timeoutMs: number;
-  // Which record engine this case NEEDS, as opposed to whichever one the
-  // harness happens to default to. vitest-e2e-lab.config.ts points the lab at
-  // v2, so today this is usually redundant - which is exactly why it is worth
-  // declaring: a case that is meaningless on v1 says so itself, and keeps
-  // saying it if the default ever moves or a run pins FORCE_V2_ALL=false. A
-  // case that declares it must also prove it routed, with assertV2Routing() in
-  // its setup phase; see framework/v2-routing.ts for why both halves are
-  // required.
-  routing?: "force-v2";
 }
 
 // A runner-specific view of a bug case, keeping the runner literal and its
@@ -76,6 +67,9 @@ export interface BugRunContext {
   appUrl: string;
   cookie?: string;
   runId: string;
+  // The engine every case here guards. A constant, stamped into artifacts as
+  // provenance - see framework/engine.ts.
+  engine: string;
   // The teable-ee revision under test, stamped into every artifact so the
   // comparison table never has to infer a column from a directory name.
   commitSha: string;

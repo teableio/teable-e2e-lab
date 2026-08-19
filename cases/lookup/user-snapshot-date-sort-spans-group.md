@@ -65,10 +65,10 @@ id/title 相同是关键：那是分组折叠认的身份，改了它就是两�
 回来，且**只有 1 个分组头**。如果漂移把组拆开了，「组内日期是否贯通」这个问题就不存在
 了，那是另一个故障。
 
-**路由校验（失败 = 💥 error）**：`assertV2Routing()`。这个故障只存在于 v2 的
-stored-field order-by 上，用例声明 `routing: "force-v2"`，并在 setup 里读响应头
-`x-teable-v2` 证明确实走了 v2。少了这一步，v1 路由的一次运行会给出一行毫无意义的绿——
-这个坑是真踩过的，见 `framework/v2-routing.ts` 的注释。
+**路由校验（失败 = 💥 error）**：对上面那次分组读的响应断言 `x-teable-v2=true` 且
+`x-teable-v2-feature=getRecords`——就是 bug 拼 ORDER BY 的那次读本身。v1 还在、还会应答，
+少了这一步，悄悄退回 v1 的一次运行会给出一行毫无意义的绿；这个坑是真踩过的，见
+`framework/engine.ts`。
 
 **checkpoint `date-sort-spans-the-whole-group`（失败 = ❌ bug 复现）**：按 lookup 分组 +
 按日期倒序取数，断言顺序正好是整体倒序。顺序不对时，报错会额外判断一句「是不是正好等于

@@ -17,6 +17,7 @@ export interface BugArtifactPayload {
   // The teable-ee revision this observation belongs to. The comparison table
   // groups payloads by this field, never by artifact directory names.
   commitSha: string;
+  engine: string;
   appUrl: string;
   observed: ObservedOutcome;
   verdict: BugVerdict;

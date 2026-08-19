@@ -9,11 +9,14 @@
   直接写库（`framework/fixture-db.ts`），用来造 API 造不出来的历史状态：漂移的存储快照、
   和物理列对不上的字段元数据、被早已下线的路径清空的外键。这条边界是被强制的——在
   `bugCheckpoint()` 里面拿数据库句柄会抛错。
-- **这个 bug 在哪个引擎上？** teable-ee 有两套记录引擎。lab 默认跑 v2（理由写在
-  `vitest-e2e-lab.config.ts`），但只有 v2 才有的 bug 仍然要自己声明
-  `routing: "force-v2"` 并在 setup 里 `assertV2Routing()`——默认值不该是用例结论的
-  前提。少了这一步，一次 v1 路由的运行会在每一列都绿：问的是从来没有这个 bug 的那套
-  代码。见 `framework/v2-routing.ts`。
+- **请求确实走到 v2 了吗？** 产品在往 v2 迁移，v1 的 bug 不再修，所以这里只有一个引擎、
+  不是选项：每条用例守的都是 v2，用例不需要声明。但 v1 还在、还会应答，**悄悄退回 v1
+  是这套 harness 最坏的故障**：用例问的是从来没有这个 bug 的那套代码，每一列都绿。
+  所以 runner 要在 setup 里用 `assertServedByV2()` 自证，而且是**对用例真正依赖的那个
+  请求的响应**断言，不是另发一个探针——探针走到了 v2、被测操作没走到，正是要抓的形状。
+  连 feature 一起断言（`x-teable-v2-feature`）：bug 在 getRecords 里，"某个 v2 端点能用"
+  说明不了任何事。setup 阶段失败判 💥，不会被误读成「bug 没了」。见
+  `framework/engine.ts`。
 - **checkpoint 在哪里？** `bugCheckpoint()` 里面抛出的任何异常都算「bug 复现」，
   外面抛的都算「用例没跑成」。setup（建表、造数、验证夹具就位）放外面，对 bug 的
   观察放里面。夹具验证放外面是有讲究的：结论都建立在初始状态正确上，夹具本身没

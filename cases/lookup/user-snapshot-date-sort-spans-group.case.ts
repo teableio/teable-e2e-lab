@@ -9,7 +9,6 @@ export default defineBugCase({
   id: "lookup/user-snapshot-date-sort-spans-group",
   title: "同一个协作者的多份快照折成一组后，组内日期倒序要一路贯通",
   runner: "lookup-user-snapshot-sort",
-  routing: "force-v2",
   timeoutMs: 180_000,
   bug: {
     issue: "T6751",

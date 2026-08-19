@@ -6,17 +6,9 @@ import { overridePathResolvePlugin } from "./vitest-override-plugin";
 process.env.TZ = "UTC";
 // One serial spec against the job-managed database — no per-worker DB clones.
 process.env.E2E_WORKER_DB = "0";
-// teable-ee runs two record engines behind one API, and this harness would
-// otherwise route to v1 — the engine production has already left. Every recent
-// bug report the lab collects arrives stamped `teable.version: v2`, and bases
-// created through the API are v2 from birth, so v1 is the engine no reported
-// bug lives on any more. Defaulting the lab to v2 is what makes a case ask
-// about the code its bug came from; a v1-routed run answers a question nobody
-// asked and reports it as a pass.
-//
-// Assignment is conditional so a run can still pin the other engine
-// (FORCE_V2_ALL=false) to compare the two.
-process.env.FORCE_V2_ALL ??= "true";
+// The record engine is pinned in framework/engine.ts and applied by the spec —
+// this file is copied into teable-ee/enterprise/backend-ee/, where "./framework"
+// does not resolve.
 
 // This file is copied to teable-ee/enterprise/backend-ee/, so the relative
 // imports above and the setup files below resolve inside teable-ee, exactly

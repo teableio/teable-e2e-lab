@@ -1,4 +1,5 @@
 import { FieldKeyType, FieldType, hasAnyOf, is } from "@teable/core";
+import { updateViewFilter as apiUpdateViewFilter } from "@teable/openapi";
 import {
   createRecords,
   createTable,
@@ -6,10 +7,9 @@ import {
   getView,
   getViews,
   permanentDeleteTable,
-  updateViewFilter,
 } from "../../../utils/init-app";
 import { bugCheckpoint } from "../checkpoint";
-import { assertV2Routing } from "../v2-routing";
+import { assertServedByV2 } from "../engine";
 import type { BugCaseFor, BugProbeResult, BugRunContext } from "../types";
 import type { ViewFilterRoundtripCaseConfig } from "../types";
 
@@ -138,10 +138,29 @@ export const runViewFilterRoundtripCase = async (
       );
     }
 
-    // The view filter schema that dropped the condition is v2's. Proving v2
-    // answers here, in setup, is what keeps a v1-routed run from reporting a
-    // green row that means nothing.
-    const routingReason = await assertV2Routing(tableId);
+    // Save a filter that has nothing tricky in it, still in setup. This does
+    // two jobs at once: it proves saving a filter works at all - without which
+    // the checkpoint below would be asking an unanswerable question - and it
+    // is the operation the bug lives in, so its response is where the routing
+    // proof belongs. Asserting here rather than inside the checkpoint is the
+    // difference between "the lab asked the wrong engine" (💥) and "the bug
+    // reproduced" (❌).
+    const warmup = await apiUpdateViewFilter(tableId, view.id, {
+      filter: {
+        conjunction: "and",
+        filterSet: [
+          {
+            fieldId: titleField.id,
+            operator: is.value,
+            value: config.matchedTitle,
+          },
+        ],
+      },
+    });
+    const routing = assertServedByV2(warmup.headers, {
+      operation: "PUT /table/{tableId}/view/{viewId}/filter",
+      feature: "updateViewFilter",
+    });
 
     const filter = buildFilter(
       titleField.id,
@@ -152,7 +171,7 @@ export const runViewFilterRoundtripCase = async (
     const probe = await bugCheckpoint(
       "incomplete-condition-survives-and-filters-nothing",
       async () => {
-        await updateViewFilter(tableId, view.id, { filter });
+        await apiUpdateViewFilter(tableId, view.id, { filter });
 
         const savedFilter = (await getView(tableId, view.id)).filter;
         if (canonicalFilter(savedFilter) !== canonicalFilter(filter)) {
@@ -185,7 +204,7 @@ export const runViewFilterRoundtripCase = async (
       details: {
         tableId,
         tableName,
-        routingReason,
+        routing,
         sentFilter: filter,
         savedFilter: probe.savedFilter,
         returnedTitles: probe.titles,

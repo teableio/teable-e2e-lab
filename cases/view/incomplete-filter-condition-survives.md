@@ -51,10 +51,11 @@ and
 
 ## 关于 v2
 
-丢条件的是 v2 的 `ViewSourceFilter`。lab 现在默认跑 v2，但用例仍然声明
-`routing: "force-v2"` 并在 setup 里用 `assertV2Routing()` 证明请求确实由 v2 服务——
-这条用例的第一版正是在默认走 v1 的时候，在每一列都给出了毫无意义的绿。见
-`framework/v2-routing.ts`。
+丢条件的是 v2 的 `ViewSourceFilter`。这里只有 v2 一个引擎，用例不用声明；runner 在
+setup 里先存一次**没有半截条件**的普通 filter，对那个响应断言
+`x-teable-v2-feature=updateViewFilter`——它同时证明两件事：存 filter 这条路本身是通的
+（否则下面的问题无从问起），以及走的确实是出 bug 的那个 v2 feature。这条用例的第一版正是
+在走 v1 的时候，在每一列都给出了毫无意义的绿。见 `framework/engine.ts`。
 
 ## 期望状态
 

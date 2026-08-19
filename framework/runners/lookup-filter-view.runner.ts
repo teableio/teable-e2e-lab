@@ -6,7 +6,11 @@ import {
   isNoneOf,
   isNotEmpty,
 } from "@teable/core";
-import { updateViewGroup, updateViewSort } from "@teable/openapi";
+import {
+  getRecords as apiGetRecords,
+  updateViewGroup,
+  updateViewSort,
+} from "@teable/openapi";
 import {
   createField,
   createRecords,
@@ -17,7 +21,7 @@ import {
   updateViewFilter,
 } from "../../../utils/init-app";
 import { bugCheckpoint } from "../checkpoint";
-import { assertV2Routing } from "../v2-routing";
+import { assertServedByV2 } from "../engine";
 import type { BugCaseFor, BugProbeResult, BugRunContext } from "../types";
 import type { LookupFilterViewCaseConfig } from "../types";
 
@@ -152,10 +156,18 @@ export const runLookupFilterViewCase = async (
     // the host table must read back every row with the lookup already resolved.
     // The failure below is "the view will not load"; if the plain table cannot
     // load either, that is a different fault and must not be read as this bug.
-    const seeded = await getRecords(hostTableId, {
+    // Read through the openapi client rather than the init-app wrapper: the
+    // wrapper returns .data, and the routing proof lives in the headers of
+    // this exact response - the read whose SQL the bug breaks.
+    const seededResponse = await apiGetRecords(hostTableId, {
       fieldKeyType: FieldKeyType.Name,
       take: config.rows.length,
     });
+    const routing = assertServedByV2(seededResponse.headers, {
+      operation: "GET /table/{tableId}/record",
+      feature: "getRecords",
+    });
+    const seeded = seededResponse.data;
     if (seeded.records.length !== config.rows.length) {
       throw new Error(
         `Seed did not land: read back ${seeded.records.length} rows, expected ${config.rows.length}`,
@@ -176,11 +188,6 @@ export const runLookupFilterViewCase = async (
         `Lookup did not resolve for [${unresolved.join(", ")}] - the fixture is not in place`,
       );
     }
-
-    // The failure lives on the v2 record path only. Proving v2 answers here,
-    // in setup, is what keeps a v1-routed run from reporting a green row that
-    // means nothing.
-    const routingReason = await assertV2Routing(hostTableId);
 
     const taskField = hostTable.fields.find(
       (field: { name: string }) => field.name === TASK_FIELD,
@@ -244,7 +251,7 @@ export const runLookupFilterViewCase = async (
       details: {
         referenceTableId,
         hostTableId,
-        routingReason,
+        routing,
         allowedCategory: config.allowedCategory,
         excludedCategories: config.excludedCategories,
         expectedTasks: config.expectedTasks,
