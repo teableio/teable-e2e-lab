@@ -3,8 +3,8 @@
 //
 // Kept deliberately small next to perf-lab's sender: bug results are
 // deterministic, so there are no noise caveats, no baselines, and no folded
-// panels — the card states the verdict, lists what needs a human (regressions,
-// errors, unexpectedly-fixed), and shows each row's transition points.
+// panels — the card shows the bug × commit grid, lists what needs a human
+// (regressions, errors, unexpectedly-fixed), and links the run.
 
 import { readFile } from "node:fs/promises";
 import { env, requiredEnv } from "./env.mjs";
@@ -17,28 +17,64 @@ const CELL = {
   error: "💥",
 };
 
+const MISSING_CELL = "❓";
+
+// The grid is drawn inside a fenced code block because that is the only place
+// Feishu renders text in a monospace font — padded columns in a normal
+// markdown paragraph collapse into one ragged line and the whole point of a
+// table is lost.
+//
+// Column widths are computed in display cells, not code points: every verdict
+// glyph is an emoji that occupies two monospace cells, so counting characters
+// would leave every column after the first one short. Everything the card puts
+// in the grid is either ASCII (case ids, short shas, ref names) or a CJK/emoji
+// glyph, which makes "below U+2000 is narrow" an exact rule here rather than a
+// general-purpose width table.
+const displayWidth = (text) =>
+  [...text].reduce(
+    (width, char) => width + (char.codePointAt(0) >= 0x2000 ? 2 : 1),
+    0,
+  );
+
+const padCell = (text, width) =>
+  text + " ".repeat(Math.max(0, width - displayWidth(text)));
+
+// A commit column is headed by whatever the human asked for: "develop" stays
+// "develop", a raw sha shrinks to its short form. Reprinting "develop@afcc4d00e0"
+// in a header buys nothing the run link does not already answer.
+const columnLabel = ({ ref, short }) =>
+  /^[0-9a-f]{7,40}$/i.test(ref) ? short : ref;
+
+export const buildComparisonGrid = (comparison) => {
+  const header = ["用例", ...comparison.commits.map(columnLabel)];
+  const rows = comparison.rows.map((row) => [
+    row.caseId,
+    ...row.cells.map((cell) =>
+      cell.missing ? MISSING_CELL : (CELL[cell.verdict] ?? MISSING_CELL),
+    ),
+  ]);
+  const widths = header.map((label, column) =>
+    Math.max(
+      displayWidth(label),
+      ...rows.map((row) => displayWidth(row[column] ?? "")),
+    ),
+  );
+
+  return [header, ...rows].map((row) =>
+    row
+      .map((cell, column) => padCell(cell ?? "", widths[column]))
+      .join("  ")
+      .trimEnd(),
+  );
+};
+
 export const buildFeishuCard = ({ comparison, runUrl }) => {
   const failed = !comparison.passed;
-  const commitLine = comparison.commits
-    .map(({ ref, short }) => `${ref}@${short}`)
-    .join(" → ");
 
-  const lines = [`**版本列**：${commitLine}`, ""];
-
-  const rowLines = comparison.rows.map((row) => {
-    const cells = row.cells
-      .map((cell) => (cell.missing ? "❓" : (CELL[cell.verdict] ?? "❓")))
-      .join(" ");
-    const transitions = row.transitions
-      .map((transition) =>
-        transition.kind === "fixed-between"
-          ? `修复落在 ${transition.fromShort}..${transition.toShort}`
-          : `回归出现在 ${transition.fromShort}..${transition.toShort}`,
-      )
-      .join("；");
-    return `${cells} \`${row.caseId}\`${transitions ? ` — ${transitions}` : ""}`;
-  });
-  lines.push(...rowLines, "");
+  // The grid alone carries the comparison: a row reading ❌ then ✅ already
+  // says "fixed between these two commits", so spelling the transition out
+  // again next to it only competed with the table for the reader's attention.
+  const lines = ["```", ...buildComparisonGrid(comparison), "```", ""];
 
   const failureLines = [];
   for (const failure of comparison.failures.regressions) {
