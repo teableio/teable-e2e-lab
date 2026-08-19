@@ -21,11 +21,11 @@ on:
   workflow_dispatch:
     inputs:
       teable_image_tag:
-        description: "被测 Teable 镜像 tag（旧 api-lab 的接口，见文件头注释）"
+        description: "被测 Teable 镜像 tag（本仓库前身——镜像验收系统——的接口，见文件头注释）"
         required: false
         default: "latest"
       case_filter:
-        description: "旧 api-lab 的用例过滤输入，保留以兼容派发方"
+        description: "前身系统的用例过滤输入，保留以兼容派发方"
         required: false
         default: "all"
 

@@ -1,6 +1,7 @@
 import { defineBugCase } from "../../framework/types";
 
-// Ported from teable-api-lab's record/update-100-mixed acceptance case. The
+// Ported from this repository's retired Python acceptance lab
+// (record/update-100-mixed). The
 // failure class it exists to catch is "the update answered 200 and only part
 // of it landed" — invisible to status codes, row counts, and sampling; only a
 // full per-cell scan sees it. The same four field types and the same

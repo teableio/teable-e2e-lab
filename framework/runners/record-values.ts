@@ -1,7 +1,7 @@
 import type { RecordFlowFieldSpec } from "../types";
 
 // Deterministic cell values as a pure function of (field, row, revision),
-// ported from teable-api-lab's record cases. Revision 1 is what the seed
+// ported from this repository's retired Python acceptance lab. Revision 1 is what the seed
 // writes; revision 2 is what the mutation under test writes.
 //
 // The load-bearing property: for every row and every field type, the revision 1

@@ -1,6 +1,7 @@
 # record/bulk-update-100-mixed-lands
 
-移植自 teable-api-lab 的 `record/update-100-mixed`，那份设计的完整论证保留在下面。
+移植自本仓库前身（Python 版接口验收系统）的 `record/update-100-mixed`，那份设计的
+完整论证保留在下面。
 
 ## 目标
 
