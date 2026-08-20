@@ -36,9 +36,9 @@ then the table is created, seeded, and read back.
 
 **Setup (failure = 💥 error).** Create a two-column table (`Title` single line
 text, `Day` a date field in the configured zone, formatted YYYY-MM-DD with no
-time), seed 4 rows across the buckets, then read once grouped by `Day` and prove:
+time), seed the buckets' rows, then read once grouped by `Day` and prove:
 
-- all 4 rows come back;
+- every seeded row comes back;
 - the grouping is **exactly the declared buckets**, and every group header's
   value equals the instant in the config.
 
@@ -80,11 +80,12 @@ diagnosing it does not require another run.
 
 ## Deterministic data
 
-A row's value is a pure function of (bucket, row number): the title is
-`<local date>#<row>`, e.g. `2025-11-30#1`. Every piece of evidence then carries
-the day it belongs to, and reading the report needs no second lookup table.
+A row's value is a pure function of (bucket, local hour): the title is
+`<local date>#<hh>h`, e.g. `2025-11-30#09h`. Every piece of evidence then
+carries both the day and the time of day it belongs to, and reading the report
+needs no second lookup table.
 
-The bucket list has two load-bearing properties, guarded by
+The bucket list has three load-bearing properties, guarded by
 `framework/runners/group-buckets.test.js` rather than trusted by reading the
 code:
 
@@ -92,19 +93,31 @@ code:
    what a day bucket is keyed on; an instant anywhere else and the product's
    group header would differ from the configured value, failing setup for a
    reason unrelated to this bug.
-2. **Adjacent buckets are adjacent local days.** The misaimed exclusion targets
+2. **Every bucket holds rows away from local midnight.** This one is the
+   difference between a case that works and a case that only looks like it
+   does. The first version of this case seeded every row at exactly its
+   bucket's local midnight, and on the commit right before the fix it came back
+   **green** — the same collapse that misfires for a user returned exactly the
+   right rows. Spreading the rows across the day (00:00, 09:00, 23:00) makes
+   the same commit reproduce, with the collapsed group leaking and its
+   neighbour hidden. Why a midnight-only table escapes has not been pinned
+   down; what is established, and re-run on both commits, is that it does. A
+   fixture without a non-midnight row is therefore rejected outright rather
+   than left to produce a matrix of meaningless greens.
+
+3. **Adjacent buckets are adjacent local days.** The misaimed exclusion targets
    "the previous day", so only when the previous day is exactly the previous
    bucket (and non-empty) is the "rows that should have stayed were hidden" half
    observable at all; with a gap it lands on an empty day, silently.
 
-The second property is checked by "one millisecond before local midnight belongs
+The third property is checked by "one millisecond before local midnight belongs
 to the previous day" rather than by subtracting 24 hours — across a DST
 transition two adjacent local days can be 23 or 25 hours apart, and subtracting
 24 hours would misjudge it. The test pins this with America/New_York
 2025-11-02 → 11-03 (25 hours apart).
 
-Each bucket gets 2 rows: with only 1, "the whole group leaked out" and "one
-extra row slipped in" look the same in the assertion.
+Each bucket gets more than one row: with only 1, "the whole group leaked out"
+and "one extra row slipped in" look the same in the assertion.
 
 ## Cleanup
 
@@ -113,8 +126,12 @@ is the test's own housekeeping, not the product being wrong.
 
 ## Expected status
 
-`status: open`. As of the case landing, this bug is unfixed on teable-ee
-develop: the lab's process runs at UTC and the field zone is Asia/Shanghai, so
-collapsing necessarily goes wrong, reproduction is the expected outcome, and it
-is not red. Once the fix merges, a human confirms it and flips `status` to
-`fixed`; reproducing it after that is a regression.
+`status: fixed`. The matrix reproduces the bug on the commit immediately before
+the fix and comes back clean on develop, so a reproduction from here on is a
+regression rather than the world before the fix.
+
+The case carried `status: open` and a midnight-only fixture until that fixture
+was found to be green on both sides — see property 2 above. The status flip and
+the fixture repair belong together: flipping the status alone would have
+recorded a fix as confirmed on the strength of a case that never observed the
+bug.

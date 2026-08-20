@@ -15,7 +15,7 @@ import {
 import { bugCheckpoint } from "../checkpoint";
 import type { BugCaseFor, BugProbeResult, BugRunContext } from "../types";
 import type { GroupCollapseCaseConfig } from "../types";
-import { bucketProblems, bucketTitles } from "./group-buckets";
+import { bucketProblems, bucketRows, bucketTitles } from "./group-buckets";
 
 // Create a table with one date field -> seed consecutive local-day buckets ->
 // prove the product groups them into exactly those buckets -> checkpoint:
@@ -49,8 +49,11 @@ const seedBuckets = async (
   config: GroupCollapseCaseConfig,
 ): Promise<void> => {
   const records = config.buckets.flatMap((bucket) =>
-    bucketTitles(bucket).map((title) => ({
-      fields: { [TITLE_FIELD]: title, [DATE_FIELD]: bucket.instant },
+    bucketRows(bucket).map((row) => ({
+      // Each row sits at its own hour of the local day, not at the bucket key.
+      // A row at exactly local midnight is excluded correctly even by the
+      // broken filter, so a midnight-only fixture is green on both sides.
+      fields: { [TITLE_FIELD]: row.title, [DATE_FIELD]: row.instant },
     })),
   );
   await createRecords(tableId, {
@@ -104,6 +107,12 @@ export const runGroupCollapseCase = async (
       throw new Error(`Table ${tableId} has no "${DATE_FIELD}" field`);
     }
     const groupBy = [{ fieldId: dateField.id, order: SortFunc.Asc }];
+    // The grid always loads through a view; asking without one takes a
+    // different query path than the one the user is on.
+    const viewId = table.views?.[0]?.id;
+    if (!viewId) {
+      throw new Error(`Table ${tableId} has no default view`);
+    }
 
     await seedBuckets(tableId, config);
     const expectedTitles = config.buckets.flatMap(bucketTitles);
@@ -115,6 +124,7 @@ export const runGroupCollapseCase = async (
     // make the header check read a partial grouping.
     const seeded = await getRecords(tableId, {
       fieldKeyType: FieldKeyType.Name,
+      viewId,
       groupBy,
       take: expectedTitles.length,
     });
@@ -177,6 +187,7 @@ export const runGroupCollapseCase = async (
           `/table/${tableId}/record/socket/doc-ids`,
           {
             fieldKeyType: FieldKeyType.Id,
+            viewId,
             groupBy,
             collapsedGroupIds: [headers[index].id],
           },

@@ -1,17 +1,56 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { bucketProblems, bucketTitles, localDayOf } from "./group-buckets.ts";
+import {
+  bucketProblems,
+  bucketRows,
+  bucketTitles,
+  localDayOf,
+} from "./group-buckets.ts";
 
 const SHANGHAI = "Asia/Shanghai";
 
 // 2025-11-30 and 2025-12-01, local midnight in Asia/Shanghai.
 const VALID = [
-  { localDay: "2025-11-30", instant: "2025-11-29T16:00:00.000Z", rowCount: 2 },
-  { localDay: "2025-12-01", instant: "2025-11-30T16:00:00.000Z", rowCount: 2 },
+  {
+    localDay: "2025-11-30",
+    instant: "2025-11-29T16:00:00.000Z",
+    localHours: [0, 9, 23],
+  },
+  {
+    localDay: "2025-12-01",
+    instant: "2025-11-30T16:00:00.000Z",
+    localHours: [0, 9, 23],
+  },
 ];
 
 test("a well-formed bucket list has no problems", () => {
   assert.deepEqual(bucketProblems(VALID, SHANGHAI), []);
+});
+
+// Property 2: at least one row away from local midnight. This is what the
+// case's first version got wrong: a midnight row is excluded correctly even
+// by the broken filter - the mis-aimed instant still formats to that row's own
+// local day - so the whole matrix came back green and proved nothing.
+test("a bucket holding only local midnight rows is rejected", () => {
+  const problems = bucketProblems(
+    [VALID[0], { ...VALID[1], localHours: [0, 0] }],
+    SHANGHAI,
+  );
+  assert.ok(
+    problems.some((problem) => problem.includes("only local midnight")),
+    problems.join("; "),
+  );
+});
+
+test("a bucket with a single row is rejected", () => {
+  const problems = bucketProblems(
+    [VALID[0], { ...VALID[1], localHours: [9] }],
+    SHANGHAI,
+  );
+  assert.ok(
+    problems.some((problem) => problem.includes("one stray row")),
+    problems.join("; "),
+  );
 });
 
 // Property 1: bucket keys are local midnight. An instant in the middle of the
@@ -38,12 +77,12 @@ test("a gap between buckets is rejected", () => {
       {
         localDay: "2025-11-30",
         instant: "2025-11-29T16:00:00.000Z",
-        rowCount: 2,
+        localHours: [0, 9, 23],
       },
       {
         localDay: "2025-12-02",
         instant: "2025-12-01T16:00:00.000Z",
-        rowCount: 2,
+        localHours: [0, 9, 23],
       },
     ],
     SHANGHAI,
@@ -92,12 +131,12 @@ test("consecutive days across a DST transition are accepted", () => {
     {
       localDay: "2025-11-02",
       instant: "2025-11-02T04:00:00.000Z",
-      rowCount: 2,
+      localHours: [0, 9, 23],
     },
     {
       localDay: "2025-11-03",
       instant: "2025-11-03T05:00:00.000Z",
-      rowCount: 2,
+      localHours: [0, 9, 23],
     },
   ];
   assert.equal(
@@ -116,8 +155,22 @@ test("consecutive days across a DST transition are accepted", () => {
   assert.deepEqual(bucketProblems(buckets, "America/New_York"), []);
 });
 
-// Titles carry the day, so evidence says which bucket a row belongs to without
-// a lookup table.
-test("row titles name the bucket they belong to", () => {
-  assert.deepEqual(bucketTitles(VALID[0]), ["2025-11-30#1", "2025-11-30#2"]);
+// Titles carry the day and the local hour, so evidence says which bucket a row
+// belongs to - and where in the day it sits - without a lookup table.
+test("row titles name the bucket and hour they belong to", () => {
+  assert.deepEqual(bucketTitles(VALID[0]), [
+    "2025-11-30#00h",
+    "2025-11-30#09h",
+    "2025-11-30#23h",
+  ]);
+});
+
+// Rows are placed by adding the hour to the bucket key, so an off-by-one in
+// the offset would move a row into the neighbouring bucket silently.
+test("rows sit at their local hour within the bucket", () => {
+  assert.deepEqual(bucketRows(VALID[0]), [
+    { title: "2025-11-30#00h", instant: "2025-11-29T16:00:00.000Z" },
+    { title: "2025-11-30#09h", instant: "2025-11-30T01:00:00.000Z" },
+    { title: "2025-11-30#23h", instant: "2025-11-30T15:00:00.000Z" },
+  ]);
 });
