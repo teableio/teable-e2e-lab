@@ -527,10 +527,126 @@ export const runComputedBackfillRecastCase = async (
     };
   };
 
+  // ---------------------------------------------------------------------
+  // A lookup that has already computed, repointed at a different foreign
+  // field. This is the shape that makes the drift rather than assuming it:
+  // the rebuild copied the old db_field_type forward, so the declaration went
+  // on saying DATETIME while the column underneath it became text.
+  //
+  // The other shapes on this runner convert a field once, and a single
+  // conversion derives its types fresh - which is why they were green on
+  // every column, with declaration and physical column in agreement.
+  // ---------------------------------------------------------------------
+  const buildLookupTargetChanged = async (): Promise<ShapeBuild> => {
+    const foreignTable = await createTable(baseId, {
+      name: `${suffix}-foreign`,
+      fields: [
+        { name: "Name", type: FieldType.SingleLineText },
+        { name: "Due", type: FieldType.Date },
+        { name: "Note", type: FieldType.SingleLineText },
+      ],
+      records: [
+        {
+          fields: {
+            Name: "contract-1",
+            Due: "2026-03-04T00:00:00.000Z",
+            Note: config.peerTitle,
+          },
+        },
+      ],
+    });
+    const foreignRecordId = firstRecordId(foreignTable);
+    const foreignNote = foreignTable.fields.find(
+      (field: { name: string }) => field.name === "Note",
+    );
+    const foreignDue = foreignTable.fields.find(
+      (field: { name: string }) => field.name === "Due",
+    );
+    if (!foreignNote || !foreignDue) {
+      throw new Error(`Foreign table ${foreignTable.id} is missing its fields`);
+    }
+
+    const hostTable = await createTable(baseId, {
+      name: `${suffix}-host`,
+      fields: [{ name: "Name", type: FieldType.SingleLineText }],
+      records: [],
+    });
+    const hostLink = await createField(hostTable.id, {
+      name: "Contract",
+      type: FieldType.Link,
+      options: {
+        foreignTableId: foreignTable.id,
+        relationship: Relationship.ManyOne,
+        isOneWay: true,
+      },
+    });
+    await createRecords(hostTable.id, {
+      fieldKeyType: FieldKeyType.Name,
+      typecast: false,
+      records: rowNames.map((name) => ({
+        fields: { Name: name, Contract: { id: foreignRecordId } },
+      })),
+    });
+
+    // The lookup in its first life: a date, over a timestamptz column.
+    const lookup = await createField(hostTable.id, {
+      name: "Contract Field",
+      type: FieldType.Date,
+      isLookup: true,
+      lookupOptions: {
+        foreignTableId: foreignTable.id,
+        lookupFieldId: foreignDue.id,
+        linkFieldId: hostLink.id,
+      },
+    });
+
+    return {
+      tableIds: [hostTable.id, foreignTable.id],
+      hostTableId: hostTable.id,
+      read: (fieldId) => readHostCells(hostTable.id, fieldId),
+      holds: (cell) => holdsTitle(cell, config.peerTitle),
+      verifyFixture: async () => {
+        // The lookup has to have computed in its FIRST shape before it is
+        // repointed. A lookup that never filled in has nothing to rebuild,
+        // and the drift this case is about is created by the rebuild.
+        const deadline = Date.now() + config.settleTimeoutMs;
+        for (;;) {
+          const seen = await readHostCells(hostTable.id, lookup.id);
+          const empty = seen.cells.filter((cell) => !holdsTitle(cell, "2026-"));
+          if (empty.length === 0) {
+            return { headers: seen.headers, detail: seen.cells[0] };
+          }
+          if (Date.now() >= deadline) {
+            throw new Error(
+              `${empty.length} of ${config.rowCount} date lookup cells are empty after ${config.settleTimeoutMs}ms (e.g. ${JSON.stringify(empty[0])}) - the lookup never computed, so there is nothing for the repoint to rebuild`,
+            );
+          }
+          await sleep(config.settlePollIntervalMs);
+        }
+      },
+      makeComputed: async () => {
+        // Repoint it at a text field. The column has to become text; the
+        // declaration is what kept saying DATETIME.
+        await convertField(hostTable.id, lookup.id, {
+          name: "Contract Field",
+          type: FieldType.SingleLineText,
+          isLookup: true,
+          lookupOptions: {
+            foreignTableId: foreignTable.id,
+            lookupFieldId: foreignNote.id,
+            linkFieldId: hostLink.id,
+          },
+        });
+        return lookup.id;
+      },
+    };
+  };
+
   const builders = {
     "number-to-formula-lookup": buildNumberToFormulaLookup,
     "text-lookup-then-formula": buildTextLookupThenFormula,
     "one-one-link-lookup": buildOneOneLinkLookup,
+    "lookup-target-changed": buildLookupTargetChanged,
   } as const;
 
   let build: ShapeBuild | undefined;

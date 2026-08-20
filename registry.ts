@@ -29,6 +29,7 @@ import tableTrashDegradesInboundLinkWithoutDisplayColumnCase from "./cases/table
 import computedNumberColumnConvertedToFormulaLookupCase from "./cases/computed/number-column-converted-to-formula-lookup.case";
 import computedFormulaOverTextStoredLinkLookupCase from "./cases/computed/formula-over-text-stored-link-lookup.case";
 import computedLinkLookupAddedAfterRowsAreLinkedCase from "./cases/computed/link-lookup-added-after-rows-are-linked.case";
+import computedLookupRepointedAtAnotherFieldCase from "./cases/computed/lookup-repointed-at-another-field.case";
 import type { BugCase } from "./framework/types";
 
 // Every runnable case, registered explicitly. scripts/case-catalog.mjs parses
@@ -66,6 +67,7 @@ const cases = [
   computedNumberColumnConvertedToFormulaLookupCase,
   computedFormulaOverTextStoredLinkLookupCase,
   computedLinkLookupAddedAfterRowsAreLinkedCase,
+  computedLookupRepointedAtAnotherFieldCase,
 ] satisfies BugCase[];
 
 const caseById = new Map<string, BugCase>(

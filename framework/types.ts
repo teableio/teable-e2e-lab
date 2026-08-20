@@ -668,10 +668,17 @@ export interface ComputedBackfillRecastCaseConfig {
   //   "one-one-link-lookup" - a lookup of a foreign link field added to a host
   //     whose rows are already linked. The column is jsonb from the start and
   //     the seeding backfill assigned a text-typed alias into it.
+  //   "lookup-target-changed" - a lookup that already computed, whose target
+  //     is then repointed from a date field to a text one. The rebuild copied
+  //     the old db_field_type forward, so the declaration said DATETIME over a
+  //     text column. This is the only one of the four that makes the drift
+  //     happen rather than assuming it: the other three convert a field once,
+  //     and a single conversion derives its types fresh.
   shape:
     | "number-to-formula-lookup"
     | "text-lookup-then-formula"
-    | "one-one-link-lookup";
+    | "one-one-link-lookup"
+    | "lookup-target-changed";
   // Title carried by the row at the far end of the graph, and the string the
   // link-shaped assertions look for.
   peerTitle: string;
