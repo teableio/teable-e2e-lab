@@ -70,8 +70,14 @@ backfill the bugs live in.
 
 So the shape is not reachable from here today. If a seam appears that lets a
 case observe a dead schema operation, or drive the conversion the way the v2
-container does, delete these three rows and write the cases: the fixtures are
-in run 32395779980 and were correct, they simply never went red.
+container does, delete these three rows and start from what is already built.
+
+The three cases and their shared runner were kept rather than thrown away:
+branch `attempt/computed-backfill-recast-green-everywhere`, two commits, never
+merged. The fixtures in it are correct — every graph verified before its
+checkpoint, every value read back — they simply never went red. Picking that
+branch up is a much smaller job than deriving it again, which is the whole
+reason this ledger exists.
 
 ## Covered
 
