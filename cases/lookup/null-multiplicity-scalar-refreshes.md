@@ -31,15 +31,26 @@ only difference between it and its working neighbours was NULL versus false.
    `is_multiple_cell_value = NULL` — SQL, see below.
 3. Edit the foreign row's title, which is what queues the recompute.
 
-Before the fix the new title never arrives. After it, the cell updates.
+Before the fix the cell comes back as `["beta"]` — a JSON array written into
+a scalar column — instead of `beta`. After it, the cell reads the scalar.
 
 ## What the checkpoint asserts
 
-That the edited title reaches the lookup cell within the settle budget.
+That the lookup cell holds the edited title **as a scalar** within the settle
+budget.
 
-The timeout is the assertion. The dead-lettering happens out of band — the
-upstream edit answers 200 either way — so there is no error to catch at the
-caller, only a cell that never changes.
+Note what this fixture does and does not reproduce. The root cause is the one
+from the report — unset multiplicity is read as multi-valued, so the computed
+update projects the multi-valued shape — but here that shape lands in the
+column as an array string rather than colliding with a `text = jsonb`
+comparison. So the case pins the defect and the correct behavior; it does not
+reproduce the production dead-letter itself, and a reader should not take a
+green cell here as evidence that computed tasks are no longer dead-lettering
+for other reasons.
+
+The timeout is still part of the assertion: the upstream edit answers 200 no
+matter what, so nothing is raised at the caller — the only signals are a cell
+that stays stale or a cell that fills in with the wrong shape.
 
 Fixture verification, outside the checkpoint: the lookup resolves before the
 drift, and the scalar value survived the column rewrite. Without the second
