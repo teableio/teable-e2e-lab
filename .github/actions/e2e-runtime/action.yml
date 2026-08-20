@@ -91,8 +91,12 @@ runs:
         export DOCKER_GID="$(getent group docker | cut -d: -f3)"
 
         make docker.create.network
-        docker rm -fv "$TEST_PG_CONTAINER_NAME" || true
-        docker rm -fv teable-cache || true
+        # A fresh runner has no containers to remove, and docker says so on
+        # stderr. Printed at the top of every job it reads as a failure, which
+        # is how a real bootstrap error gets scrolled past. Removing something
+        # that is not there is the expected case here, so it stays quiet.
+        docker rm -fv "$TEST_PG_CONTAINER_NAME" >/dev/null 2>&1 || true
+        docker rm -fv teable-cache >/dev/null 2>&1 || true
 
         docker compose \
           --env-file ./dockers/.env \
@@ -124,8 +128,8 @@ runs:
         export DOCKER_UID="$(id -u)"
         export DOCKER_GID="$(getent group docker | cut -d: -f3)"
 
-        docker rm -fv "$TEST_PG_CONTAINER_NAME" || true
-        docker rm -fv teable-cache || true
+        docker rm -fv "$TEST_PG_CONTAINER_NAME" >/dev/null 2>&1 || true
+        docker rm -fv teable-cache >/dev/null 2>&1 || true
         docker compose \
           --env-file ./dockers/.env \
           -f ./dockers/networks.yml \

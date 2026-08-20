@@ -165,10 +165,16 @@ jobs:
 
       # Browser-driven cases start a real frontend and drive it with Chromium.
       # The package is already installed with teable-ee; only the browser binary
-      # is missing on a runner. The install is skipped while this repository has
-      # no browser runtime, so it costs nothing until the first such case lands
-      # and turns itself on.
+      # is missing on a runner. Both steps are gated on the browser runtime
+      # existing, so they cost nothing until the first such case lands and turn
+      # themselves on together when it does.
+      #
+      # The gate belongs on the cache step too, not only on the install: a cache
+      # with nothing to save closes every job with a red "Path Validation Error"
+      # that means only "this repository has no browser cases yet", and noise
+      # like that is how a real failure gets scrolled past.
       - name: Restore Chromium cache
+        if: hashFiles('e2e-lab/framework/browser-runtime.ts') != ''
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
@@ -177,13 +183,10 @@ jobs:
             ${{ runner.os }}-playwright-
 
       - name: Install Chromium for browser-driven cases
+        if: hashFiles('e2e-lab/framework/browser-runtime.ts') != ''
         working-directory: teable-ee/enterprise/app-ee
         run: |
           set -euo pipefail
-          if [ ! -f "$GITHUB_WORKSPACE/e2e-lab/framework/browser-runtime.ts" ]; then
-            echo "No browser runtime in this repository yet; skipping."
-            exit 0
-          fi
           pnpm exec playwright install --with-deps chromium
 
       - name: Run bug cases through teable-ee e2e
