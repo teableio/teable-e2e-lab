@@ -20,6 +20,7 @@ export interface BugCaseConfigByRunner {
   "table-trash-inbound-link": TableTrashInboundLinkCaseConfig;
   "required-link-blocks-delete": RequiredLinkBlocksDeleteCaseConfig;
   "legacy-unique-error": LegacyUniqueErrorCaseConfig;
+  "paste-non-collaborator-user": PasteNonCollaboratorUserCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -383,4 +384,20 @@ export interface LegacyUniqueErrorCaseConfig {
   // Written once during setup and then written again to collide with itself.
   // Its content carries nothing; the collision is the fixture.
   duplicateValue: string;
+}
+
+// A user field, and a member who exists on the platform but is not a
+// collaborator of this base -> paste that member in the way the grid does when
+// a user cell is copied -> checkpoint: the paste lands. The write path had been
+// narrowed to collaborators while the read path stayed open, so the column
+// displayed a person it refused to let anyone write.
+export interface PasteNonCollaboratorUserCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Display name of the outsider. Their id and email are derived from the
+  // runId instead: the row is real platform state, so it must not collide
+  // with a leftover from an earlier run.
+  outsiderName: string;
+  // Primary-field value of the single row. Nothing asserts on it.
+  rowTitle: string;
 }
