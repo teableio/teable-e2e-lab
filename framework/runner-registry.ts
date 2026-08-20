@@ -11,6 +11,7 @@ import { runLookupFilterViewCase } from "./runners/lookup-filter-view.runner";
 import { runLookupUserSnapshotSortCase } from "./runners/lookup-user-snapshot-sort.runner";
 import { runHttpCheckCase } from "./runners/http-check.runner";
 import { runNullMultiplicityLookupCase } from "./runners/null-multiplicity-lookup.runner";
+import { runPasteByIdAlignmentCase } from "./runners/paste-by-id-alignment.runner";
 import { runPasteNonCollaboratorUserCase } from "./runners/paste-non-collaborator-user.runner";
 import { runRecordFlowCase } from "./runners/record-flow.runner";
 import { runRequiredLinkBlocksDeleteCase } from "./runners/required-link-blocks-delete.runner";
@@ -61,6 +62,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "delete-undo-restores": runDeleteUndoRestoresCase,
   "cross-base-link-delete": runCrossBaseLinkDeleteCase,
   "excel-import-offset-header": runExcelImportOffsetHeaderCase,
+  "paste-by-id-alignment": runPasteByIdAlignmentCase,
 };
 
 export const executeRegisteredRunner = (
