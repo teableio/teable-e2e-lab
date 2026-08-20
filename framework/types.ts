@@ -22,6 +22,7 @@ export interface BugCaseConfigByRunner {
   "legacy-unique-error": LegacyUniqueErrorCaseConfig;
   "paste-non-collaborator-user": PasteNonCollaboratorUserCaseConfig;
   "stale-lookup-recast": StaleLookupRecastCaseConfig;
+  "null-multiplicity-lookup": NullMultiplicityLookupCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -430,6 +431,27 @@ export interface StaleLookupRecastCaseConfig {
   peerTitle: string;
   // How long a rebuilt lookup may take to fill in. This is the assertion: the
   // failure raises nothing at the caller, it just never arrives.
+  settleTimeoutMs: number;
+  settlePollIntervalMs: number;
+}
+
+// A scalar lookup whose `is_multiple_cell_value` is NULL rather than false ->
+// recompute it, or convert it away -> checkpoint: whichever was asked for
+// works. Unset multiplicity was read as multi-valued, so computed updates
+// projected jsonb into a TEXT column and the conversion ran jsonb_typeof over
+// plain text. The table could neither compute nor be repaired from inside the
+// product.
+export interface NullMultiplicityLookupCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Which half of the failure this case watches. "recompute" is the outage;
+  // "convert-to-text" is the way out the user reached for and did not have.
+  observe: "recompute" | "convert-to-text";
+  // The looked-up title, before and after the upstream edit that forces the
+  // recompute. They must differ: writing the same title back queues no
+  // computed task, and the case would read the pre-drift value and pass.
+  sourceValue: string;
+  sourceValueAfter: string;
   settleTimeoutMs: number;
   settlePollIntervalMs: number;
 }
