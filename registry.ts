@@ -22,6 +22,7 @@ import realtimeViewFilterUpdateReachesSubscribersCase from "./cases/realtime/vie
 import realtimeViewGroupAndSortReachSubscribersCase from "./cases/realtime/view-group-and-sort-reach-subscribers.case";
 import undoDeleteRecordsUndoRestoresAllCase from "./cases/undo/delete-records-undo-restores-all.case";
 import linkCrossBaseLinkClearsOnDeleteCase from "./cases/link/cross-base-link-clears-on-delete.case";
+import importExcelHeaderBelowA1Case from "./cases/import/excel-header-below-a1.case";
 import type { BugCase } from "./framework/types";
 
 // Every runnable case, registered explicitly. scripts/case-catalog.mjs parses
@@ -52,6 +53,7 @@ const cases = [
   realtimeViewGroupAndSortReachSubscribersCase,
   undoDeleteRecordsUndoRestoresAllCase,
   linkCrossBaseLinkClearsOnDeleteCase,
+  importExcelHeaderBelowA1Case,
 ] satisfies BugCase[];
 
 const caseById = new Map<string, BugCase>(
