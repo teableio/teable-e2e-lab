@@ -9,6 +9,7 @@ import {
 } from "../../../utils/init-app";
 import { bugCheckpoint } from "../checkpoint";
 import { assertServedByV2 } from "../engine";
+import { fixtureDb } from "../fixture-db";
 import type { BugCaseFor, BugProbeResult, BugRunContext } from "../types";
 import type { ComputedBackfillRecastCaseConfig } from "../types";
 
@@ -123,6 +124,52 @@ export const runComputedBackfillRecastCase = async (
       cells: records.map(
         (record: { fields: Record<string, unknown> }) => record.fields[fieldId],
       ),
+    };
+  };
+
+  // Diagnostic, not an assertion, and deliberately AFTER the checkpoint - by
+  // then we are outside it again and fixture-db will hand over a handle.
+  //
+  // It answers the one question three green pre-fix columns cannot: did this
+  // sequence even reach the state the bug needs? Every one of these fixes is
+  // about a computed field whose stored db_field_type disagrees with the
+  // physical type of its column. If the two disagree here and the backfill
+  // still landed, the precondition existed and the problem is that this lab
+  // cannot see the failure. If they agree, the sequence never built the state
+  // at all and the cases are watching a bug that was never there.
+  const readTypeAgreement = async (hostTableId: string, fieldId: string) => {
+    const db = fixtureDb(context.app);
+    const { schema, table } = await db.physicalTable(hostTableId);
+    const meta = await db.query<
+      {
+        db_field_type: string;
+        cell_value_type: string;
+        db_field_name: string;
+        is_lookup: boolean | null;
+        is_computed: boolean | null;
+      }[]
+    >(
+      `SELECT db_field_type, cell_value_type, db_field_name, is_lookup, is_computed FROM "field" WHERE id = $1`,
+      fieldId,
+    );
+    const row = meta[0];
+    if (!row) {
+      return { error: `no field row for ${fieldId}` };
+    }
+    const physical = await db.query<{ data_type: string; udt_name: string }[]>(
+      `SELECT data_type, udt_name FROM information_schema.columns WHERE table_schema = $1 AND table_name = $2 AND column_name = $3`,
+      schema,
+      table,
+      row.db_field_name,
+    );
+    return {
+      declared: row.db_field_type,
+      cellValueType: row.cell_value_type,
+      isLookup: row.is_lookup,
+      isComputed: row.is_computed,
+      column: row.db_field_name,
+      physical: physical[0]?.data_type ?? "(column not found)",
+      physicalUdt: physical[0]?.udt_name ?? null,
     };
   };
 
@@ -521,9 +568,15 @@ export const runComputedBackfillRecastCase = async (
       },
     );
 
+    const typeAgreement = await readTypeAgreement(
+      build.hostTableId,
+      probe.fieldId,
+    );
+
     return {
       details: {
         shape: config.shape,
+        typeAgreement,
         hostTableId: build.hostTableId,
         routing,
         fixtureCell: fixture.detail,
