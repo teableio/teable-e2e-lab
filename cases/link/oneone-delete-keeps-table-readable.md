@@ -1,9 +1,7 @@
 # link/oneone-delete-keeps-table-readable
 
 **Bug:** T6807 — `GET /api/comment/:tableId/count` answered
-`42703: column t_tbl….__id does not exist`. Fixed by
-[teable-ee#3040](https://github.com/teableio/teable-ee/pull/3040)
-(`2138a8f7fd`, 2026-08-18).
+`42703: column t_tbl….__id does not exist`.
 
 ## What broke
 
