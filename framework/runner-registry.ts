@@ -3,6 +3,7 @@ import { runComputedValueLandsCase } from "./runners/computed-value-lands.runner
 import { runDeleteUndoRestoresCase } from "./runners/delete-undo-restores.runner";
 import { runCrossBaseLinkDeleteCase } from "./runners/cross-base-link-delete.runner";
 import { runExcelImportDuplicateColumnsCase } from "./runners/excel-import-duplicate-columns.runner";
+import { runExcelImportOffsetHeaderCase } from "./runners/excel-import-offset-header.runner";
 import { runGroupCollapseCase } from "./runners/group-collapse.runner";
 import { runLinkDeleteReadableCase } from "./runners/link-delete-readable.runner";
 import { runLegacyUniqueErrorCase } from "./runners/legacy-unique-error.runner";
@@ -59,6 +60,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "view-property-realtime": runViewPropertyRealtimeCase,
   "delete-undo-restores": runDeleteUndoRestoresCase,
   "cross-base-link-delete": runCrossBaseLinkDeleteCase,
+  "excel-import-offset-header": runExcelImportOffsetHeaderCase,
 };
 
 export const executeRegisteredRunner = (

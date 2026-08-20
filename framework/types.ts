@@ -29,6 +29,7 @@ export interface BugCaseConfigByRunner {
   "view-property-realtime": ViewPropertyRealtimeCaseConfig;
   "delete-undo-restores": DeleteUndoRestoresCaseConfig;
   "cross-base-link-delete": CrossBaseLinkDeleteCaseConfig;
+  "excel-import-offset-header": ExcelImportOffsetHeaderCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -565,4 +566,23 @@ export interface CrossBaseLinkDeleteCaseConfig {
   crossBaseOwnerTitle: string;
   sameBaseHostTitle: string;
   crossBaseHostTitle: string;
+}
+
+// Build an Excel sheet whose used range starts below A1 -> analyze and import
+// it -> checkpoint: the analyzer reports the header row's columns, the table
+// is created with those field names, and the data row lands under them.
+export interface ExcelImportOffsetHeaderCaseConfig {
+  // This case owns its space: the import row budget is derived from the
+  // space's usage, so importing into a space other cases fill would
+  // eventually answer 402 for reasons unrelated to this bug.
+  baseId: "own-space";
+  namePrefix: string;
+  // Where the sheet's content starts, e.g. "A2". Anything below row 1 leaves
+  // the hole at dense-row index 0 that this case is about; the runner re-reads
+  // the workbook and refuses a fixture that landed at A1 anyway.
+  origin: string;
+  headers: string[];
+  // One data row, the same width as the headers.
+  row: (string | number)[];
+  timeZone: string;
 }
