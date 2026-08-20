@@ -12,6 +12,8 @@ import tableTrashDegradesInboundLinkCase from "./cases/table/trash-degrades-inbo
 import linkRequiredLinkBlocksOwnerDeleteCase from "./cases/link/required-link-blocks-owner-delete.case";
 import recordLegacyUniqueViolationNamesFieldCase from "./cases/record/legacy-unique-violation-names-field.case";
 import userFieldPasteNonCollaboratorValueCase from "./cases/user-field/paste-non-collaborator-value.case";
+import lookupStaleTextMetadataRecastsOnRebuildCase from "./cases/lookup/stale-text-metadata-recasts-on-rebuild.case";
+import lookupStaleTextMetadataSurvivesDisplayConvertCase from "./cases/lookup/stale-text-metadata-survives-display-convert.case";
 import type { BugCase } from "./framework/types";
 
 // Every runnable case, registered explicitly. scripts/case-catalog.mjs parses
@@ -32,6 +34,8 @@ const cases = [
   linkRequiredLinkBlocksOwnerDeleteCase,
   recordLegacyUniqueViolationNamesFieldCase,
   userFieldPasteNonCollaboratorValueCase,
+  lookupStaleTextMetadataRecastsOnRebuildCase,
+  lookupStaleTextMetadataSurvivesDisplayConvertCase,
 ] satisfies BugCase[];
 
 const caseById = new Map<string, BugCase>(
