@@ -242,7 +242,9 @@ export const runLinkSelectorCandidatesCase = async (
     const initialResponse = await initialCandidate;
 
     const probe = await bugCheckpoint(
-      "candidate-filter-survives-selected-all-switch",
+      config.mode === "initial-load"
+        ? "first-open-shows-link-candidates"
+        : "candidate-filter-survives-selected-all-switch",
       async () => {
         if (
           !carriesCandidateFilter(
@@ -263,6 +265,12 @@ export const runLinkSelectorCandidatesCase = async (
           throw new Error(
             `the first All list returned [${initialIds.join(", ")}], expected free ${freeRecordId} and not occupied ${occupiedRecordId}`,
           );
+        }
+
+        if (config.mode === "initial-load") {
+          await browser!.page.waitForTimeout(250);
+          await verifyCandidateGridVisible(browser!.page);
+          return { initialIds, switchedCount: undefined };
         }
 
         const selectedRowCountPromise = browser!.page.waitForResponse(

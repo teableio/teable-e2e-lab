@@ -343,12 +343,12 @@ export interface AutomationPercentMappingCaseConfig {
 }
 
 // Build a deterministic one-many link fixture through the API, then open the
-// real grid link editor in Chromium. Switching Selected -> All must restore
-// the candidate filter so a child owned by a different parent cannot re-enter
-// the selectable list.
+// real grid link editor in Chromium. The initial-load mode protects first-open
+// candidate rendering; tab-switch protects candidate-filter restoration.
 export interface LinkSelectorCandidatesCaseConfig {
   baseId: "seed-base";
   tableNamePrefix: string;
+  mode: "initial-load" | "tab-switch";
   targetIssueTitle: string;
   ownerIssueTitle: string;
   freeRecordTitle: string;
