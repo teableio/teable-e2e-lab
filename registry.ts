@@ -7,6 +7,8 @@ import filterScalarLookupNoneOfLoadsCase from "./cases/filter/scalar-lookup-none
 import lookupUserSnapshotDateSortSpansGroupCase from "./cases/lookup/user-snapshot-date-sort-spans-group.case";
 import formulaScalarValueOverLinkedTextCase from "./cases/formula/scalar-value-over-linked-text.case";
 import linkRequiredLinkKeepsSiblingRefreshCase from "./cases/link/required-link-keeps-sibling-refresh.case";
+import authorityY132AccessTokenSpaceRangeCase from "./cases/authority/y132-access-token-space-range.case";
+import automationY152PercentMappingPreservesNumberCase from "./cases/automation/y152-percent-mapping-preserves-number.case";
 import type { BugCase } from "./framework/types";
 
 // Every runnable case, registered explicitly. scripts/case-catalog.mjs parses
@@ -22,6 +24,8 @@ const cases = [
   lookupUserSnapshotDateSortSpansGroupCase,
   formulaScalarValueOverLinkedTextCase,
   linkRequiredLinkKeepsSiblingRefreshCase,
+  authorityY132AccessTokenSpaceRangeCase,
+  automationY152PercentMappingPreservesNumberCase,
 ] satisfies BugCase[];
 
 const caseById = new Map<string, BugCase>(

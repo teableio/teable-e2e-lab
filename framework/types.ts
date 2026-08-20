@@ -16,6 +16,8 @@ export interface BugCaseConfigByRunner {
   "lookup-user-snapshot-sort": LookupUserSnapshotSortCaseConfig;
   "computed-value-lands": ComputedValueLandsCaseConfig;
   "required-link-refresh": RequiredLinkRefreshCaseConfig;
+  "access-token-resource-isolation": AccessTokenResourceIsolationCaseConfig;
+  "automation-percent-mapping": AutomationPercentMappingCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -311,6 +313,29 @@ export interface RequiredLinkRefreshCaseConfig {
   otherTitleAfter: string;
   // How long the refreshed title may take to arrive. This is the assertion:
   // above a slow-but-working pipeline, below "never".
+  settleTimeoutMs: number;
+  settlePollIntervalMs: number;
+}
+
+// Create two spaces owned by the same user, enable the authority matrix on a
+// base in space B, and mint a PAT whose resource range contains only space A.
+// The checkpoint proves the matrix cannot widen that token into space B.
+export interface AccessTokenResourceIsolationCaseConfig {
+  spaceNamePrefix: string;
+  baseNamePrefix: string;
+  tableNamePrefix: string;
+  blockedRecordValue: string;
+}
+
+// Map one percentage-formatted number through an automation single-variable
+// array node into another percentage-formatted number field. The checkpoint
+// proves the template resolver preserves both the numeric type and value.
+export interface AutomationPercentMappingCaseConfig {
+  spaceNamePrefix: string;
+  baseNamePrefix: string;
+  tableNamePrefix: string;
+  percentValue: number;
+  precision: number;
   settleTimeoutMs: number;
   settlePollIntervalMs: number;
 }

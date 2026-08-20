@@ -56,9 +56,12 @@ const serverDetail = (
 ): Pick<NormalizedBugError, "status" | "response"> => {
   let current = error;
   for (let depth = 0; depth < MAX_CAUSE_DEPTH && current; depth += 1) {
-    const response = (
-      current as { response?: { status?: unknown; data?: unknown } }
-    )?.response;
+    const currentError = current as {
+      status?: unknown;
+      data?: unknown;
+      response?: { status?: unknown; data?: unknown };
+    };
+    const response = currentError.response;
     if (response && typeof response === "object") {
       const status =
         typeof response.status === "number" ? response.status : undefined;
@@ -74,6 +77,21 @@ const serverDetail = (
                 : body,
         };
       }
+    }
+    // @teable/core's HttpError keeps status/data at the top level after the
+    // OpenAPI interceptor unwraps Axios. Read only those two fields as a
+    // fallback; a full Axios response above remains the richer source.
+    if (typeof currentError.status === "number") {
+      const body = asText(currentError.data);
+      return {
+        status: currentError.status,
+        response:
+          body === undefined
+            ? undefined
+            : body.length > MAX_RESPONSE_CHARS
+              ? `${body.slice(0, MAX_RESPONSE_CHARS)}... (${body.length} chars)`
+              : body,
+      };
     }
     const next = (current as { cause?: unknown })?.cause;
     if (next === current) {

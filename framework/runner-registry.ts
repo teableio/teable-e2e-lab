@@ -1,4 +1,6 @@
 import { runComputedValueLandsCase } from "./runners/computed-value-lands.runner";
+import { runAccessTokenResourceIsolationCase } from "./runners/access-token-resource-isolation.runner";
+import { runAutomationPercentMappingCase } from "./runners/automation-percent-mapping.runner";
 import { runGroupCollapseCase } from "./runners/group-collapse.runner";
 import { runLookupFilterViewCase } from "./runners/lookup-filter-view.runner";
 import { runLookupUserSnapshotSortCase } from "./runners/lookup-user-snapshot-sort.runner";
@@ -33,6 +35,8 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "lookup-user-snapshot-sort": runLookupUserSnapshotSortCase,
   "computed-value-lands": runComputedValueLandsCase,
   "required-link-refresh": runRequiredLinkRefreshCase,
+  "access-token-resource-isolation": runAccessTokenResourceIsolationCase,
+  "automation-percent-mapping": runAutomationPercentMappingCase,
 };
 
 export const executeRegisteredRunner = (
