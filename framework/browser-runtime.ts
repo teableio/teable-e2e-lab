@@ -205,7 +205,6 @@ const startRuntime = async (context: BugRunContext): Promise<RuntimeState> => {
         SERVER_PORT: backendPort,
         SOCKET_PORT: backendPort,
         NEXT_BUILD_ENV_CSP: "false",
-        : "CLOUD",
         NEXT_BUILD_ENV_SENTRY_ENABLED: "false",
         NEXT_BUILD_ENV_TYPECHECK: "false",
       },
