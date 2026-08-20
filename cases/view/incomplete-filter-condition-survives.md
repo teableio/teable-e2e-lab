@@ -6,9 +6,6 @@ T6568. In the filter panel, a user clicked "add filter", picked a field, and the
 condition **disappeared on its own** — no chance to choose an operator or a
 value. The user confirmed on 2026-08-09 that it was still happening.
 
-Fixed by [teable-ee 3f15439a3](https://github.com/teableio/teable-ee/commit/3f15439a3)
-(PR #2860).
-
 The cause is in `ViewSourceFilter`. v1 stores a list-operator condition the user
 has not finished (`value` is `null` or `[]`) exactly as written and skips it at
 query time; v2's schema instead **dropped that shape on both read and write**,

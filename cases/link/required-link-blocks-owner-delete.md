@@ -1,9 +1,7 @@
 # link/required-link-blocks-owner-delete
 
 **Bug:** T6705 — required manyOne/oneOne writeback dead-letters when the foreign
-row is gone. Fixed by
-[teable-ee#2986](https://github.com/teableio/teable-ee/pull/2986)
-(`6e581ee04a`, 2026-08-13).
+row is gone.
 
 ## What broke
 

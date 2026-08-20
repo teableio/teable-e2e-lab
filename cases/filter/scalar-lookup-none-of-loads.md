@@ -10,9 +10,6 @@ internal_server_error: Failed to load table records:
 error: COALESCE types text and jsonb cannot be matched
 ```
 
-Fixed by [teable-ee d45bf6f32](https://github.com/teableio/teable-ee/commit/d45bf6f32)
-(PR #2865).
-
 A scalar lookup — one whose target is a single-value field such as a select — is
 stored as a plain scalar, but the filter path compiled it as the JSON array a
 multi-value lookup would be. `isNoneOf` therefore built a COALESCE comparing

@@ -6,9 +6,6 @@ T6751, reported as "sorting is scrambled when grouped": grouped by person and
 sorted by payment date descending, the dates inside one person's group ran
 **2026, 2025, 2026**.
 
-Fixed by [teable-ee 89477a9bd](https://github.com/teableio/teable-ee/commit/89477a9bd)
-(PR #3026).
-
 The group header folds **several stored snapshots** of the same collaborator
 into one bucket, keyed on id and title, but the generated SQL still ordered by
 the **raw JSON**. A collaborator's snapshot carries email and avatarUrl

@@ -5,11 +5,8 @@
 T6844: a single-valued number formula referencing a link/lookup produced a
 jsonb-array-to-double cast and Postgres answered 22P02. The computed UPDATE for
 `VALUE({lookup})` wrapped `jsonb_agg(...)` directly in `::double precision`,
-which fails for a value like `[0.0003]`.
-
-Fixed by [teable-ee 662cfde02](https://github.com/teableio/teable-ee/commit/662cfde02)
-(PR #3075). The same batch includes
-[ca79dcb9c](https://github.com/teableio/teable-ee/commit/ca79dcb9c) (T6845),
+which fails for a value like `[0.0003]`. The same batch includes
+`ca79dcb9c` (T6845),
 classifying 22P02 as non-retryable — retrying a syntax error only wastes time.
 
 ## What the user sees: nothing

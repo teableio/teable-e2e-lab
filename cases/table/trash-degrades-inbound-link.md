@@ -1,9 +1,7 @@
 # table/trash-degrades-inbound-link
 
 **Bug:** T6859 — trashing a table left link fields on other tables pointing at
-it, and the record editor froze. Fixed by
-[teable-ee#3087](https://github.com/teableio/teable-ee/pull/3087)
-(`68bf4bc59f`, 2026-08-19).
+it, and the record editor froze.
 
 ## What broke
 
