@@ -19,25 +19,30 @@ export default defineBugCase({
   timeoutMs: 120_000,
   bug: {
     issue: "T6856",
-    status: "open",
+    status: "fixed",
   },
   config: {
     baseId: "seed-base",
     tableNamePrefix: "e2e-lab-collapsed-date-group",
     timeZone: "Asia/Shanghai",
     // Two consecutive local days, so collapsing the later one puts the
-    // mis-aimed exclusion squarely on the earlier one's rows. Two rows each:
-    // one row cannot tell "this group leaked" from "one stray row".
+    // mis-aimed exclusion squarely on the earlier one's rows.
+    //
+    // The hours are the load-bearing part. A row at exactly local midnight is
+    // excluded correctly even by the broken filter, so a fixture of midnight
+    // rows is green on both sides of the fix; each bucket therefore holds rows
+    // spread across its day, and more than one, because one row cannot tell
+    // "this group leaked" from "one stray row".
     buckets: [
       {
         localDay: "2025-11-30",
         instant: "2025-11-29T16:00:00.000Z",
-        rowCount: 2,
+        localHours: [0, 9, 23],
       },
       {
         localDay: "2025-12-01",
         instant: "2025-11-30T16:00:00.000Z",
-        rowCount: 2,
+        localHours: [0, 9, 23],
       },
     ],
   },

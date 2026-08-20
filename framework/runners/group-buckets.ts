@@ -10,7 +10,13 @@
 //      instant sat mid-day, the header would legitimately differ and the
 //      fixture check would fail for a reason that has nothing to do with the
 //      bug.
-//   2. Consecutive buckets are consecutive local days. The failure this case
+//   2. Every bucket holds at least one row away from local midnight. A row at
+//      exactly the bucket key is excluded correctly even by the broken filter,
+//      because the mis-aimed instant still formats to that row's own day; only
+//      rows elsewhere in the day fall on the wrong side of it. A fixture of
+//      midnight-only rows is green on both sides of the fix and proves
+//      nothing.
+//   3. Consecutive buckets are consecutive local days. The failure this case
 //      watches mis-aims the exclusion filter at the day *before* the collapsed
 //      group, so the day before bucket N must be bucket N-1. Skip a day and
 //      the "rows that should have stayed visible disappeared" half of the bug
@@ -26,8 +32,11 @@ export interface DayBucket {
   // day it belongs to.
   localDay: string;
   // Local midnight of `localDay` in the field's time zone, as an instant.
+  // This is the group key the product reports for the bucket.
   instant: string;
-  rowCount: number;
+  // Hours after local midnight, one row each. At least two, and at least one
+  // of them non-zero - see property 2 above.
+  localHours: number[];
 }
 
 const dayFormatter = (timeZone: string) =>
@@ -84,9 +93,19 @@ export const bucketProblems = (
         `bucket ${index} is labelled ${bucket.localDay} but falls on ${day} in ${timeZone}`,
       );
     }
-    if (bucket.rowCount < 1) {
+    if (bucket.localHours.length < 2) {
       problems.push(
-        `bucket ${index} (${bucket.localDay}) seeds ${bucket.rowCount} rows — an empty bucket cannot show a leak`,
+        `bucket ${index} (${bucket.localDay}) seeds ${bucket.localHours.length} rows — with fewer than 2, "the whole group leaked" and "one stray row" look the same`,
+      );
+    }
+    if (bucket.localHours.some((hour) => hour < 0 || hour >= 24)) {
+      problems.push(
+        `bucket ${index} (${bucket.localDay}) has an hour outside the local day: [${bucket.localHours.join(", ")}]`,
+      );
+    }
+    if (!bucket.localHours.some((hour) => hour !== 0)) {
+      problems.push(
+        `bucket ${index} (${bucket.localDay}) seeds only local midnight — a midnight row is excluded correctly even by the broken filter, so this fixture cannot observe the bug`,
       );
     }
 
@@ -112,10 +131,20 @@ export const bucketProblems = (
   return problems;
 };
 
-export const rowTitle = (bucket: DayBucket, rowNumber: number): string =>
-  `${bucket.localDay}#${rowNumber}`;
+// A row's title names its bucket and its local hour, so every line of
+// evidence says which day and which time of day it belongs to.
+export const rowTitle = (bucket: DayBucket, localHour: number): string =>
+  `${bucket.localDay}#${String(localHour).padStart(2, "0")}h`;
+
+export const bucketRows = (
+  bucket: DayBucket,
+): { title: string; instant: string }[] =>
+  bucket.localHours.map((hour) => ({
+    title: rowTitle(bucket, hour),
+    instant: new Date(
+      new Date(bucket.instant).getTime() + hour * 3_600_000,
+    ).toISOString(),
+  }));
 
 export const bucketTitles = (bucket: DayBucket): string[] =>
-  Array.from({ length: bucket.rowCount }, (_, index) =>
-    rowTitle(bucket, index + 1),
-  );
+  bucketRows(bucket).map((row) => row.title);
