@@ -5,6 +5,7 @@ import { runLookupFilterViewCase } from "./runners/lookup-filter-view.runner";
 import { runLookupUserSnapshotSortCase } from "./runners/lookup-user-snapshot-sort.runner";
 import { runHttpCheckCase } from "./runners/http-check.runner";
 import { runRecordFlowCase } from "./runners/record-flow.runner";
+import { runRequiredLinkBlocksDeleteCase } from "./runners/required-link-blocks-delete.runner";
 import { runRequiredLinkRefreshCase } from "./runners/required-link-refresh.runner";
 import { runShareSaveCase } from "./runners/share-save.runner";
 import { runTableTrashInboundLinkCase } from "./runners/table-trash-inbound-link.runner";
@@ -37,6 +38,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "required-link-refresh": runRequiredLinkRefreshCase,
   "link-delete-readable": runLinkDeleteReadableCase,
   "table-trash-inbound-link": runTableTrashInboundLinkCase,
+  "required-link-blocks-delete": runRequiredLinkBlocksDeleteCase,
 };
 
 export const executeRegisteredRunner = (
