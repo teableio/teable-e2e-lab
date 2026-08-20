@@ -6,9 +6,6 @@ T6840. A user saved a shared app into an **existing base** (`Save to my space`
 → `Existing base`), the page reported success after `Duplicate`, and the target
 base showed nothing. Saving it a second time answered `Internal server error`.
 
-Fixed by [teable-ee 3b1bfd0d7](https://github.com/teableio/teable-ee/commit/3b1bfd0d7)
-(PR #3071).
-
 One user action, two independent faults. The case puts them in a single
 checkpoint, because to the user they are one thing that did not work:
 

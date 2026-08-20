@@ -9,10 +9,7 @@ an update to the foreign table triggered a refresh of both link fields in one
 step, and the generated SQL took its ELSE branch on the empty foreign key and
 wrote NULL into the required display column. Postgres answered 23502 and the
 task dead-lettered as `data_constraint` — **which the admin console refuses to
-replay**, so every occurrence needed a human.
-
-Fixed by [teable-ee 1fc507346](https://github.com/teableio/teable-ee/commit/1fc507346)
-(PR #3088). The cause is that `UpdateFromSelectBuilder`'s COALESCE for a
+replay**, so every occurrence needed a human. The cause is that `UpdateFromSelectBuilder`'s COALESCE for a
 required link only covered "foreign key present but the join missed", and
 deliberately propagated NULL when the foreign key itself was empty.
 
