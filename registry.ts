@@ -16,6 +16,7 @@ import lookupStaleTextMetadataRecastsOnRebuildCase from "./cases/lookup/stale-te
 import lookupStaleTextMetadataSurvivesDisplayConvertCase from "./cases/lookup/stale-text-metadata-survives-display-convert.case";
 import lookupNullMultiplicityScalarRefreshesCase from "./cases/lookup/null-multiplicity-scalar-refreshes.case";
 import lookupNullMultiplicityScalarConvertsCase from "./cases/lookup/null-multiplicity-scalar-converts.case";
+import importExcelDuplicateHeadersCase from "./cases/import/excel-duplicate-headers.case";
 import type { BugCase } from "./framework/types";
 
 // Every runnable case, registered explicitly. scripts/case-catalog.mjs parses
@@ -40,6 +41,7 @@ const cases = [
   lookupStaleTextMetadataSurvivesDisplayConvertCase,
   lookupNullMultiplicityScalarRefreshesCase,
   lookupNullMultiplicityScalarConvertsCase,
+  importExcelDuplicateHeadersCase,
 ] satisfies BugCase[];
 
 const caseById = new Map<string, BugCase>(
