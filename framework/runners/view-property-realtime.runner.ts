@@ -92,11 +92,18 @@ export const runViewPropertyRealtimeCase = async (
       return response;
     };
 
+    const expectedGroup = [{ fieldId: titleField.id, order: SortFunc.Asc }];
+    const expectedSort = {
+      sortObjs: [{ fieldId: numberField.id, order: SortFunc.Desc }],
+    };
+    const matches = (actual: unknown, expected: unknown) =>
+      JSON.stringify(actual) === JSON.stringify(expected);
+
     const probe = await bugCheckpoint(
       "subscribed-client-sees-group-and-sort-changes",
       async () => {
         const groupResponse = await put(VIEW_GROUP, {
-          group: [{ fieldId: titleField.id, order: SortFunc.Asc }],
+          group: expectedGroup,
         });
         // The engine belongs to the request under test, and this request is
         // the trigger inside the checkpoint - so a v1 answer reads as a
@@ -106,25 +113,23 @@ export const runViewPropertyRealtimeCase = async (
           operation: "PUT /table/{tableId}/view/{viewId}/group",
           feature: "updateViewGroup",
         });
-        await view.waitFor((data) => data?.group != null, {
+        await view.waitFor((data) => matches(data?.group, expectedGroup), {
           timeoutMs: config.settleTimeoutMs,
-          describe: "the group it was just given",
+          describe: `the exact group it was just given: ${JSON.stringify(expectedGroup)}`,
         });
 
         // Sort is a separate projection, so a fix to one does not imply the
         // other. Both were reported and both are checked.
         const sortResponse = await put(VIEW_SORT, {
-          sort: {
-            sortObjs: [{ fieldId: numberField.id, order: SortFunc.Desc }],
-          },
+          sort: expectedSort,
         });
         const sortRouting = assertServedByV2(sortResponse.headers, {
           operation: "PUT /table/{tableId}/view/{viewId}/sort",
           feature: "updateViewSort",
         });
-        await view.waitFor((data) => data?.sort != null, {
+        await view.waitFor((data) => matches(data?.sort, expectedSort), {
           timeoutMs: config.settleTimeoutMs,
-          describe: "the sort it was just given",
+          describe: `the exact sort it was just given: ${JSON.stringify(expectedSort)}`,
         });
 
         const failures = view.errors();
@@ -133,9 +138,18 @@ export const runViewPropertyRealtimeCase = async (
             `the subscribed client errored during the view property changes: ${JSON.stringify(failures)}`,
           );
         }
+        const current = view.data();
+        if (
+          !matches(current?.group, expectedGroup) ||
+          !matches(current?.sort, expectedSort)
+        ) {
+          throw new Error(
+            `the subscribed client has group=${JSON.stringify(current?.group)} sort=${JSON.stringify(current?.sort)}, expected group=${JSON.stringify(expectedGroup)} sort=${JSON.stringify(expectedSort)}`,
+          );
+        }
         return {
-          group: view.data()?.group,
-          sort: view.data()?.sort,
+          group: current.group,
+          sort: current.sort,
           groupRouting,
           sortRouting,
         };

@@ -31,13 +31,14 @@ both appear.
 
 ## What the checkpoint asserts
 
-That the subscribed document's top-level `group` appears after step 3, that its
-`sort` appears after step 4, and that the client did not error along the way.
+That the subscribed document's top-level `group` exactly matches the field and
+direction written in step 3, that its `sort` exactly matches the field and
+direction written in step 4, and that the client did not error along the way.
 
-**Waiting on `group` rather than on "an op arrived" is the whole point.** An op
-did arrive before the fix. A case that only asserted something was published
-would have been green on both sides and proved nothing — this is the same trap
-as a case that watches the wrong engine, wearing different clothes.
+**Waiting on the exact `group` and `sort` rather than on "an op arrived" is the
+whole point.** An op did arrive before the fix. A case that only asserted
+something was published, or that either property was merely non-empty, could
+accept an old or malformed configuration and prove nothing.
 
 Both properties are checked because they are separate projections: a regression
 in one is invisible to a case that only watches the other, which is precisely
