@@ -32,6 +32,9 @@ const EXTERNAL_MODULES = [
   "@teable/db-main-prisma",
   // Used by the Excel import case to build its workbook fixture in-process.
   "xlsx",
+  // Used by framework/realtime.ts to subscribe as a real client would.
+  "sharedb/lib/client",
+  "ws",
 ];
 
 const VITEST_GLOBALS = [

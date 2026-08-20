@@ -14,6 +14,18 @@ do not restate it elsewhere.
   column, a foreign key some retired write path cleared. That boundary is
   enforced, not merely documented — asking for a database handle inside a
   `bugCheckpoint()` throws.
+
+  Some bugs never touch an HTTP response at all: the request answers 200 and
+  what breaks is what the server then pushes to everyone watching the table —
+  a malformed op, an update that never lands, a field left stuck in a failed
+  state. Those are the "Socket Error" reports. For them the observation is a
+  subscribed client (`framework/realtime.ts`), which is the mirror image of
+  the fixture seam: it only reads, it is what a browser sees, and it belongs
+  INSIDE the checkpoint. It speaks the same SockJS transport a browser does,
+  because the serialization boundary is often exactly where the damage is —
+  `realtime/view-filter-update-reaches-subscribers` reproduces an op that was
+  well-formed in memory and instruction-less on the wire.
+
 - **Which engine is the bug on?** teable-ee has two record engines, and v1 bugs
   are not being fixed, so there is one engine here rather than a choice: every
   case guards v2. But v1 is still present and still answers, and **silently

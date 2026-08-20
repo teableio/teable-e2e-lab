@@ -25,6 +25,7 @@ export interface BugCaseConfigByRunner {
   "null-multiplicity-lookup": NullMultiplicityLookupCaseConfig;
   "excel-import-duplicate-columns": ExcelImportDuplicateColumnsCaseConfig;
   "audit-user-name-resolves": AuditUserNameResolvesCaseConfig;
+  "view-filter-realtime": ViewFilterRealtimeCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -493,4 +494,23 @@ export interface AuditUserNameResolvesCaseConfig {
   // labels - what is asserted is the audit cell beside them.
   legacyRowTitle: string;
   missingSnapshotRowTitle: string;
+}
+
+// A client subscribed to a view -> set and clear that view's filter ->
+// checkpoint: the client applies every update and never errors. Updating the
+// filter on a view that had none emitted an op carrying a path and no
+// instruction, which ot-json0 refuses - so every subscribed client threw and
+// the user got a Socket Error toast, while the HTTP request answered 200.
+export interface ViewFilterRealtimeCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // The one row's title, reused as the filter's value so the filter is a
+  // realistic one rather than a shape nothing matches.
+  rowTitle: string;
+  // How long the client may take to attach. Failing to subscribe is a fixture
+  // failure, not a reproduction.
+  subscribeTimeoutMs: number;
+  // How long an update may take to reach the subscriber. This is half the
+  // assertion - the other half is that no error arrived instead.
+  settleTimeoutMs: number;
 }
