@@ -1,6 +1,7 @@
 import { runComputedValueLandsCase } from "./runners/computed-value-lands.runner";
 import { runGroupCollapseCase } from "./runners/group-collapse.runner";
 import { runLinkDeleteReadableCase } from "./runners/link-delete-readable.runner";
+import { runLegacyUniqueErrorCase } from "./runners/legacy-unique-error.runner";
 import { runLookupFilterViewCase } from "./runners/lookup-filter-view.runner";
 import { runLookupUserSnapshotSortCase } from "./runners/lookup-user-snapshot-sort.runner";
 import { runHttpCheckCase } from "./runners/http-check.runner";
@@ -39,6 +40,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "link-delete-readable": runLinkDeleteReadableCase,
   "table-trash-inbound-link": runTableTrashInboundLinkCase,
   "required-link-blocks-delete": runRequiredLinkBlocksDeleteCase,
+  "legacy-unique-error": runLegacyUniqueErrorCase,
 };
 
 export const executeRegisteredRunner = (
