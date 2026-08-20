@@ -112,7 +112,8 @@ tight grant).
 
 ## Local runs
 
-See [.agents/skills/localrun/SKILL.md](../../.agents/skills/localrun/SKILL.md).
+Follow the localrun skill in `.agents/skills/localrun/`; its instructions are
+not published with this repository, so ask the team for them.
 Same spec, same injection, long-lived local containers instead of job-local
 ones. Local runs are direction-finding; GitHub Actions is the acceptance
 surface.

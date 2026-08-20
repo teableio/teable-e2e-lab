@@ -204,7 +204,7 @@ export const buildCaseRecord = ({
     "Doc Path": entry.path.replace(/\.case\.ts$/, ".md"),
     "Doc URL": `https://github.com/${repository}/blob/main/${entry.path.replace(/\.case\.ts$/, ".md")}`,
     "CI Reproduce Command": `gh workflow run e2e-lab.yml --repo ${repository} --ref main -f teable_ee_commits=develop -f case_filter=${entry.id}`,
-    "Local Reproduce Command": `E2E_LAB_CASE_FILTER=${entry.id} NEXT_BUILD_ENV_EDITION=CLOUD npx vitest run --config ./vitest-e2e-lab.config.ts`,
+    "Local Reproduce Command": `E2E_LAB_CASE_FILTER=${entry.id} npx vitest run --config ./vitest-e2e-lab.config.ts`,
     "Source SHA": sourceSha,
     "Synced At": syncedAt,
   },

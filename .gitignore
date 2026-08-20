@@ -15,3 +15,7 @@ e2e-lab-report/
 
 # Local Claude Code setup (the skills symlink); machine-specific, never committed.
 .claude/
+
+# Local operating instructions for a private product checkout. This is a
+# public repository; the skill scripts are committed, the instructions are not.
+.agents/skills/*/SKILL.md
