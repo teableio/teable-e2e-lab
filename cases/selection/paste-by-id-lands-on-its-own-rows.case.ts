@@ -20,6 +20,7 @@ export default defineBugCase({
   bug: {
     issue: "sentinel/paste-by-id-alignment",
     status: "fixed",
+    sourceCommits: ["4c6ded6e3"],
   },
   config: {
     baseId: "seed-base",

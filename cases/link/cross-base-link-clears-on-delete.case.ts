@@ -18,6 +18,7 @@ export default defineBugCase({
   bug: {
     issue: "T6863",
     status: "fixed",
+    sourceCommits: ["cfddb0057"],
   },
   config: {
     baseId: "own-space",

@@ -15,6 +15,7 @@ export default defineBugCase({
   bug: {
     issue: "sentinel/delete-undo-restores-all",
     status: "fixed",
+    sourceCommits: ["4266e93cd", "d3bf3f4fb", "4a721b780"],
   },
   config: {
     baseId: "seed-base",

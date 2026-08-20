@@ -54,6 +54,19 @@ do not restate it elsewhere.
 - Case: `cases/<group>/<name>.case.ts`, where `id` must equal `<group>/<name>`
   (checked). `id`, `issue`, and `status` must be string literals — the planner
   and the checks read them by static parsing.
+- `bug.sourceCommits`: the teable-ee commits this case settles — the fix it
+  reproduces, as short SHAs. Required for anything with a tracker id, optional
+  only for a sentinel that guards a path rather than a commit. This is not
+  bookkeeping: the next batch of cases starts by scanning recent commits for
+  uncovered fixes, and that scan can otherwise only match issue ids, which
+  loses every sentinel and mis-reads any commit that fixed three things at
+  once. `pnpm check:source-commits` enforces it.
+- Dropped a candidate? Write it down in `docs/triage-ledger.md` — commit,
+  issue, and **why not**, in the same PR that would have carried the case.
+  Rejections are the expensive knowledge: a commit that produced a case
+  announces itself, while one that was read, tried, and rejected leaves no
+  trace, and the next pass pays the same cost to reach the same answer. Some of
+  those rejections cost a CI matrix run each.
 - Doc: a same-name `.md` in the same directory. Name the issue, the
   reproduction, what the checkpoint asserts, and why the data is shaped the way
   it is. Nobody will remember what T1481 was in six months; the doc is for
