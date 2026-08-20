@@ -52,32 +52,36 @@ places — it cannot be settled and skipped at once.
 All three are the same failure: a computed backfill whose SQL assignment
 disagrees with the physical type of the column it lands in, killing the
 `table.update` schema operation it runs inside. All three were built as cases
-on a shared runner, and all three were green on every column of two CI matrix
-runs — six pre-fix columns between them, values landing in roughly a second.
+on a shared runner, and all three were green on every column of every run.
 
-The second run existed to test the best remaining hypothesis: these bugs live
-in the builder that writes a backfill as one `UPDATE ... FROM SELECT` over a
-batch, so a one-row fixture is what a per-row fast path would answer instead.
-Forty rows per shape changed nothing.
+The rejection is not "the failure was invisible to the cases". It is stronger
+than that, and it took three runs to establish:
 
-What is left is a difference in harness rather than in fixture. The fixes are
-demonstrated in `packages/v2/e2e`, which drives the v2 core directly with
-pre-assigned field ids and an outbox it drains by hand. This lab drives the
-public API. The routes are v2 — `convertField` and `createField` both carry
-`@UseV2Feature`, and the reads returned v2 routing headers — but the
-conversion this lab's requests produce does not reach the schema-operation
-backfill the bugs live in.
+1. **Four shapes, ten green pre-fix columns.** A number column converted into a
+   lookup of a foreign formula; a formula over a lookup stored in a leftover
+   text column; a lookup of a link field added to a host whose rows were
+   already linked; and a lookup that had already computed, repointed from a
+   date field to a text one. Runs 32395244311, 32395779980 and 32397534038.
+2. **Batch size is not the variable.** These backfills are written as one
+   `UPDATE ... FROM SELECT`, so a one-row fixture is what a per-row fast path
+   would answer instead. Forty rows per shape changed nothing.
+3. **The precondition is never built.** A probe read the stored
+   `db_field_type` and the physical column type together, on the fix's parent,
+   after each sequence. They agree every time — `REAL`/`double precision`,
+   `JSON`/`jsonb`, `TEXT`/`text`, and `TEXT`/`text` again after the repoint
+   that was expected to leave `DATETIME` behind.
 
-So the shape is not reachable from here today. If a seam appears that lets a
-case observe a dead schema operation, or drive the conversion the way the v2
-container does, delete these three rows and start from what is already built.
+So the drift these fixes are about does not happen here. Field conversion
+through the public API re-derives `db_field_type` from the resulting shape; the
+unconditional copy the fix removed is in the v2 core's own rebuild path, which
+these requests do not take. The cases were watching a state that was never
+there, on either side of the fix.
 
-The three cases and their shared runner were kept rather than thrown away:
-branch `attempt/computed-backfill-recast-green-everywhere`, two commits, never
-merged. The fixtures in it are correct — every graph verified before its
-checkpoint, every value read back — they simply never went red. Picking that
-branch up is a much smaller job than deriving it again, which is the whole
-reason this ledger exists.
+The work is kept rather than thrown away: branch
+`attempt/computed-backfill-recast-green-everywhere`, unmerged, carrying the
+four shapes, their fixture checks and the type-agreement probe. If a seam
+appears that drives the conversion the way the v2 container does, start there —
+the fixtures are correct, they simply have nothing to catch.
 
 ## Covered
 
