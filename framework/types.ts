@@ -23,6 +23,7 @@ export interface BugCaseConfigByRunner {
   "paste-non-collaborator-user": PasteNonCollaboratorUserCaseConfig;
   "stale-lookup-recast": StaleLookupRecastCaseConfig;
   "null-multiplicity-lookup": NullMultiplicityLookupCaseConfig;
+  "excel-import-duplicate-columns": ExcelImportDuplicateColumnsCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -454,4 +455,27 @@ export interface NullMultiplicityLookupCaseConfig {
   sourceValueAfter: string;
   settleTimeoutMs: number;
   settlePollIntervalMs: number;
+}
+
+// An Excel sheet whose header row repeats a column name -> import it as a new
+// table -> checkpoint: the table is created and every column got a distinct
+// physical name. Excel imports were pushed back from v2 as an unsupported
+// feature and ran v1's batch column add, which did not make physical names
+// unique - so a repeated header answered Postgres 42701 and the import 500'd.
+export interface ExcelImportDuplicateColumnsCaseConfig {
+  // No `baseId`: this case builds its own space and base. The EE import
+  // controller derives a row budget from the space's usage and answers 402
+  // when it runs out, so importing into the shared seed base would eventually
+  // fail for a reason unrelated to the bug.
+  tableNamePrefix: string;
+  // The header row. It must repeat a name - that repetition is the fixture,
+  // and the runner refuses a row of distinct headers rather than passing on a
+  // question it never asked.
+  headers: string[];
+  // One data row, so the import has something to write and the case covers
+  // the data path rather than just the schema.
+  row: string[];
+  // Import time zone. Not load-bearing here; pinned so a date-shaped cell
+  // could never make the result depend on where this runs.
+  timeZone: string;
 }

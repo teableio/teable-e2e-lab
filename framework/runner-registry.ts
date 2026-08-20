@@ -1,4 +1,5 @@
 import { runComputedValueLandsCase } from "./runners/computed-value-lands.runner";
+import { runExcelImportDuplicateColumnsCase } from "./runners/excel-import-duplicate-columns.runner";
 import { runGroupCollapseCase } from "./runners/group-collapse.runner";
 import { runLinkDeleteReadableCase } from "./runners/link-delete-readable.runner";
 import { runLegacyUniqueErrorCase } from "./runners/legacy-unique-error.runner";
@@ -47,6 +48,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "paste-non-collaborator-user": runPasteNonCollaboratorUserCase,
   "stale-lookup-recast": runStaleLookupRecastCase,
   "null-multiplicity-lookup": runNullMultiplicityLookupCase,
+  "excel-import-duplicate-columns": runExcelImportDuplicateColumnsCase,
 };
 
 export const executeRegisteredRunner = (
