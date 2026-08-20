@@ -30,6 +30,7 @@ export interface BugCaseConfigByRunner {
   "delete-undo-restores": DeleteUndoRestoresCaseConfig;
   "cross-base-link-delete": CrossBaseLinkDeleteCaseConfig;
   "excel-import-offset-header": ExcelImportOffsetHeaderCaseConfig;
+  "paste-by-id-alignment": PasteByIdAlignmentCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -585,4 +586,16 @@ export interface ExcelImportOffsetHeaderCaseConfig {
   // One data row, the same width as the headers.
   row: (string | number)[];
   timeZone: string;
+}
+
+// Paste a column of distinct values into a list of records by id ->
+// checkpoint: every value landed on its own record, and a paste naming a
+// record that does not exist is refused rather than dropped from a positional
+// payload.
+export interface PasteByIdAlignmentCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // At least 3 - below that a shift by one row cannot be told from a single
+  // wrong cell. The runner refuses anything smaller.
+  rowCount: number;
 }
