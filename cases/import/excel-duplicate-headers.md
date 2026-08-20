@@ -61,9 +61,15 @@ a reproduction rather than an error.
 
 ## Why the data looks like this
 
-The header row carries both shapes of collision. `Amount` twice is the plain
-one. `status` and `Status` is the one a user does not see coming, because the
-sheet looks fine and only the folded identifier collides.
+The header row carries a real collision and a control. `Amount` twice is the
+collision: on the fixed side it comes back as `Amount` and `Amount_2`.
+
+`status` and `Status` are the control, and they are deliberately left in even
+though they do **not** collide — physical identifiers are quoted and therefore
+case-sensitive, so both survive unchanged. That is worth asserting: it shows
+the deduplication renames only what actually conflicts rather than mangling
+every near-match, which would be its own kind of surprise for a user whose
+sheet legitimately has both.
 
 One data row, so the import exercises the data path rather than only the
 schema — `importData: true` is where v1's batch column add ran.

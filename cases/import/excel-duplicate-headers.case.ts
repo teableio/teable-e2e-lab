@@ -19,9 +19,9 @@ export default defineBugCase({
   },
   config: {
     tableNamePrefix: "e2e-lab-excel-dup",
-    // "Amount" twice is the plain form of the collision. The pair differing
-    // only in case is the one a user does not see coming - both fold to the
-    // same physical identifier.
+    // "Amount" twice is the collision. "status"/"Status" is a control: quoted
+    // identifiers are case-sensitive so those two do NOT conflict, and both
+    // must survive unrenamed - deduplication should touch only what collides.
     headers: ["Name", "Amount", "Amount", "status", "Status"],
     row: ["row-1", "1", "2", "open", "closed"],
     timeZone: "Asia/Shanghai",
