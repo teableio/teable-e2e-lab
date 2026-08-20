@@ -14,6 +14,8 @@ import recordLegacyUniqueViolationNamesFieldCase from "./cases/record/legacy-uni
 import userFieldPasteNonCollaboratorValueCase from "./cases/user-field/paste-non-collaborator-value.case";
 import lookupStaleTextMetadataRecastsOnRebuildCase from "./cases/lookup/stale-text-metadata-recasts-on-rebuild.case";
 import lookupStaleTextMetadataSurvivesDisplayConvertCase from "./cases/lookup/stale-text-metadata-survives-display-convert.case";
+import lookupNullMultiplicityScalarRefreshesCase from "./cases/lookup/null-multiplicity-scalar-refreshes.case";
+import lookupNullMultiplicityScalarConvertsCase from "./cases/lookup/null-multiplicity-scalar-converts.case";
 import type { BugCase } from "./framework/types";
 
 // Every runnable case, registered explicitly. scripts/case-catalog.mjs parses
@@ -36,6 +38,8 @@ const cases = [
   userFieldPasteNonCollaboratorValueCase,
   lookupStaleTextMetadataRecastsOnRebuildCase,
   lookupStaleTextMetadataSurvivesDisplayConvertCase,
+  lookupNullMultiplicityScalarRefreshesCase,
+  lookupNullMultiplicityScalarConvertsCase,
 ] satisfies BugCase[];
 
 const caseById = new Map<string, BugCase>(
