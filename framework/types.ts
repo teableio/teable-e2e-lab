@@ -27,6 +27,7 @@ export interface BugCaseConfigByRunner {
   "audit-user-name-resolves": AuditUserNameResolvesCaseConfig;
   "view-filter-realtime": ViewFilterRealtimeCaseConfig;
   "view-property-realtime": ViewPropertyRealtimeCaseConfig;
+  "delete-undo-restores": DeleteUndoRestoresCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -530,4 +531,16 @@ export interface ViewPropertyRealtimeCaseConfig {
   // How long a change may take to reach the subscriber. This is the assertion:
   // before the fix it never arrived at all.
   settleTimeoutMs: number;
+}
+
+// Delete every row -> undo -> checkpoint: every row is back, with its id, its
+// position and every cell. A SENTINEL: no bug behind it, guarding a path that
+// keeps being optimised and whose failure would be silent - undo answering
+// "fulfilled" while bringing back less than it took.
+export interface DeleteUndoRestoresCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // At least 2. One row cannot express a PARTIAL restore, which is the shape
+  // this guards; the runner refuses anything smaller.
+  recordCount: number;
 }
