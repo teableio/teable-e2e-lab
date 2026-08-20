@@ -9,6 +9,7 @@ import formulaScalarValueOverLinkedTextCase from "./cases/formula/scalar-value-o
 import linkRequiredLinkKeepsSiblingRefreshCase from "./cases/link/required-link-keeps-sibling-refresh.case";
 import linkOneoneDeleteKeepsTableReadableCase from "./cases/link/oneone-delete-keeps-table-readable.case";
 import tableTrashDegradesInboundLinkCase from "./cases/table/trash-degrades-inbound-link.case";
+import linkRequiredLinkBlocksOwnerDeleteCase from "./cases/link/required-link-blocks-owner-delete.case";
 import type { BugCase } from "./framework/types";
 
 // Every runnable case, registered explicitly. scripts/case-catalog.mjs parses
@@ -26,6 +27,7 @@ const cases = [
   linkRequiredLinkKeepsSiblingRefreshCase,
   linkOneoneDeleteKeepsTableReadableCase,
   tableTrashDegradesInboundLinkCase,
+  linkRequiredLinkBlocksOwnerDeleteCase,
 ] satisfies BugCase[];
 
 const caseById = new Map<string, BugCase>(

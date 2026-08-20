@@ -18,6 +18,7 @@ export interface BugCaseConfigByRunner {
   "required-link-refresh": RequiredLinkRefreshCaseConfig;
   "link-delete-readable": LinkDeleteReadableCaseConfig;
   "table-trash-inbound-link": TableTrashInboundLinkCaseConfig;
+  "required-link-blocks-delete": RequiredLinkBlocksDeleteCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -353,4 +354,19 @@ export interface TableTrashInboundLinkCaseConfig {
   // "never" - which is exactly what the pre-fix behavior was.
   settleTimeoutMs: number;
   settlePollIntervalMs: number;
+}
+
+// A host row whose required manyOne link points at an owner row -> delete that
+// owner row -> checkpoint: the delete is refused with a 4xx and both rows are
+// intact. The delete used to succeed, and the computed writeback that followed
+// dead-lettered on the NOT NULL display column, leaving a required link with
+// nothing on the other end.
+export interface RequiredLinkBlocksDeleteCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Titles for the two rows. Neither is asserted on - what matters is that the
+  // link resolves before the delete and still resolves after the refusal - so
+  // they are here to keep an artifact readable.
+  ownerTitle: string;
+  hostTitle: string;
 }
