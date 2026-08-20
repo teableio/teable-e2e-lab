@@ -43,6 +43,35 @@ places — it cannot be settled and skipped at once.
 | `161e960c71` | T6821 | Sargability. The behavior is identical either way; what changed is whether an index can be used, measured in the commit as 260s against 14ms for a 500-row batch. Belongs in the performance lab, next to the conditional-rollup cases.                                            |
 | `aea53eec6b` | T6815 | Request-scoped caching of a table aggregate on write paths. Same responses, fewer rebuilds - there is no response for a case to tell apart.                                                                                                                                        |
 | `4087dad967` | T6883 | A subscription-level filter in a browser hook that made free spaces invisible to the base-generation flow. Nothing server-side changed, so no request answers differently.                                                                                                         |
+| `a9f56d9d51` | T6765 | Written and run: converting a number column into a lookup of a foreign formula completes correctly on the fix's parent, at 1 row and at 40, in about a second. See the note below this table.                                                                                      |
+| `e94ae6db28` | T6767 | Written and run: a formula over a lookup of a link field stored in a leftover TEXT column backfills correctly on the fix's parent. Same note.                                                                                                                                      |
+| `228be9ffa7` | T6770 | Written and run: a lookup of a link field added to a host whose rows are already linked seeds correctly on the fix's parent. Same note.                                                                                                                                            |
+
+### The three computed-backfill rows
+
+All three are the same failure: a computed backfill whose SQL assignment
+disagrees with the physical type of the column it lands in, killing the
+`table.update` schema operation it runs inside. All three were built as cases
+on a shared runner, and all three were green on every column of two CI matrix
+runs — six pre-fix columns between them, values landing in roughly a second.
+
+The second run existed to test the best remaining hypothesis: these bugs live
+in the builder that writes a backfill as one `UPDATE ... FROM SELECT` over a
+batch, so a one-row fixture is what a per-row fast path would answer instead.
+Forty rows per shape changed nothing.
+
+What is left is a difference in harness rather than in fixture. The fixes are
+demonstrated in `packages/v2/e2e`, which drives the v2 core directly with
+pre-assigned field ids and an outbox it drains by hand. This lab drives the
+public API. The routes are v2 — `convertField` and `createField` both carry
+`@UseV2Feature`, and the reads returned v2 routing headers — but the
+conversion this lab's requests produce does not reach the schema-operation
+backfill the bugs live in.
+
+So the shape is not reachable from here today. If a seam appears that lets a
+case observe a dead schema operation, or drive the conversion the way the v2
+container does, delete these three rows and write the cases: the fixtures are
+in run 32395779980 and were correct, they simply never went red.
 
 ## Covered
 
