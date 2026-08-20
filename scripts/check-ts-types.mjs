@@ -30,6 +30,8 @@ const EXTERNAL_MODULES = [
   "@teable/core",
   "@teable/openapi",
   "@teable/db-main-prisma",
+  // Used by the Excel import case to build its workbook fixture in-process.
+  "xlsx",
 ];
 
 const VITEST_GLOBALS = [
