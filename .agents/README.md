@@ -5,10 +5,14 @@ do not restate it elsewhere.
 
 ## 1. Settle four things first
 
-- **What API sequence reproduces it?** The observation always goes through the
-  public API, because that is how users reach the product, and going around it
-  skips the layers that break most often: caching, serialization, permission
-  filtering. **Building the fixture** may write to the database directly
+- **What user-visible sequence reproduces it?** Backend cases observe through
+  the public API. A confirmed frontend defect may use the shared headless
+  Chromium runtime when no API assertion can express the bug. Browser setup
+  still uses APIs, and the checkpoint observes both the real UI and its real
+  public-API traffic; mocked success responses do not qualify. Going around
+  those surfaces skips the layers that break most often: state transitions,
+  caching, serialization, and permission filtering. **Building the fixture**
+  may write to the database directly
   (`framework/fixture-db.ts`) to reach state the API cannot produce on request:
   a drifted stored snapshot, field metadata out of step with its physical
   column, a foreign key some retired write path cleared. That boundary is
@@ -52,6 +56,9 @@ do not restate it elsewhere.
   `BugCaseConfigByRunner` entry in `framework/types.ts`, and the implementation
   in `framework/runner-registry.ts`. Miss any step and `pnpm check:types`
   catches it.
+- Browser runners share `framework/browser-runtime.ts`. They start Next.js
+  lazily, reuse the seeded Nest session, and close Chromium before the backend
+  app. Do not start a frontend or browser for API-only cases.
 
 ## 3. Data rules
 

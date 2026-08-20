@@ -22,8 +22,10 @@ picture, [.agents/README.md](.agents/README.md) to add or change a case, and
 - Shared execution belongs in `framework/`. Case files carry no logic.
 - Keep data deterministic and derive expected values locally, so a rerun is
   byte-comparable.
-- Observe through the public API. The database is available for building
-  fixtures the API cannot express, and only there — reaching for it inside a
+- Observe through the public API for backend behavior. A confirmed frontend
+  defect may use the shared Chromium runtime, but its fixture still comes from
+  APIs and its checkpoint must observe the real UI plus the real public-API
+  traffic. The database remains fixture-only — reaching for it inside a
   checkpoint throws (`framework/fixture-db.ts`).
 - Every case guards v2. v1 still answers, so runners prove which engine served
   them (`framework/engine.ts`).

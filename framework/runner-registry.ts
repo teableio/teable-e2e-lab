@@ -4,10 +4,12 @@ import { runAutomationPercentMappingCase } from "./runners/automation-percent-ma
 import { runGroupCollapseCase } from "./runners/group-collapse.runner";
 import { runLookupFilterViewCase } from "./runners/lookup-filter-view.runner";
 import { runLookupUserSnapshotSortCase } from "./runners/lookup-user-snapshot-sort.runner";
+import { runLinkSelectorCandidatesCase } from "./runners/link-selector-candidates.runner";
 import { runHttpCheckCase } from "./runners/http-check.runner";
 import { runRecordFlowCase } from "./runners/record-flow.runner";
 import { runRequiredLinkRefreshCase } from "./runners/required-link-refresh.runner";
 import { runShareSaveCase } from "./runners/share-save.runner";
+import { runTableDeleteSingleSubmitCase } from "./runners/table-delete-single-submit.runner";
 import { runViewFilterRoundtripCase } from "./runners/view-filter-roundtrip.runner";
 import type {
   BugCase,
@@ -37,6 +39,8 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "required-link-refresh": runRequiredLinkRefreshCase,
   "access-token-resource-isolation": runAccessTokenResourceIsolationCase,
   "automation-percent-mapping": runAutomationPercentMappingCase,
+  "link-selector-candidates": runLinkSelectorCandidatesCase,
+  "table-delete-single-submit": runTableDeleteSingleSubmitCase,
 };
 
 export const executeRegisteredRunner = (

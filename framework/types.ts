@@ -18,6 +18,8 @@ export interface BugCaseConfigByRunner {
   "required-link-refresh": RequiredLinkRefreshCaseConfig;
   "access-token-resource-isolation": AccessTokenResourceIsolationCaseConfig;
   "automation-percent-mapping": AutomationPercentMappingCaseConfig;
+  "link-selector-candidates": LinkSelectorCandidatesCaseConfig;
+  "table-delete-single-submit": TableDeleteSingleSubmitCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -338,4 +340,28 @@ export interface AutomationPercentMappingCaseConfig {
   precision: number;
   settleTimeoutMs: number;
   settlePollIntervalMs: number;
+}
+
+// Build a deterministic one-many link fixture through the API, then open the
+// real grid link editor in Chromium. Switching Selected -> All must restore
+// the candidate filter so a child owned by a different parent cannot re-enter
+// the selectable list.
+export interface LinkSelectorCandidatesCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  targetIssueTitle: string;
+  ownerIssueTitle: string;
+  freeRecordTitle: string;
+  occupiedRecordTitle: string;
+}
+
+// Create a target and fallback table through the API, hold the browser's real
+// delete request pending, then prove the confirmation UI is loading/disabled
+// and cannot emit a second request. The delay is deterministic test control;
+// the response still comes from the real backend.
+export interface TableDeleteSingleSubmitCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  recordCount: number;
+  duplicateProbeMs: number;
 }

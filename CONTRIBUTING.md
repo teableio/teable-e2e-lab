@@ -6,9 +6,11 @@
   `sentinel/` case guarding currently-correct behavior). The `.md` beside it
   names the issue, the reproduction, and what the checkpoint asserts — written
   for someone reading it six months from now.
-- **Observe through the public API.** Cases exercise the product the way users
-  reach it, because that is where a reported failure shows up. Building the
-  fixture may reach the database directly when the API cannot express the state
+- **Observe through the public product surface.** Backend cases use the public
+  API. Confirmed frontend defects may use the shared Chromium runtime, with
+  API-built fixtures and assertions over the real UI and real public-API
+  traffic. Building the fixture may reach the database directly when the API
+  cannot express the state
   — drifted snapshots, metadata out of step with its physical column, a foreign
   key some retired path cleared — and only there: `framework/fixture-db.ts`
   throws if it is called inside a checkpoint.

@@ -25,7 +25,8 @@ The execution skeleton is teable-perf-lab's, proven in production there:
 - **Pinning**: refs are resolved to SHAs once, up front; every job checks out
   the pinned SHA.
 - **One job per commit**: isolated database built from that commit's own
-  migrations, all selected cases run serially, one JSON payload per case
+  migrations, all selected cases run serially, and confirmed frontend cases
+  lazily start Next.js plus headless Chromium. One JSON payload per case
   written _before_ any assertion throws — the payloads are the source of
   truth, and failures carry the server's own error body.
 - **Fail-closed report**: every planned (case × commit) cell must have exactly

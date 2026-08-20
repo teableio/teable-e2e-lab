@@ -9,6 +9,8 @@ import formulaScalarValueOverLinkedTextCase from "./cases/formula/scalar-value-o
 import linkRequiredLinkKeepsSiblingRefreshCase from "./cases/link/required-link-keeps-sibling-refresh.case";
 import authorityY132AccessTokenSpaceRangeCase from "./cases/authority/y132-access-token-space-range.case";
 import automationY152PercentMappingPreservesNumberCase from "./cases/automation/y152-percent-mapping-preserves-number.case";
+import linkY57CandidateFilterSurvivesTabsCase from "./cases/link/y57-candidate-filter-survives-tabs.case";
+import tableY149DeleteSingleSubmitCase from "./cases/table/y149-delete-single-submit.case";
 import type { BugCase } from "./framework/types";
 
 // Every runnable case, registered explicitly. scripts/case-catalog.mjs parses
@@ -26,6 +28,8 @@ const cases = [
   linkRequiredLinkKeepsSiblingRefreshCase,
   authorityY132AccessTokenSpaceRangeCase,
   automationY152PercentMappingPreservesNumberCase,
+  linkY57CandidateFilterSurvivesTabsCase,
+  tableY149DeleteSingleSubmitCase,
 ] satisfies BugCase[];
 
 const caseById = new Map<string, BugCase>(
