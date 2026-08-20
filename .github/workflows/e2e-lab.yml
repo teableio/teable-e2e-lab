@@ -163,6 +163,29 @@ jobs:
           make postgres.mode
           pnpm -F @teable/db-main-prisma-ee prisma-db-seed -- --e2e
 
+      # Browser-driven cases start a real frontend and drive it with Chromium.
+      # The package is already installed with teable-ee; only the browser binary
+      # is missing on a runner. The install is skipped while this repository has
+      # no browser runtime, so it costs nothing until the first such case lands
+      # and turns itself on.
+      - name: Restore Chromium cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('teable-ee/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
+      - name: Install Chromium for browser-driven cases
+        working-directory: teable-ee/enterprise/app-ee
+        run: |
+          set -euo pipefail
+          if [ ! -f "$GITHUB_WORKSPACE/e2e-lab/framework/browser-runtime.ts" ]; then
+            echo "No browser runtime in this repository yet; skipping."
+            exit 0
+          fi
+          pnpm exec playwright install --with-deps chromium
+
       - name: Run bug cases through teable-ee e2e
         working-directory: teable-ee
         run: |
