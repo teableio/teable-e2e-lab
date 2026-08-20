@@ -2,10 +2,14 @@ import { defineBugCase } from "../../framework/types";
 
 // T6880: the same degrade as its sibling, over a host table whose link column
 // is not physically there. Converting a link field to text renamed that column
-// as its first step, unconditionally - so a host whose display column was
-// never provisioned failed the whole schema update, the table.update operation
-// retried until it was dead, and the user kept a Link field pointing at a
-// table nobody can open. The trash looked like it had worked.
+// as its first step, unconditionally, so the whole schema update failed.
+//
+// On the fix's parent this lab sees it as a 500 from the delete itself -
+// `Failed to update table schema: error: column "Target" does not exist` - and
+// a target table that stays where it was. The dead table.update operation the
+// fix describes is the same failure reached through the async repair path
+// instead; either way the base is left with a Link field pointing at a table
+// nobody can open.
 export default defineBugCase({
   id: "table/trash-degrades-inbound-link-without-display-column",
   title: "Trashing a table degrades an inbound link whose column is missing",

@@ -8,12 +8,20 @@ the same runner.
 Trashing a linked table converts every inbound link field to text. The
 conversion's first step renamed the link field's physical column to a temporary
 name — unconditionally. If that column was not there, the rename failed, and it
-took the whole schema update with it: the `table.update` operation retried until
-it was dead, and the host table kept a Link field pointing at a table nobody can
-open.
+took the whole schema update with it.
 
-Nothing said so. The delete answered normally, the target table went to the
-trash, and the damage was on a table the user was not looking at.
+What that looks like depends on which way the update was reached. Through the
+async repair path it is a `table.update` operation that retries until it is
+dead, leaving the host with a Link field pointing at a table nobody can open —
+the delete having answered normally, so nothing says the base is now broken.
+
+What this lab observes on the fix's parent is the blunter half of the same
+failure: the delete answers **500**, with
+`Failed to update table schema: error: column "Target" does not exist`, and the
+target table does not go to the trash at all.
+
+Either way the operation cannot complete, and the user is left with a link
+between two tables that cannot be separated.
 
 ## Why a column would be missing in the first place
 
@@ -32,12 +40,15 @@ sibling and report green for a reason that has nothing to do with T6880.
 
 ## What the checkpoint asserts
 
-The same two things as the sibling, in the same order:
+The same three things as the sibling, in the same order:
 
-1. Within the settle budget, the inbound link field's type reads
+1. The delete answered 2xx. This assertion is inside the checkpoint on purpose:
+   a refused delete is the product failing, not the fixture, and it is what the
+   pre-fix column actually trips on.
+2. Within the settle budget, the inbound link field's type reads
    `singleLineText`. The budget **is** the assertion — before the fix the field
    stayed a Link until someone emptied the trash, which is to say forever.
-2. The host table still reads. A field that converted by taking the record read
+3. The host table still reads. A field that converted by taking the record read
    down with it would pass a type check alone, and here that risk is real: the
    conversion has to end with a text column the table did not have when it
    started.
@@ -45,6 +56,13 @@ The same two things as the sibling, in the same order:
 The field type only, never the text left in the cell — v2 loses the cell value
 in the degrade (T6703, open), and asserting on it would make this case red for a
 bug it is not about.
+
+The delete is issued with raw axios and the status left open. The generated
+client throws away the whole response — routing headers included — the moment a
+request answers non-2xx, which would report "the engine that served it cannot be
+established" for a delete the product had just answered, and turn the
+reproduction into a broken case. That is exactly what the first run of this case
+did.
 
 ## Order of operations
 
