@@ -21,6 +21,8 @@ export default defineBugCase({
     tableNamePrefix: "e2e-lab-trash-inbound-link",
     targetRowTitle: "target-row",
     hostRowTitle: "host-row",
+    relationship: "manyOne",
+    dropLinkDisplayColumn: false,
     settleTimeoutMs: 30_000,
     settlePollIntervalMs: 500,
   },

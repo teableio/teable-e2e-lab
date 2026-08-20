@@ -25,6 +25,7 @@ import linkCrossBaseLinkClearsOnDeleteCase from "./cases/link/cross-base-link-cl
 import importExcelHeaderBelowA1Case from "./cases/import/excel-header-below-a1.case";
 import selectionPasteByIdLandsOnItsOwnRowsCase from "./cases/selection/paste-by-id-lands-on-its-own-rows.case";
 import searchStaysInsideViewFilterCase from "./cases/search/stays-inside-view-filter.case";
+import tableTrashDegradesInboundLinkWithoutDisplayColumnCase from "./cases/table/trash-degrades-inbound-link-without-display-column.case";
 import type { BugCase } from "./framework/types";
 
 // Every runnable case, registered explicitly. scripts/case-catalog.mjs parses
@@ -58,6 +59,7 @@ const cases = [
   importExcelHeaderBelowA1Case,
   selectionPasteByIdLandsOnItsOwnRowsCase,
   searchStaysInsideViewFilterCase,
+  tableTrashDegradesInboundLinkWithoutDisplayColumnCase,
 ] satisfies BugCase[];
 
 const caseById = new Map<string, BugCase>(

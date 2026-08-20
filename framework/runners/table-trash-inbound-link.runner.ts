@@ -1,7 +1,9 @@
 import { FieldKeyType, FieldType, Relationship } from "@teable/core";
 import {
-  deleteTable as apiDeleteTable,
+  DELETE_TABLE,
+  axios,
   getRecords as apiGetRecords,
+  urlBuilder,
 } from "@teable/openapi";
 import {
   createField,
@@ -12,6 +14,7 @@ import {
 } from "../../../utils/init-app";
 import { bugCheckpoint } from "../checkpoint";
 import { assertServedByV2 } from "../engine";
+import { fixtureDb } from "../fixture-db";
 import type { BugCaseFor, BugProbeResult, BugRunContext } from "../types";
 import type { TableTrashInboundLinkCaseConfig } from "../types";
 
@@ -35,6 +38,16 @@ import type { TableTrashInboundLinkCaseConfig } from "../types";
 // The checkpoint asserts the field TYPE only, not the text left in the cell.
 // v2 loses the cell value in the degrade (T6703, still open); asserting on it
 // would make this case red for a bug it is not about.
+//
+// `dropLinkDisplayColumn` runs the same shape over a host whose link column
+// was never provisioned - metadata describing a column the table does not
+// have, which a base accumulates through a failed schema operation rather than
+// through anything a user can type. The conversion renamed that column
+// unconditionally, so the whole schema update failed and the host kept a Link
+// field pointing at a table nobody can open. The drop happens after the
+// fixture read and before the delete, in that order: reading the link first is
+// what proves there was something to degrade, and it is the last moment the
+// row can be read at all.
 
 const TARGET_NAME_FIELD = "Name";
 const HOST_NAME_FIELD = "Name";
@@ -44,13 +57,6 @@ const sleep = (ms: number) =>
   new Promise<void>((resolveSleep) => {
     setTimeout(resolveSleep, ms);
   });
-
-const headersOf = (value: unknown): Record<string, unknown> | undefined => {
-  const headers = (value as { headers?: unknown } | undefined)?.headers;
-  return headers && typeof headers === "object"
-    ? (headers as Record<string, unknown>)
-    : undefined;
-};
 
 export const runTableTrashInboundLinkCase = async (
   bugCase: BugCaseFor<"table-trash-inbound-link">,
@@ -89,7 +95,10 @@ export const runTableTrashInboundLinkCase = async (
       type: FieldType.Link,
       options: {
         foreignTableId: targetTableId,
-        relationship: Relationship.ManyOne,
+        relationship:
+          config.relationship === "oneMany"
+            ? Relationship.OneMany
+            : Relationship.ManyOne,
         isOneWay: false,
       },
     });
@@ -101,7 +110,10 @@ export const runTableTrashInboundLinkCase = async (
         {
           fields: {
             [HOST_NAME_FIELD]: config.hostRowTitle,
-            [LINK_FIELD]: { id: targetRecordId },
+            [LINK_FIELD]:
+              config.relationship === "oneMany"
+                ? [{ id: targetRecordId }]
+                : { id: targetRecordId },
           },
         },
       ],
@@ -130,30 +142,59 @@ export const runTableTrashInboundLinkCase = async (
       operation: "GET /table/{tableId}/record",
       feature: "getRecords",
     });
-    const linkedTitle = (before.cell as { title?: string } | undefined)?.title;
+    const linkedCell = before.cell as
+      | { title?: string }
+      | { title?: string }[]
+      | undefined;
+    const linkedTitle = (Array.isArray(linkedCell) ? linkedCell[0] : linkedCell)
+      ?.title;
     if (linkedTitle !== config.targetRowTitle) {
       throw new Error(
         `the link cell reads ${JSON.stringify(before.cell)}, expected the target row titled "${config.targetRowTitle}" - the fixture is not in place`,
       );
     }
 
+    // The missing-column fixture, written through the database because no API
+    // asks for a column to be taken away. Setup only, and outside the
+    // checkpoint - fixture-db throws if it is ever reached from inside one.
+    let droppedColumn: string | undefined;
+    if (config.dropLinkDisplayColumn) {
+      const db = fixtureDb(context.app);
+      const { schema, table } = await db.physicalTable(hostTableId);
+      droppedColumn = await db.physicalColumn(linkField.id);
+      const quoted = (name: string) => `"${name.replace(/"/g, '""')}"`;
+      await db.execute(
+        `ALTER TABLE ${quoted(schema)}.${quoted(table)} DROP COLUMN IF EXISTS ${quoted(droppedColumn)}`,
+      );
+      // The drop has to have happened, or the case silently becomes a second
+      // copy of its sibling and reports green for the wrong reason.
+      const remaining = await db.query<{ count: bigint | number }[]>(
+        `SELECT COUNT(*)::int AS count FROM information_schema.columns WHERE table_schema = $1 AND table_name = $2 AND column_name = $3`,
+        schema,
+        table,
+        droppedColumn,
+      );
+      if (Number(remaining[0]?.count ?? 0) !== 0) {
+        throw new Error(
+          `column ${droppedColumn} is still on ${schema}.${table} - the missing-column fixture is not in place, so this case would only repeat its sibling`,
+        );
+      }
+    }
+
     // Trash, not permanent delete: the whole point is what the base looks like
     // while the table sits in the trash.
-    let deleteError: unknown;
-    let deleteHeaders: Record<string, unknown> | undefined;
-    try {
-      const response = await apiDeleteTable(baseId, targetTableId);
-      deleteHeaders = headersOf(response);
-    } catch (error) {
-      deleteError = error;
-      deleteHeaders = headersOf((error as { response?: unknown })?.response);
-    }
-    if (!deleteHeaders) {
-      throw new Error(
-        "DELETE /base/{baseId}/table/{tableId} returned no headers, so the engine that served it cannot be established",
-      );
-    }
-    const deleteRouting = assertServedByV2(deleteHeaders, {
+    //
+    // Raw axios with the status left open, because this delete is allowed to
+    // be refused - on the missing-column variant it was, before the fix - and
+    // the generated client throws away the whole response, routing headers
+    // included, the moment a request answers non-2xx. Losing them here would
+    // report "the engine could not be established" for a delete the product
+    // had just answered, turning a reproduction into a broken case.
+    const deleteResponse = await axios.delete(
+      urlBuilder(DELETE_TABLE, { baseId, tableId: targetTableId }),
+      { validateStatus: () => true },
+    );
+    const deleteRouting = assertServedByV2(deleteResponse.headers, {
       operation: "DELETE /base/{baseId}/table/{tableId}",
       feature: "deleteTable",
     });
@@ -161,8 +202,13 @@ export const runTableTrashInboundLinkCase = async (
     const probe = await bugCheckpoint(
       "inbound-link-degrades-when-target-is-trashed",
       async () => {
-        if (deleteError) {
-          throw deleteError;
+        // A refused delete is the product failing, not the fixture, so it is
+        // raised in here where it reads as the bug rather than as an error.
+        if (deleteResponse.status >= 300) {
+          throw new Error(
+            `DELETE /base/{baseId}/table/{tableId} answered ${deleteResponse.status}: ` +
+              `${typeof deleteResponse.data === "string" ? deleteResponse.data : JSON.stringify(deleteResponse.data)}`,
+          );
         }
 
         const deadline = Date.now() + config.settleTimeoutMs;
@@ -197,6 +243,9 @@ export const runTableTrashInboundLinkCase = async (
         readRouting,
         deleteRouting,
         inboundLinkFieldId: linkField.id,
+        relationship: config.relationship,
+        droppedColumn: droppedColumn ?? null,
+        deleteStatus: deleteResponse.status,
         typeAfterTrash: probe.type,
         cellAfterTrash: probe.cell,
       },
