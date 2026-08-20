@@ -57,6 +57,6 @@ Ask before "fixing" any of these:
 pnpm check
 ```
 
-That is source validation only. Local runtime runs are direction-finding
-([.agents/skills/localrun/SKILL.md](.agents/skills/localrun/SKILL.md)); GitHub
-Actions is the acceptance surface.
+That is source validation only. Local runtime runs are direction-finding and
+follow the localrun skill in `.agents/skills/localrun/`, whose instructions are
+not published with this repository; GitHub Actions is the acceptance surface.

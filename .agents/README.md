@@ -68,7 +68,7 @@ do not restate it elsewhere.
 
 ```bash
 pnpm check                 # static chain; necessary for a PR, not sufficient
-# local run (direction-finding): see .agents/skills/localrun/SKILL.md
+# local run (direction-finding): the localrun skill, not published here
 # acceptance: dispatch e2e-lab.yml — GitHub Actions is the acceptance surface
 ```
 
