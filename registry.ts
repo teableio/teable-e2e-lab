@@ -19,6 +19,7 @@ import lookupNullMultiplicityScalarConvertsCase from "./cases/lookup/null-multip
 import importExcelDuplicateHeadersCase from "./cases/import/excel-duplicate-headers.case";
 import auditFieldsLastModifiedByResolvesNameCase from "./cases/audit-fields/last-modified-by-resolves-name.case";
 import realtimeViewFilterUpdateReachesSubscribersCase from "./cases/realtime/view-filter-update-reaches-subscribers.case";
+import realtimeViewGroupAndSortReachSubscribersCase from "./cases/realtime/view-group-and-sort-reach-subscribers.case";
 import type { BugCase } from "./framework/types";
 
 // Every runnable case, registered explicitly. scripts/case-catalog.mjs parses
@@ -46,6 +47,7 @@ const cases = [
   importExcelDuplicateHeadersCase,
   auditFieldsLastModifiedByResolvesNameCase,
   realtimeViewFilterUpdateReachesSubscribersCase,
+  realtimeViewGroupAndSortReachSubscribersCase,
 ] satisfies BugCase[];
 
 const caseById = new Map<string, BugCase>(

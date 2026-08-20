@@ -16,6 +16,7 @@ import { runStaleLookupRecastCase } from "./runners/stale-lookup-recast.runner";
 import { runShareSaveCase } from "./runners/share-save.runner";
 import { runTableTrashInboundLinkCase } from "./runners/table-trash-inbound-link.runner";
 import { runViewFilterRealtimeCase } from "./runners/view-filter-realtime.runner";
+import { runViewPropertyRealtimeCase } from "./runners/view-property-realtime.runner";
 import { runViewFilterRoundtripCase } from "./runners/view-filter-roundtrip.runner";
 import type {
   BugCase,
@@ -53,6 +54,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "excel-import-duplicate-columns": runExcelImportDuplicateColumnsCase,
   "audit-user-name-resolves": runAuditUserNameResolvesCase,
   "view-filter-realtime": runViewFilterRealtimeCase,
+  "view-property-realtime": runViewPropertyRealtimeCase,
 };
 
 export const executeRegisteredRunner = (
