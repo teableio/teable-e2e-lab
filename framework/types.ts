@@ -16,6 +16,8 @@ export interface BugCaseConfigByRunner {
   "lookup-user-snapshot-sort": LookupUserSnapshotSortCaseConfig;
   "computed-value-lands": ComputedValueLandsCaseConfig;
   "required-link-refresh": RequiredLinkRefreshCaseConfig;
+  "link-delete-readable": LinkDeleteReadableCaseConfig;
+  "table-trash-inbound-link": TableTrashInboundLinkCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -311,6 +313,44 @@ export interface RequiredLinkRefreshCaseConfig {
   otherTitleAfter: string;
   // How long the refreshed title may take to arrive. This is the assertion:
   // above a slow-but-working pipeline, below "never".
+  settleTimeoutMs: number;
+  settlePollIntervalMs: number;
+}
+
+// Two tables joined by a two-way oneOne link -> delete one side of it ->
+// checkpoint: both tables still answer a record read. The side that does not
+// host the physical foreign key had resolved its key name to `__id`, so its
+// delete rule dropped the record id column of the table that does - and every
+// read of that table selects `__id`.
+export interface LinkDeleteReadableCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Which side of the two-way link is deleted. "symmetric" - the side the
+  // link was NOT created from, and which owns no physical column - is the one
+  // that reproduces; "hosting" is the side that legitimately owns the foreign
+  // key and is here so the choice is stated rather than implied.
+  deletedSide: "symmetric" | "hosting";
+  // Row titles are only there so a read that returns the wrong table is
+  // visible in the artifact; nothing asserts on their content.
+  hostRowTitle: string;
+  foreignRowTitle: string;
+}
+
+// A surviving table linking into a target table -> move the target table to
+// the trash -> checkpoint: the inbound link field degrades to text within the
+// settle budget. The timeout is the assertion: before the fix the field stayed
+// a Link pointing at an unreadable table until someone emptied the trash.
+export interface TableTrashInboundLinkCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // The linked row's title. Asserted before the delete, as fixture
+  // verification - a link that never resolved would make "the field never
+  // degraded" unreadable. Not asserted after: v2 loses the cell value in the
+  // degrade (T6703, open), which is a different bug.
+  targetRowTitle: string;
+  hostRowTitle: string;
+  // How long the degrade may take. Above a slow-but-working delete, below
+  // "never" - which is exactly what the pre-fix behavior was.
   settleTimeoutMs: number;
   settlePollIntervalMs: number;
 }

@@ -1,11 +1,13 @@
 import { runComputedValueLandsCase } from "./runners/computed-value-lands.runner";
 import { runGroupCollapseCase } from "./runners/group-collapse.runner";
+import { runLinkDeleteReadableCase } from "./runners/link-delete-readable.runner";
 import { runLookupFilterViewCase } from "./runners/lookup-filter-view.runner";
 import { runLookupUserSnapshotSortCase } from "./runners/lookup-user-snapshot-sort.runner";
 import { runHttpCheckCase } from "./runners/http-check.runner";
 import { runRecordFlowCase } from "./runners/record-flow.runner";
 import { runRequiredLinkRefreshCase } from "./runners/required-link-refresh.runner";
 import { runShareSaveCase } from "./runners/share-save.runner";
+import { runTableTrashInboundLinkCase } from "./runners/table-trash-inbound-link.runner";
 import { runViewFilterRoundtripCase } from "./runners/view-filter-roundtrip.runner";
 import type {
   BugCase,
@@ -33,6 +35,8 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "lookup-user-snapshot-sort": runLookupUserSnapshotSortCase,
   "computed-value-lands": runComputedValueLandsCase,
   "required-link-refresh": runRequiredLinkRefreshCase,
+  "link-delete-readable": runLinkDeleteReadableCase,
+  "table-trash-inbound-link": runTableTrashInboundLinkCase,
 };
 
 export const executeRegisteredRunner = (
