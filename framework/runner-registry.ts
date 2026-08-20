@@ -9,6 +9,7 @@ import { runPasteNonCollaboratorUserCase } from "./runners/paste-non-collaborato
 import { runRecordFlowCase } from "./runners/record-flow.runner";
 import { runRequiredLinkBlocksDeleteCase } from "./runners/required-link-blocks-delete.runner";
 import { runRequiredLinkRefreshCase } from "./runners/required-link-refresh.runner";
+import { runStaleLookupRecastCase } from "./runners/stale-lookup-recast.runner";
 import { runShareSaveCase } from "./runners/share-save.runner";
 import { runTableTrashInboundLinkCase } from "./runners/table-trash-inbound-link.runner";
 import { runViewFilterRoundtripCase } from "./runners/view-filter-roundtrip.runner";
@@ -43,6 +44,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "required-link-blocks-delete": runRequiredLinkBlocksDeleteCase,
   "legacy-unique-error": runLegacyUniqueErrorCase,
   "paste-non-collaborator-user": runPasteNonCollaboratorUserCase,
+  "stale-lookup-recast": runStaleLookupRecastCase,
 };
 
 export const executeRegisteredRunner = (
