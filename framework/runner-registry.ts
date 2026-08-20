@@ -5,6 +5,7 @@ import { runLegacyUniqueErrorCase } from "./runners/legacy-unique-error.runner";
 import { runLookupFilterViewCase } from "./runners/lookup-filter-view.runner";
 import { runLookupUserSnapshotSortCase } from "./runners/lookup-user-snapshot-sort.runner";
 import { runHttpCheckCase } from "./runners/http-check.runner";
+import { runNullMultiplicityLookupCase } from "./runners/null-multiplicity-lookup.runner";
 import { runPasteNonCollaboratorUserCase } from "./runners/paste-non-collaborator-user.runner";
 import { runRecordFlowCase } from "./runners/record-flow.runner";
 import { runRequiredLinkBlocksDeleteCase } from "./runners/required-link-blocks-delete.runner";
@@ -45,6 +46,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "legacy-unique-error": runLegacyUniqueErrorCase,
   "paste-non-collaborator-user": runPasteNonCollaboratorUserCase,
   "stale-lookup-recast": runStaleLookupRecastCase,
+  "null-multiplicity-lookup": runNullMultiplicityLookupCase,
 };
 
 export const executeRegisteredRunner = (
