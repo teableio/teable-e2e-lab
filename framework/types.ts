@@ -19,6 +19,7 @@ export interface BugCaseConfigByRunner {
   "link-delete-readable": LinkDeleteReadableCaseConfig;
   "table-trash-inbound-link": TableTrashInboundLinkCaseConfig;
   "required-link-blocks-delete": RequiredLinkBlocksDeleteCaseConfig;
+  "legacy-unique-error": LegacyUniqueErrorCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -369,4 +370,17 @@ export interface RequiredLinkBlocksDeleteCaseConfig {
   // they are here to keep an artifact readable.
   ownerTitle: string;
   hostTitle: string;
+}
+
+// A table carrying a unique index named the way v1 named them -> insert a
+// duplicate value -> checkpoint: the 400 says which field. v2 read the field
+// out of the constraint name and understood only its own naming form, so on a
+// migrated table the message rendered with an empty field name and no i18n
+// payload - unrecognisable to an integration branching on the conflict.
+export interface LegacyUniqueErrorCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Written once during setup and then written again to collide with itself.
+  // Its content carries nothing; the collision is the fixture.
+  duplicateValue: string;
 }

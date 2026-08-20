@@ -10,6 +10,7 @@ import linkRequiredLinkKeepsSiblingRefreshCase from "./cases/link/required-link-
 import linkOneoneDeleteKeepsTableReadableCase from "./cases/link/oneone-delete-keeps-table-readable.case";
 import tableTrashDegradesInboundLinkCase from "./cases/table/trash-degrades-inbound-link.case";
 import linkRequiredLinkBlocksOwnerDeleteCase from "./cases/link/required-link-blocks-owner-delete.case";
+import recordLegacyUniqueViolationNamesFieldCase from "./cases/record/legacy-unique-violation-names-field.case";
 import type { BugCase } from "./framework/types";
 
 // Every runnable case, registered explicitly. scripts/case-catalog.mjs parses
@@ -28,6 +29,7 @@ const cases = [
   linkOneoneDeleteKeepsTableReadableCase,
   tableTrashDegradesInboundLinkCase,
   linkRequiredLinkBlocksOwnerDeleteCase,
+  recordLegacyUniqueViolationNamesFieldCase,
 ] satisfies BugCase[];
 
 const caseById = new Map<string, BugCase>(
