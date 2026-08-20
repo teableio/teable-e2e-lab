@@ -378,6 +378,21 @@ export interface TableTrashInboundLinkCaseConfig {
   // degrade (T6703, open), which is a different bug.
   targetRowTitle: string;
   hostRowTitle: string;
+  // Which side of the link the host holds. Stated rather than defaulted
+  // because the two cases on this runner deliberately differ: a manyOne link
+  // stores one JSON object per row, a oneMany link stores an array, and the
+  // reported reproduction of the missing-column variant is the oneMany one.
+  relationship: "manyOne" | "oneMany";
+  // Drop the link field's physical column before trashing the target, leaving
+  // metadata that describes a column the table does not have. This is the
+  // T6880 variant: the conversion renamed that column unconditionally, so a
+  // table whose display column was never provisioned failed the schema update
+  // outright and left the host with a Link field and a dead operation.
+  //
+  // It is a fixture written through framework/fixture-db.ts, which is why it
+  // is a flag rather than a second runner - everything either case observes,
+  // and every assertion, is identical.
+  dropLinkDisplayColumn: boolean;
   // How long the degrade may take. Above a slow-but-working delete, below
   // "never" - which is exactly what the pre-fix behavior was.
   settleTimeoutMs: number;
