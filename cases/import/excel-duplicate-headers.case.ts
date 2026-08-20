@@ -16,6 +16,7 @@ export default defineBugCase({
   bug: {
     issue: "T6855",
     status: "fixed",
+    sourceCommits: ["afcc4d00e"],
   },
   config: {
     tableNamePrefix: "e2e-lab-excel-dup",

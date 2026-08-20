@@ -15,6 +15,7 @@ export default defineBugCase({
   bug: {
     issue: "T6807",
     status: "fixed",
+    sourceCommits: ["2138a8f7f"],
   },
   config: {
     baseId: "seed-base",

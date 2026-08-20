@@ -98,14 +98,26 @@ const numericField = (source, name) => {
   return match ? Number(match[1].replaceAll("_", "")) : undefined;
 };
 
+// Optional array-of-string-literals (e.g. `sourceCommits: ["a1b2c3d"]`).
+// Returns [] when absent: a sentinel that guards no single commit is allowed
+// to have none, and check-source-commits decides who may omit it.
+const literalArrayField = (source, name) => {
+  const match = source.match(new RegExp(`${name}:\\s*\\[([^\\]]*)\\]`));
+  if (!match) {
+    return [];
+  }
+  return [...match[1].matchAll(/["']([^"']+)["']/g)].map((entry) => entry[1]);
+};
+
 const optionalLiteralField = (source, name) => {
   const match = source.match(new RegExp(`${name}:\\s*["']([^"']+)["']`));
   return match ? match[1] : undefined;
 };
 
 // The catalog: one entry per REGISTERED case, in registry array order, each
-// carrying {id, path, issue, status} plus the display extras the Teable case
-// sync publishes (title, timeoutMs, link).
+// carrying {id, path, issue, status}, the teable-ee commits the case settles,
+// plus the display extras the Teable case sync publishes (title, timeoutMs,
+// link).
 export const loadCaseCatalog = async (repoRoot) => {
   const { pathByImport, arrayEntries } = await loadRegistry(repoRoot);
   const catalog = [];
@@ -127,6 +139,7 @@ export const loadCaseCatalog = async (repoRoot) => {
       timeoutMs: numericField(source, "timeoutMs"),
       link: optionalLiteralField(source, "link"),
       appliesSince: optionalLiteralField(source, "appliesSince"),
+      sourceCommits: literalArrayField(source, "sourceCommits"),
     });
   }
   return catalog;

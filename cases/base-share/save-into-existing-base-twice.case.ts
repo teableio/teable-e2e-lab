@@ -15,6 +15,7 @@ export default defineBugCase({
   bug: {
     issue: "T6840",
     status: "fixed",
+    sourceCommits: ["3b1bfd0d7"],
   },
   config: {
     spaceId: "seed-space",

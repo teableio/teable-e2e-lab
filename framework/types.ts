@@ -54,6 +54,21 @@ export interface BugRef {
   status: "open" | "fixed";
   // Optional URL to the report/fix for humans reading the comparison table.
   link?: string;
+  // The teable-ee commits this case settles: the fix it reproduces, or - for a
+  // sentinel, which has no fix behind it - the rewrites it was written to
+  // guard. Short SHAs.
+  //
+  // This exists for the next triage pass rather than for this run. Scanning
+  // recent commits for uncovered fixes is how a batch of cases starts, and
+  // without this the scan can only match on issue ids: a sentinel matches
+  // nothing, a commit carrying three issue ids looks two-thirds uncovered, and
+  // every commit already examined comes back up as a fresh candidate. Listing
+  // the commits a case answers for lets that pass skip them and spend its time
+  // on what is actually left.
+  //
+  // Commits examined and deliberately NOT turned into a case belong in
+  // docs/triage-ledger.md, which is the other half of the same answer.
+  sourceCommits?: string[];
   // Reserved: oldest teable-ee revision this case is meaningful on. Not
   // enforced yet — the planner and the comparison table will learn to render
   // "not applicable" cells from it before anyone registers a case that needs
