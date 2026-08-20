@@ -1,3 +1,4 @@
+import { runAuditUserNameResolvesCase } from "./runners/audit-user-name-resolves.runner";
 import { runComputedValueLandsCase } from "./runners/computed-value-lands.runner";
 import { runExcelImportDuplicateColumnsCase } from "./runners/excel-import-duplicate-columns.runner";
 import { runGroupCollapseCase } from "./runners/group-collapse.runner";
@@ -49,6 +50,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "stale-lookup-recast": runStaleLookupRecastCase,
   "null-multiplicity-lookup": runNullMultiplicityLookupCase,
   "excel-import-duplicate-columns": runExcelImportDuplicateColumnsCase,
+  "audit-user-name-resolves": runAuditUserNameResolvesCase,
 };
 
 export const executeRegisteredRunner = (

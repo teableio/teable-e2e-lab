@@ -24,6 +24,7 @@ export interface BugCaseConfigByRunner {
   "stale-lookup-recast": StaleLookupRecastCaseConfig;
   "null-multiplicity-lookup": NullMultiplicityLookupCaseConfig;
   "excel-import-duplicate-columns": ExcelImportDuplicateColumnsCaseConfig;
+  "audit-user-name-resolves": AuditUserNameResolvesCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -478,4 +479,18 @@ export interface ExcelImportDuplicateColumnsCaseConfig {
   // Import time zone. Not load-bearing here; pinned so a date-shaped cell
   // could never make the result depend on where this runs.
   timeZone: string;
+}
+
+// Rows whose LastModifiedBy cell is stored the way older tables store it ->
+// read them -> checkpoint: the cell carries the editor's name. v2's read
+// hydration enriched public user cells but skipped `lastModifiedBy`, so cells
+// without their own stored snapshot fell back to showing the raw user id where
+// a person's name belongs.
+export interface AuditUserNameResolvesCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Titles for the two rows, one per historical storage shape. They are only
+  // labels - what is asserted is the audit cell beside them.
+  legacyRowTitle: string;
+  missingSnapshotRowTitle: string;
 }
