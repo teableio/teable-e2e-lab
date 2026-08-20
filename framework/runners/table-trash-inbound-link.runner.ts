@@ -1,7 +1,9 @@
 import { FieldKeyType, FieldType, Relationship } from "@teable/core";
 import {
-  deleteTable as apiDeleteTable,
+  DELETE_TABLE,
+  axios,
   getRecords as apiGetRecords,
+  urlBuilder,
 } from "@teable/openapi";
 import {
   createField,
@@ -55,13 +57,6 @@ const sleep = (ms: number) =>
   new Promise<void>((resolveSleep) => {
     setTimeout(resolveSleep, ms);
   });
-
-const headersOf = (value: unknown): Record<string, unknown> | undefined => {
-  const headers = (value as { headers?: unknown } | undefined)?.headers;
-  return headers && typeof headers === "object"
-    ? (headers as Record<string, unknown>)
-    : undefined;
-};
 
 export const runTableTrashInboundLinkCase = async (
   bugCase: BugCaseFor<"table-trash-inbound-link">,
@@ -188,21 +183,18 @@ export const runTableTrashInboundLinkCase = async (
 
     // Trash, not permanent delete: the whole point is what the base looks like
     // while the table sits in the trash.
-    let deleteError: unknown;
-    let deleteHeaders: Record<string, unknown> | undefined;
-    try {
-      const response = await apiDeleteTable(baseId, targetTableId);
-      deleteHeaders = headersOf(response);
-    } catch (error) {
-      deleteError = error;
-      deleteHeaders = headersOf((error as { response?: unknown })?.response);
-    }
-    if (!deleteHeaders) {
-      throw new Error(
-        "DELETE /base/{baseId}/table/{tableId} returned no headers, so the engine that served it cannot be established",
-      );
-    }
-    const deleteRouting = assertServedByV2(deleteHeaders, {
+    //
+    // Raw axios with the status left open, because this delete is allowed to
+    // be refused - on the missing-column variant it was, before the fix - and
+    // the generated client throws away the whole response, routing headers
+    // included, the moment a request answers non-2xx. Losing them here would
+    // report "the engine could not be established" for a delete the product
+    // had just answered, turning a reproduction into a broken case.
+    const deleteResponse = await axios.delete(
+      urlBuilder(DELETE_TABLE, { baseId, tableId: targetTableId }),
+      { validateStatus: () => true },
+    );
+    const deleteRouting = assertServedByV2(deleteResponse.headers, {
       operation: "DELETE /base/{baseId}/table/{tableId}",
       feature: "deleteTable",
     });
@@ -210,8 +202,13 @@ export const runTableTrashInboundLinkCase = async (
     const probe = await bugCheckpoint(
       "inbound-link-degrades-when-target-is-trashed",
       async () => {
-        if (deleteError) {
-          throw deleteError;
+        // A refused delete is the product failing, not the fixture, so it is
+        // raised in here where it reads as the bug rather than as an error.
+        if (deleteResponse.status >= 300) {
+          throw new Error(
+            `DELETE /base/{baseId}/table/{tableId} answered ${deleteResponse.status}: ` +
+              `${typeof deleteResponse.data === "string" ? deleteResponse.data : JSON.stringify(deleteResponse.data)}`,
+          );
         }
 
         const deadline = Date.now() + config.settleTimeoutMs;
@@ -248,6 +245,7 @@ export const runTableTrashInboundLinkCase = async (
         inboundLinkFieldId: linkField.id,
         relationship: config.relationship,
         droppedColumn: droppedColumn ?? null,
+        deleteStatus: deleteResponse.status,
         typeAfterTrash: probe.type,
         cellAfterTrash: probe.cell,
       },
