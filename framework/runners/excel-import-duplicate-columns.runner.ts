@@ -15,6 +15,7 @@ import {
 import {
   createBase,
   createSpace,
+  deleteSpace,
   permanentDeleteSpace,
 } from "../../../utils/init-app";
 import { bugCheckpoint } from "../checkpoint";
@@ -204,8 +205,11 @@ export const runExcelImportDuplicateColumnsCase = async (
   } finally {
     if (spaceId) {
       try {
-        // The space carries the base, the imported table and its rows, so one
-        // delete takes the whole fixture with it.
+        // Trash first: a space has to be in the trash before it can be
+        // permanently deleted, and skipping that step leaves the whole space
+        // behind - one per run, each still counted against the row quota that
+        // made this case build its own space in the first place.
+        await deleteSpace(spaceId);
         await permanentDeleteSpace(spaceId);
       } catch (error) {
         // Cleanup is the case's own housekeeping - the product did not fail.
