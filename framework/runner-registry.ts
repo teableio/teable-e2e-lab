@@ -15,6 +15,7 @@ import { runRequiredLinkRefreshCase } from "./runners/required-link-refresh.runn
 import { runStaleLookupRecastCase } from "./runners/stale-lookup-recast.runner";
 import { runShareSaveCase } from "./runners/share-save.runner";
 import { runTableTrashInboundLinkCase } from "./runners/table-trash-inbound-link.runner";
+import { runViewFilterRealtimeCase } from "./runners/view-filter-realtime.runner";
 import { runViewFilterRoundtripCase } from "./runners/view-filter-roundtrip.runner";
 import type {
   BugCase,
@@ -51,6 +52,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "null-multiplicity-lookup": runNullMultiplicityLookupCase,
   "excel-import-duplicate-columns": runExcelImportDuplicateColumnsCase,
   "audit-user-name-resolves": runAuditUserNameResolvesCase,
+  "view-filter-realtime": runViewFilterRealtimeCase,
 };
 
 export const executeRegisteredRunner = (
