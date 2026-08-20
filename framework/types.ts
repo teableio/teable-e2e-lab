@@ -26,6 +26,7 @@ export interface BugCaseConfigByRunner {
   "excel-import-duplicate-columns": ExcelImportDuplicateColumnsCaseConfig;
   "audit-user-name-resolves": AuditUserNameResolvesCaseConfig;
   "view-filter-realtime": ViewFilterRealtimeCaseConfig;
+  "view-property-realtime": ViewPropertyRealtimeCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -512,5 +513,21 @@ export interface ViewFilterRealtimeCaseConfig {
   subscribeTimeoutMs: number;
   // How long an update may take to reach the subscriber. This is half the
   // assertion - the other half is that no error arrived instead.
+  settleTimeoutMs: number;
+}
+
+// A client subscribed to a view -> change its group, then its sort ->
+// checkpoint: the subscriber sees both. The writes persisted, but nothing was
+// pushed to the client that made them, so the grid kept its old layout until
+// the page was reloaded.
+export interface ViewPropertyRealtimeCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Enough rows that a group and a sort are meaningful rather than degenerate;
+  // nothing asserts on the titles themselves.
+  rowTitles: string[];
+  subscribeTimeoutMs: number;
+  // How long a change may take to reach the subscriber. This is the assertion:
+  // before the fix it never arrived at all.
   settleTimeoutMs: number;
 }
