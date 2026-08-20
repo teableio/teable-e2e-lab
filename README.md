@@ -53,9 +53,8 @@ gh workflow run e2e-lab.yml \
 
 Commits go oldest-first; the last one is the gating column. The table lands in
 the report job's GitHub summary; `comparison.json` in the
-`e2e-lab-comparison-*` artifact. Local direction-finding runs follow the localrun skill in
-`.agents/skills/localrun/`; its scripts are here, its instructions are not
-published with this repository, so ask the team for them.
+`e2e-lab-comparison-*` artifact. Local direction-finding runs follow the localrun skill, which is not published
+with this repository; ask the team for it.
 
 ## Adding a case
 
