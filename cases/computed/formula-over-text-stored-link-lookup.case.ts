@@ -21,6 +21,8 @@ export default defineBugCase({
     peerTitle: "peer-a",
     sourceNumber: 12.5,
     placeholderNumber: 1,
+    // Well past any per-row fast path: the bug lives in the batch statement.
+    rowCount: 40,
     settleTimeoutMs: 45_000,
     settlePollIntervalMs: 750,
   },

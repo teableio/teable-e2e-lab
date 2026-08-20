@@ -682,6 +682,11 @@ export interface ComputedBackfillRecastCaseConfig {
   // sourceNumber: a conversion that quietly leaves the old cell alone has to
   // be distinguishable from one whose backfill landed.
   placeholderNumber: number;
+  // Host rows to seed. Every one of these bugs lives in the builder that
+  // writes a backfill as a single UPDATE ... FROM SELECT over many rows, and
+  // a one-row table is exactly the fixture a per-row fast path would answer
+  // instead. The runner refuses fewer than two.
+  rowCount: number;
   // How long the backfill may take. Above a slow but working one, far below
   // "never" - which is what a dead schema operation amounts to.
   settleTimeoutMs: number;

@@ -33,6 +33,13 @@ import type { ComputedBackfillRecastCaseConfig } from "../types";
 // but working backfill, and far below "never", which is what the pre-fix
 // behavior amounts to.
 //
+// All three seed many host rows rather than one. Every one of these bugs lives
+// in the builder that writes a backfill as a single UPDATE ... FROM SELECT
+// over the whole batch, and a one-row table is exactly the fixture a per-row
+// fast path would answer instead - which is what a first run of these cases
+// looked like: three greens on the fix's parent, every value landing in under
+// a second.
+//
 // This is the same family as `lookup/stale-text-metadata-*`, and deliberately
 // not the same case. Those reach the mismatch by writing drifted metadata with
 // SQL, because it is the residue of migrations rather than a state today's API
@@ -71,7 +78,7 @@ interface ShapeBuild {
   // computed exists.
   read: (fieldId: string) => Promise<{
     headers: Record<string, unknown>;
-    cell: unknown;
+    cells: unknown[];
   }>;
   holds: (cell: unknown) => boolean;
   // Asserted before the computed field is made, outside the checkpoint: the
@@ -91,16 +98,38 @@ export const runComputedBackfillRecastCase = async (
   const baseId = globalThis.testConfig.baseId;
   const suffix = `${config.tableNamePrefix}-${context.runId}`;
 
-  const readHostCell = async (hostTableId: string, fieldId: string) => {
+  if (config.rowCount < 2) {
+    throw new Error(
+      `rowCount is ${config.rowCount} - these backfills are written as one statement over a batch, and a single row is what a per-row fast path would answer instead`,
+    );
+  }
+
+  // Every seeded row, not the first one. A backfill that lands on some rows
+  // and not others is the exact shape a dead schema operation leaves behind
+  // when it dies partway, and reading one row would call that a pass.
+  const readHostCells = async (hostTableId: string, fieldId: string) => {
     const response = await apiGetRecords(hostTableId, {
       fieldKeyType: FieldKeyType.Id,
-      take: 1,
+      take: config.rowCount,
     });
+    const records = response.data.records;
+    if (records.length !== config.rowCount) {
+      throw new Error(
+        `host table ${hostTableId} returned ${records.length} rows, expected ${config.rowCount}`,
+      );
+    }
     return {
       headers: response.headers,
-      cell: response.data.records[0]?.fields?.[fieldId],
+      cells: records.map(
+        (record: { fields: Record<string, unknown> }) => record.fields[fieldId],
+      ),
     };
   };
+
+  const rowNames = Array.from(
+    { length: config.rowCount },
+    (_unused, index) => `host-${index + 1}`,
+  );
 
   const firstRecordId = (table: { id: string; records?: { id: string }[] }) => {
     const recordId = table.records?.[0]?.id;
@@ -168,33 +197,34 @@ export const runComputedBackfillRecastCase = async (
     await createRecords(hostTable.id, {
       fieldKeyType: FieldKeyType.Name,
       typecast: false,
-      records: [
-        {
-          fields: {
-            Name: "host-1",
-            // A value the host column can hold and the lookup cannot produce.
-            // If the conversion silently leaves the old cell in place, the
-            // checkpoint sees this rather than the expected number.
-            "Payment Amount": config.placeholderNumber,
-            Contract: { id: foreignRecordId },
-          },
+      records: rowNames.map((name) => ({
+        fields: {
+          Name: name,
+          // A value the host column can hold and the lookup cannot produce.
+          // If the conversion silently leaves the old cells in place, the
+          // checkpoint sees this rather than the expected number.
+          "Payment Amount": config.placeholderNumber,
+          Contract: { id: foreignRecordId },
         },
-      ],
+      })),
     });
 
     return {
       tableIds: [hostTable.id, foreignTable.id],
       hostTableId: hostTable.id,
-      read: (fieldId) => readHostCell(hostTable.id, fieldId),
+      read: (fieldId) => readHostCells(hostTable.id, fieldId),
       holds: (cell) => holdsNumber(cell, config.sourceNumber),
       verifyFixture: async () => {
-        const before = await readHostCell(hostTable.id, hostNumberField.id);
-        if (!holdsNumber(before.cell, config.placeholderNumber)) {
+        const before = await readHostCells(hostTable.id, hostNumberField.id);
+        const wrong = before.cells.filter(
+          (cell) => !holdsNumber(cell, config.placeholderNumber),
+        );
+        if (wrong.length > 0) {
           throw new Error(
-            `the host number cell reads ${JSON.stringify(before.cell)}, expected ${config.placeholderNumber} - the row this case converts is not in place`,
+            `${wrong.length} of ${config.rowCount} host number cells do not read ${config.placeholderNumber} (e.g. ${JSON.stringify(wrong[0])}) - the rows this case converts are not in place`,
           );
         }
-        return { headers: before.headers, detail: before.cell };
+        return { headers: before.headers, detail: before.cells[0] };
       },
       makeComputed: async () => {
         // A lookup over a formula field is declared as a formula that carries
@@ -288,11 +318,9 @@ export const runComputedBackfillRecastCase = async (
     await createRecords(hostTable.id, {
       fieldKeyType: FieldKeyType.Name,
       typecast: false,
-      records: [
-        {
-          fields: { Name: "host-1", "Foreign Link": { id: foreignRecordId } },
-        },
-      ],
+      records: rowNames.map((name) => ({
+        fields: { Name: name, "Foreign Link": { id: foreignRecordId } },
+      })),
     });
 
     // The conversion is fixture, not observation: it succeeds on both sides of
@@ -311,7 +339,7 @@ export const runComputedBackfillRecastCase = async (
     return {
       tableIds: [hostTable.id, foreignTable.id, peerTable.id],
       hostTableId: hostTable.id,
-      read: (fieldId) => readHostCell(hostTable.id, fieldId),
+      read: (fieldId) => readHostCells(hostTable.id, fieldId),
       holds: (cell) => holdsTitle(cell, config.peerTitle),
       verifyFixture: async () => {
         // The lookup itself has to have filled in. If it has not, the formula
@@ -319,13 +347,16 @@ export const runComputedBackfillRecastCase = async (
         // conversion rather than for the formula backfill it is about.
         const deadline = Date.now() + config.settleTimeoutMs;
         for (;;) {
-          const seen = await readHostCell(hostTable.id, hostTextField.id);
-          if (holdsTitle(seen.cell, config.peerTitle)) {
-            return { headers: seen.headers, detail: seen.cell };
+          const seen = await readHostCells(hostTable.id, hostTextField.id);
+          const missing = seen.cells.filter(
+            (cell) => !holdsTitle(cell, config.peerTitle),
+          );
+          if (missing.length === 0) {
+            return { headers: seen.headers, detail: seen.cells[0] };
           }
           if (Date.now() >= deadline) {
             throw new Error(
-              `the lookup-of-link cell reads ${JSON.stringify(seen.cell)} after ${config.settleTimeoutMs}ms, expected it to hold "${config.peerTitle}" - the fixture this case writes a formula over is not in place`,
+              `${missing.length} of ${config.rowCount} lookup-of-link cells do not hold "${config.peerTitle}" after ${config.settleTimeoutMs}ms (e.g. ${JSON.stringify(missing[0])}) - the fixture this case writes a formula over is not in place`,
             );
           }
           await sleep(config.settlePollIntervalMs);
@@ -369,16 +400,25 @@ export const runComputedBackfillRecastCase = async (
         isOneWay: true,
       },
     });
+    // One foreign row per host row: a oneOne link cannot point two hosts at
+    // the same foreign record, so the batch has to be built on both sides.
     const foreignRows = await createRecords(foreignTable.id, {
       fieldKeyType: FieldKeyType.Name,
       typecast: false,
-      records: [
-        { fields: { Name: "opp-1", Related: [{ id: relatedRecordId }] } },
-      ],
+      records: rowNames.map((_name, index) => ({
+        fields: {
+          Name: `opp-${index + 1}`,
+          Related: [{ id: relatedRecordId }],
+        },
+      })),
     });
-    const foreignRecordId = foreignRows.records[0]?.id;
-    if (!foreignRecordId) {
-      throw new Error(`Foreign row was not created in ${foreignTable.id}`);
+    const foreignRecordIds = foreignRows.records.map(
+      (record: { id: string }) => record.id,
+    );
+    if (foreignRecordIds.length !== config.rowCount) {
+      throw new Error(
+        `Foreign rows were not created in ${foreignTable.id}: got ${foreignRecordIds.length}, expected ${config.rowCount}`,
+      );
     }
 
     const hostTable = await createTable(baseId, {
@@ -398,32 +438,31 @@ export const runComputedBackfillRecastCase = async (
     await createRecords(hostTable.id, {
       fieldKeyType: FieldKeyType.Name,
       typecast: false,
-      records: [
-        {
-          fields: {
-            Name: "submission-1",
-            "Linked Opportunity": { id: foreignRecordId },
-          },
+      records: rowNames.map((_name, index) => ({
+        fields: {
+          Name: `submission-${index + 1}`,
+          "Linked Opportunity": { id: foreignRecordIds[index] },
         },
-      ],
+      })),
     });
 
     return {
       tableIds: [hostTable.id, foreignTable.id, relatedTable.id],
       hostTableId: hostTable.id,
-      read: (fieldId) => readHostCell(hostTable.id, fieldId),
+      read: (fieldId) => readHostCells(hostTable.id, fieldId),
       holds: (cell) => holdsTitle(cell, config.peerTitle),
       verifyFixture: async () => {
         // The rows have to be linked BEFORE the lookup is added - that
         // ordering is the shape. A lookup added first and linked afterwards
         // fills in through a different path and does not reproduce.
-        const seen = await readHostCell(hostTable.id, hostLink.id);
-        if (!holdsTitle(seen.cell, "opp-1")) {
+        const seen = await readHostCells(hostTable.id, hostLink.id);
+        const unlinked = seen.cells.filter((cell) => !holdsTitle(cell, "opp-"));
+        if (unlinked.length > 0) {
           throw new Error(
-            `the host link cell reads ${JSON.stringify(seen.cell)}, expected it to hold "opp-1" - the rows are not linked, so the lookup below would be seeded over nothing`,
+            `${unlinked.length} of ${config.rowCount} host link cells hold nothing (e.g. ${JSON.stringify(unlinked[0])}) - the rows are not linked, so the lookup below would be seeded over nothing`,
           );
         }
-        return { headers: seen.headers, detail: seen.cell };
+        return { headers: seen.headers, detail: seen.cells[0] };
       },
       makeComputed: async () => {
         const lookup = await createField(hostTable.id, {
@@ -463,12 +502,12 @@ export const runComputedBackfillRecastCase = async (
         const fieldId = await build!.makeComputed();
 
         const deadline = Date.now() + config.settleTimeoutMs;
-        let last: unknown;
+        let missing: unknown[] = [];
         for (;;) {
           const seen = await build!.read(fieldId);
-          last = seen.cell;
-          if (build!.holds(last)) {
-            return { fieldId, cell: last };
+          missing = seen.cells.filter((cell) => !build!.holds(cell));
+          if (missing.length === 0) {
+            return { fieldId, cells: seen.cells.slice(0, 3) };
           }
           if (Date.now() >= deadline) {
             break;
@@ -477,7 +516,7 @@ export const runComputedBackfillRecastCase = async (
         }
 
         throw new Error(
-          `the computed cell still reads ${JSON.stringify(last ?? null)} after ${config.settleTimeoutMs}ms - the backfill never landed, which is what a schema operation killed by a type mismatch looks like from outside`,
+          `${missing.length} of ${config.rowCount} computed cells are still empty after ${config.settleTimeoutMs}ms (e.g. ${JSON.stringify(missing[0] ?? null)}) - the backfill never landed, which is what a schema operation killed by a type mismatch looks like from outside`,
         );
       },
     );
@@ -489,7 +528,7 @@ export const runComputedBackfillRecastCase = async (
         routing,
         fixtureCell: fixture.detail,
         computedFieldId: probe.fieldId,
-        computedCell: probe.cell,
+        computedCellSample: probe.cells,
       },
     };
   } finally {
