@@ -32,6 +32,7 @@ export interface BugCaseConfigByRunner {
   "excel-import-offset-header": ExcelImportOffsetHeaderCaseConfig;
   "paste-by-id-alignment": PasteByIdAlignmentCaseConfig;
   "search-view-filter": SearchViewFilterCaseConfig;
+  "computed-backfill-recast": ComputedBackfillRecastCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -645,4 +646,44 @@ export interface SearchViewFilterCaseConfig {
   // The rows, one per name. The runner refuses a set that does not populate
   // all three quadrants it needs; see rowProblems() for which and why.
   rows: { name: string; inView: boolean; matches: boolean }[];
+}
+
+// Build a small table graph -> make a computed field over it -> checkpoint:
+// the value arrives within the settle budget. Three sequences, one failure:
+// a computed backfill whose assignment disagrees with the physical type of
+// the column it lands in kills the schema operation it runs inside, and the
+// caller is told nothing. Sibling of the lookup/stale-text-metadata pair,
+// which reaches the same mismatch through migrated metadata instead.
+export interface ComputedBackfillRecastCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Which reported sequence to run:
+  //
+  //   "number-to-formula-lookup" - a number column converted into a lookup of
+  //     a foreign formula. The column stays double precision; the rebuilt
+  //     lookup kept metadata saying TEXT.
+  //   "text-lookup-then-formula" - a text column converted into a lookup of a
+  //     foreign link field, then a formula over it. The column stays TEXT and
+  //     holds titles as text; the formula's backfill hard-cast it with ::jsonb.
+  //   "one-one-link-lookup" - a lookup of a foreign link field added to a host
+  //     whose rows are already linked. The column is jsonb from the start and
+  //     the seeding backfill assigned a text-typed alias into it.
+  shape:
+    | "number-to-formula-lookup"
+    | "text-lookup-then-formula"
+    | "one-one-link-lookup";
+  // Title carried by the row at the far end of the graph, and the string the
+  // link-shaped assertions look for.
+  peerTitle: string;
+  // Value behind the number shape. Non-integer on purpose - an integer would
+  // survive a text round trip that a real double does not.
+  sourceNumber: number;
+  // What the host number cell holds before the conversion. Must differ from
+  // sourceNumber: a conversion that quietly leaves the old cell alone has to
+  // be distinguishable from one whose backfill landed.
+  placeholderNumber: number;
+  // How long the backfill may take. Above a slow but working one, far below
+  // "never" - which is what a dead schema operation amounts to.
+  settleTimeoutMs: number;
+  settlePollIntervalMs: number;
 }

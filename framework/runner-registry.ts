@@ -1,4 +1,5 @@
 import { runAuditUserNameResolvesCase } from "./runners/audit-user-name-resolves.runner";
+import { runComputedBackfillRecastCase } from "./runners/computed-backfill-recast.runner";
 import { runComputedValueLandsCase } from "./runners/computed-value-lands.runner";
 import { runDeleteUndoRestoresCase } from "./runners/delete-undo-restores.runner";
 import { runCrossBaseLinkDeleteCase } from "./runners/cross-base-link-delete.runner";
@@ -65,6 +66,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "excel-import-offset-header": runExcelImportOffsetHeaderCase,
   "paste-by-id-alignment": runPasteByIdAlignmentCase,
   "search-view-filter": runSearchViewFilterCase,
+  "computed-backfill-recast": runComputedBackfillRecastCase,
 };
 
 export const executeRegisteredRunner = (

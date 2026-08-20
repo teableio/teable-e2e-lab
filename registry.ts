@@ -26,6 +26,9 @@ import importExcelHeaderBelowA1Case from "./cases/import/excel-header-below-a1.c
 import selectionPasteByIdLandsOnItsOwnRowsCase from "./cases/selection/paste-by-id-lands-on-its-own-rows.case";
 import searchStaysInsideViewFilterCase from "./cases/search/stays-inside-view-filter.case";
 import tableTrashDegradesInboundLinkWithoutDisplayColumnCase from "./cases/table/trash-degrades-inbound-link-without-display-column.case";
+import computedNumberColumnConvertedToFormulaLookupCase from "./cases/computed/number-column-converted-to-formula-lookup.case";
+import computedFormulaOverTextStoredLinkLookupCase from "./cases/computed/formula-over-text-stored-link-lookup.case";
+import computedLinkLookupAddedAfterRowsAreLinkedCase from "./cases/computed/link-lookup-added-after-rows-are-linked.case";
 import type { BugCase } from "./framework/types";
 
 // Every runnable case, registered explicitly. scripts/case-catalog.mjs parses
@@ -60,6 +63,9 @@ const cases = [
   selectionPasteByIdLandsOnItsOwnRowsCase,
   searchStaysInsideViewFilterCase,
   tableTrashDegradesInboundLinkWithoutDisplayColumnCase,
+  computedNumberColumnConvertedToFormulaLookupCase,
+  computedFormulaOverTextStoredLinkLookupCase,
+  computedLinkLookupAddedAfterRowsAreLinkedCase,
 ] satisfies BugCase[];
 
 const caseById = new Map<string, BugCase>(
