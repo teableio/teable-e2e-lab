@@ -24,6 +24,7 @@ import undoDeleteRecordsUndoRestoresAllCase from "./cases/undo/delete-records-un
 import linkCrossBaseLinkClearsOnDeleteCase from "./cases/link/cross-base-link-clears-on-delete.case";
 import importExcelHeaderBelowA1Case from "./cases/import/excel-header-below-a1.case";
 import selectionPasteByIdLandsOnItsOwnRowsCase from "./cases/selection/paste-by-id-lands-on-its-own-rows.case";
+import searchStaysInsideViewFilterCase from "./cases/search/stays-inside-view-filter.case";
 import type { BugCase } from "./framework/types";
 
 // Every runnable case, registered explicitly. scripts/case-catalog.mjs parses
@@ -56,6 +57,7 @@ const cases = [
   linkCrossBaseLinkClearsOnDeleteCase,
   importExcelHeaderBelowA1Case,
   selectionPasteByIdLandsOnItsOwnRowsCase,
+  searchStaysInsideViewFilterCase,
 ] satisfies BugCase[];
 
 const caseById = new Map<string, BugCase>(

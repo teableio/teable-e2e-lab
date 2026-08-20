@@ -17,6 +17,7 @@ import { runRecordFlowCase } from "./runners/record-flow.runner";
 import { runRequiredLinkBlocksDeleteCase } from "./runners/required-link-blocks-delete.runner";
 import { runRequiredLinkRefreshCase } from "./runners/required-link-refresh.runner";
 import { runStaleLookupRecastCase } from "./runners/stale-lookup-recast.runner";
+import { runSearchViewFilterCase } from "./runners/search-view-filter.runner";
 import { runShareSaveCase } from "./runners/share-save.runner";
 import { runTableTrashInboundLinkCase } from "./runners/table-trash-inbound-link.runner";
 import { runViewFilterRealtimeCase } from "./runners/view-filter-realtime.runner";
@@ -63,6 +64,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "cross-base-link-delete": runCrossBaseLinkDeleteCase,
   "excel-import-offset-header": runExcelImportOffsetHeaderCase,
   "paste-by-id-alignment": runPasteByIdAlignmentCase,
+  "search-view-filter": runSearchViewFilterCase,
 };
 
 export const executeRegisteredRunner = (

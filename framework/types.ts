@@ -31,6 +31,7 @@ export interface BugCaseConfigByRunner {
   "cross-base-link-delete": CrossBaseLinkDeleteCaseConfig;
   "excel-import-offset-header": ExcelImportOffsetHeaderCaseConfig;
   "paste-by-id-alignment": PasteByIdAlignmentCaseConfig;
+  "search-view-filter": SearchViewFilterCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -613,4 +614,20 @@ export interface PasteByIdAlignmentCaseConfig {
   // At least 3 - below that a shift by one row cannot be told from a single
   // wrong cell. The runner refuses anything smaller.
   rowCount: number;
+}
+
+// Seed rows that cross two independent axes - inside/outside the saved view
+// filter, matched/not matched by the search term -> save the view filter ->
+// checkpoint: searching by viewId counts and indexes only the rows the view
+// actually shows.
+export interface SearchViewFilterCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // The needle. It is the name of one choice on the searched single-select
+  // field, so a row either carries it in that cell or does not - no partial
+  // matches to reason about.
+  searchTerm: string;
+  // The rows, one per name. The runner refuses a set that does not populate
+  // all three quadrants it needs; see rowProblems() for which and why.
+  rows: { name: string; inView: boolean; matches: boolean }[];
 }
