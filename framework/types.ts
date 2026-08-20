@@ -21,6 +21,7 @@ export interface BugCaseConfigByRunner {
   "required-link-blocks-delete": RequiredLinkBlocksDeleteCaseConfig;
   "legacy-unique-error": LegacyUniqueErrorCaseConfig;
   "paste-non-collaborator-user": PasteNonCollaboratorUserCaseConfig;
+  "stale-lookup-recast": StaleLookupRecastCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -400,4 +401,35 @@ export interface PasteNonCollaboratorUserCaseConfig {
   outsiderName: string;
   // Primary-field value of the single row. Nothing asserts on it.
   rowTitle: string;
+}
+
+// Lookups whose stored metadata says TEXT while their physical column is
+// `double precision` or `jsonb` -> rebuild them -> checkpoint: the values come
+// back. The backfill generated its assignment from the metadata, Postgres
+// refused it, and the table.update schema operation died where no caller could
+// see it - leaving a lookup column that quietly stopped filling in.
+export interface StaleLookupRecastCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Which lookups the host carries, and therefore which physical column types
+  // the drifted TEXT metadata has to be recast against: "number" is stored as
+  // double precision, "link" as jsonb. Both mismatches were reported.
+  lookups: ("number" | "link")[];
+  // What makes the rebuild run. "add-filter" changes what the lookup selects;
+  // "display-only" changes nothing but the number's formatting, which is the
+  // weaker of the two and the one the second report came in on - the rebuild
+  // still has to derive the physical type even when the values cannot have
+  // moved. Either way it must be a real change: re-submitting identical
+  // options queues no backfill, and the case would read the pre-drift values
+  // back and call it a pass.
+  trigger: "add-filter" | "display-only";
+  // Value behind the number lookup. Non-integer on purpose - an integer would
+  // survive a text round trip that a real double does not.
+  sourceNumber: number;
+  // Title behind the link lookup, matched as a substring of the cell.
+  peerTitle: string;
+  // How long a rebuilt lookup may take to fill in. This is the assertion: the
+  // failure raises nothing at the caller, it just never arrives.
+  settleTimeoutMs: number;
+  settlePollIntervalMs: number;
 }
