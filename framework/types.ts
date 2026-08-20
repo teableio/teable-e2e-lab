@@ -28,6 +28,7 @@ export interface BugCaseConfigByRunner {
   "view-filter-realtime": ViewFilterRealtimeCaseConfig;
   "view-property-realtime": ViewPropertyRealtimeCaseConfig;
   "delete-undo-restores": DeleteUndoRestoresCaseConfig;
+  "cross-base-link-delete": CrossBaseLinkDeleteCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -543,4 +544,25 @@ export interface DeleteUndoRestoresCaseConfig {
   // At least 2. One row cannot express a PARTIAL restore, which is the shape
   // this guards; the runner refuses anything smaller.
   recordCount: number;
+}
+
+// Two bases in one space, an OPTIONAL one-way link reaching from the second
+// into the first -> delete the row it points at -> checkpoint: the delete
+// succeeds and the cross-base link cell clears.
+//
+// A second owner row, linked only from within its own base, is deleted first
+// as a control from OUTSIDE the checkpoint: if the same-base delete misbehaves
+// too, the product is wrong about optional links in general, which is a
+// different fault from "the cleanup stops at the base boundary".
+export interface CrossBaseLinkDeleteCaseConfig {
+  // This case owns its space: it needs two bases that can see each other, and
+  // the shared seed base cannot supply the second one.
+  baseId: "own-space";
+  namePrefix: string;
+  // The row reached only from inside its own base - the control.
+  sameBaseOwnerTitle: string;
+  // The row reached from the other base - the one under test.
+  crossBaseOwnerTitle: string;
+  sameBaseHostTitle: string;
+  crossBaseHostTitle: string;
 }

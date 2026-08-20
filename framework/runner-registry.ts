@@ -1,6 +1,7 @@
 import { runAuditUserNameResolvesCase } from "./runners/audit-user-name-resolves.runner";
 import { runComputedValueLandsCase } from "./runners/computed-value-lands.runner";
 import { runDeleteUndoRestoresCase } from "./runners/delete-undo-restores.runner";
+import { runCrossBaseLinkDeleteCase } from "./runners/cross-base-link-delete.runner";
 import { runExcelImportDuplicateColumnsCase } from "./runners/excel-import-duplicate-columns.runner";
 import { runGroupCollapseCase } from "./runners/group-collapse.runner";
 import { runLinkDeleteReadableCase } from "./runners/link-delete-readable.runner";
@@ -57,6 +58,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "view-filter-realtime": runViewFilterRealtimeCase,
   "view-property-realtime": runViewPropertyRealtimeCase,
   "delete-undo-restores": runDeleteUndoRestoresCase,
+  "cross-base-link-delete": runCrossBaseLinkDeleteCase,
 };
 
 export const executeRegisteredRunner = (
