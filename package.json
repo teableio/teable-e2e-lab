@@ -17,9 +17,10 @@
     "check:verdict": "node --experimental-strip-types --test framework/verdict.test.js",
     "check:engine": "node --experimental-strip-types --test framework/engine.test.js",
     "check:feishu-card": "node --test scripts/send-feishu-summary.test.js",
+    "check:conclude": "node --test scripts/conclude-check-run.test.js",
     "check:record-values": "node --experimental-strip-types --test framework/runners/record-values.test.js",
     "check:group-buckets": "node --experimental-strip-types --test framework/runners/group-buckets.test.js",
-    "check": "pnpm format:check && pnpm check:run-docs-untracked && pnpm check:types && pnpm check:case-docs && pnpm check:source-commits && pnpm check:english && pnpm check:run-plan && pnpm check:comparison && pnpm check:track && pnpm check:verdict && pnpm check:engine && pnpm check:feishu-card && pnpm check:record-values && pnpm check:group-buckets"
+    "check": "pnpm format:check && pnpm check:run-docs-untracked && pnpm check:types && pnpm check:case-docs && pnpm check:source-commits && pnpm check:english && pnpm check:run-plan && pnpm check:comparison && pnpm check:track && pnpm check:verdict && pnpm check:engine && pnpm check:feishu-card && pnpm check:conclude && pnpm check:record-values && pnpm check:group-buckets"
   },
   "devDependencies": {
     "@types/node": "^22.19.20",
