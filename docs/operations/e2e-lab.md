@@ -110,6 +110,41 @@ access token stored as the `TEABLE_EE_CHECKOUT_TOKEN` secret (a
 fine-grained PAT with read-only Contents access to that repository is the
 tight grant).
 
+## The develop-push trigger and its check run
+
+teable-ee's `teable-e2e-lab-trigger.yml` dispatches this workflow on every
+develop push that touches the backend, pinned to that push's SHA — the
+watchdog question "did this commit re-break a fixed bug", asked without anyone
+pressing a button. Before dispatching it opens an **E2E Lab Regression** check
+run on the pushed commit (as the `teable-remote-ci` GitHub App, the same App
+teable-enterprise's remote suites report through) and passes its id here as
+`teable_ee_check_run_id`.
+
+The report job concludes that check run after the acceptance gate, `always()`,
+with the same verdict the gate reached — success only when acceptance passed,
+`cancelled` when the run was cancelled, failure otherwise, including runs that
+broke before a comparison existed. The output carries the bug × commit table
+from the very `comparison.json` acceptance judged; full logs and artifacts are
+one click away through the details link, because this repository is public and
+needs no private log channel.
+
+Concluding needs the App credentials as secrets **in this repository**:
+`RCI_APP_ID` and `RCI_APP_PRIVATE_KEY`, the same pair teable-ee and
+teable-enterprise already hold. Hand dispatches leave the input empty and skip
+the whole leg, so a missing pair only breaks triggered runs — visibly, in the
+conclude step.
+
+Two deliberate asymmetries against the remote-ci suites:
+
+- **The native "Re-run" button on the check run does nothing.** The rerequest
+  webhook worker recognizes only remote-ci suites (by their `external_id`
+  shape) and ignores this check on purpose. Re-ask the question from
+  teable-ee's "Trigger Teable E2E Lab" workflow instead.
+- **A lost run is reaped late, not never.** If this workflow dies without
+  concluding (runner lost, workflow broken), the enterprise-side watchdog
+  fails the check run after the lab's own ceiling — longer than the remote-ci
+  suites' 75 minutes, because a full-corpus column is allowed 120.
+
 ## Local runs
 
 Follow the localrun skill, which is not published with this repository; ask the

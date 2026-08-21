@@ -17,6 +17,13 @@ on:
         required: false
         default: all
         type: string
+      teable_ee_check_run_id:
+        description: >-
+          Id of a teable-ee check run to conclude with this run's verdict. Set
+          by teable-ee's develop-push trigger; leave empty on hand dispatches.
+        required: false
+        default: ""
+        type: string
 
 permissions:
   contents: read
@@ -305,6 +312,34 @@ jobs:
       # regressions on the gating column. Runs after the table and the upload so
       # a failing run still publishes its evidence.
       - name: Enforce run acceptance
+        id: acceptance
         env:
           E2E_LAB_COMPARISON_PATH: ${{ github.workspace }}/e2e-lab-report/comparison.json
         run: node e2e-lab/scripts/verify-run-acceptance.mjs
+
+      # teable-ee's develop-push trigger opens a check run on the pushed commit
+      # before dispatching here, and this run owns concluding it — the same
+      # Checks API shape teable-enterprise's remote suites use, as the same
+      # teable-remote-ci App. Both steps gate on the input, so hand dispatches
+      # (empty id) skip them; `always()` because an unconcluded check run spins
+      # on the commit until the watchdog reaps it, which reads as a lost run
+      # rather than the failure this run actually saw.
+      - name: Mint teable-ee checks token
+        id: checks-app
+        if: always() && inputs.teable_ee_check_run_id != ''
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.RCI_APP_ID }}
+          private-key: ${{ secrets.RCI_APP_PRIVATE_KEY }}
+          owner: teableio
+          repositories: teable-ee
+
+      - name: Conclude teable-ee check run
+        if: always() && inputs.teable_ee_check_run_id != ''
+        env:
+          TEABLE_EE_CHECK_RUN_ID: ${{ inputs.teable_ee_check_run_id }}
+          TEABLE_EE_CHECKS_TOKEN: ${{ steps.checks-app.outputs.token }}
+          E2E_LAB_ACCEPTANCE_OUTCOME: ${{ steps.acceptance.outcome }}
+          E2E_LAB_JOB_STATUS: ${{ job.status }}
+          E2E_LAB_COMPARISON_PATH: ${{ github.workspace }}/e2e-lab-report/comparison.json
+        run: node e2e-lab/scripts/conclude-check-run.mjs
