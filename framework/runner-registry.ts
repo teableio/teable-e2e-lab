@@ -9,6 +9,7 @@ import { runLinkDeleteReadableCase } from "./runners/link-delete-readable.runner
 import { runLegacyUniqueErrorCase } from "./runners/legacy-unique-error.runner";
 import { runLookupFilterViewCase } from "./runners/lookup-filter-view.runner";
 import { runLookupUserSnapshotSortCase } from "./runners/lookup-user-snapshot-sort.runner";
+import { runUserGroupIdentityCase } from "./runners/user-group-identity.runner";
 import { runHttpCheckCase } from "./runners/http-check.runner";
 import { runNullMultiplicityLookupCase } from "./runners/null-multiplicity-lookup.runner";
 import { runPasteByIdAlignmentCase } from "./runners/paste-by-id-alignment.runner";
@@ -47,6 +48,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "view-filter-roundtrip": runViewFilterRoundtripCase,
   "lookup-filter-view": runLookupFilterViewCase,
   "lookup-user-snapshot-sort": runLookupUserSnapshotSortCase,
+  "user-group-identity": runUserGroupIdentityCase,
   "computed-value-lands": runComputedValueLandsCase,
   "required-link-refresh": runRequiredLinkRefreshCase,
   "link-delete-readable": runLinkDeleteReadableCase,
