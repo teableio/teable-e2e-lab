@@ -8,6 +8,9 @@ import {
 import type { INotificationVo, IUserMeVo } from "@teable/openapi";
 import {
   axios,
+  getTrashItems as apiGetTrashItems,
+  restoreTrash as apiRestoreTrash,
+  TrashType,
   emailBaseInvitation,
   getRecords as apiGetRecords,
   urlBuilder,
@@ -22,6 +25,7 @@ import {
 import { createNewUserAxios } from "../../../utils/axios-instance/new-user";
 import { createTable, permanentDeleteTable } from "../../../utils/init-app";
 import { bugCheckpoint } from "../checkpoint";
+import { fixtureDb } from "../fixture-db";
 import { assertServedByV2, pickRoutingHeaders } from "../engine";
 import type { BugCaseFor, BugProbeResult, BugRunContext } from "../types";
 import type { UserFieldNotifyReplayCaseConfig } from "../types";
@@ -246,7 +250,25 @@ export const runUserFieldNotifyReplayCase = async (
     const replayedRecordId = recordId;
     let actionRouting;
 
-    if (config.replay === "undoDelete") {
+    if (config.replay === "trashRestore") {
+      await deleteRecord();
+      const trashDeadline = Date.now() + config.replaySettleTimeoutMs;
+      let trashId: string | undefined;
+      for (;;) {
+        const items = await apiGetTrashItems({
+          resourceId: tableId,
+          resourceType: TrashType.Table,
+        });
+        trashId = items.data.trashItems[0]?.id;
+        if (trashId) break;
+        if (Date.now() >= trashDeadline) {
+          throw new Error("the deleted row never reached the trash");
+        }
+        await sleep(config.pollIntervalMs);
+      }
+      const response = await apiRestoreTrash(trashId, tableId);
+      actionRouting = pickRoutingHeaders(response.headers);
+    } else if (config.replay === "undoDelete") {
       await deleteRecord();
       actionRouting = await undoOnce();
     } else {
@@ -316,9 +338,37 @@ export const runUserFieldNotifyReplayCase = async (
       },
     );
 
+    // Diagnostic, after the checkpoint returns - outside it again, so the
+    // database is reachable. Reads back what the restore actually wrote and
+    // whether a notification row exists at all, which is what tells apart
+    // "the notification was never created" from "it was created and the
+    // unread-list read did not see it".
+    let probeDiagnostic: Record<string, unknown> | undefined;
+    if (config.replay === "trashRestore") {
+      const db = fixtureDb(context.app);
+      const { schema, table } = await db.physicalTable(tableId);
+      const column = await db.physicalColumn(userFieldId);
+      const quoted = (name: string) => `"${name.replace(/"/g, '""')}"`;
+      const cells = await db.query<{ value: unknown }[]>(
+        `SELECT ${quoted(column)} AS value FROM ${quoted(schema)}.${quoted(table)} WHERE __id = $1`,
+        replayedRecordId,
+      );
+      const rows = await db.query<{ count: number }[]>(
+        `SELECT COUNT(*)::int AS count FROM "notification" WHERE "to_user_id" = $1 AND "url_path" LIKE $2`,
+        assignee.id,
+        `%${tableId}%`,
+      );
+      probeDiagnostic = {
+        restoredCellRaw: cells[0]?.value ?? null,
+        restoredCellType: typeof cells[0]?.value,
+        notificationRowsForTable: Number(rows[0]?.count ?? 0),
+      };
+    }
+
     return {
       details: {
         replay: config.replay,
+        probeDiagnostic,
         tableId,
         assigneeId: assignee.id,
         recordId,

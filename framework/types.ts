@@ -696,7 +696,7 @@ export interface UserFieldNotifyReplayCaseConfig {
   // The last two are the ones that needed a second guard: a replay re-issues
   // the original request, so its source still reads 'user' and only the
   // execution context says it is a replay.
-  replay: "undoDelete" | "undoClear";
+  replay: "undoDelete" | "undoClear" | "trashRestore";
   rowTitle: string;
   // How long the first assignment's notification may take before the case
   // gives up and calls the pipeline broken.
