@@ -33,6 +33,7 @@ export interface BugCaseConfigByRunner {
   "paste-by-id-alignment": PasteByIdAlignmentCaseConfig;
   "search-view-filter": SearchViewFilterCaseConfig;
   "user-field-notify-bulk-action": UserFieldNotifyBulkActionCaseConfig;
+  "user-field-notify-replay": UserFieldNotifyReplayCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -675,5 +676,38 @@ export interface UserFieldNotifyBulkActionCaseConfig {
   // How long the moved row may take to become readable with the user in it.
   // Import lands asynchronously, so this is not the same clock as the others.
   rowVisibleTimeoutMs: number;
+  pollIntervalMs: number;
+}
+
+// An assignment the person was already told about -> put it back through a
+// path that only replays it -> checkpoint: they hear nothing the second time.
+// Same control-then-quiet skeleton as UserFieldNotifyBulkActionCaseConfig, but
+// the control is the first assignment on the table under test rather than a
+// separate table, because the record has to be assigned before it can be
+// replayed. The unread list is marked read in between, which is what makes
+// "no unread notification" mean "nothing new".
+export interface UserFieldNotifyReplayCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Which replay puts the assignment back.
+  //   recordDuplicate - copy the row; the copy arrives already assigned
+  //   trashRestore    - delete the row and restore it from the trash
+  //   undoDelete      - delete the row and undo, replaying the create
+  //   undoClear       - clear the assignee and undo, replaying the update
+  // The last two are the ones that needed a second guard: a replay re-issues
+  // the original request, so its source still reads 'user' and only the
+  // execution context says it is a replay.
+  replay: "recordDuplicate" | "trashRestore" | "undoDelete" | "undoClear";
+  rowTitle: string;
+  // How long the first assignment's notification may take before the case
+  // gives up and calls the pipeline broken.
+  notifyTimeoutMs: number;
+  // How long silence has to hold afterwards. Refused at runtime if it is not
+  // at least three times the control latency actually observed.
+  quietTimeoutMs: number;
+  // How long the replay may take to be readable - the trash entry to appear,
+  // the row to come back with its assignment. Not the same clock as the quiet
+  // budget, which only starts once the replay is visible.
+  replaySettleTimeoutMs: number;
   pollIntervalMs: number;
 }

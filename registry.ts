@@ -28,6 +28,10 @@ import searchStaysInsideViewFilterCase from "./cases/search/stays-inside-view-fi
 import tableTrashDegradesInboundLinkWithoutDisplayColumnCase from "./cases/table/trash-degrades-inbound-link-without-display-column.case";
 import userFieldImportDoesNotNotifyAssigneeCase from "./cases/user-field/import-does-not-notify-assignee.case";
 import userFieldTableDuplicateDoesNotNotifyAssigneeCase from "./cases/user-field/table-duplicate-does-not-notify-assignee.case";
+import userFieldRecordDuplicateDoesNotRenotifyAssigneeCase from "./cases/user-field/record-duplicate-does-not-renotify-assignee.case";
+import userFieldTrashRestoreDoesNotRenotifyAssigneeCase from "./cases/user-field/trash-restore-does-not-renotify-assignee.case";
+import userFieldUndoOfDeleteDoesNotRenotifyAssigneeCase from "./cases/user-field/undo-of-delete-does-not-renotify-assignee.case";
+import userFieldUndoOfClearDoesNotRenotifyAssigneeCase from "./cases/user-field/undo-of-clear-does-not-renotify-assignee.case";
 import type { BugCase } from "./framework/types";
 
 // Every runnable case, registered explicitly. scripts/case-catalog.mjs parses
@@ -64,6 +68,10 @@ const cases = [
   tableTrashDegradesInboundLinkWithoutDisplayColumnCase,
   userFieldImportDoesNotNotifyAssigneeCase,
   userFieldTableDuplicateDoesNotNotifyAssigneeCase,
+  userFieldRecordDuplicateDoesNotRenotifyAssigneeCase,
+  userFieldTrashRestoreDoesNotRenotifyAssigneeCase,
+  userFieldUndoOfDeleteDoesNotRenotifyAssigneeCase,
+  userFieldUndoOfClearDoesNotRenotifyAssigneeCase,
 ] satisfies BugCase[];
 
 const caseById = new Map<string, BugCase>(

@@ -21,6 +21,7 @@ import { runSearchViewFilterCase } from "./runners/search-view-filter.runner";
 import { runShareSaveCase } from "./runners/share-save.runner";
 import { runTableTrashInboundLinkCase } from "./runners/table-trash-inbound-link.runner";
 import { runUserFieldNotifyBulkActionCase } from "./runners/user-field-notify-bulk-action.runner";
+import { runUserFieldNotifyReplayCase } from "./runners/user-field-notify-replay.runner";
 import { runViewFilterRealtimeCase } from "./runners/view-filter-realtime.runner";
 import { runViewPropertyRealtimeCase } from "./runners/view-property-realtime.runner";
 import { runViewFilterRoundtripCase } from "./runners/view-filter-roundtrip.runner";
@@ -67,6 +68,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "paste-by-id-alignment": runPasteByIdAlignmentCase,
   "search-view-filter": runSearchViewFilterCase,
   "user-field-notify-bulk-action": runUserFieldNotifyBulkActionCase,
+  "user-field-notify-replay": runUserFieldNotifyReplayCase,
 };
 
 export const executeRegisteredRunner = (
