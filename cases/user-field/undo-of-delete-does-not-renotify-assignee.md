@@ -91,21 +91,28 @@ fixture held — the restored row comes back carrying its assignee, so this is
 not a case that failed to build its precondition. A case green on both columns
 warns about nothing, so it was not kept.
 
-**Why it stays silent is not established.** Reading the code says it should
-notify: before the fix the restore published its batch-created event with no
-source at all, which defaults to `user`, and the event does carry the field
-values. So the measurement and the code disagree, and the reason is still open.
-Two candidates neither confirmed nor ruled out: the cell value in a trash
-snapshot may not have the shape the notification extractor requires (it wants
-an object with a string `id`), or the restore this case drives may not reach
-that handler at all. Settling it needs one run that reads the restored cell
-back raw; until then this paragraph is a question, not a finding.
+**It is now measured, and the shape theory is dead.** A diagnostic run
+(32584328782) re-added this variant with a probe that reads, after the
+checkpoint, the restored cell straight out of the physical column and counts
+the `notification` rows addressed to the assignee for this table. On both
+columns the cell holds a full user object — `id`, `email`, `title`,
+`avatarUrl`, a string id, exactly the shape the notification extractor wants —
+and the table has one notification row, the control assignment. Not a delayed
+delivery, not a notification the assignee's list failed to show: nothing was
+ever written.
+
+So the value is republished and the notification is not produced. Of the two
+candidates, "the trash snapshot's cell has the wrong shape" is ruled out and
+"the restore does not reach that handler" is what is left, unproven. The
+stored cell is what the event would carry, which is close to the event payload
+but not the same reading; confirming it needs the event itself, not the column.
 
 Worth flagging either way: the issue lists restore as notifying on both
 engines, but its own confidence note puts that row in the group that was
 "confirmed to go through the record create/update path but not run one by one".
-It is an inference. This measurement disagrees with it, and neither side has
-been closed out.
+It is an inference, and the measurement above contradicts it on the only
+evidence either side has: no notification row is written, before the fix or
+after.
 
 **Duplicating a record** was written, run, and also dropped — for the opposite
 reason. It reproduces on the parent _and_ on `develop`: the notification simply
