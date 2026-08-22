@@ -1,66 +1,51 @@
 # user-field/record-duplicate-does-not-renotify-assignee
 
-**T6663** — fixed. One of four cases on the `user-field-notify-replay` runner;
-this file carries the parts they share.
+**T6663** — **open**. On the `user-field-notify-replay` runner; the shared
+design is described in `user-field/undo-of-delete-does-not-renotify-assignee`.
 
-## What changed, and why it needed four cases
+## What this case found
 
-T6662 named two paths that must not notify: CSV import and table duplicate.
-T6663 turned that inside out. Only _someone is assigning you right now_
-notifies — user actions and form submissions — and everything else is silent by
-default, including source types nobody has written yet. A list of exceptions
-has to be extended every time a new way of moving records appears; a whitelist
-does not.
+Duplicating a record still notifies the assignee a second time. Not only on the
+fix's parent — on `develop` too. This case is the only one of the three on this
+runner that reproduces on both columns, which is why its status is `open`
+rather than `fixed`.
 
-Four paths fell through the old list, and they fail for two different reasons:
+|                   | `8706bd35d` (pre-fix) | `develop` |
+| ----------------- | --------------------- | --------- |
+| notification      | arrives               | arrives   |
+| after the request | 9 ms                  | 9.7 s     |
 
-- **`recordDuplicate`** and **`trashRestore`** create a record whose user cell
-  arrives already filled. The old rule saw a create with a user in it.
-- **`undoDelete`** and **`undoClear`** replay the original request, so the
-  event they publish still says its source was a user. Nothing in the event
-  distinguishes a replay from the real thing; only the execution context does,
-  which is where the second guard reads it from.
+The delay is the whole story. The same PR that stopped the duplicate's _create_
+from notifying also introduced a 10-second window that coalesces notifications
+per actor and table. 9.7 s is that window flushing. So the create projection is
+being skipped exactly as intended — and something the duplicate does after the
+create still reaches the dispatcher and buffers into the window opened by the
+first, legitimate assignment.
 
-Two of each, so a fix that repaired one mechanism and not the other cannot go
-unnoticed.
+## How that was isolated
 
-## Why re-notification is worse than notification
+The other two cases on this runner share every step of this one except the
+action: same table shape, same first assignment, same control notification at
+roughly half a second, same 25-second quiet budget spanning well past ten
+seconds. Both stayed silent for the whole budget on both columns.
 
-Every variant here is a _second_ delivery of an assignment the person already
-received a notification for. Not a stranger's notification they can dismiss as
-noise — the same one again, for an action they were not part of and cannot see.
-Restoring a bin of a hundred rows re-announces a hundred assignments that
-nobody made.
+So the delayed notification is not a second copy of the control, and not a
+property of the runner. It follows the duplicate.
 
-## How silence is made trustworthy
+## Why the fix's own test does not see it
 
-The record has to be assigned before it can be replayed, so the notification
-that first assignment produces is free — and it is the control. Waiting for it
-establishes both that notifications work on this commit and how long they take
-here; the quiet budget is refused at runtime unless it is at least three times
-the latency actually measured.
+Its negative assertion waits 8 seconds. The coalescing window is 10. The test
+stops looking two seconds before the notification is delivered, and the same PR
+introduced both numbers.
 
-It is then marked read through the endpoint behind the bell icon's "mark all
-read", and the runner checks the unread list is actually empty afterwards. That
-is what makes "no unread notification" mean _nothing new_ rather than _nothing
-ever_ — without it the checkpoint would count the first assignment as if the
-replay had sent it.
+That gap is the reason this case is worth keeping in an `open` state rather
+than dropped: the behavior is invisible to the suite that was written for it,
+and a case that reproduces on `develop` and says so is exactly what an `open`
+status is for. If it starts passing, the lab reports it as unexpectedly fixed
+and asks for the status to be flipped.
 
-Observation is the assignee's own unread list, on a real second session.
-Reading the notification table would prove a row exists, not that it reached
-anyone.
+## The budget
 
-## Routing
-
-`FORCE_V2_ALL` is on for the whole process, so every operation with a v2 path
-takes it — but only tagged controllers emit the feature header, and the trash
-and undo-redo controllers do not. So the assertion is anchored on the assigned
-create, which every variant depends on and which is what publishes the event
-the projection listens to; each action's own headers are recorded as data.
-What proves the action reached the projection is the pre-fix column going red.
-
-## This variant
-
-Duplicate the assigned record. The copy arrives with the user cell already
-filled, and the assertion is scoped to the whole table, so a notification for
-either row trips it.
+`quietTimeoutMs` is deliberately longer than the coalescing window. A budget
+that stopped at eight seconds would have reported this case green on `develop`
+and shipped a fix that is not there.

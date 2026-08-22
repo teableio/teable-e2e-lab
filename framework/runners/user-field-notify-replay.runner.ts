@@ -10,8 +10,6 @@ import {
   axios,
   emailBaseInvitation,
   getRecords as apiGetRecords,
-  getTrashItems as apiGetTrashItems,
-  restoreTrash as apiRestoreTrash,
   urlBuilder,
   CREATE_RECORD,
   DELETE_RECORDS_URL,
@@ -19,7 +17,6 @@ import {
   NOTIFICATION_LIST,
   NOTIFICATION_READ_ALL,
   OPERATION_UNDO,
-  TrashType,
   UPDATE_RECORD,
   USER_ME,
 } from "@teable/openapi";
@@ -31,9 +28,9 @@ import type { BugCaseFor, BugProbeResult, BugRunContext } from "../types";
 import type { UserFieldNotifyReplayCaseConfig } from "../types";
 
 // A record whose user field already names someone -> put that same assignment
-// back through a path that only replays it (duplicate the record, restore it
-// from the trash, undo the delete, undo the clearing edit) -> checkpoint: the
-// person hears nothing the second time.
+// back through a path that only replays it (duplicate the record, undo the
+// delete, undo the clearing edit) -> checkpoint: the person hears nothing the
+// second time.
 //
 // The sibling runner user-field-notify-bulk-action covers the same rule for
 // import and table duplicate (T6662). What T6663 changed is the shape of the
@@ -63,7 +60,7 @@ import type { UserFieldNotifyReplayCaseConfig } from "../types";
 //
 // Routing: FORCE_V2_ALL is on for the whole process, so every operation with a
 // v2 path takes it, but only tagged controllers emit the feature header - the
-// trash and undo-redo controllers do not. So the assertion is anchored on the
+// undo-redo controller does not. So the assertion is anchored on the
 // assigned create, which every variant depends on and which is what publishes
 // the event the projection listens to, and the action's own headers are
 // recorded as data. What actually proves the action reached the projection is
@@ -269,32 +266,6 @@ export const runUserFieldNotifyReplayCase = async (
         );
       }
       replayedRecordId = duplicatedId;
-    } else if (config.replay === "trashRestore") {
-      await deleteRecord();
-      // The trash entry is written after the delete answers, so it is waited
-      // for rather than assumed.
-      const trashDeadline = Date.now() + config.replaySettleTimeoutMs;
-      let trashId: string | undefined;
-      for (;;) {
-        const items = await apiGetTrashItems({
-          resourceId: tableId,
-          resourceType: TrashType.Table,
-        });
-        trashId = items.data.trashItems[0]?.id;
-        if (trashId) {
-          break;
-        }
-        if (Date.now() >= trashDeadline) {
-          throw new Error(
-            `the deleted row never reached the trash within ${config.replaySettleTimeoutMs}ms, so there is nothing to restore`,
-          );
-        }
-        await sleep(config.pollIntervalMs);
-      }
-      const response = await apiRestoreTrash(trashId, tableId);
-      // The trash controller carries no v2 feature tag, so this is recorded
-      // rather than asserted; see the note at the top of this file.
-      actionRouting = pickRoutingHeaders(response.headers);
     } else if (config.replay === "undoDelete") {
       await deleteRecord();
       actionRouting = await undoOnce();

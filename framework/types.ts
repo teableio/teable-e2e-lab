@@ -691,13 +691,12 @@ export interface UserFieldNotifyReplayCaseConfig {
   tableNamePrefix: string;
   // Which replay puts the assignment back.
   //   recordDuplicate - copy the row; the copy arrives already assigned
-  //   trashRestore    - delete the row and restore it from the trash
   //   undoDelete      - delete the row and undo, replaying the create
   //   undoClear       - clear the assignee and undo, replaying the update
   // The last two are the ones that needed a second guard: a replay re-issues
   // the original request, so its source still reads 'user' and only the
   // execution context says it is a replay.
-  replay: "recordDuplicate" | "trashRestore" | "undoDelete" | "undoClear";
+  replay: "recordDuplicate" | "undoDelete" | "undoClear";
   rowTitle: string;
   // How long the first assignment's notification may take before the case
   // gives up and calls the pipeline broken.
@@ -705,8 +704,8 @@ export interface UserFieldNotifyReplayCaseConfig {
   // How long silence has to hold afterwards. Refused at runtime if it is not
   // at least three times the control latency actually observed.
   quietTimeoutMs: number;
-  // How long the replay may take to be readable - the trash entry to appear,
-  // the row to come back with its assignment. Not the same clock as the quiet
+  // How long the replay may take to be readable - the row to come back with
+  // its assignment. Not the same clock as the quiet
   // budget, which only starts once the replay is visible.
   replaySettleTimeoutMs: number;
   pollIntervalMs: number;

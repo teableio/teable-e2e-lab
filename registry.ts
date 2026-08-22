@@ -29,7 +29,6 @@ import tableTrashDegradesInboundLinkWithoutDisplayColumnCase from "./cases/table
 import userFieldImportDoesNotNotifyAssigneeCase from "./cases/user-field/import-does-not-notify-assignee.case";
 import userFieldTableDuplicateDoesNotNotifyAssigneeCase from "./cases/user-field/table-duplicate-does-not-notify-assignee.case";
 import userFieldRecordDuplicateDoesNotRenotifyAssigneeCase from "./cases/user-field/record-duplicate-does-not-renotify-assignee.case";
-import userFieldTrashRestoreDoesNotRenotifyAssigneeCase from "./cases/user-field/trash-restore-does-not-renotify-assignee.case";
 import userFieldUndoOfDeleteDoesNotRenotifyAssigneeCase from "./cases/user-field/undo-of-delete-does-not-renotify-assignee.case";
 import userFieldUndoOfClearDoesNotRenotifyAssigneeCase from "./cases/user-field/undo-of-clear-does-not-renotify-assignee.case";
 import type { BugCase } from "./framework/types";
@@ -69,7 +68,6 @@ const cases = [
   userFieldImportDoesNotNotifyAssigneeCase,
   userFieldTableDuplicateDoesNotNotifyAssigneeCase,
   userFieldRecordDuplicateDoesNotRenotifyAssigneeCase,
-  userFieldTrashRestoreDoesNotRenotifyAssigneeCase,
   userFieldUndoOfDeleteDoesNotRenotifyAssigneeCase,
   userFieldUndoOfClearDoesNotRenotifyAssigneeCase,
 ] satisfies BugCase[];

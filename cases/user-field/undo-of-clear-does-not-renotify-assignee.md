@@ -1,8 +1,8 @@
 # user-field/undo-of-clear-does-not-renotify-assignee
 
 **T6663** — fixed. On the `user-field-notify-replay` runner; the shared design
-is described in `user-field/record-duplicate-does-not-renotify-assignee`.
-Sibling of `user-field/undo-of-delete-does-not-renotify-assignee`.
+is described in `user-field/undo-of-delete-does-not-renotify-assignee`, which
+is also this case's sibling.
 
 ## This variant
 
