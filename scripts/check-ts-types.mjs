@@ -50,7 +50,12 @@ const VITEST_GLOBALS = [
 
 // Resolved targets of the cross-repo relative imports, rooted at the temp
 // directory standing in for community/apps/nestjs-backend.
-const RELATIVE_MODULE_STUBS = ["test/utils/init-app"];
+const RELATIVE_MODULE_STUBS = [
+  "test/utils/init-app",
+  // Used by the user-field notification cases to sign up the second person
+  // whose notification list is the observation.
+  "test/utils/axios-instance/new-user",
+];
 
 const collectTsFiles = async (dir) => {
   const entries = await readdir(dir, { withFileTypes: true });

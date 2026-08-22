@@ -32,6 +32,7 @@ export interface BugCaseConfigByRunner {
   "excel-import-offset-header": ExcelImportOffsetHeaderCaseConfig;
   "paste-by-id-alignment": PasteByIdAlignmentCaseConfig;
   "search-view-filter": SearchViewFilterCaseConfig;
+  "user-field-notify-bulk-action": UserFieldNotifyBulkActionCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -645,4 +646,34 @@ export interface SearchViewFilterCaseConfig {
   // The rows, one per name. The runner refuses a set that does not populate
   // all three quadrants it needs; see rowProblems() for which and why.
   rows: { name: string; inView: boolean; matches: boolean }[];
+}
+
+// A second person assigned in a user field -> move that assignment in bulk ->
+// checkpoint: their notification list stays empty for the whole quiet budget.
+// The budget is the assertion, and it is only trusted because the same run
+// first measured how long a real notification takes on this commit.
+export interface UserFieldNotifyBulkActionCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Which bulk path moves the assignment. Both re-deliver a user cell that
+  // was already populated; they differ only in how the runner produces it,
+  // which is why they share a runner rather than duplicating the control
+  // measurement and the quiet loop.
+  action: "import" | "tableDuplicate";
+  // The control row, created on a throwaway table with a plain record create.
+  // Its notification is the proof that notifications work here at all.
+  controlRowTitle: string;
+  // The row the bulk action moves. Read back before the checkpoint: an
+  // assignment that never landed could not have notified anyone.
+  actionRowTitle: string;
+  // How long the control notification may take before the case gives up and
+  // calls the pipeline broken.
+  notifyTimeoutMs: number;
+  // How long silence has to hold. Refused at runtime if it is not at least
+  // three times the control latency actually observed.
+  quietTimeoutMs: number;
+  // How long the moved row may take to become readable with the user in it.
+  // Import lands asynchronously, so this is not the same clock as the others.
+  rowVisibleTimeoutMs: number;
+  pollIntervalMs: number;
 }
