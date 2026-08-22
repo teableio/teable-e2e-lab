@@ -99,16 +99,30 @@ export const runUserFieldNotifyBulkActionCase = async (
     // A real signup rather than a row written into `users`: the assignee has
     // to be able to call the notification endpoint as themselves, and only a
     // real session can do that.
-    const assigneeEmail = `e2e-lab-notify-${context.runId}@example.com`;
+    //
+    // The address carries the case's own prefix as well as the run id: the two
+    // cases on this runner share a run, and a single address would make the
+    // second one invite a collaborator the first had already added. That is a
+    // 400, and it errored both columns of the first run this case ever had.
+    const assigneeEmail = `${config.tableNamePrefix}-${context.runId}@example.com`;
     const assigneeAxios = await createNewUserAxios({
       email: assigneeEmail,
       password: "12345678a",
     });
     const assignee = (await assigneeAxios.get<IUserMeVo>(USER_ME)).data;
-    await emailBaseInvitation({
-      baseId,
-      emailBaseInvitationRo: { emails: [assigneeEmail], role: Role.Editor },
-    });
+    try {
+      await emailBaseInvitation({
+        baseId,
+        emailBaseInvitationRo: { emails: [assigneeEmail], role: Role.Editor },
+      });
+    } catch (error) {
+      // Already a collaborator is the state this asks for, not a failure - a
+      // re-run against a database an earlier run touched would hit it.
+      const message = error instanceof Error ? error.message : String(error);
+      if (!/already exist/i.test(message)) {
+        throw error;
+      }
+    }
 
     const listNotifications = async (tableId: string) => {
       const response = await assigneeAxios.get<INotificationVo>(
