@@ -86,19 +86,26 @@ both go red on its parent, so they are guarding something real.
 ## Two variants that were written and dropped
 
 **Restoring from the trash** was the obvious third path here, and it is in fact
-the issue's headline ask. It notifies nobody on the fix's parent either.
+the issue's headline ask. It notifies nobody on the fix's parent either. The
+fixture held — the restored row comes back carrying its assignee, so this is
+not a case that failed to build its precondition. A case green on both columns
+warns about nothing, so it was not kept.
 
-The fixture held — the restored row comes back carrying its assignee, so this
-is not a case that failed to build its precondition. The restore simply does
-not republish the user cell, so there was never a notification for the fix to
-stop on this route. A case green on both columns warns about nothing, so it was
-not kept. This paragraph is the record; the commit itself is settled by the
-cases that did reproduce, which is why there is no triage-ledger row for it.
+**Why it stays silent is not established.** Reading the code says it should
+notify: before the fix the restore published its batch-created event with no
+source at all, which defaults to `user`, and the event does carry the field
+values. So the measurement and the code disagree, and the reason is still open.
+Two candidates neither confirmed nor ruled out: the cell value in a trash
+snapshot may not have the shape the notification extractor requires (it wants
+an object with a string `id`), or the restore this case drives may not reach
+that handler at all. Settling it needs one run that reads the restored cell
+back raw; until then this paragraph is a question, not a finding.
 
-Worth flagging rather than burying: the issue lists restore as notifying on
-both engines, but its own confidence note puts that row in the group that was
+Worth flagging either way: the issue lists restore as notifying on both
+engines, but its own confidence note puts that row in the group that was
 "confirmed to go through the record create/update path but not run one by one".
-It is an inference, not a measurement. This measurement disagrees with it.
+It is an inference. This measurement disagrees with it, and neither side has
+been closed out.
 
 **Duplicating a record** was written, run, and also dropped — for the opposite
 reason. It reproduces on the parent _and_ on `develop`: the notification simply
