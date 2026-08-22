@@ -13,7 +13,6 @@ import {
   urlBuilder,
   CREATE_RECORD,
   DELETE_RECORDS_URL,
-  DUPLICATE_URL,
   NOTIFICATION_LIST,
   NOTIFICATION_READ_ALL,
   OPERATION_UNDO,
@@ -28,9 +27,8 @@ import type { BugCaseFor, BugProbeResult, BugRunContext } from "../types";
 import type { UserFieldNotifyReplayCaseConfig } from "../types";
 
 // A record whose user field already names someone -> put that same assignment
-// back through a path that only replays it (duplicate the record, undo the
-// delete, undo the clearing edit) -> checkpoint: the person hears nothing the
-// second time.
+// back by replaying the request that made it (undo a delete, undo a clearing
+// edit) -> checkpoint: the person hears nothing the second time.
 //
 // The sibling runner user-field-notify-bulk-action covers the same rule for
 // import and table duplicate (T6662). What T6663 changed is the shape of the
@@ -244,29 +242,11 @@ export const runUserFieldNotifyReplayCase = async (
       return pickRoutingHeaders(response.headers);
     };
 
-    // The record the assertion reads back afterwards. For every variant but
-    // the duplicate that is the original row; the duplicate makes a new one.
-    let replayedRecordId = recordId;
+    // Both variants replay onto the original row.
+    const replayedRecordId = recordId;
     let actionRouting;
 
-    if (config.replay === "recordDuplicate") {
-      const response = await axios.post(
-        urlBuilder(DUPLICATE_URL, { tableId, recordId }),
-        undefined,
-        { headers: windowHeaders },
-      );
-      actionRouting = assertServedByV2(response.headers, {
-        operation: "POST /table/{tableId}/record/{recordId}/duplicate",
-        feature: "duplicateRecord",
-      });
-      const duplicatedId = (response.data as { id?: string } | undefined)?.id;
-      if (!duplicatedId) {
-        throw new Error(
-          `duplicating ${recordId} returned no record: ${JSON.stringify(response.data)}`,
-        );
-      }
-      replayedRecordId = duplicatedId;
-    } else if (config.replay === "undoDelete") {
+    if (config.replay === "undoDelete") {
       await deleteRecord();
       actionRouting = await undoOnce();
     } else {

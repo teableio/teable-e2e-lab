@@ -691,13 +691,12 @@ export interface UserFieldNotifyReplayCaseConfig {
   baseId: "seed-base";
   tableNamePrefix: string;
   // Which replay puts the assignment back.
-  //   recordDuplicate - copy the row; the copy arrives already assigned
   //   undoDelete      - delete the row and undo, replaying the create
   //   undoClear       - clear the assignee and undo, replaying the update
   // The last two are the ones that needed a second guard: a replay re-issues
   // the original request, so its source still reads 'user' and only the
   // execution context says it is a replay.
-  replay: "recordDuplicate" | "undoDelete" | "undoClear";
+  replay: "undoDelete" | "undoClear";
   rowTitle: string;
   // How long the first assignment's notification may take before the case
   // gives up and calls the pipeline broken.

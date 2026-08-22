@@ -69,18 +69,49 @@ The undo stack is keyed by it: a missing or mismatched id undoes nothing, the
 undo answers with a status that is not `fulfilled`, and the runner refuses
 rather than sit through a quiet budget watching an action that never happened.
 
-## A fourth variant that was written and dropped
+## What this group does and does not answer
 
-Restoring a deleted record from the trash was the obvious fourth path, and the
-fix touches its handler too. It notifies nobody on the fix's parent either.
+The issue behind it asks for two things: restoring a record from the trash, and
+undoing a delete, should not notify. It is a Feature request, not a bug report
+— the behavior was the same on both engines and the ask is a product change.
+
+The PR that answered it did more than that. It replaced the list of paths that
+must stay quiet with a whitelist, and it added a window that coalesces bursts.
+Two cases in this group cover that additional scope rather than the issue text:
+this runner's `undoClear` variant (the issue says _delete_, not _clear the
+assignee_), and `user-field/assignment-burst-arrives-coalesced`. Both are
+tracked under the same issue because that is where the change came from, and
+both go red on its parent, so they are guarding something real.
+
+## Two variants that were written and dropped
+
+**Restoring from the trash** was the obvious third path here, and it is in fact
+the issue's headline ask. It notifies nobody on the fix's parent either.
 
 The fixture held — the restored row comes back carrying its assignee, so this
 is not a case that failed to build its precondition. The restore simply does
 not republish the user cell, so there was never a notification for the fix to
 stop on this route. A case green on both columns warns about nothing, so it was
 not kept. This paragraph is the record; the commit itself is settled by the
-three cases that did reproduce, which is why there is no triage-ledger row for
-it.
+cases that did reproduce, which is why there is no triage-ledger row for it.
+
+Worth flagging rather than burying: the issue lists restore as notifying on
+both engines, but its own confidence note puts that row in the group that was
+"confirmed to go through the record create/update path but not run one by one".
+It is an inference, not a measurement. This measurement disagrees with it.
+
+**Duplicating a record** was written, run, and also dropped — for the opposite
+reason. It reproduces on the parent _and_ on `develop`: the notification simply
+arrives at the coalescing flush, around 9.7s instead of 9ms. But no issue asks
+for record duplicate to be silent. The comparison table in the sibling issue
+lists it as notifying on both engines today, and this issue excludes it by
+name.
+
+What makes it interesting anyway is that the PR added a `recordDuplicate`
+source and left it out of the whitelist, so the code states an intent it does
+not keep. That is a question for whoever owns the behavior, not something this
+lab should encode as a requirement on its own, so the case is not shipped. It
+is one commit away if the answer is that duplicates should be silent.
 
 ## This variant
 

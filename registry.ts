@@ -28,7 +28,6 @@ import searchStaysInsideViewFilterCase from "./cases/search/stays-inside-view-fi
 import tableTrashDegradesInboundLinkWithoutDisplayColumnCase from "./cases/table/trash-degrades-inbound-link-without-display-column.case";
 import userFieldImportDoesNotNotifyAssigneeCase from "./cases/user-field/import-does-not-notify-assignee.case";
 import userFieldTableDuplicateDoesNotNotifyAssigneeCase from "./cases/user-field/table-duplicate-does-not-notify-assignee.case";
-import userFieldRecordDuplicateDoesNotRenotifyAssigneeCase from "./cases/user-field/record-duplicate-does-not-renotify-assignee.case";
 import userFieldUndoOfDeleteDoesNotRenotifyAssigneeCase from "./cases/user-field/undo-of-delete-does-not-renotify-assignee.case";
 import userFieldUndoOfClearDoesNotRenotifyAssigneeCase from "./cases/user-field/undo-of-clear-does-not-renotify-assignee.case";
 import userFieldAssignmentBurstArrivesCoalescedCase from "./cases/user-field/assignment-burst-arrives-coalesced.case";
@@ -68,7 +67,6 @@ const cases = [
   tableTrashDegradesInboundLinkWithoutDisplayColumnCase,
   userFieldImportDoesNotNotifyAssigneeCase,
   userFieldTableDuplicateDoesNotNotifyAssigneeCase,
-  userFieldRecordDuplicateDoesNotRenotifyAssigneeCase,
   userFieldUndoOfDeleteDoesNotRenotifyAssigneeCase,
   userFieldUndoOfClearDoesNotRenotifyAssigneeCase,
   userFieldAssignmentBurstArrivesCoalescedCase,
