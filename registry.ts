@@ -31,6 +31,7 @@ import userFieldTableDuplicateDoesNotNotifyAssigneeCase from "./cases/user-field
 import userFieldRecordDuplicateDoesNotRenotifyAssigneeCase from "./cases/user-field/record-duplicate-does-not-renotify-assignee.case";
 import userFieldUndoOfDeleteDoesNotRenotifyAssigneeCase from "./cases/user-field/undo-of-delete-does-not-renotify-assignee.case";
 import userFieldUndoOfClearDoesNotRenotifyAssigneeCase from "./cases/user-field/undo-of-clear-does-not-renotify-assignee.case";
+import userFieldAssignmentBurstArrivesCoalescedCase from "./cases/user-field/assignment-burst-arrives-coalesced.case";
 import type { BugCase } from "./framework/types";
 
 // Every runnable case, registered explicitly. scripts/case-catalog.mjs parses
@@ -70,6 +71,7 @@ const cases = [
   userFieldRecordDuplicateDoesNotRenotifyAssigneeCase,
   userFieldUndoOfDeleteDoesNotRenotifyAssigneeCase,
   userFieldUndoOfClearDoesNotRenotifyAssigneeCase,
+  userFieldAssignmentBurstArrivesCoalescedCase,
 ] satisfies BugCase[];
 
 const caseById = new Map<string, BugCase>(

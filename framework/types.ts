@@ -34,6 +34,7 @@ export interface BugCaseConfigByRunner {
   "search-view-filter": SearchViewFilterCaseConfig;
   "user-field-notify-bulk-action": UserFieldNotifyBulkActionCaseConfig;
   "user-field-notify-replay": UserFieldNotifyReplayCaseConfig;
+  "user-field-notify-burst": UserFieldNotifyBurstCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -709,4 +710,27 @@ export interface UserFieldNotifyReplayCaseConfig {
   // budget, which only starts once the replay is visible.
   replaySettleTimeoutMs: number;
   pollIntervalMs: number;
+}
+
+// Assign the same person on N records in a row -> checkpoint: they get a
+// handful of notifications, not N. The ceiling is asserted rather than an
+// exact count: the fix delivers the first immediately and merges the rest,
+// so the steady state is two, and where the burst lands inside the window is
+// timing this case must not fail on.
+export interface UserFieldNotifyBurstCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  rowTitlePrefix: string;
+  // How many separate assignments to make. One request each, not one batch:
+  // a batch is a single act of assignment and always produced a single
+  // notification.
+  burstSize: number;
+  // The ceiling. The runner refuses a value that is not strictly between the
+  // coalesced result (2) and burstSize, because outside that range the
+  // assertion cannot separate the two behaviors.
+  maxNotifications: number;
+  // How long to wait after the burst before counting. Has to outlast the
+  // coalescing window, or the count reads the first instant delivery as the
+  // whole story and passes on a commit that coalesces nothing.
+  settleAfterBurstMs: number;
 }

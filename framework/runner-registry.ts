@@ -21,6 +21,7 @@ import { runSearchViewFilterCase } from "./runners/search-view-filter.runner";
 import { runShareSaveCase } from "./runners/share-save.runner";
 import { runTableTrashInboundLinkCase } from "./runners/table-trash-inbound-link.runner";
 import { runUserFieldNotifyBulkActionCase } from "./runners/user-field-notify-bulk-action.runner";
+import { runUserFieldNotifyBurstCase } from "./runners/user-field-notify-burst.runner";
 import { runUserFieldNotifyReplayCase } from "./runners/user-field-notify-replay.runner";
 import { runViewFilterRealtimeCase } from "./runners/view-filter-realtime.runner";
 import { runViewPropertyRealtimeCase } from "./runners/view-property-realtime.runner";
@@ -69,6 +70,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "search-view-filter": runSearchViewFilterCase,
   "user-field-notify-bulk-action": runUserFieldNotifyBulkActionCase,
   "user-field-notify-replay": runUserFieldNotifyReplayCase,
+  "user-field-notify-burst": runUserFieldNotifyBurstCase,
 };
 
 export const executeRegisteredRunner = (
