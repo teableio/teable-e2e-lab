@@ -26,6 +26,11 @@ import importExcelHeaderBelowA1Case from "./cases/import/excel-header-below-a1.c
 import selectionPasteByIdLandsOnItsOwnRowsCase from "./cases/selection/paste-by-id-lands-on-its-own-rows.case";
 import searchStaysInsideViewFilterCase from "./cases/search/stays-inside-view-filter.case";
 import tableTrashDegradesInboundLinkWithoutDisplayColumnCase from "./cases/table/trash-degrades-inbound-link-without-display-column.case";
+import userFieldImportDoesNotNotifyAssigneeCase from "./cases/user-field/import-does-not-notify-assignee.case";
+import userFieldTableDuplicateDoesNotNotifyAssigneeCase from "./cases/user-field/table-duplicate-does-not-notify-assignee.case";
+import userFieldUndoOfDeleteDoesNotRenotifyAssigneeCase from "./cases/user-field/undo-of-delete-does-not-renotify-assignee.case";
+import userFieldUndoOfClearDoesNotRenotifyAssigneeCase from "./cases/user-field/undo-of-clear-does-not-renotify-assignee.case";
+import userFieldAssignmentBurstArrivesCoalescedCase from "./cases/user-field/assignment-burst-arrives-coalesced.case";
 import type { BugCase } from "./framework/types";
 
 // Every runnable case, registered explicitly. scripts/case-catalog.mjs parses
@@ -60,6 +65,11 @@ const cases = [
   selectionPasteByIdLandsOnItsOwnRowsCase,
   searchStaysInsideViewFilterCase,
   tableTrashDegradesInboundLinkWithoutDisplayColumnCase,
+  userFieldImportDoesNotNotifyAssigneeCase,
+  userFieldTableDuplicateDoesNotNotifyAssigneeCase,
+  userFieldUndoOfDeleteDoesNotRenotifyAssigneeCase,
+  userFieldUndoOfClearDoesNotRenotifyAssigneeCase,
+  userFieldAssignmentBurstArrivesCoalescedCase,
 ] satisfies BugCase[];
 
 const caseById = new Map<string, BugCase>(
