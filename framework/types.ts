@@ -50,6 +50,7 @@ export interface BugCaseConfigByRunner {
   "repeated-foreign-links": RepeatedForeignLinksCaseConfig;
   "legacy-field-id": LegacyFieldIdCaseConfig;
   "nested-lookup-rename": NestedLookupRenameCaseConfig;
+  "table-restore-scope": TableRestoreScopeCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1026,4 +1027,19 @@ export interface NestedLookupRenameCaseConfig {
   // losing its colors and a list losing everything are hard to tell apart.
   choiceNames: string[];
   renamedTo: string;
+}
+
+// A column deleted long before the table was trashed, and the table restored.
+// Restoring looked for everything marked deleted rather than for what the
+// table's own delete had taken, so the old column came back too.
+export interface TableRestoreScopeCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // How far back the old deletion is dated. At least one hour: deleted in the
+  // same moment as the table, the two are indistinguishable by time, and a
+  // case that cannot tell them apart would pass on a build that restores
+  // everything.
+  backdateHours: number;
+  trashVisibleTimeoutMs: number;
+  pollIntervalMs: number;
 }
