@@ -21,6 +21,8 @@ export default defineBugCase({
     // Inside the second half of 2024: after June 1 and before December 1.
     left: { fn: "IS_AFTER", date: "2024-06-01" },
     right: { fn: "IS_BEFORE", date: "2024-12-01" },
+    // Every row is created on this date and moved to its own afterwards.
+    seedDate: "2024-07-01T00:00:00.000Z",
     rows: [
       {
         name: "before-the-window",

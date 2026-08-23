@@ -1230,6 +1230,10 @@ export interface DateComparisonBooleanCaseConfig {
   combinator: "AND" | "OR";
   left: { fn: "IS_AFTER" | "IS_BEFORE" | "IS_SAME"; date: string };
   right: { fn: "IS_AFTER" | "IS_BEFORE" | "IS_SAME"; date: string };
+  // The date every row is created with, before the formula exists. Each row is
+  // then moved to its own date, so the answer comes from the recompute an
+  // ordinary edit triggers rather than from a new field's backfill.
+  seedDate: string;
   // One row the comparison includes and one it excludes. With only one side, a
   // column stuck on yes and a correct column look the same.
   rows: { name: string; date: string; expected: boolean }[];

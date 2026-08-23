@@ -1,5 +1,8 @@
 import { FieldKeyType, FieldType } from "@teable/core";
-import { getRecords as apiGetRecords } from "@teable/openapi";
+import {
+  getRecords as apiGetRecords,
+  updateRecord as apiUpdateRecord,
+} from "@teable/openapi";
 import {
   createField,
   createTable,
@@ -56,7 +59,7 @@ export const runDateComparisonBooleanCase = async (
         { name: DATE_FIELD, type: FieldType.Date },
       ],
       records: config.rows.map((row) => ({
-        fields: { [NAME_FIELD]: row.name, [DATE_FIELD]: row.date },
+        fields: { [NAME_FIELD]: row.name, [DATE_FIELD]: config.seedDate },
       })),
     });
     tableId = table.id;
@@ -79,6 +82,37 @@ export const runDateComparisonBooleanCase = async (
       type: FieldType.Formula,
       options: { expression },
     });
+
+    // Every row starts on the same date, and each one is moved to its own date
+    // only now that the formula exists. That routes the answer through the
+    // recompute an ordinary edit triggers, not through the one-off backfill a
+    // new formula field runs - measured in run 32672010796, where the backfill
+    // answers correctly on the fix's parent and the case saw nothing.
+    const seeded = await apiGetRecords(tableId, {
+      fieldKeyType: FieldKeyType.Name,
+      take: config.rows.length,
+    });
+    const recordIdByName = new Map<string, string>(
+      seeded.data.records.map(
+        (record: { id: string; fields: Record<string, unknown> }) => [
+          String(record.fields[NAME_FIELD] ?? ""),
+          record.id,
+        ],
+      ),
+    );
+    const dateFieldName = DATE_FIELD;
+    for (const row of config.rows) {
+      const recordId = recordIdByName.get(row.name);
+      if (!recordId) {
+        throw new Error(
+          `row ${row.name} is not in the table - the fixture is not in place`,
+        );
+      }
+      await apiUpdateRecord(tableId, recordId, {
+        fieldKeyType: FieldKeyType.Name,
+        record: { fields: { [dateFieldName]: row.date } },
+      });
+    }
 
     const probe = await bugCheckpoint(
       "a-date-comparison-inside-and-or-still-decides",

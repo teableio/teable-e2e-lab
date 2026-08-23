@@ -20,6 +20,8 @@ export default defineBugCase({
     // On June 1 or after it.
     left: { fn: "IS_AFTER", date: "2024-06-01" },
     right: { fn: "IS_SAME", date: "2024-06-01" },
+    // Every row is created on this date and moved to its own afterwards.
+    seedDate: "2024-07-01T00:00:00.000Z",
     rows: [
       {
         name: "before-the-date",
