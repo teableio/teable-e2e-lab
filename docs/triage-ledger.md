@@ -58,6 +58,35 @@ places — it cannot be settled and skipped at once.
 | `c0ffdb358`  | T6511 | Written and run: clearing a filled text cell with typecast already stored `null` on the fix's parent, so the case is green on both columns. Run 32656127300.                                                                                                                       |
 | `175d1de3f`  | T6728 | Written in three shapes and run three times. Every trigger a small fixture can reach through the public API computes inline, and inline compute fails closed identically on both sides of the fix. See the note below the table.                                                   |
 | `3ff04d015`  | T5453 | Written in two shapes and run twice, green on both columns each time: a single-cell edit already answers with the row's formula recomputed on the fix's parent. See the note below the table.                                                                                      |
+| `0a12e96a0`  | T5496 | The fix is in the v1 generated-column SQL conversion, which nothing in v2 imports. Written in two shapes and run twice anyway; green on both columns each time. See the note below the table.                                                                                      |
+
+### The date comparison inside AND or OR
+
+`0a12e96a0` / T5496. `IS_BEFORE`, `IS_AFTER` and `IS_SAME` were missing from the
+list of functions that produce a yes or a no, so nested inside AND or OR they
+fell through to "has a value, therefore yes" and the comparison was discarded.
+A status column built on a date would say yes to every row that had one.
+
+| shape                                                                   | pre-fix `87eff63c2` / `develop` | run         |
+| ----------------------------------------------------------------------- | ------------------------------- | ----------- |
+| rows seeded with their dates, the formula added last                    | ✅ / ✅                         | 32672010796 |
+| rows seeded on one date and moved to their own after the formula exists | ✅ / ✅                         | 32672297955 |
+
+Both shapes answered correctly on both columns, for all three rows: before the
+window, inside it, after it.
+
+The reason is settled and it is not about the shape of the fixture. The file
+the fix changes is `sql-conversion.visitor.ts` under the v1 backend's
+query-builder, and it is reached only through the v1 generated-column path.
+Nothing under the v2 packages imports it - checked across `develop`. The lab
+runs with every operation forced to v2, so this expression is never converted
+by the code the fix repairs.
+
+Worth carrying forward: a fix living under the v1 backend's own directories is
+a reason to stop before writing the case, not after. The second run here was
+spent on a fixture question that could not have mattered.
+
+The shapes are gone; the runner is not kept.
 
 ### The inline computed value in a write response
 
