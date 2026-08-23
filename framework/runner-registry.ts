@@ -55,6 +55,7 @@ import { runUniqueToggleCleanupCase } from "./runners/unique-toggle-cleanup.runn
 import { runMultiFieldUpdateRealtimeCase } from "./runners/multi-field-update-realtime.runner";
 import { runBaseImportFieldDescriptionCase } from "./runners/base-import-field-description.runner";
 import { runUserWriteScopeCase } from "./runners/user-write-scope.runner";
+import { runOrphanLinkFieldDeleteCase } from "./runners/orphan-link-field-delete.runner";
 import type {
   BugCase,
   BugCaseFor,
@@ -129,6 +130,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "multi-field-update-realtime": runMultiFieldUpdateRealtimeCase,
   "base-import-field-description": runBaseImportFieldDescriptionCase,
   "user-write-scope": runUserWriteScopeCase,
+  "orphan-link-field-delete": runOrphanLinkFieldDeleteCase,
 };
 
 export const executeRegisteredRunner = (

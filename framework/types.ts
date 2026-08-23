@@ -64,6 +64,7 @@ export interface BugCaseConfigByRunner {
   "multi-field-update-realtime": MultiFieldUpdateRealtimeCaseConfig;
   "base-import-field-description": BaseImportFieldDescriptionCaseConfig;
   "user-write-scope": UserWriteScopeCaseConfig;
+  "orphan-link-field-delete": OrphanLinkFieldDeleteCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1249,4 +1250,17 @@ export interface UserWriteScopeCaseConfig {
   // an empty cell would prove nothing.
   insiderRowTitle: string;
   outsiderRowTitle: string;
+}
+
+// A link column whose foreign table is no longer physically there. Removing
+// the column reaches across to that table's storage, so the delete failed and
+// the column could not be taken off at all.
+export interface OrphanLinkFieldDeleteCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  hostRowTitle: string;
+  foreignRowTitle: string;
+  // A plain column beside the link, so a delete that took the rest of the
+  // table with it is caught as well.
+  neighbourFieldName: string;
 }
