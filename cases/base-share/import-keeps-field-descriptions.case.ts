@@ -17,6 +17,7 @@ export default defineBugCase({
     sourceCommits: ["7e765de97"],
   },
   config: {
+    shape: "describedFields",
     namePrefix: "e2e-lab-base-desc",
     rowTitle: "the-row",
     describedFields: [

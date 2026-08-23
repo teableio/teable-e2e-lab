@@ -47,7 +47,7 @@ export const runBaseImportFieldDescriptionCase = async (
   const zipPath = join(tmpdir(), `e2e-lab-base-desc-${context.runId}.zip`);
   let spaceId = "";
 
-  if (config.describedFields.length < 1) {
+  if (config.shape === "describedFields" && config.describedFields.length < 1) {
     throw new Error("the fixture needs at least one described field");
   }
 
@@ -58,35 +58,51 @@ export const runBaseImportFieldDescriptionCase = async (
     spaceId = space.id;
     const sourceBase = await createBase({ spaceId, name: `${suffix}-source` });
 
-    const table = await createTable(sourceBase.id, {
-      name: `${suffix}-table`,
-      fields: [
-        { name: NAME_FIELD, type: FieldType.SingleLineText, isPrimary: true },
-        ...config.describedFields.map((field) => ({
-          name: field.name,
-          type: FieldType.SingleLineText,
-          description: field.description,
-        })),
-        // One field deliberately without a description, so "every field came
-        // back with a description" cannot be reached by inventing one.
-        { name: config.undescribedFieldName, type: FieldType.SingleLineText },
-      ],
-      records: [{ fields: { [NAME_FIELD]: config.rowTitle } }],
-    });
+    // A base with no tables at all is the second thing this fix repairs: a
+    // base can hold automations, webhooks and apps and no table yet, and
+    // importing one was refused outright.
+    const table =
+      config.shape === "describedFields"
+        ? await createTable(sourceBase.id, {
+            name: `${suffix}-table`,
+            fields: [
+              {
+                name: NAME_FIELD,
+                type: FieldType.SingleLineText,
+                isPrimary: true,
+              },
+              ...config.describedFields.map((field) => ({
+                name: field.name,
+                type: FieldType.SingleLineText,
+                description: field.description,
+              })),
+              // One field deliberately without a description, so "every field
+              // came back with a description" cannot be reached by inventing
+              // one.
+              {
+                name: config.undescribedFieldName,
+                type: FieldType.SingleLineText,
+              },
+            ],
+            records: [{ fields: { [NAME_FIELD]: config.rowTitle } }],
+          })
+        : undefined;
 
     // Fixture verification, outside the checkpoint: the descriptions are on
     // the source. If creating a field silently dropped them, every commit
     // would answer the same way.
-    const sourceFields = await getFields(table.id);
-    for (const field of config.describedFields) {
-      const stored = sourceFields.find(
-        (candidate: { name: string }) => candidate.name === field.name,
-      )?.description;
-      if (stored !== field.description) {
-        throw new Error(
-          `the source field ${field.name} holds ${JSON.stringify(stored)} as its description, expected ` +
-            `${JSON.stringify(field.description)} - the fixture is not in place`,
-        );
+    if (table) {
+      const sourceFields = await getFields(table.id);
+      for (const field of config.describedFields) {
+        const stored = sourceFields.find(
+          (candidate: { name: string }) => candidate.name === field.name,
+        )?.description;
+        if (stored !== field.description) {
+          throw new Error(
+            `the source field ${field.name} holds ${JSON.stringify(stored)} as its description, expected ` +
+              `${JSON.stringify(field.description)} - the fixture is not in place`,
+          );
+        }
       }
     }
 
@@ -134,12 +150,27 @@ export const runBaseImportFieldDescriptionCase = async (
     );
 
     const probe = await bugCheckpoint(
-      "an-imported-base-keeps-its-field-descriptions",
+      config.shape === "describedFields"
+        ? "an-imported-base-keeps-its-field-descriptions"
+        : "a-base-with-no-tables-can-be-imported",
       async () => {
+        // Refused imports throw here, which is the point: on the pre-fix
+        // commit the table-less shape is refused outright.
         const imported = await apiImportBase({
           notify: notified.data,
           spaceId,
         });
+
+        if (!table) {
+          const importedBaseId = imported.data?.base?.id;
+          if (!importedBaseId) {
+            throw new Error(
+              `importing a base with no tables produced no base: ${JSON.stringify(imported.data)}`,
+            );
+          }
+          return { importedTableId: undefined, importedBaseId };
+        }
+
         const importedTableId = imported.data?.tableIdMap?.[table.id];
         if (!importedTableId) {
           throw new Error(
@@ -172,14 +203,16 @@ export const runBaseImportFieldDescriptionCase = async (
                 : ` - the field that had no description came back with ${JSON.stringify(invented)}`),
           );
         }
-        return { importedTableId };
+        return { importedTableId, importedBaseId: imported.data?.base?.id };
       },
     );
 
     return {
       details: {
-        sourceTableId: table.id,
-        importedTableId: probe.importedTableId,
+        shape: config.shape,
+        sourceTableId: table?.id ?? null,
+        importedBaseId: probe.importedBaseId ?? null,
+        importedTableId: probe.importedTableId ?? null,
         describedFields: config.describedFields.length,
       },
     };
