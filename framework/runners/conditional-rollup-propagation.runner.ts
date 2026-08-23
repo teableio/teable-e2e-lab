@@ -112,13 +112,18 @@ export const runConditionalRollupPropagationCase = async (
     // link between the tables - the condition is the whole relationship.
     await createField(reportTableId, {
       name: TOTAL_FIELD,
-      type: FieldType.Number,
+      type: FieldType.Rollup,
       isLookup: true,
       isConditionalLookup: true,
+      // A rollup carries its aggregation in `options.expression`; the
+      // condition rides in the lookup options, where an ordinary rollup would
+      // instead name a link field. The first run put the expression in the
+      // lookup options and both columns answered "Unrecognized key" -
+      // run 32659440769.
+      options: { expression: "sum({values})" },
       lookupOptions: {
         foreignTableId: sourceTableId,
         lookupFieldId: priceFieldId,
-        rollupExpression: "sum({values})",
         filter: {
           conjunction: "and",
           filterSet: [
