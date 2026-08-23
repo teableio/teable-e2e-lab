@@ -36,6 +36,7 @@ import { runSparseViewFieldOrderCase } from "./runners/sparse-view-field-order.r
 import { runConditionalFilterFieldRefsCase } from "./runners/conditional-filter-field-refs.runner";
 import { runValueNormalizationCase } from "./runners/value-normalization.runner";
 import { runLinkCellShapeCase } from "./runners/link-cell-shape.runner";
+import { runRatingConversionCase } from "./runners/rating-conversion.runner";
 import type {
   BugCase,
   BugCaseFor,
@@ -91,6 +92,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "conditional-filter-field-refs": runConditionalFilterFieldRefsCase,
   "value-normalization": runValueNormalizationCase,
   "link-cell-shape": runLinkCellShapeCase,
+  "rating-conversion": runRatingConversionCase,
 };
 
 export const executeRegisteredRunner = (
