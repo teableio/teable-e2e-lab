@@ -29,6 +29,7 @@ import importExcelHeaderBelowA1Case from "./cases/import/excel-header-below-a1.c
 import selectionPasteByIdLandsOnItsOwnRowsCase from "./cases/selection/paste-by-id-lands-on-its-own-rows.case";
 import searchStaysInsideViewFilterCase from "./cases/search/stays-inside-view-filter.case";
 import fieldLegacyIdTableCase from "./cases/field/legacy-field-id-table-still-works.case";
+import lookupNestedRenameCase from "./cases/lookup/renaming-a-nested-lookup-keeps-its-choices.case";
 import realtimeManualSortCase from "./cases/realtime/manual-sort-reaches-the-open-page.case";
 import fieldRatingConversionCase from "./cases/field/rating-conversion-normalizes-existing-values.case";
 import linkTwoToOneTableCase from "./cases/link/two-links-to-one-table-get-two-columns.case";
@@ -86,6 +87,7 @@ const cases = [
   selectionPasteByIdLandsOnItsOwnRowsCase,
   searchStaysInsideViewFilterCase,
   fieldLegacyIdTableCase,
+  lookupNestedRenameCase,
   realtimeManualSortCase,
   fieldRatingConversionCase,
   linkTwoToOneTableCase,
