@@ -39,14 +39,29 @@ by those counts reproduces what the grid draws. That matters beyond
 convenience: a fix that gets the buckets right while the record page keeps its
 own ordering would look correct in the headers alone, and here it does not.
 
+## What the pre-fix column actually returns
+
+Not three headers. One header for the collaborator, covering one row, followed
+by two more row segments that belong to no header at all — measured on
+`fb4d62c3c`, run 32586254919. That is the same split seen from outside: the
+buckets came apart, and only the first piece kept a header. The grid draws the
+rest as extra append rows with the row numbering restarted, which is how the
+bug was reported.
+
+So this case declares its pre-fix behavior as header-less row segments rather
+than as a partition. There is no partition to compare against; the segments are
+the finding, and the runner reports how many rows fell outside every header.
+
 ## What the fixture has to declare
 
-Each case declares two partitions: the buckets it expects, and the buckets the
-pre-fix grouping produces. The broken one is declared rather than derived —
-what the old code did with each cell shape is the thing under test, and
-computing it here would make the case agree with itself instead of with the
-product. The runner refuses a fixture whose two partitions are equal, because
-that case could not tell the fix from the bug.
+Each case declares the buckets it expects and what the pre-fix grouping does
+with the same fixture. The broken side is declared rather than derived — what
+the old code did with each cell shape is the thing under test, and computing it
+here would make the case agree with itself instead of with the product — and it
+is copied from the run that first went red rather than reasoned out. Two of the
+three declare a partition; this one declares header-less row segments. The
+runner refuses a broken partition equal to the expected one, because that case
+could not tell the fix from the bug.
 
 Every stored cell is also read back raw before the checkpoint and checked
 against the shape the case says it holds. A SQL fixture that silently did not

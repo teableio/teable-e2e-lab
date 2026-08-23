@@ -36,6 +36,6 @@ export default defineBugCase({
         bucket: "collaborator",
       },
     ],
-    brokenBuckets: [["current-snapshot"], ["older-email"], ["oldest-email"]],
+    broken: { kind: "headerlessRowSegments" },
   },
 });

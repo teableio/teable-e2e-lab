@@ -733,6 +733,8 @@ export interface UserFieldNotifyBurstCaseConfig {
   // coalescing window, or the count reads the first instant delivery as the
   // whole story and passes on a commit that coalesces nothing.
   settleAfterBurstMs: number;
+}
+
 // A user field holding the cell shapes a base accumulates - a fresh snapshot,
 // a drifted one, a bare user id, an unwrapped object - grouped by that field
 // -> checkpoint: the rows land in the buckets the fixture declares.
@@ -762,10 +764,22 @@ export interface UserGroupIdentityCaseConfig {
     // in one group.
     bucket: string;
   }[];
-  // The partition the pre-fix grouping produces, as arrays of row names.
-  // Declared rather than derived: what the broken code does with each shape
-  // is the thing under test, and deriving it would make the case agree with
-  // itself instead of with the product. The runner refuses a fixture whose
-  // broken partition equals its expected one.
-  brokenBuckets: string[][];
+  // What the pre-fix grouping does with this fixture. Declared rather than
+  // derived - what the broken code does with each cell shape is the thing
+  // under test, and deriving it would make the case agree with itself instead
+  // of with the product - and copied from the run that first went red rather
+  // than guessed.
+  //
+  // "partition" is the ordinary form: the same rows, in different buckets. The
+  // runner refuses a broken partition equal to the expected one, or one that
+  // does not cover exactly the fixture rows.
+  //
+  // "headerlessRowSegments" is what one bucket splitting apart looks like from
+  // outside: a single header, then row segments belonging to no header at all,
+  // which the grid draws as extra rows with the numbering restarted. It is not
+  // a partition, so there is nothing to compare - the segments are the
+  // finding.
+  broken:
+    | { kind: "partition"; buckets: string[][] }
+    | { kind: "headerlessRowSegments" };
 }

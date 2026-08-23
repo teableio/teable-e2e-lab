@@ -55,32 +55,40 @@ export const runUserGroupIdentityCase = async (
   };
   let tableId = "";
 
-  // The partition the fixture claims, and the one the broken behavior
-  // produces. Declared rather than derived: what the pre-fix grouping does
-  // with each shape is the thing under test, and modelling it here would make
-  // the case agree with itself instead of with the product.
+  // The partition the fixture claims, and what the pre-fix grouping does with
+  // it. The broken side is declared rather than derived: what the old code did
+  // with each cell shape is the thing under test, and modelling it here would
+  // make the case agree with itself instead of with the product. Both forms
+  // are measured values, copied from the run that first went red.
   const expectedBuckets = [
     ...new Set(config.rows.map((row) => row.bucket)),
   ].map((bucket) =>
     config.rows.filter((row) => row.bucket === bucket).map((row) => row.name),
   );
-  if (partitionKey(expectedBuckets) === partitionKey(config.brokenBuckets)) {
-    throw new Error(
-      "the fixture's expected buckets and its declared broken buckets are the same partition - " +
-        "this case cannot tell the fix from the bug",
-    );
-  }
   const declaredNames = config.rows.map((row) => row.name);
   if (new Set(declaredNames).size !== declaredNames.length) {
     throw new Error(
       "row names have to be unique - they are how rows are matched to buckets",
     );
   }
-  const brokenNames = config.brokenBuckets.flat();
-  if (partitionKey([brokenNames]) !== partitionKey([declaredNames])) {
+  if (config.broken.kind === "partition") {
+    if (partitionKey(expectedBuckets) === partitionKey(config.broken.buckets)) {
+      throw new Error(
+        "the fixture's expected buckets and its declared broken buckets are the same partition - " +
+          "this case cannot tell the fix from the bug",
+      );
+    }
+    const brokenNames = config.broken.buckets.flat();
+    if (partitionKey([brokenNames]) !== partitionKey([declaredNames])) {
+      throw new Error(
+        `the declared broken buckets cover ${JSON.stringify([...brokenNames].sort())}, ` +
+          `not the fixture rows ${JSON.stringify([...declaredNames].sort())}`,
+      );
+    }
+  } else if (expectedBuckets.length !== 1) {
     throw new Error(
-      `brokenBuckets names ${JSON.stringify(brokenNames.sort())} do not cover exactly the fixture rows ` +
-        `${JSON.stringify([...declaredNames].sort())}`,
+      `this fixture declares ${expectedBuckets.length} buckets but says the pre-fix behavior is ` +
+        "header-less row segments - that shape is what one bucket splitting apart looks like",
     );
   }
 
@@ -225,21 +233,43 @@ export const runUserGroupIdentityCase = async (
             String(record.fields[NAME_FIELD]),
         );
 
-        // groupPoints alternates header, row count, header, row count. Slicing
-        // the record page by those counts is what the grid draws, so the
-        // partition below is the one a person actually sees.
-        const points = response.data.extra?.groupPoints ?? [];
+        // groupPoints alternates a header and a row count. Slicing the record
+        // page by those counts is what the grid draws, so the partition below is
+        // the one a person actually sees.
+        //
+        // A row count that follows another row count instead of a header is the
+        // failure itself rather than a parsing problem: those rows belong to no
+        // bucket, and the grid draws them as extra append rows with the row
+        // numbering restarted.
+        const points = (response.data.extra?.groupPoints ?? []) as {
+          type: number;
+          count?: number;
+        }[];
         const counts: number[] = [];
+        let headerlessRows = 0;
         let sawHeader = false;
-        for (const point of points as { type: number; count?: number }[]) {
+        for (const point of points) {
           if (point.type === GroupPointType.Header) {
             sawHeader = true;
             continue;
           }
-          if (point.type === GroupPointType.Row && sawHeader) {
+          if (point.type !== GroupPointType.Row) {
+            continue;
+          }
+          if (sawHeader) {
             counts.push(point.count ?? 0);
             sawHeader = false;
+          } else {
+            headerlessRows += point.count ?? 0;
           }
+        }
+        if (headerlessRows > 0) {
+          throw new Error(
+            `${counts.length} group header(s) cover ${counts.reduce((sum, count) => sum + count, 0)} of ` +
+              `${names.length} rows; ${headerlessRows} row(s) came back under no header at all - ` +
+              "one collaborator's bucket split, and the grid draws the leftover segments as extra rows " +
+              `with the numbering restarted. Group points were ${JSON.stringify(points)}`,
+          );
         }
         const total = counts.reduce((sum, count) => sum + count, 0);
         if (total !== names.length) {
@@ -257,8 +287,9 @@ export const runUserGroupIdentityCase = async (
 
         if (partitionKey(observedBuckets) !== partitionKey(expectedBuckets)) {
           const asBroken =
+            config.broken.kind === "partition" &&
             partitionKey(observedBuckets) ===
-            partitionKey(config.brokenBuckets);
+              partitionKey(config.broken.buckets);
           throw new Error(
             `grouping put the rows in ${JSON.stringify(observedBuckets)}, expected ` +
               `${JSON.stringify(expectedBuckets)}` +

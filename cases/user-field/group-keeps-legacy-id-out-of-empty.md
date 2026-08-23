@@ -18,3 +18,12 @@ The fixture is two empty rows and one legacy cell, and the assertion is that
 the empty bucket holds exactly the two. One empty row would be enough to
 observe the merge, but not enough to notice a fix that solved it by breaking
 the empty bucket instead.
+
+## What the pre-fix column actually returns
+
+`[["unassigned-one"], ["unassigned-two", "legacy-id-cell"]]`, measured on
+`fb4d62c3c`, run 32586254919. The legacy row does come back grouped with an
+empty one, which is the loss the case is about; the second empty row landing in
+a bucket of its own is measured, not explained here. What the three rows have in
+common on that commit is an identity of NULL, so how they were then divided is a
+question about the ordering, and this case does not answer it.

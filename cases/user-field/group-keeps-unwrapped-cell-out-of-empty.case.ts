@@ -30,9 +30,13 @@ export default defineBugCase({
       },
       { name: "left-unwrapped", stored: "bareObject", bucket: "collaborator" },
     ],
-    brokenBuckets: [
-      ["unassigned", "left-unwrapped"],
-      ["written-after-the-switch"],
-    ],
+    broken: {
+      kind: "partition",
+      buckets: [
+        ["unassigned"],
+        ["written-after-the-switch"],
+        ["left-unwrapped"],
+      ],
+    },
   },
 });

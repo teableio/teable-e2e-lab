@@ -26,6 +26,9 @@ export default defineBugCase({
       { name: "unassigned-two", stored: "empty", bucket: "empty" },
       { name: "legacy-id-cell", stored: "scalarId", bucket: "collaborator" },
     ],
-    brokenBuckets: [["unassigned-one", "unassigned-two", "legacy-id-cell"]],
+    broken: {
+      kind: "partition",
+      buckets: [["unassigned-one"], ["unassigned-two", "legacy-id-cell"]],
+    },
   },
 });
