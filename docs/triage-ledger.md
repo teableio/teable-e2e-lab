@@ -57,6 +57,37 @@ places — it cannot be settled and skipped at once.
 | `bfe5599ed`  | T6615 | Written and run: a conditional lookup whose condition compares two columns of its source table selects every source row on the fix's parent and on `develop` alike, so the two columns are indistinguishable. See the note below the table.                                        |
 | `c0ffdb358`  | T6511 | Written and run: clearing a filled text cell with typecast already stored `null` on the fix's parent, so the case is green on both columns. Run 32656127300.                                                                                                                       |
 | `175d1de3f`  | T6728 | Written in three shapes and run three times. Every trigger a small fixture can reach through the public API computes inline, and inline compute fails closed identically on both sides of the fix. See the note below the table.                                                   |
+| `3ff04d015`  | T5453 | Written in two shapes and run twice, green on both columns each time: a single-cell edit already answers with the row's formula recomputed on the fix's parent. See the note below the table.                                                                                      |
+
+### The inline computed value in a write response
+
+`3ff04d015` / T5453. Both shapes were single-record edits reading the value of
+a same-row formula out of the answer to the write, which is what the fix is
+about.
+
+| shape                                                                                  | pre-fix `e6c338e11` / `develop` | run         |
+| -------------------------------------------------------------------------------------- | ------------------------------- | ----------- |
+| a formula that is one cell times a number                                              | ✅ / ✅                         | 32671032258 |
+| the fix's own shape - gated on a status, branching on the order type, rounded to money | ✅ / ✅                         | 32671353944 |
+
+In both, the answer to the write carried the recomputed value and the row
+settled to the same number, so there was nothing to tell the columns apart.
+
+What the fix changes is a gate: in `hybrid` mode - the default, and what the
+lab runs - only inserts computed inline before answering, and the fix extends
+that to updates. Reading the code, an update on the fix's parent should have
+gone to the outbox and answered stale. It did not. **Why is not established.**
+The plausible reading is that a same-record formula of this shape is resolved
+when the record is read rather than from a stored value, which would make the
+gate irrelevant to what the answer says - but that was not verified, and it
+should be before anyone spends another run here.
+
+The next thing to try is a computed value that cannot be resolved on read: a
+rollup or a lookup over a link, where the answer has to carry something another
+table produced. That is a different subject from the one the fix names, so it
+may not belong to this issue at all.
+
+The shapes are gone; the runner is not kept.
 
 ### The three computed-backfill rows
 
