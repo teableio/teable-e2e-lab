@@ -156,7 +156,7 @@ export const runLinkCellShapeCase = async (
       async () => {
         if (status < 200 || status >= 300) {
           throw new Error(
-            `writing ${JSON.stringify(written)} into a ${config.shape === "arrayIntoSingle" ? "single" : "multi"}-value ` +
+            `writing ${JSON.stringify(written)} into a ${config.shape === "objectIntoMulti" ? "multi" : "single"}-value ` +
               `link answered ${status}: ${body}`,
           );
         }
