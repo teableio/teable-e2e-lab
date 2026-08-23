@@ -51,6 +51,7 @@ export interface BugCaseConfigByRunner {
   "legacy-field-id": LegacyFieldIdCaseConfig;
   "nested-lookup-rename": NestedLookupRenameCaseConfig;
   "table-restore-scope": TableRestoreScopeCaseConfig;
+  "rollup-filter-persists": RollupFilterPersistsCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1041,5 +1042,20 @@ export interface TableRestoreScopeCaseConfig {
   // everything.
   backdateHours: number;
   trashVisibleTimeoutMs: number;
+  pollIntervalMs: number;
+}
+
+// A rollup over linked rows narrowed with a condition. Converting the field
+// mapped its link and lookup ids and dropped the filter, so the condition
+// never persisted and the column went on totalling everything.
+export interface RollupFilterPersistsCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // The category the condition counts. At least one linked row must carry it
+  // and at least one must not, or a dropped filter and an applied one give the
+  // same total.
+  countedCategory: string;
+  items: { name: string; category: string; amount: number }[];
+  settleTimeoutMs: number;
   pollIntervalMs: number;
 }
