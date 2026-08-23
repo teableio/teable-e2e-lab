@@ -15,7 +15,10 @@ export default defineBugCase({
   bug: {
     issue: "T6608",
     status: "fixed",
-    sourceCommits: ["447a6d8dd"],
+    // Also settles 674ff3d7b (T6563, "Socket Error when clearing view
+    // filters"): this case already clears a filter, and it goes red on that
+    // commit's parent too. Measured, run 32654702809 - see the case doc.
+    sourceCommits: ["447a6d8dd", "674ff3d7b"],
   },
   config: {
     baseId: "seed-base",
