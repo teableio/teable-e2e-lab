@@ -40,6 +40,7 @@ export interface BugCaseConfigByRunner {
   "delete-collateral": DeleteCollateralCaseConfig;
   "duplicate-shared-view": DuplicateSharedViewCaseConfig;
   "legacy-record-id": LegacyRecordIdCaseConfig;
+  "restore-conditional-lookup": RestoreConditionalLookupCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -853,4 +854,20 @@ export interface LegacyRecordIdCaseConfig {
   updatedValue: string;
   settleTimeoutMs: number;
   settlePollIntervalMs: number;
+}
+
+// A lookup that matches rows by a value rather than through a link, deleted
+// and then restored from the trash. The condition is the whole field: without
+// it there is nothing saying which row to read.
+export interface RestoreConditionalLookupCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // One row per pair. `ref` is the shared reference the condition matches on -
+  // they have to be distinct, or a condition matching the wrong row would pass
+  // - and `value` is what the host row should end up showing.
+  rows: { ref: string; value: string }[];
+  // The trash entry is written asynchronously; this is how long it may take to
+  // appear before the case calls the fixture broken.
+  trashVisibleTimeoutMs: number;
+  pollIntervalMs: number;
 }
