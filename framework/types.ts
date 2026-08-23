@@ -62,6 +62,7 @@ export interface BugCaseConfigByRunner {
   "link-rename-keeps-config": LinkRenameKeepsConfigCaseConfig;
   "unique-toggle-cleanup": UniqueToggleCleanupCaseConfig;
   "multi-field-update-realtime": MultiFieldUpdateRealtimeCaseConfig;
+  "inline-computed-update-response": InlineComputedUpdateResponseCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1218,4 +1219,17 @@ export interface MultiFieldUpdateRealtimeCaseConfig {
   subscribeTimeoutMs: number;
   settleTimeoutMs: number;
   pollIntervalMs: number;
+}
+
+// A formula over another cell of the same row. Changing that cell answered
+// with the formula's value from before the edit, so whoever made the write
+// took away a wrong number as the result of their own write.
+export interface InlineComputedUpdateResponseCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  priceBefore: number;
+  priceAfter: number;
+  // The formula is the source cell times this. Kept whole so the expectation
+  // is exact - a rounded expectation would let a wrong value pass.
+  multiplier: number;
 }
