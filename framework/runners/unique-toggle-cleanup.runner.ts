@@ -12,6 +12,7 @@ import {
   permanentDeleteTable,
 } from "../../../utils/init-app";
 import { bugCheckpoint } from "../checkpoint";
+import { fixtureDb } from "../fixture-db";
 import { pickRoutingHeaders } from "../engine";
 import type { BugCaseFor, BugProbeResult, BugRunContext } from "../types";
 import type { UniqueToggleCleanupCaseConfig } from "../types";
@@ -59,6 +60,22 @@ export const runUniqueToggleCleanupCase = async (
     );
     if (!codeField?.id) {
       throw new Error(`Table ${tableId} is not in place`);
+    }
+
+    // The legacy shape: a second, standalone unique index over the same
+    // column, named the way an older version named them. Bases carry these,
+    // and switching the column's own constraint off does not know about them
+    // unless it looks for indexes on the column rather than for the one name
+    // it would have written itself.
+    let legacyIndexName = "";
+    if (config.withLegacyIndex) {
+      const db = fixtureDb(context.app);
+      const { schema, table: physicalTable } = await db.physicalTable(tableId);
+      const column = await db.physicalColumn(codeField.id);
+      legacyIndexName = `${physicalTable}_${column}_unique`.slice(0, 63);
+      await db.execute(
+        `CREATE UNIQUE INDEX "${legacyIndexName}" ON "${schema}"."${physicalTable}" ("${column}")`,
+      );
     }
 
     await createRecords(tableId, {
@@ -147,6 +164,8 @@ export const runUniqueToggleCleanupCase = async (
     return {
       details: {
         tableId,
+        withLegacyIndex: config.withLegacyIndex,
+        legacyIndexName: legacyIndexName || null,
         rejectedWhileUnique: whileUnique.status,
         acceptedAfterToggle: probe.status,
         routing: probe.routing,

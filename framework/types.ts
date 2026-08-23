@@ -1195,6 +1195,10 @@ export interface LinkRenameKeepsConfigCaseConfig {
 export interface UniqueToggleCleanupCaseConfig {
   baseId: "seed-base";
   tableNamePrefix: string;
+  // Whether a second, standalone unique index over the same column is written
+  // first, named the way an older version named them. Bases carry these, and
+  // they are the other half of the same issue.
+  withLegacyIndex: boolean;
   // The value written twice.
   code: string;
 }

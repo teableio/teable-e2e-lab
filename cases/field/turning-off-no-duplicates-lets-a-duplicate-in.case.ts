@@ -18,6 +18,7 @@ export default defineBugCase({
   config: {
     baseId: "seed-base",
     tableNamePrefix: "e2e-lab-unique-toggle",
+    withLegacyIndex: false,
     code: "SKU-001",
   },
 });
