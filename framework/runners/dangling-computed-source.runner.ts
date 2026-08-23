@@ -41,6 +41,7 @@ const SOURCE_VALUE_FIELD = "Amount";
 const HOST_NAME_FIELD = "Name";
 const LINK_FIELD = "Source";
 const LOOKUP_FIELD = "Amount Lookup";
+const HEALTHY_FIELD = "Echo";
 const HOST_ROW = "host-row";
 
 const sleep = (ms: number) =>
@@ -125,6 +126,17 @@ export const runDanglingComputedSourceCase = async (
         linkFieldId: linkField.id,
       },
     });
+    // A computed column with nothing wrong with it, on the same table. It is
+    // the observation: the dangling lookup is supposed to be unable to stop
+    // this one from keeping up.
+    await createField(hostTableId, {
+      name: HEALTHY_FIELD,
+      type: FieldType.Formula,
+      options: {
+        expression: `CONCATENATE({${hostTable.fields.find((field: { name: string }) => field.name === HOST_NAME_FIELD).id}}, "-ok")`,
+      },
+    });
+
     const created = await createRecords(hostTableId, {
       fieldKeyType: FieldKeyType.Name,
       typecast: false,
@@ -153,6 +165,7 @@ export const runDanglingComputedSourceCase = async (
       return {
         headers: response.headers,
         title: String(record?.fields[HOST_NAME_FIELD] ?? ""),
+        healthy: String(record?.fields[HEALTHY_FIELD] ?? ""),
         lookup: record?.fields[LOOKUP_FIELD],
       };
     };
@@ -164,13 +177,17 @@ export const runDanglingComputedSourceCase = async (
       const deadline = Date.now() + config.settleTimeoutMs;
       for (;;) {
         const current = await readHost();
-        if (Number(current.lookup) === config.sourceAmount) {
+        if (
+          Number(current.lookup) === config.sourceAmount &&
+          current.healthy === `${HOST_ROW}-ok`
+        ) {
           return current;
         }
         if (Date.now() >= deadline) {
           throw new Error(
-            `the lookup reads ${JSON.stringify(current.lookup)} after ${config.settleTimeoutMs}ms, expected ` +
-              `${config.sourceAmount} - the fixture is not in place`,
+            `after ${config.settleTimeoutMs}ms the lookup reads ${JSON.stringify(current.lookup)} (expected ` +
+              `${config.sourceAmount}) and the healthy column reads ${JSON.stringify(current.healthy)} ` +
+              `(expected ${JSON.stringify(`${HOST_ROW}-ok`)}) - the fixture is not in place`,
           );
         }
         await sleep(config.pollIntervalMs);
@@ -208,9 +225,10 @@ export const runDanglingComputedSourceCase = async (
     const probe = await bugCheckpoint(
       "table-with-a-dangling-lookup-still-edits",
       async () => {
-        // An ordinary edit to an ordinary column. It has nothing to do with
-        // the lookup, which is the point: the broken column should not be able
-        // to stop it.
+        // An edit that makes the table recompute. The healthy column follows
+        // the title, and the dangling lookup is in the same computed pass -
+        // which is the point: the broken column should not be able to stop the
+        // one next to it.
         await apiUpdateRecords(hostTableId, {
           fieldKeyType: FieldKeyType.Name,
           typecast: false,
@@ -222,13 +240,21 @@ export const runDanglingComputedSourceCase = async (
           ],
         });
 
+        const expectedHealthy = `${config.editedTitle}-ok`;
         const deadline = Date.now() + config.settleTimeoutMs;
-        let last = "";
+        let last = { title: "", healthy: "" };
         for (;;) {
           const current = await readHost();
-          last = current.title;
-          if (last === config.editedTitle) {
-            return { title: last, lookup: current.lookup };
+          last = { title: current.title, healthy: current.healthy };
+          if (
+            current.title === config.editedTitle &&
+            current.healthy === expectedHealthy
+          ) {
+            return {
+              title: current.title,
+              healthy: current.healthy,
+              lookup: current.lookup,
+            };
           }
           if (Date.now() >= deadline) {
             break;
@@ -236,9 +262,9 @@ export const runDanglingComputedSourceCase = async (
           await sleep(config.pollIntervalMs);
         }
         throw new Error(
-          `the edit never settled: after ${config.settleTimeoutMs}ms the row still reads ${JSON.stringify(last)}, ` +
-            `expected ${JSON.stringify(config.editedTitle)} - the dangling lookup took the whole table's ` +
-            "computed work with it",
+          `after ${config.settleTimeoutMs}ms the row reads ${JSON.stringify(last)}, expected the title ` +
+            `${JSON.stringify(config.editedTitle)} and the healthy computed column ` +
+            `${JSON.stringify(expectedHealthy)} - the dangling lookup took the healthy column with it`,
         );
       },
     );
@@ -251,6 +277,7 @@ export const runDanglingComputedSourceCase = async (
         deletedSourceFieldId: sourceValueFieldId,
         lookupFieldId: lookupField.id,
         titleAfterEdit: probe.title,
+        healthyAfterEdit: probe.healthy,
         // Recorded, not asserted: what a lookup with no source left shows is a
         // separate question from whether the table still works.
         lookupAfterEdit: probe.lookup ?? null,

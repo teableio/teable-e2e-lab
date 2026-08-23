@@ -38,10 +38,18 @@ it.
 
 ## What the checkpoint asserts
 
-An ordinary edit to an ordinary text column on the host table, which has
-nothing to do with the lookup. That is the point: a broken column should not be
-able to stop it. The assertion waits for the edit to read back, because the
-failure is asynchronous — the write is accepted and then nothing happens.
+The host table carries a second computed column with nothing wrong with it — a
+formula over its own title. Editing the title makes the table recompute, and
+the dangling lookup is in that same pass. The assertion is that the healthy
+column follows the new title.
+
+The first version of this case asserted only that the plain edit read back,
+and it was green on both columns (run 32654069014): editing a text field
+queues no recompute involving the lookup, so the SQL that fails was never
+generated. The healthy computed column is what puts the broken one in the pass.
+
+The assertion waits rather than checking once, because the failure is
+asynchronous — the write is accepted and then nothing happens.
 
 What the dangling lookup itself shows afterwards is recorded and not asserted.
 Whether it reads empty, or is marked, or disappears, is a separate question
