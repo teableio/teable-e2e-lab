@@ -196,6 +196,9 @@ export const runImportRecordHistoryCase = async (
             importData: true,
           },
         },
+        // Required by this endpoint, and not load-bearing here: the sheet
+        // holds text, so no value is interpreted against a zone.
+        tz: "UTC",
       });
       routing = assertServedByV2(imported.headers, {
         operation: "POST /import/{baseId}",
