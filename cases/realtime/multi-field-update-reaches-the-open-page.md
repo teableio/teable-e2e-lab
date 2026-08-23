@@ -29,6 +29,13 @@ After a single edit changing every cell, the watching client holds every new
 value. Not "at least one changed", and not the row read back from the server:
 the subscriber's own copy, in full.
 
+## It has to be a single-record edit
+
+Measured on the pre-fix commit (run 32670313557): the batch-update endpoint
+delivered all four cells in 617ms. Batch updates go through a different
+projection that already sent the whole row as one message, so a case built on
+them is green on the broken build. The case uses the single-record update.
+
 ## What the fixture has to hold
 
 Four cells. With two, a lost change and a change applied in a different order

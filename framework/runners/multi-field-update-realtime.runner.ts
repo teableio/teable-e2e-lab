@@ -1,5 +1,5 @@
 import { FieldKeyType, FieldType, IdPrefix } from "@teable/core";
-import { updateRecords as apiUpdateRecords } from "@teable/openapi";
+import { updateRecord as apiUpdateRecord } from "@teable/openapi";
 import { createTable, permanentDeleteTable } from "../../../utils/init-app";
 import { bugCheckpoint } from "../checkpoint";
 import { realtimeClient } from "../realtime";
@@ -117,19 +117,19 @@ export const runMultiFieldUpdateRealtimeCase = async (
     const probe = await bugCheckpoint(
       "one-edit-of-several-cells-reaches-the-watcher",
       async () => {
-        // One request changing every cell: that is the shape whose changes
-        // were sent one at a time and partly lost.
-        await apiUpdateRecords(tableId, {
+        // One single-record update changing every cell. Not the batch
+        // endpoint: batch updates go through a different projection that
+        // already sent the whole row as one message, so a case built on them
+        // passes on the broken build - measured on 4e992354a, run
+        // 32670313557, where all four cells arrived in 617ms.
+        await apiUpdateRecord(tableId, recordId, {
           fieldKeyType: FieldKeyType.Name,
           typecast: false,
-          records: [
-            {
-              id: recordId,
-              fields: Object.fromEntries(
-                cellNames.map((name, index) => [name, after(index)]),
-              ),
-            },
-          ],
+          record: {
+            fields: Object.fromEntries(
+              cellNames.map((name, index) => [name, after(index)]),
+            ),
+          },
         });
 
         const deadline = Date.now() + config.settleTimeoutMs;
