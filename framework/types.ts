@@ -65,6 +65,7 @@ export interface BugCaseConfigByRunner {
   "base-import-field-description": BaseImportFieldDescriptionCaseConfig;
   "user-write-scope": UserWriteScopeCaseConfig;
   "orphan-link-field-delete": OrphanLinkFieldDeleteCaseConfig;
+  "text-to-date-conversion": TextToDateConversionCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1263,4 +1264,14 @@ export interface OrphanLinkFieldDeleteCaseConfig {
   // A plain column beside the link, so a delete that took the rest of the
   // table with it is caught as well.
   neighbourFieldName: string;
+}
+
+// A text column holding a few values that are not dates, converted to a date
+// column. One impossible value was enough to stop the whole conversion.
+export interface TextToDateConversionCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // "empty" for a value that is not a date and has to end up cleared,
+  // "date" for one that has to survive. The fixture needs both.
+  rows: { name: string; text: string; becomes: "empty" | "date" }[];
 }
