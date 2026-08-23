@@ -46,6 +46,7 @@ places — it cannot be settled and skipped at once.
 | `a9f56d9d51` | T6765 | Written and run: converting a number column into a lookup of a foreign formula completes correctly on the fix's parent, at 1 row and at 40, in about a second. See the note below this table.                                                                                      |
 | `e94ae6db28` | T6767 | Written and run: a formula over a lookup of a link field stored in a leftover TEXT column backfills correctly on the fix's parent. Same note.                                                                                                                                      |
 | `228be9ffa7` | T6770 | Written and run: a lookup of a link field added to a host whose rows are already linked seeds correctly on the fix's parent. Same note.                                                                                                                                            |
+| `dfe6a1ebc`  | T6614 | Written in three shapes and run three times, green on both columns each time. The dangling reference a `deleted_time` fixture produces does not reach the SQL builder the fix changes. See the note below the table.                                                               |
 | `175d1de3f`  | T6728 | Written in three shapes and run three times. Every trigger a small fixture can reach through the public API computes inline, and inline compute fails closed identically on both sides of the fix. See the note below the table.                                                   |
 
 ### The three computed-backfill rows
@@ -119,6 +120,38 @@ today, and it is where the next attempt should start rather than reshaping the
 small ones again.
 
 The three shapes are kept on branch `case/computed-oversized-cell`, unmerged.
+
+### The dangling-computed-source row
+
+The change degrades a rollup or lookup whose aggregation source field was
+deleted without the dependent being marked broken - the residue of older delete
+paths - instead of failing SQL generation with "Field not found" and killing
+the whole computed task. That is a real and legible failure: the task is per
+table, so one unmarked column stops every other computed column on it.
+
+The fixture is the problem. Marking the source field's `deleted_time` is what
+the old delete path left behind in the database, but it is not enough to make
+the current builder reach for it, and three triggers were tried:
+
+1. **A plain text edit on the dependent table.** Green on both columns - run 32654069014. Editing a text field queues no recompute involving the lookup
+   at all.
+2. **A healthy formula on the same table, edited into recomputing.** Green on
+   both columns - run 32654350507. The healthy column recomputed on its own;
+   the lookup's SQL was never generated.
+3. **Touching the source row first, then the dependent.** Green on both columns
+   - run 32654659137. The lookup still read its old value, so the plan did not
+     consult the deleted field even then.
+
+What the third run shows is the informative part: after the source field is
+marked deleted, the lookup goes on answering its previous value. So the plan
+this fixture produces is not the plan the fix repairs - either the dependency
+graph is resolved from somewhere the fixture did not touch, or a real
+occurrence needs the field row gone rather than tombstoned.
+
+The next attempt should start by making a lookup actually fail SQL generation -
+confirm the "Field not found" error can be produced at all - before building a
+case around surviving it. The three shapes are kept on branch
+`case/dangling-computed-source`, unmerged.
 
 ## Covered
 
