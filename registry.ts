@@ -28,6 +28,7 @@ import linkCrossBaseLinkClearsOnDeleteCase from "./cases/link/cross-base-link-cl
 import importExcelHeaderBelowA1Case from "./cases/import/excel-header-below-a1.case";
 import selectionPasteByIdLandsOnItsOwnRowsCase from "./cases/selection/paste-by-id-lands-on-its-own-rows.case";
 import searchStaysInsideViewFilterCase from "./cases/search/stays-inside-view-filter.case";
+import lookupDanglingSourceCase from "./cases/lookup/dangling-source-does-not-stall-the-table.case";
 import recordLegacyIdStillComputesCase from "./cases/record/legacy-id-row-still-computes.case";
 import fieldDeleteSparesSharedColumnCase from "./cases/field/delete-spares-a-field-sharing-its-column.case";
 import recordRepeatedDeleteIsIdempotentCase from "./cases/record/repeated-delete-is-idempotent.case";
@@ -73,6 +74,7 @@ const cases = [
   importExcelHeaderBelowA1Case,
   selectionPasteByIdLandsOnItsOwnRowsCase,
   searchStaysInsideViewFilterCase,
+  lookupDanglingSourceCase,
   recordLegacyIdStillComputesCase,
   fieldDeleteSparesSharedColumnCase,
   recordRepeatedDeleteIsIdempotentCase,

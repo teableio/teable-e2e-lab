@@ -31,6 +31,7 @@ import { runUserFieldNotifyReplayCase } from "./runners/user-field-notify-replay
 import { runViewFilterRealtimeCase } from "./runners/view-filter-realtime.runner";
 import { runViewPropertyRealtimeCase } from "./runners/view-property-realtime.runner";
 import { runViewFilterRoundtripCase } from "./runners/view-filter-roundtrip.runner";
+import { runDanglingComputedSourceCase } from "./runners/dangling-computed-source.runner";
 import type {
   BugCase,
   BugCaseFor,
@@ -81,6 +82,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "paste-over-pending-field": runPasteOverPendingFieldCase,
   "duplicate-shared-view": runDuplicateSharedViewCase,
   "legacy-record-id": runLegacyRecordIdCase,
+  "dangling-computed-source": runDanglingComputedSourceCase,
 };
 
 export const executeRegisteredRunner = (

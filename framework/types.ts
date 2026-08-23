@@ -40,6 +40,7 @@ export interface BugCaseConfigByRunner {
   "delete-collateral": DeleteCollateralCaseConfig;
   "duplicate-shared-view": DuplicateSharedViewCaseConfig;
   "legacy-record-id": LegacyRecordIdCaseConfig;
+  "dangling-computed-source": DanglingComputedSourceCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -853,4 +854,19 @@ export interface LegacyRecordIdCaseConfig {
   updatedValue: string;
   settleTimeoutMs: number;
   settlePollIntervalMs: number;
+}
+
+// A lookup left pointing at a field that was deleted without the lookup being
+// marked broken - the residue of an older delete path. Generating SQL for it
+// answered "Field not found" and killed the whole computed task, so the table
+// stopped keeping up.
+export interface DanglingComputedSourceCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  sourceAmount: number;
+  // What the host row's ordinary column is edited to. Must differ from the
+  // seeded title, or the write would settle without the row changing.
+  editedTitle: string;
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
 }
