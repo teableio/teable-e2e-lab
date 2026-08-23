@@ -49,6 +49,7 @@ export interface BugCaseConfigByRunner {
   "manual-sort-realtime": ManualSortRealtimeCaseConfig;
   "repeated-foreign-links": RepeatedForeignLinksCaseConfig;
   "legacy-field-id": LegacyFieldIdCaseConfig;
+  "nested-lookup-rename": NestedLookupRenameCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1013,4 +1014,16 @@ export interface LegacyFieldIdCaseConfig {
   legacyFieldId: string;
   seedValue: string;
   updatedValue: string;
+}
+
+// A single-select carried across two tables by lookups, and a rename of the
+// last one. A select field is its choices; a lookup of one carries that list
+// along, and renaming the column dropped it.
+export interface NestedLookupRenameCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // The choices on the source select. At least two: a single-choice list
+  // losing its colors and a list losing everything are hard to tell apart.
+  choiceNames: string[];
+  renamedTo: string;
 }
