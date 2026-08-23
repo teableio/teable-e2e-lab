@@ -30,6 +30,7 @@ import selectionPasteByIdLandsOnItsOwnRowsCase from "./cases/selection/paste-by-
 import searchStaysInsideViewFilterCase from "./cases/search/stays-inside-view-filter.case";
 import recordLegacyIdStillComputesCase from "./cases/record/legacy-id-row-still-computes.case";
 import lookupConditionalRestoreCase from "./cases/lookup/conditional-lookup-survives-restore.case";
+import viewAddedFieldLandsLastCase from "./cases/view/added-field-lands-after-legacy-columns.case";
 import fieldDeleteSparesSharedColumnCase from "./cases/field/delete-spares-a-field-sharing-its-column.case";
 import recordRepeatedDeleteIsIdempotentCase from "./cases/record/repeated-delete-is-idempotent.case";
 import tableDuplicateWithSharedViewCase from "./cases/table/duplicate-with-shared-view.case";
@@ -76,6 +77,7 @@ const cases = [
   searchStaysInsideViewFilterCase,
   recordLegacyIdStillComputesCase,
   lookupConditionalRestoreCase,
+  viewAddedFieldLandsLastCase,
   fieldDeleteSparesSharedColumnCase,
   recordRepeatedDeleteIsIdempotentCase,
   tableDuplicateWithSharedViewCase,
