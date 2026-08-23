@@ -41,6 +41,7 @@ export interface BugCaseConfigByRunner {
   "duplicate-shared-view": DuplicateSharedViewCaseConfig;
   "legacy-record-id": LegacyRecordIdCaseConfig;
   "restore-conditional-lookup": RestoreConditionalLookupCaseConfig;
+  "sparse-view-field-order": SparseViewFieldOrderCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -870,4 +871,18 @@ export interface RestoreConditionalLookupCaseConfig {
   // appear before the case calls the fixture broken.
   trashVisibleTimeoutMs: number;
   pollIntervalMs: number;
+}
+
+// A view whose column metadata mentions only some of its fields - what a table
+// older than that bookkeeping looks like - and a field added to it. The new
+// column's position was derived from the entries that exist rather than from
+// the columns that exist, so it was given a position already taken.
+export interface SparseViewFieldOrderCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // The fields whose view entry is removed. At least two: with one, an
+  // appended column landing on top of it cannot be told from an ordering that
+  // is merely off by one.
+  legacyFieldNames: string[];
+  addedFieldName: string;
 }

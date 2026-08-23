@@ -32,6 +32,7 @@ import { runViewFilterRealtimeCase } from "./runners/view-filter-realtime.runner
 import { runViewPropertyRealtimeCase } from "./runners/view-property-realtime.runner";
 import { runViewFilterRoundtripCase } from "./runners/view-filter-roundtrip.runner";
 import { runRestoreConditionalLookupCase } from "./runners/restore-conditional-lookup.runner";
+import { runSparseViewFieldOrderCase } from "./runners/sparse-view-field-order.runner";
 import type {
   BugCase,
   BugCaseFor,
@@ -83,6 +84,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "duplicate-shared-view": runDuplicateSharedViewCase,
   "legacy-record-id": runLegacyRecordIdCase,
   "restore-conditional-lookup": runRestoreConditionalLookupCase,
+  "sparse-view-field-order": runSparseViewFieldOrderCase,
 };
 
 export const executeRegisteredRunner = (
