@@ -45,6 +45,7 @@ export interface BugCaseConfigByRunner {
   "conditional-filter-field-refs": ConditionalFilterFieldRefsCaseConfig;
   "value-normalization": ValueNormalizationCaseConfig;
   "link-cell-shape": LinkCellShapeCaseConfig;
+  "rating-conversion": RatingConversionCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -952,4 +953,17 @@ export interface LinkCellShapeCaseConfig {
   // the same shape of failure: a link to a row whose primary cell is empty is
   // stored as {id, title: null}, and write validation rejected the null title.
   shape: "arrayIntoSingle" | "objectIntoMulti" | "nullTitle";
+}
+
+// A number column converted into a rating field. A rating is whole stars
+// between one and its maximum, and the conversion has to answer for every
+// value already in the column: a fraction, a number past the maximum, a zero.
+export interface RatingConversionCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  ratingMax: number;
+  // `before` is what the number column holds, `after` what the rating must
+  // read once converted. At least one value has to be outside the rating's
+  // domain, or the conversion would have nothing to normalize.
+  rows: { name: string; before: number | null; after: number | null }[];
 }
