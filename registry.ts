@@ -29,6 +29,8 @@ import importExcelHeaderBelowA1Case from "./cases/import/excel-header-below-a1.c
 import selectionPasteByIdLandsOnItsOwnRowsCase from "./cases/selection/paste-by-id-lands-on-its-own-rows.case";
 import searchStaysInsideViewFilterCase from "./cases/search/stays-inside-view-filter.case";
 import lookupConditionalForeignRefCase from "./cases/lookup/conditional-filter-over-a-foreign-table.case";
+import recordInvalidDateCase from "./cases/record/invalid-date-is-not-invented.case";
+import recordRatingDomainCase from "./cases/record/rating-is-stored-in-whole-stars.case";
 import recordLegacyIdStillComputesCase from "./cases/record/legacy-id-row-still-computes.case";
 import lookupConditionalRestoreCase from "./cases/lookup/conditional-lookup-survives-restore.case";
 import viewAddedFieldLandsLastCase from "./cases/view/added-field-lands-after-legacy-columns.case";
@@ -77,6 +79,8 @@ const cases = [
   selectionPasteByIdLandsOnItsOwnRowsCase,
   searchStaysInsideViewFilterCase,
   lookupConditionalForeignRefCase,
+  recordInvalidDateCase,
+  recordRatingDomainCase,
   recordLegacyIdStillComputesCase,
   lookupConditionalRestoreCase,
   viewAddedFieldLandsLastCase,
