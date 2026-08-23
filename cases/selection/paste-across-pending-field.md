@@ -10,9 +10,11 @@ a rectangular range addressed by column position, not a list of field ids.
 
 The report came in on paste-by-id. The write path underneath is shared and the
 fix landed in the selection service both requests go through, so the range
-paste is expected to fail the same way — but expected is not measured, and this
-case is what measures it. If it turns out green on the fix's parent, it does
-not ship: a case green on both columns warns about nothing.
+paste was expected to fail the same way — and it does. Measured on
+`87ff8a8c3`, run 32649325772: the same 500, the same Postgres complaint that
+the column does not exist. So the failure was never specific to the endpoint
+the report happened to come in on; anyone pasting over that column in that base
+was hitting it, by whichever route.
 
 The pending field is the third column here, appended by the field creation,
 rather than sitting in the middle as it does in the by-id variant. Column
