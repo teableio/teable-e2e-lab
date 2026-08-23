@@ -46,6 +46,7 @@ export interface BugCaseConfigByRunner {
   "value-normalization": ValueNormalizationCaseConfig;
   "link-cell-shape": LinkCellShapeCaseConfig;
   "rating-conversion": RatingConversionCaseConfig;
+  "conditional-rollup-propagation": ConditionalRollupPropagationCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -966,4 +967,21 @@ export interface RatingConversionCaseConfig {
   // read once converted. At least one value has to be outside the rating's
   // domain, or the conversion would have nothing to normalize.
   rows: { name: string; before: number | null; after: number | null }[];
+}
+
+// A summary column that totals only the rows matching a condition, and a
+// change to one of the rows it counts. The propagation deciding which
+// summaries a write dirties skipped the filtered path, so the total kept its
+// old number while the row beside it showed the new one.
+export interface ConditionalRollupPropagationCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // The category the summary counts. At least one row must carry it and at
+  // least one must not.
+  matchedCategory: string;
+  rows: { name: string; category: string; price: number }[];
+  // What the first counted row's price becomes. Must change the total.
+  editedPrice: number;
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
 }

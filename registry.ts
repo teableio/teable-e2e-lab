@@ -28,6 +28,7 @@ import linkCrossBaseLinkClearsOnDeleteCase from "./cases/link/cross-base-link-cl
 import importExcelHeaderBelowA1Case from "./cases/import/excel-header-below-a1.case";
 import selectionPasteByIdLandsOnItsOwnRowsCase from "./cases/selection/paste-by-id-lands-on-its-own-rows.case";
 import searchStaysInsideViewFilterCase from "./cases/search/stays-inside-view-filter.case";
+import lookupConditionalSummaryCase from "./cases/lookup/conditional-summary-follows-a-counted-row.case";
 import fieldRatingConversionCase from "./cases/field/rating-conversion-normalizes-existing-values.case";
 import lookupConditionalForeignRefCase from "./cases/lookup/conditional-filter-over-a-foreign-table.case";
 import recordInvalidDateCase from "./cases/record/invalid-date-is-not-invented.case";
@@ -82,6 +83,7 @@ const cases = [
   importExcelHeaderBelowA1Case,
   selectionPasteByIdLandsOnItsOwnRowsCase,
   searchStaysInsideViewFilterCase,
+  lookupConditionalSummaryCase,
   fieldRatingConversionCase,
   lookupConditionalForeignRefCase,
   recordInvalidDateCase,

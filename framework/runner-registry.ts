@@ -37,6 +37,7 @@ import { runConditionalFilterFieldRefsCase } from "./runners/conditional-filter-
 import { runValueNormalizationCase } from "./runners/value-normalization.runner";
 import { runLinkCellShapeCase } from "./runners/link-cell-shape.runner";
 import { runRatingConversionCase } from "./runners/rating-conversion.runner";
+import { runConditionalRollupPropagationCase } from "./runners/conditional-rollup-propagation.runner";
 import type {
   BugCase,
   BugCaseFor,
@@ -93,6 +94,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "value-normalization": runValueNormalizationCase,
   "link-cell-shape": runLinkCellShapeCase,
   "rating-conversion": runRatingConversionCase,
+  "conditional-rollup-propagation": runConditionalRollupPropagationCase,
 };
 
 export const executeRegisteredRunner = (
