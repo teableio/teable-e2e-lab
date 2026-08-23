@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { FieldKeyType, FieldType } from "@teable/core";
 import {
   analyzeFile as apiAnalyzeFile,
+  importTableFromFile as apiImportTableFromFile,
   getRecordListHistory as apiGetRecordListHistory,
   getSignature as apiGetSignature,
   inplaceImportTableFromFile as apiInplaceImport,
@@ -52,6 +53,7 @@ export const runImportRecordHistoryCase = async (
   const baseId = globalThis.testConfig.baseId;
   const suffix = `${config.tableNamePrefix}-${context.runId}`;
   const csvPath = join(tmpdir(), `e2e-lab-import-history-${context.runId}.csv`);
+  const createdTableIds: string[] = [];
   let tableId = "";
 
   if (config.importedRows < 2) {
@@ -70,6 +72,7 @@ export const runImportRecordHistoryCase = async (
       records: [],
     });
     tableId = table.id;
+    createdTableIds.unshift(table.id);
     const nameFieldId = table.fields.find(
       (field: { name: string }) => field.name === NAME_FIELD,
     )?.id;
@@ -80,12 +83,12 @@ export const runImportRecordHistoryCase = async (
       throw new Error(`Table ${tableId} is not in place`);
     }
 
-    const historyCount = async () => {
+    const historyCount = async (target = tableId) => {
       // The query takes no page size - a cursor and some filters is all it
       // offers - so this is the first page. That is enough: the assertion is
       // that the list is empty, and one entry on the first page is one too
       // many.
-      const response = await apiGetRecordListHistory(tableId, {});
+      const response = await apiGetRecordListHistory(target, {});
       return {
         headers: response.headers,
         count: (response.data.historyList ?? []).length,
@@ -156,19 +159,57 @@ export const runImportRecordHistoryCase = async (
       throw new Error("the analyzer found no worksheet in the uploaded CSV");
     }
 
-    const imported = await apiInplaceImport(baseId, tableId, {
-      attachmentUrl,
-      fileType: SUPPORTEDTYPE.CSV,
-      insertConfig: {
-        sourceWorkSheetKey: worksheetKey,
-        excludeFirstRow: true,
-        sourceColumnMap: { [nameFieldId]: 0, [noteFieldId]: 1 },
-      },
-    });
-    const routing = assertServedByV2(imported.headers, {
-      operation: "PATCH /import/{baseId}/{tableId}",
-      feature: "importRecords",
-    });
+    // Which import. "inplace" adds the sheet's rows to the table that already
+    // exists; "newTable" is the other entry point, where the import creates
+    // the table as it goes. They are different handlers, and the first shape
+    // of this case measured only the former - green on both columns, run
+    // 32656953918.
+    let observedTableId = tableId;
+    let routing;
+    if (config.mode === "inplace") {
+      const imported = await apiInplaceImport(baseId, tableId, {
+        attachmentUrl,
+        fileType: SUPPORTEDTYPE.CSV,
+        insertConfig: {
+          sourceWorkSheetKey: worksheetKey,
+          excludeFirstRow: true,
+          sourceColumnMap: { [nameFieldId]: 0, [noteFieldId]: 1 },
+        },
+      });
+      routing = assertServedByV2(imported.headers, {
+        operation: "PATCH /import/{baseId}/{tableId}",
+        feature: "importRecords",
+      });
+    } else {
+      const columns = analyzed.data.worksheets[worksheetKey].columns;
+      const imported = await apiImportTableFromFile(baseId, {
+        attachmentUrl,
+        fileType: SUPPORTEDTYPE.CSV,
+        worksheets: {
+          [worksheetKey]: {
+            name: `${suffix}-imported`,
+            columns: columns.map((column: unknown, index: number) => ({
+              ...(column as Record<string, unknown>),
+              sourceColumnIndex: index,
+            })),
+            useFirstRowAsHeader: true,
+            importData: true,
+          },
+        },
+      });
+      routing = assertServedByV2(imported.headers, {
+        operation: "POST /import/{baseId}",
+        feature: "importCsv",
+      });
+      const createdId = imported.data?.[0]?.id;
+      if (!createdId) {
+        throw new Error(
+          `the import created no table: ${JSON.stringify(imported.data)}`,
+        );
+      }
+      createdTableIds.unshift(createdId);
+      observedTableId = createdId;
+    }
 
     const probe = await bugCheckpoint(
       "import-writes-no-record-history",
@@ -179,7 +220,7 @@ export const runImportRecordHistoryCase = async (
         const deadline = Date.now() + config.settleTimeoutMs;
         let count = 0;
         for (;;) {
-          count = (await historyCount()).count;
+          count = (await historyCount(observedTableId)).count;
           if (count > 0) {
             throw new Error(
               `importing ${config.importedRows} rows of 2 columns wrote ${count} record history entries - ` +
@@ -199,6 +240,8 @@ export const runImportRecordHistoryCase = async (
     return {
       details: {
         tableId,
+        observedTableId,
+        mode: config.mode,
         importedRows: config.importedRows,
         routing,
         historyAfterImport: probe.count,
@@ -207,13 +250,13 @@ export const runImportRecordHistoryCase = async (
     };
   } finally {
     await unlink(csvPath).catch(() => undefined);
-    if (tableId) {
+    for (const created of createdTableIds) {
       try {
-        await permanentDeleteTable(baseId, tableId);
+        await permanentDeleteTable(baseId, created);
       } catch (error) {
         // Cleanup is the case's own housekeeping - the product did not fail.
         console.warn(
-          `[e2e-lab] cleanup failed for ${bugCase.id} (table ${tableId}): ${
+          `[e2e-lab] cleanup failed for ${bugCase.id} (table ${created}): ${
             error instanceof Error ? error.message : String(error)
           }`,
         );

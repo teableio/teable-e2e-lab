@@ -19,8 +19,14 @@ them.
 
 ## How the case is built
 
-A table, one row created through the API, then a three-row two-column sheet
-imported into it.
+A table, one row created through the API — the control — then a three-row
+two-column sheet imported.
+
+Which import matters. The first shape of this case added the sheet's rows to
+the table that already existed, and was green on both columns (run
+32656953918): that handler does not write the history entries. The case now
+takes the other entry point, where the import creates the table as it goes,
+which is the handler the fix names.
 
 The row created through the API is the control, and it is checked before the
 import: history has to be empty after it. Without that, "the import wrote

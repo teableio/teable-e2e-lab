@@ -21,6 +21,7 @@ export default defineBugCase({
   config: {
     baseId: "seed-base",
     tableNamePrefix: "e2e-lab-import-history",
+    mode: "newTable",
     importedRows: 3,
     settleTimeoutMs: 15_000,
     pollIntervalMs: 500,

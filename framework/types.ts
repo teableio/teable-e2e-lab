@@ -895,6 +895,11 @@ export interface SparseViewFieldOrderCaseConfig {
 export interface ImportRecordHistoryCaseConfig {
   baseId: "seed-base";
   tableNamePrefix: string;
+  // Which import. "inplace" adds the sheet's rows to a table that already
+  // exists; "newTable" is the entry point where the import creates the table
+  // as it goes. Different handlers, and the first shape of this case measured
+  // only the former.
+  mode: "inplace" | "newTable";
   // Rows in the sheet, two columns each, every cell filled. At least two: one
   // row times two columns is a count that could be reached by accident.
   importedRows: number;
