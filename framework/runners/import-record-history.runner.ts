@@ -6,6 +6,7 @@ import { FieldKeyType, FieldType } from "@teable/core";
 import {
   analyzeFile as apiAnalyzeFile,
   importTableFromFile as apiImportTableFromFile,
+  getRecords as apiGetRecords,
   getRecordListHistory as apiGetRecordListHistory,
   getSignature as apiGetSignature,
   inplaceImportTableFromFile as apiInplaceImport,
@@ -18,6 +19,7 @@ import {
   createRecords,
   createTable,
   permanentDeleteTable,
+  updateRecordByApi,
 } from "../../../utils/init-app";
 import { bugCheckpoint } from "../checkpoint";
 import { assertServedByV2 } from "../engine";
@@ -116,6 +118,45 @@ export const runImportRecordHistoryCase = async (
           "supposed to write none, so this case cannot say anything about the import",
       );
     }
+
+    // And the other half of the control: editing a cell DOES write history.
+    // Without this, "the import wrote nothing" would be satisfied just as well
+    // by history being switched off in this environment, and the case would
+    // pass on every commit. That is not hypothetical - it is what the first
+    // two shapes of this case could not rule out.
+    const created = await apiGetRecords(tableId, {
+      fieldKeyType: FieldKeyType.Id,
+      take: 1,
+    });
+    const controlRecordId = created.data.records[0]?.id;
+    if (!controlRecordId) {
+      throw new Error("the control row is not there");
+    }
+    await updateRecordByApi(
+      tableId,
+      controlRecordId,
+      noteFieldId,
+      "an edited note",
+    );
+    const editDeadline = Date.now() + config.settleTimeoutMs;
+    let afterEdit = 0;
+    for (;;) {
+      afterEdit = (await historyCount()).count;
+      if (afterEdit > 0) {
+        break;
+      }
+      if (Date.now() >= editDeadline) {
+        throw new Error(
+          `editing a cell wrote no record history within ${config.settleTimeoutMs}ms - history is not being ` +
+            "written at all here, so this case cannot tell an import that writes none from an environment " +
+            "that writes none",
+        );
+      }
+      await new Promise<void>((resolveSleep) => {
+        setTimeout(resolveSleep, config.pollIntervalMs);
+      });
+    }
+    const baseline = afterEdit;
 
     // The sheet: two columns, several rows, every cell filled. Empty cells
     // were never the problem - the amplification is one entry per non-empty
@@ -248,6 +289,7 @@ export const runImportRecordHistoryCase = async (
         importedRows: config.importedRows,
         routing,
         historyAfterImport: probe.count,
+        historyAfterControlEdit: baseline,
         watchedForMs: config.settleTimeoutMs,
       },
     };

@@ -28,10 +28,12 @@ the table that already existed, and was green on both columns (run
 takes the other entry point, where the import creates the table as it goes,
 which is the handler the fix names.
 
-The row created through the API is the control, and it is checked before the
-import: history has to be empty after it. Without that, "the import wrote
-nothing" could just as well mean history is switched off in this environment
-entirely, and the case would pass everywhere.
+The control has two halves, and the second was missing at first. Creating a row
+writes no history — checked. And editing a cell **does** write history —
+checked too, because without it "the import wrote nothing" is satisfied just as
+well by history being switched off in this environment, and the case would pass
+on every commit. The first two shapes of this case were green on both columns
+and could not rule that out.
 
 Every cell in the sheet is filled. Empty cells were never the problem — the
 amplification is per non-empty cell — so a sparse sheet would understate it.
