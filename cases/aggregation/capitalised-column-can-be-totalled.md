@@ -4,18 +4,22 @@
 
 ## What the user sees
 
-The summary under a column shows nothing, or the request behind it fails. The
-column holds numbers and looks entirely ordinary; what is unusual about it is
-that its name has capital letters.
+The count under a multi-select column is too high. Three rows, one of them
+empty, and the summary says three are filled.
 
-## Why
+An overcount is worse than a failure: nothing looks broken, and the number goes
+into whatever is being counted.
 
-Postgres folds an unquoted identifier to lower case. A column stored as
-`TotalAmount` is therefore only findable if the query quotes it, and the
-aggregation query did not.
+## What was measured
 
-That number is not a decoration: it is what the grid shows under the column,
-and every summary row and group total is made of it.
+On the fix's parent `ea79f6cc1` the count comes back as 3 where two rows have
+selections; on `develop` it is 2. Run 32666841101.
+
+The commit is about how the aggregation functions build their column
+reference — Postgres folds an unquoted identifier to lower case, so a column
+stored as `TotalAmount` is only findable if the query quotes it. Whether that
+is what produces this particular overcount is not established here; what the
+case pins is the number the summary shows.
 
 ## Why this is most tables
 
