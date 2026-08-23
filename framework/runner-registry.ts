@@ -56,6 +56,7 @@ import { runMultiFieldUpdateRealtimeCase } from "./runners/multi-field-update-re
 import { runBaseImportFieldDescriptionCase } from "./runners/base-import-field-description.runner";
 import { runUserWriteScopeCase } from "./runners/user-write-scope.runner";
 import { runOrphanLinkFieldDeleteCase } from "./runners/orphan-link-field-delete.runner";
+import { runTextToDateConversionCase } from "./runners/text-to-date-conversion.runner";
 import type {
   BugCase,
   BugCaseFor,
@@ -131,6 +132,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "base-import-field-description": runBaseImportFieldDescriptionCase,
   "user-write-scope": runUserWriteScopeCase,
   "orphan-link-field-delete": runOrphanLinkFieldDeleteCase,
+  "text-to-date-conversion": runTextToDateConversionCase,
 };
 
 export const executeRegisteredRunner = (
