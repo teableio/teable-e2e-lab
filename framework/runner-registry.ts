@@ -39,6 +39,7 @@ import { runLinkCellShapeCase } from "./runners/link-cell-shape.runner";
 import { runRatingConversionCase } from "./runners/rating-conversion.runner";
 import { runManualSortRealtimeCase } from "./runners/manual-sort-realtime.runner";
 import { runRepeatedForeignLinksCase } from "./runners/repeated-foreign-links.runner";
+import { runLegacyFieldIdCase } from "./runners/legacy-field-id.runner";
 import type {
   BugCase,
   BugCaseFor,
@@ -97,6 +98,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "rating-conversion": runRatingConversionCase,
   "manual-sort-realtime": runManualSortRealtimeCase,
   "repeated-foreign-links": runRepeatedForeignLinksCase,
+  "legacy-field-id": runLegacyFieldIdCase,
 };
 
 export const executeRegisteredRunner = (
