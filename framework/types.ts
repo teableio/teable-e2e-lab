@@ -1227,9 +1227,10 @@ export interface MultiFieldUpdateRealtimeCaseConfig {
 export interface InlineComputedUpdateResponseCaseConfig {
   baseId: "seed-base";
   tableNamePrefix: string;
-  priceBefore: number;
-  priceAfter: number;
-  // The formula is the source cell times this. Kept whole so the expectation
-  // is exact - a rounded expectation would let a wrong value pass.
-  multiplier: number;
+  price: number;
+  // The commission rates the formula branches on. The expectation is computed
+  // from them rather than written down, so the fixture and the assertion
+  // cannot drift apart.
+  newOrderRate: number;
+  renewalRate: number;
 }

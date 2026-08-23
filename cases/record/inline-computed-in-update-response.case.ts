@@ -20,9 +20,9 @@ export default defineBugCase({
   config: {
     baseId: "seed-base",
     tableNamePrefix: "e2e-lab-inline-computed",
-    priceBefore: 480,
-    priceAfter: 200,
-    // Whole numbers throughout, so the expected value is exact.
-    multiplier: 3,
+    price: 480,
+    // 480 * 0.15 = 72 before the edit, 0 after it.
+    newOrderRate: 0.15,
+    renewalRate: 0.1,
   },
 });

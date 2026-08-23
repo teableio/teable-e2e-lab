@@ -34,11 +34,20 @@ to. A red column with the right settled value means the recompute happened and
 the answer did not say so; a red column with a stale settled value would mean
 something else entirely and would need a different case.
 
+## The formula has to be a real commission rule
+
+A first attempt used a formula that was one number times another. Both columns
+were green (run 32671032258, `e6c338e11` answered 600 correctly): a
+single-level arithmetic formula is computed inline on the write path anyway.
+The fixture now carries the shape a base actually has - gated on a status,
+branching on the order type, rounded to money.
+
 ## What the fixture has to hold
 
-The edit has to change the source cell, and the formula's before and after
-values have to be different numbers — the runner refuses otherwise. The formula
-is a whole-number multiple, so the expectation is exact rather than rounded.
+The commission before the edit has to be something other than zero, or the
+stale value and the correct one are the same number; the runner refuses
+otherwise. Both expectations are computed from the rates in the config rather
+than written down, so the fixture and the assertion cannot drift apart.
 
 The runner checks the formula computes the old value before the edit. Without
 that, a formula that never computed at all would look like the bug.
