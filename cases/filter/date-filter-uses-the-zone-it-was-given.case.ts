@@ -18,6 +18,7 @@ export default defineBugCase({
     baseId: "seed-base",
     tableNamePrefix: "e2e-lab-date-filter-zone",
     filterValue: "exactDateWithZone",
+    operator: "isOnOrAfter",
     // UTC+8: the two instants below are the 13th here and the 12th in UTC.
     timeZone: "Asia/Shanghai",
     rows: [

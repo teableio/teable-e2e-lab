@@ -1100,6 +1100,9 @@ export interface LegacyDateFilterCaseConfig {
   // sends; "exactDateWithZone" is the structured value the filter panel saves,
   // carrying the zone that decides which day the date is.
   filterValue: "plainString" | "exactDateWithZone";
+  // Which comparison the filter makes. `is` asks for one day; `isOnOrAfter`
+  // asks for a boundary, which is where a mishandled zone shows most sharply.
+  operator: "is" | "isOnOrAfter";
   // Display zone of the date column, and the zone the structured filter
   // carries. For the zone variant this is load-bearing: it has to be one where
   // the local day and the UTC day differ for some of the fixture's instants.

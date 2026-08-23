@@ -21,6 +21,7 @@ export default defineBugCase({
     baseId: "seed-base",
     tableNamePrefix: "e2e-lab-legacy-date-filter",
     filterValue: "plainString",
+    operator: "is",
     timeZone: "UTC",
     rows: [
       { name: "on-the-day", date: "2026-02-12T09:00:00.000Z" },

@@ -15,14 +15,23 @@ day that date is. Matching ignored the zone and used UTC, so any deployment
 east of it — which is where the lab runs its server, and where the official
 image runs by default — answers for a different day than the one on screen.
 
+## Which comparison
+
+`isOnOrAfter`, not `is`. Asking for one day already honoured the zone on the
+fix's parent — measured, run 32665470824 — so the case moved to a boundary,
+which is where a mishandled zone shows most sharply: a row a few hours before
+local midnight is the previous day locally and the same day in UTC.
+
 ## What the fixture holds
 
-Three instants that are all the 12th in UTC, and a column whose zone is UTC+8.
-Two of them are the 13th there; one is still the 12th.
+Two instants that are both the 12th in UTC, in a column whose zone is UTC+8.
+One of them is 00:30 on the 13th there; the other is 23:00 on the 12th. A third
+row is comfortably the 11th in both.
 
-That split is the whole case. A filter that uses the zone returns the two; one
-that falls back to UTC returns all three. Neither answer is empty, and neither
-is an error — the difference is which rows a person is looking at.
+Asked for everything on or after the 13th **in that zone**, the answer is the
+first row alone. A filter that falls back to UTC sees both as the 12th and
+answers with neither. Neither answer is an error — the difference is which rows
+a person is looking at.
 
 ## Its sibling
 

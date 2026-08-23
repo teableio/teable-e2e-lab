@@ -25,8 +25,11 @@ import type { LegacyDateFilterCaseConfig } from "../types";
 //     matched nothing.
 //   exactDateWithZone (T5583): the structured value the filter panel saves
 //     carries the zone that decides which day the date is, and matching
-//     ignored it - so east of UTC the filter answered with the neighbouring
-//     day.
+//     ignored it - so east of UTC the filter answered for the neighbouring
+//     day. `is` already honoured the zone on the fix\'s parent (run
+//     32665470824); the comparison operators are where the boundary bites,
+//     because a row a few hours before local midnight is the previous day
+//     locally and the same day in UTC.
 //
 // Both are the worst way for a filter to fail: the answer is a plausible list
 // of rows, and a report built on it is quietly wrong rather than visibly
@@ -60,19 +63,34 @@ export const runLegacyDateFilterCase = async (
       day: "2-digit",
     }).format(new Date(value));
   const filterDay = dayOf(config.filterDate);
-  const wanted = config.rows.filter((row) => dayOf(row.date) === filterDay);
-  const others = config.rows.filter((row) => dayOf(row.date) !== filterDay);
-  if (wanted.length < 2 || others.length < 1) {
+  const wanted =
+    config.operator === "is"
+      ? config.rows.filter((row) => dayOf(row.date) === filterDay)
+      : // isOnOrAfter: every row on the filtered day or later, by day in the
+        // column's own zone. That is where the zone bites hardest - a row a
+        // few hours before local midnight is the previous day here and the
+        // same day in UTC.
+        config.rows.filter((row) => dayOf(row.date) >= filterDay);
+  const others = config.rows.filter((row) => !wanted.includes(row));
+  if (wanted.length < 1 || others.length < 1) {
     throw new Error(
-      "the fixture needs at least two rows on the filtered day - at different times, so a filter matching " +
-        "the instant rather than the day is caught - and at least one row on another day",
+      "the fixture needs rows the filter selects and rows it does not - otherwise an answer that includes " +
+        "everything and one that includes the right rows look the same",
     );
   }
-  if (new Set(wanted.map((row) => row.date)).size !== wanted.length) {
-    throw new Error(
-      "the rows on the filtered day have to be at different times, or matching the instant and matching " +
-        "the day look the same",
-    );
+  if (config.operator === "is") {
+    if (wanted.length < 2) {
+      throw new Error(
+        "for `is`, at least two rows on the filtered day - at different times, so a filter matching the " +
+          "instant rather than the day is caught",
+      );
+    }
+    if (new Set(wanted.map((row) => row.date)).size !== wanted.length) {
+      throw new Error(
+        "the rows on the filtered day have to be at different times, or matching the instant and matching " +
+          "the day look the same",
+      );
+    }
   }
 
   try {
@@ -133,7 +151,7 @@ export const runLegacyDateFilterCase = async (
             filterSet: [
               {
                 fieldId: dateFieldId,
-                operator: "is",
+                operator: config.operator,
                 value:
                   config.filterValue === "plainString"
                     ? // The bare string, the way a v1-era client sends it.
