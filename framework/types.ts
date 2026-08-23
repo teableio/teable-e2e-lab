@@ -1136,5 +1136,12 @@ export interface AggregationMixedCaseCaseConfig {
   // letters, or an unquoted identifier folds to itself and the query finds it
   // either way.
   fieldName: string;
+  // Which column shape. A plain number column is summed and is green on both
+  // sides of the fix; a multi-valued one goes through the adapter the fix
+  // touches and is counted by how many rows have anything in it.
+  column: "number" | "multiSelect";
   amounts: number[];
+  // The choices, and what each row selects, for the multi-valued shape.
+  tags: string[];
+  rowTags: string[][];
 }

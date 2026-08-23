@@ -21,6 +21,9 @@ export default defineBugCase({
     baseId: "seed-base",
     tableNamePrefix: "e2e-lab-agg-mixed-case",
     fieldName: "TotalAmount",
+    column: "multiSelect",
     amounts: [100, 250, 25],
+    tags: ["Urgent", "Backend"],
+    rowTags: [["Urgent"], ["Urgent", "Backend"], []],
   },
 });

@@ -1,4 +1,4 @@
-import { FieldType, StatisticsFunc } from "@teable/core";
+import { Colors, FieldType, StatisticsFunc } from "@teable/core";
 import { getAggregation as apiGetAggregation } from "@teable/openapi";
 import { createTable, permanentDeleteTable } from "../../../utils/init-app";
 import { bugCheckpoint } from "../checkpoint";
@@ -36,18 +36,50 @@ export const runAggregationMixedCaseCase = async (
         "query would find it either way",
     );
   }
-  const expectedTotal = config.amounts.reduce((sum, value) => sum + value, 0);
+  // A number column is summed; a multi-valued one is counted by how many rows
+  // have anything in it. The multi-valued adapter is the one the fix touches,
+  // and a plain number column is green on both columns - run 32666526545.
+  const expectedTotal =
+    config.column === "multiSelect"
+      ? config.rowTags.filter((tags) => tags.length > 0).length
+      : config.amounts.reduce((sum, value) => sum + value, 0);
+  const statistic =
+    config.column === "multiSelect"
+      ? StatisticsFunc.Filled
+      : StatisticsFunc.Sum;
 
   try {
     const table = await createTable(baseId, {
       name: suffix,
       fields: [
         { name: NAME_FIELD, type: FieldType.SingleLineText, isPrimary: true },
-        { name: config.fieldName, type: FieldType.Number },
+        config.column === "multiSelect"
+          ? {
+              name: config.fieldName,
+              type: FieldType.MultipleSelect,
+              options: {
+                choices: config.tags.map((tag, index) => ({
+                  name: tag,
+                  color: [Colors.BlueBright, Colors.GreenBright][index % 2],
+                })),
+              },
+            }
+          : { name: config.fieldName, type: FieldType.Number },
       ],
-      records: config.amounts.map((amount, index) => ({
-        fields: { [NAME_FIELD]: `row-${index}`, [config.fieldName]: amount },
-      })),
+      records:
+        config.column === "multiSelect"
+          ? config.rowTags.map((tags, index) => ({
+              fields: {
+                [NAME_FIELD]: `row-${index}`,
+                [config.fieldName]: tags,
+              },
+            }))
+          : config.amounts.map((amount, index) => ({
+              fields: {
+                [NAME_FIELD]: `row-${index}`,
+                [config.fieldName]: amount,
+              },
+            })),
     });
     tableId = table.id;
     const amountField = table.fields.find(
@@ -73,7 +105,7 @@ export const runAggregationMixedCaseCase = async (
       "a-capitalised-column-can-be-totalled",
       async () => {
         const response = await apiGetAggregation(tableId, {
-          field: { [StatisticsFunc.Sum]: [amountField.id] },
+          field: { [statistic]: [amountField.id] },
         });
         const entry = (response.data.aggregations ?? []).find(
           (item: { fieldId: string }) => item.fieldId === amountField.id,
@@ -91,6 +123,8 @@ export const runAggregationMixedCaseCase = async (
     return {
       details: {
         tableId,
+        column: config.column,
+        statistic,
         fieldName: config.fieldName,
         physicalColumn: probe.column,
         total: probe.value,
