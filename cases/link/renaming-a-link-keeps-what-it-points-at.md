@@ -4,8 +4,10 @@
 
 ## What the user sees
 
-A link column is renamed and stops working. It still looks like a link; it just
-no longer reaches anything, and the cells can no longer be filled in.
+A link column is renamed, and the matching column on the _other_ table
+disappears. The renamed column itself looks fine. Whoever notices is somebody
+working in the other table, who has no reason to connect it to a rename that
+happened somewhere else.
 
 ## Why
 
@@ -37,6 +39,11 @@ Four things about the field afterwards, and one about the other table:
 The last is the half a person notices from the other side, and it is a separate
 loss: a link can keep its own configuration and still leave the other table
 with an orphan.
+
+**That is exactly what happens.** Measured on `a5a492ca9`: the renamed link
+keeps its own options — the table it points at, how many rows it holds — and
+the column it had put on the other table is gone. A case asserting only the
+field it renamed would have been green on the broken build.
 
 ## Why the field is read back rather than the reply
 
