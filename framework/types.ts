@@ -47,6 +47,7 @@ export interface BugCaseConfigByRunner {
   "link-cell-shape": LinkCellShapeCaseConfig;
   "rating-conversion": RatingConversionCaseConfig;
   "manual-sort-realtime": ManualSortRealtimeCaseConfig;
+  "repeated-foreign-links": RepeatedForeignLinksCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -984,4 +985,17 @@ export interface ManualSortRealtimeCaseConfig {
   subscribeTimeoutMs: number;
   // How long the sorted order may take to arrive.
   settleTimeoutMs: number;
+}
+
+// A table created with two link fields pointing at the same other table. Each
+// link puts a column on that other table, and the names for those columns were
+// planned against the table as it stood before the request rather than as the
+// request was building it.
+export interface RepeatedForeignLinksCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // The link fields on the new table, all pointing at the same reference
+  // table. At least two, and named differently from each other - the case is
+  // about the columns they create on the other side.
+  linkFieldNames: string[];
 }

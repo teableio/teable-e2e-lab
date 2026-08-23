@@ -30,6 +30,7 @@ import selectionPasteByIdLandsOnItsOwnRowsCase from "./cases/selection/paste-by-
 import searchStaysInsideViewFilterCase from "./cases/search/stays-inside-view-filter.case";
 import realtimeManualSortCase from "./cases/realtime/manual-sort-reaches-the-open-page.case";
 import fieldRatingConversionCase from "./cases/field/rating-conversion-normalizes-existing-values.case";
+import linkTwoToOneTableCase from "./cases/link/two-links-to-one-table-get-two-columns.case";
 import lookupConditionalForeignRefCase from "./cases/lookup/conditional-filter-over-a-foreign-table.case";
 import recordInvalidDateCase from "./cases/record/invalid-date-is-not-invented.case";
 import recordRatingDomainCase from "./cases/record/rating-is-stored-in-whole-stars.case";
@@ -85,6 +86,7 @@ const cases = [
   searchStaysInsideViewFilterCase,
   realtimeManualSortCase,
   fieldRatingConversionCase,
+  linkTwoToOneTableCase,
   lookupConditionalForeignRefCase,
   recordInvalidDateCase,
   recordRatingDomainCase,
