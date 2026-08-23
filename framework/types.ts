@@ -59,6 +59,7 @@ export interface BugCaseConfigByRunner {
   "aggregation-mixed-case": AggregationMixedCaseCaseConfig;
   "checkbox-cleared-default": CheckboxClearedDefaultCaseConfig;
   "csv-headers-disabled": CsvHeadersDisabledCaseConfig;
+  "link-rename-keeps-config": LinkRenameKeepsConfigCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1171,4 +1172,18 @@ export interface CsvHeadersDisabledCaseConfig {
   // The lines of the sheet. At least two: with one, a dropped first line and
   // an import that did nothing look the same.
   rows: { ref: string; note: string }[];
+}
+
+// A link field renamed and nothing else. A link's configuration is what makes
+// it a link - which table it reaches, how many rows it holds, the column it
+// put on the other side - and a rename says nothing about any of it.
+export interface LinkRenameKeepsConfigCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // How the rename is sent. "patchName" is a partial update carrying only the
+  // name, which is what the fix is about; "convertWholeField" sends the whole
+  // configuration alongside and is green on both columns.
+  request: "patchName" | "convertWholeField";
+  // The new name. Must differ from the old one, or nothing is being renamed.
+  renamedTo: string;
 }
