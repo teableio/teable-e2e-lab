@@ -46,6 +46,7 @@ places — it cannot be settled and skipped at once.
 | `a9f56d9d51` | T6765 | Written and run: converting a number column into a lookup of a foreign formula completes correctly on the fix's parent, at 1 row and at 40, in about a second. See the note below this table.                                                                                      |
 | `e94ae6db28` | T6767 | Written and run: a formula over a lookup of a link field stored in a leftover TEXT column backfills correctly on the fix's parent. Same note.                                                                                                                                      |
 | `228be9ffa7` | T6770 | Written and run: a lookup of a link field added to a host whose rows are already linked seeds correctly on the fix's parent. Same note.                                                                                                                                            |
+| `45828597b`  | T6524 | Written and run three times. The last shape proved the observation is unavailable here: editing a cell writes no record history in this environment at all, within 60 seconds, so "the import wrote none" cannot be told from "nothing writes any". See the note below.            |
 | `dfe6a1ebc`  | T6614 | Written in three shapes and run three times, green on both columns each time. The dangling reference a `deleted_time` fixture produces does not reach the SQL builder the fix changes. See the note below the table.                                                               |
 | `bfe5599ed`  | T6615 | Written and run: a conditional lookup whose condition compares two columns of its source table selects every source row on the fix's parent and on `develop` alike, so the two columns are indistinguishable. See the note below the table.                                        |
 | `c0ffdb358`  | T6511 | Written and run: clearing a filled text cell with typecast already stored `null` on the fix's parent, so the case is green on both columns. Run 32656127300.                                                                                                                       |
@@ -184,6 +185,37 @@ The sibling fix `3eff0a100` (T6599), whose filter names the _host_ table on
 both sides, does reproduce and ships as
 `lookup/conditional-filter-over-a-foreign-table`. Its runner still supports the
 source-side shape, so a future attempt starts by changing one config value.
+
+### The import-record-history row
+
+The change stops an import writing one record-history entry per non-empty
+cell. Creating a row through the product writes none - a new row has no
+previous value - and an import is creating rows, so a 10000 x 20 sheet was
+200000 entries nobody asked for.
+
+Three shapes:
+
+1. **In-place import into an existing table.** Green on both columns - run 32656953918.
+2. **The create-table import, the handler the fix names.** Green on both
+   columns again - run 32657518939.
+3. **The same, with a positive control added first: edit a cell and require an
+   entry to appear.** The control fires on both columns - runs 32657904880 at
+   15 seconds and 32658159664 at 60. Record history is not written in this
+   environment at all.
+
+The third shape is what makes the first two meaningless rather than
+encouraging: "the import wrote no history" is satisfied just as well by nothing
+writing any, and a case built on it would pass on every commit forever.
+
+Whether history is off by configuration, gated to an edition, or written by a
+worker this lab does not run is not established here. Settling that is where
+the next attempt starts, and until it is settled no assertion about record
+history can be trusted in this repository - including in cases that would use
+it only incidentally.
+
+The three shapes are kept on branch `case/import-record-history`, unmerged. The
+positive control in it is worth reading first: it is the part that turned two
+silent greens into a finding.
 
 ## Covered
 
