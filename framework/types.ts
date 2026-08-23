@@ -1096,8 +1096,13 @@ export interface RequiredDefaultCaseConfig {
 export interface LegacyDateFilterCaseConfig {
   baseId: "seed-base";
   tableNamePrefix: string;
-  // Display zone of the date column. Pinned so the dates read the same
-  // everywhere rather than being load-bearing.
+  // How the date is sent. "plainString" is the bare date a v1-era client
+  // sends; "exactDateWithZone" is the structured value the filter panel saves,
+  // carrying the zone that decides which day the date is.
+  filterValue: "plainString" | "exactDateWithZone";
+  // Display zone of the date column, and the zone the structured filter
+  // carries. For the zone variant this is load-bearing: it has to be one where
+  // the local day and the UTC day differ for some of the fixture's instants.
   timeZone: string;
   // The rows, and which date the filter asks for. At least one row must be on
   // that date and at least one must not, so an empty answer and an unfiltered

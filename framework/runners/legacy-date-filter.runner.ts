@@ -11,18 +11,26 @@ import { assertServedByV2 } from "../engine";
 import type { BugCaseFor, BugProbeResult, BugRunContext } from "../types";
 import type { LegacyDateFilterCaseConfig } from "../types";
 
-// Filter a date column by a plain date string -> checkpoint: the rows on that
-// date come back.
+// Filter a date column by one date -> checkpoint: the rows on that day come
+// back, and only those.
 //
 // A date filter has a shape - a mode, a date, a time zone - and v1 also took
 // the date on its own. Integrations written against v1 send that: a saved
 // view's filter migrated forward, a script that builds a query string, a
 // report that asks for "everything dated the 12th".
 //
-// v2 did not recognise the bare string, so the filter matched nothing. That is
-// the worst way for a filter to fail: an empty result reads as "there is
-// nothing there", and a report built on it is quietly wrong rather than
-// visibly broken.
+// Two ways to send that date, and each had its own failure:
+//
+//   plainString (T5584): v2 did not recognise the bare string, so the filter
+//     matched nothing.
+//   exactDateWithZone (T5583): the structured value the filter panel saves
+//     carries the zone that decides which day the date is, and matching
+//     ignored it - so east of UTC the filter answered with the neighbouring
+//     day.
+//
+// Both are the worst way for a filter to fail: the answer is a plausible list
+// of rows, and a report built on it is quietly wrong rather than visibly
+// broken.
 //
 // The fixture holds rows on two different days, so an empty answer and an
 // unfiltered one are both wrong in a way the assertion can see.
@@ -126,8 +134,17 @@ export const runLegacyDateFilterCase = async (
               {
                 fieldId: dateFieldId,
                 operator: "is",
-                // The bare string, the way a v1-era client sends it.
-                value: config.filterDate,
+                value:
+                  config.filterValue === "plainString"
+                    ? // The bare string, the way a v1-era client sends it.
+                      config.filterDate
+                    : // The shape the filter panel saves: a date and the zone
+                      // that decides which day it is.
+                      {
+                        mode: "exactDate",
+                        exactDate: config.filterDate,
+                        timeZone: config.timeZone,
+                      },
               },
             ],
           },

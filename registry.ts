@@ -29,6 +29,7 @@ import importExcelHeaderBelowA1Case from "./cases/import/excel-header-below-a1.c
 import selectionPasteByIdLandsOnItsOwnRowsCase from "./cases/selection/paste-by-id-lands-on-its-own-rows.case";
 import searchStaysInsideViewFilterCase from "./cases/search/stays-inside-view-filter.case";
 import filterPlainDateStringCase from "./cases/filter/plain-date-string-filters-a-date-column.case";
+import filterDateZoneCase from "./cases/filter/date-filter-uses-the-zone-it-was-given.case";
 import fieldRequiredDefaultBackfillCase from "./cases/field/required-default-backfills-existing-rows.case";
 import lookupRollupFilterCase from "./cases/lookup/rollup-condition-is-saved-and-applied.case";
 import lookupRetargetCase from "./cases/lookup/repointed-lookup-shows-its-new-target.case";
@@ -92,6 +93,7 @@ const cases = [
   selectionPasteByIdLandsOnItsOwnRowsCase,
   searchStaysInsideViewFilterCase,
   filterPlainDateStringCase,
+  filterDateZoneCase,
   fieldRequiredDefaultBackfillCase,
   lookupRollupFilterCase,
   lookupRetargetCase,
