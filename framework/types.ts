@@ -1057,6 +1057,8 @@ export interface RollupFilterPersistsCaseConfig {
   // same total.
   countedCategory: string;
   items: { name: string; category: string; amount: number }[];
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
 }
 
 // A lookup pointing at a date column, repointed at a text column. The two are
