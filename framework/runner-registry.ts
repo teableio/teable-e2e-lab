@@ -49,6 +49,7 @@ import { runLegacyDateFilterCase } from "./runners/legacy-date-filter.runner";
 import { runFormulaOverDateLookupCase } from "./runners/formula-over-date-lookup.runner";
 import { runAggregationMixedCaseCase } from "./runners/aggregation-mixed-case.runner";
 import { runCheckboxClearedDefaultCase } from "./runners/checkbox-cleared-default.runner";
+import { runCsvHeadersDisabledCase } from "./runners/csv-headers-disabled.runner";
 import type {
   BugCase,
   BugCaseFor,
@@ -117,6 +118,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "formula-over-date-lookup": runFormulaOverDateLookupCase,
   "aggregation-mixed-case": runAggregationMixedCaseCase,
   "checkbox-cleared-default": runCheckboxClearedDefaultCase,
+  "csv-headers-disabled": runCsvHeadersDisabledCase,
 };
 
 export const executeRegisteredRunner = (
