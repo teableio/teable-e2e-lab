@@ -62,6 +62,7 @@ export interface BugCaseConfigByRunner {
   "link-rename-keeps-config": LinkRenameKeepsConfigCaseConfig;
   "unique-toggle-cleanup": UniqueToggleCleanupCaseConfig;
   "multi-field-update-realtime": MultiFieldUpdateRealtimeCaseConfig;
+  "base-import-field-description": BaseImportFieldDescriptionCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1218,4 +1219,16 @@ export interface MultiFieldUpdateRealtimeCaseConfig {
   subscribeTimeoutMs: number;
   settleTimeoutMs: number;
   pollIntervalMs: number;
+}
+
+// A base carried out and back in through export and import. The field
+// descriptions - the instructions whoever fills the rows reads - were dropped
+// on the way, and the copy looks complete without them.
+export interface BaseImportFieldDescriptionCaseConfig {
+  namePrefix: string;
+  rowTitle: string;
+  describedFields: { name: string; description: string }[];
+  // A field created with no description, so "every field has one" cannot be
+  // satisfied by inventing them.
+  undescribedFieldName: string;
 }
