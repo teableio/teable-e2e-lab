@@ -35,6 +35,7 @@ export interface BugCaseConfigByRunner {
   "user-field-notify-bulk-action": UserFieldNotifyBulkActionCaseConfig;
   "user-field-notify-replay": UserFieldNotifyReplayCaseConfig;
   "user-field-notify-burst": UserFieldNotifyBurstCaseConfig;
+  "user-group-identity": UserGroupIdentityCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -732,4 +733,53 @@ export interface UserFieldNotifyBurstCaseConfig {
   // coalescing window, or the count reads the first instant delivery as the
   // whole story and passes on a commit that coalesces nothing.
   settleAfterBurstMs: number;
+}
+
+// A user field holding the cell shapes a base accumulates - a fresh snapshot,
+// a drifted one, a bare user id, an unwrapped object - grouped by that field
+// -> checkpoint: the rows land in the buckets the fixture declares.
+//
+// Grouping folds on identity (id and title) rather than on the stored cell,
+// because the stored cell is a write-time snapshot. Every shape identity
+// cannot be read out of is a collaborator filed under "empty".
+export interface UserGroupIdentityCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Whether the user field accepts several people. `bareObject` is only
+  // meaningful when this is true - it is the leftover of a single -> multiple
+  // conversion.
+  multiple: boolean;
+  rows: {
+    name: string;
+    // How this row's cell is physically stored. `assigned` and `drifted` are
+    // written through the API first, so the ordinary shape in the fixture is
+    // the one the product itself produces; `drifted` is then rewritten with
+    // the later snapshot.
+    stored: "assigned" | "drifted" | "scalarId" | "bareObject" | "empty";
+    // Keys that drift over a base's life - email, avatarUrl. Never id or
+    // title: those are the identity, and moving them would make the rows
+    // genuinely different people.
+    snapshotExtras?: Record<string, string>;
+    // Which bucket this row belongs in. Rows sharing a label must come back
+    // in one group.
+    bucket: string;
+  }[];
+  // What the pre-fix grouping does with this fixture. Declared rather than
+  // derived - what the broken code does with each cell shape is the thing
+  // under test, and deriving it would make the case agree with itself instead
+  // of with the product - and copied from the run that first went red rather
+  // than guessed.
+  //
+  // "partition" is the ordinary form: the same rows, in different buckets. The
+  // runner refuses a broken partition equal to the expected one, or one that
+  // does not cover exactly the fixture rows.
+  //
+  // "headerlessRowSegments" is what one bucket splitting apart looks like from
+  // outside: a single header, then row segments belonging to no header at all,
+  // which the grid draws as extra rows with the numbering restarted. It is not
+  // a partition, so there is nothing to compare - the segments are the
+  // finding.
+  broken:
+    | { kind: "partition"; buckets: string[][] }
+    | { kind: "headerlessRowSegments" };
 }
