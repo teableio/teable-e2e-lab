@@ -63,6 +63,7 @@ export interface BugCaseConfigByRunner {
   "unique-toggle-cleanup": UniqueToggleCleanupCaseConfig;
   "multi-field-update-realtime": MultiFieldUpdateRealtimeCaseConfig;
   "base-import-field-description": BaseImportFieldDescriptionCaseConfig;
+  "user-write-scope": UserWriteScopeCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1235,4 +1236,17 @@ export interface BaseImportFieldDescriptionCaseConfig {
   // A field created with no description, so "every field has one" cannot be
   // satisfied by inventing them.
   undescribedFieldName: string;
+}
+
+// A member column matched every email typed into it against every account on
+// the platform, so anyone with an account could be written into a base they
+// have nothing to do with.
+export interface UserWriteScopeCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  outsiderName: string;
+  // The control row, naming someone who does belong to this base. Without it
+  // an empty cell would prove nothing.
+  insiderRowTitle: string;
+  outsiderRowTitle: string;
 }
