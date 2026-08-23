@@ -42,6 +42,7 @@ export interface BugCaseConfigByRunner {
   "legacy-record-id": LegacyRecordIdCaseConfig;
   "restore-conditional-lookup": RestoreConditionalLookupCaseConfig;
   "sparse-view-field-order": SparseViewFieldOrderCaseConfig;
+  "conditional-filter-field-refs": ConditionalFilterFieldRefsCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -885,4 +886,29 @@ export interface SparseViewFieldOrderCaseConfig {
   // is merely off by one.
   legacyFieldNames: string[];
   addedFieldName: string;
+}
+
+// A conditional lookup whose condition compares two columns of the table it
+// lives on. Both sides of the field reference name a host field, which the
+// set-based query paths could not generate SQL for - so the whole computed run
+// for that table dead-lettered as a code bug, on every recompute.
+export interface ConditionalFilterFieldRefsCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Where the looked-up value comes from. "selfTable": the host's own value
+  // column, so the reference sides and the lookup source are one table.
+  // "foreignTable": another table, while the condition still compares two host
+  // columns.
+  source: "selfTable" | "foreignTable";
+  // At least one row whose keys agree and at least one where they do not, or
+  // the condition answers the same for every row and matching nothing looks
+  // like matching.
+  rows: { name: string; left: string; right: string; value: string }[];
+  // The value the foreign row holds, when there is one.
+  foreignValue: string;
+  // What the matched value is changed to, to force a recompute after the
+  // backfill.
+  editedValue: string;
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
 }
