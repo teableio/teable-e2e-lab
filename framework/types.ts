@@ -52,6 +52,7 @@ export interface BugCaseConfigByRunner {
   "nested-lookup-rename": NestedLookupRenameCaseConfig;
   "table-restore-scope": TableRestoreScopeCaseConfig;
   "rollup-filter-persists": RollupFilterPersistsCaseConfig;
+  "lookup-retarget": LookupRetargetCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1056,6 +1057,18 @@ export interface RollupFilterPersistsCaseConfig {
   // same total.
   countedCategory: string;
   items: { name: string; category: string; amount: number }[];
+}
+
+// A lookup pointing at a date column, repointed at a text column. The two are
+// stored differently underneath and the lookup's own storage was left as it
+// was, so what came back afterwards was not the text it now points at.
+export interface LookupRetargetCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // What the source row holds in each column. The date is what the lookup
+  // shows first; the text is what it must show after being repointed.
+  dateValue: string;
+  textValue: string;
   settleTimeoutMs: number;
   pollIntervalMs: number;
 }
