@@ -31,7 +31,6 @@ import searchStaysInsideViewFilterCase from "./cases/search/stays-inside-view-fi
 import lookupConditionalForeignRefCase from "./cases/lookup/conditional-filter-over-a-foreign-table.case";
 import recordInvalidDateCase from "./cases/record/invalid-date-is-not-invented.case";
 import recordRatingDomainCase from "./cases/record/rating-is-stored-in-whole-stars.case";
-import recordClearedCellCase from "./cases/record/cleared-cell-stores-the-same-empty.case";
 import recordLegacyIdStillComputesCase from "./cases/record/legacy-id-row-still-computes.case";
 import lookupConditionalRestoreCase from "./cases/lookup/conditional-lookup-survives-restore.case";
 import viewAddedFieldLandsLastCase from "./cases/view/added-field-lands-after-legacy-columns.case";
@@ -82,7 +81,6 @@ const cases = [
   lookupConditionalForeignRefCase,
   recordInvalidDateCase,
   recordRatingDomainCase,
-  recordClearedCellCase,
   recordLegacyIdStillComputesCase,
   lookupConditionalRestoreCase,
   viewAddedFieldLandsLastCase,

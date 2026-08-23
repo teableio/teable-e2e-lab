@@ -1,8 +1,8 @@
 # record/invalid-date-is-not-invented
 
-**T6517** — fixed. The lead case of three on the `value-normalization` runner;
-the others are `record/rating-is-stored-in-whole-stars` and
-`record/cleared-cell-stores-the-same-empty`, and the shared design is here.
+**T6517** — fixed. The lead case of two on the `value-normalization` runner;
+the sibling is `record/rating-is-stored-in-whole-stars`, and the shared design
+is here.
 
 ## What the user sees
 
@@ -16,9 +16,14 @@ happens to be wrong.
 Typecast is what makes an import work: the value arrives as text and the field
 decides what to do with it. That decision is not cosmetic — it is what filters,
 formulas and every later read see — and v2's answers had drifted from v1's in
-several places at once. The three cases here are three of those answers, and
-they share a runner because the shape is identical: write a value the field
-cannot hold as written, read the cell back.
+several places at once. The cases here are two of those answers, and they
+share a runner because the shape is identical: write a value the field cannot
+hold as written, read the cell back.
+
+A third was built and dropped: clearing a filled cell (T6511, empty string
+where v1 stored null) already stored `null` on its fix's parent, so it was
+green on both columns. It is recorded in `docs/triage-ledger.md`, and the
+runner keeps its `emptyValue` shape.
 
 The drift matters most on bases that moved from v1, where the same column ends
 up holding values normalized two different ways.
