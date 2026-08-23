@@ -28,6 +28,7 @@ import linkCrossBaseLinkClearsOnDeleteCase from "./cases/link/cross-base-link-cl
 import importExcelHeaderBelowA1Case from "./cases/import/excel-header-below-a1.case";
 import selectionPasteByIdLandsOnItsOwnRowsCase from "./cases/selection/paste-by-id-lands-on-its-own-rows.case";
 import searchStaysInsideViewFilterCase from "./cases/search/stays-inside-view-filter.case";
+import fieldLegacyIdTableCase from "./cases/field/legacy-field-id-table-still-works.case";
 import realtimeManualSortCase from "./cases/realtime/manual-sort-reaches-the-open-page.case";
 import fieldRatingConversionCase from "./cases/field/rating-conversion-normalizes-existing-values.case";
 import linkTwoToOneTableCase from "./cases/link/two-links-to-one-table-get-two-columns.case";
@@ -84,6 +85,7 @@ const cases = [
   importExcelHeaderBelowA1Case,
   selectionPasteByIdLandsOnItsOwnRowsCase,
   searchStaysInsideViewFilterCase,
+  fieldLegacyIdTableCase,
   realtimeManualSortCase,
   fieldRatingConversionCase,
   linkTwoToOneTableCase,

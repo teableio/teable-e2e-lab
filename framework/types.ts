@@ -48,6 +48,7 @@ export interface BugCaseConfigByRunner {
   "rating-conversion": RatingConversionCaseConfig;
   "manual-sort-realtime": ManualSortRealtimeCaseConfig;
   "repeated-foreign-links": RepeatedForeignLinksCaseConfig;
+  "legacy-field-id": LegacyFieldIdCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -998,4 +999,18 @@ export interface RepeatedForeignLinksCaseConfig {
   // table. At least two, and named differently from each other - the case is
   // about the columns they create on the other side.
   linkFieldNames: string[];
+}
+
+// A table holding a field whose id body is not the length this version
+// generates - what an imported or migrated base carries, because v1 only
+// enforced the prefix. A field id is part of every query built against its
+// table, so one unparseable field is a table nobody can read.
+export interface LegacyFieldIdCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // The id the field is given. Must keep the `fld` prefix and must not have a
+  // canonical 16-character body; the runner refuses both.
+  legacyFieldId: string;
+  seedValue: string;
+  updatedValue: string;
 }
