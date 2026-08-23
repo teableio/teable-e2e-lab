@@ -46,6 +46,7 @@ export interface BugCaseConfigByRunner {
   "value-normalization": ValueNormalizationCaseConfig;
   "link-cell-shape": LinkCellShapeCaseConfig;
   "rating-conversion": RatingConversionCaseConfig;
+  "manual-sort-realtime": ManualSortRealtimeCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -966,4 +967,21 @@ export interface RatingConversionCaseConfig {
   // read once converted. At least one value has to be outside the rating's
   // domain, or the conversion would have nothing to normalize.
   rows: { name: string; before: number | null; after: number | null }[];
+}
+
+// A client watching a view's rows while that view is sorted. The sort rewrites
+// the view's row order with raw SQL and told no subscriber, so the click
+// looked dead and a refresh served the cached pre-sort order back.
+export interface ManualSortRealtimeCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // One number per row, in the order the rows are created. At least three, and
+  // not already ascending - sorting an already-sorted fixture pushes nothing
+  // and would pass on every commit.
+  rowRanks: number[];
+  // How long the client may take to attach. Failing to subscribe is a fixture
+  // failure, not a reproduction.
+  subscribeTimeoutMs: number;
+  // How long the sorted order may take to arrive.
+  settleTimeoutMs: number;
 }

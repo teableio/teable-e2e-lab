@@ -42,6 +42,23 @@ export interface RealtimeSubscription<T = Record<string, unknown>> {
   close(): void;
 }
 
+/**
+ * A live query rather than a single document: the grid subscribes this way,
+ * and the thing it watches is which rows are in the result and in what order.
+ */
+export interface RealtimeQuerySubscription {
+  /** The ids currently in the result, in the order the server put them. */
+  ids(): string[];
+  /** Everything the client failed on. A healthy subscription keeps this empty. */
+  errors(): string[];
+  /** Resolves once `predicate` holds over the ids, or rejects on timeout. */
+  waitFor(
+    predicate: (ids: string[]) => boolean,
+    options: { timeoutMs: number; describe: string },
+  ): Promise<void>;
+  close(): void;
+}
+
 export interface RealtimeClient {
   /** Subscribe to one document and start recording what arrives. */
   subscribe<T = Record<string, unknown>>(
@@ -49,6 +66,17 @@ export interface RealtimeClient {
     documentId: string,
     options?: { timeoutMs?: number },
   ): Promise<RealtimeSubscription<T>>;
+  /**
+   * Subscribe to a query and start recording the result set. This is what the
+   * grid does: it asks for a view's rows and is pushed a new answer whenever
+   * the server decides the answer changed. A case that watches a doc instead
+   * would miss exactly the failures where nothing is pushed at all.
+   */
+  subscribeQuery(
+    collection: string,
+    query: Record<string, unknown>,
+    options?: { timeoutMs?: number },
+  ): Promise<RealtimeQuerySubscription>;
   close(): void;
 }
 
@@ -230,6 +258,78 @@ export const realtimeClient = (
         close() {
           try {
             doc.destroy();
+          } catch {
+            // Tearing down a subscription is housekeeping, not a result.
+          }
+        },
+      };
+    },
+    async subscribeQuery(collection, query, options) {
+      const timeoutMs = options?.timeoutMs ?? DEFAULT_SUBSCRIBE_TIMEOUT_MS;
+      const queryErrors: string[] = [];
+      const subscription = connection.createSubscribeQuery(
+        collection,
+        query,
+      ) as {
+        results?: { id: string }[];
+        on(event: string, handler: (payload?: unknown) => void): void;
+        destroy(): void;
+      };
+      subscription.on("error", (error?: unknown) => {
+        queryErrors.push(asMessage(error));
+      });
+
+      await new Promise<void>((resolve, reject) => {
+        const timer = setTimeout(() => {
+          reject(
+            new Error(
+              `subscribing to a query on ${collection} timed out after ${timeoutMs}ms` +
+                (connectionErrors.length > 0
+                  ? `; the socket reported ${JSON.stringify(connectionErrors)}`
+                  : " with no socket-level error, so the server accepted the connection and said nothing"),
+            ),
+          );
+        }, timeoutMs);
+        subscription.on("ready", () => {
+          clearTimeout(timer);
+          resolve();
+        });
+        subscription.on("error", (error?: unknown) => {
+          clearTimeout(timer);
+          reject(new Error(asMessage(error)));
+        });
+      });
+
+      const ids = () => (subscription.results ?? []).map((doc) => doc.id);
+      const errors = () => [...connectionErrors, ...queryErrors];
+
+      return {
+        ids,
+        errors,
+        async waitFor(predicate, waitOptions) {
+          const deadline = Date.now() + waitOptions.timeoutMs;
+          for (;;) {
+            const failures = errors();
+            if (failures.length > 0) {
+              throw new Error(
+                `the subscribed query errored while waiting for ${waitOptions.describe}: ${JSON.stringify(failures)}`,
+              );
+            }
+            if (predicate(ids())) {
+              return;
+            }
+            if (Date.now() >= deadline) {
+              throw new Error(
+                `the subscribed query never saw ${waitOptions.describe} within ${waitOptions.timeoutMs}ms; ` +
+                  `it holds ${JSON.stringify(ids())}`,
+              );
+            }
+            await new Promise((sleep) => setTimeout(sleep, 50));
+          }
+        },
+        close() {
+          try {
+            subscription.destroy();
           } catch {
             // Tearing down a subscription is housekeeping, not a result.
           }
