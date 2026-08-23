@@ -46,6 +46,7 @@ places — it cannot be settled and skipped at once.
 | `a9f56d9d51` | T6765 | Written and run: converting a number column into a lookup of a foreign formula completes correctly on the fix's parent, at 1 row and at 40, in about a second. See the note below this table.                                                                                      |
 | `e94ae6db28` | T6767 | Written and run: a formula over a lookup of a link field stored in a leftover TEXT column backfills correctly on the fix's parent. Same note.                                                                                                                                      |
 | `228be9ffa7` | T6770 | Written and run: a lookup of a link field added to a host whose rows are already linked seeds correctly on the fix's parent. Same note.                                                                                                                                            |
+| `ccc43864e`  | T6406 | Written in three shapes. A conditional rollup cannot be created through the public field API at all - it refuses a rollup with no link field - and the conditional lookup that can be created propagates correctly on the fix's parent. See the note below.                        |
 | `45828597b`  | T6524 | Written and run three times. The last shape proved the observation is unavailable here: editing a cell writes no record history in this environment at all, within 60 seconds, so "the import wrote none" cannot be told from "nothing writes any". See the note below.            |
 | `dfe6a1ebc`  | T6614 | Written in three shapes and run three times, green on both columns each time. The dangling reference a `deleted_time` fixture produces does not reach the SQL builder the fix changes. See the note below the table.                                                               |
 | `bfe5599ed`  | T6615 | Written and run: a conditional lookup whose condition compares two columns of its source table selects every source row on the fix's parent and on `develop` alike, so the two columns are indistinguishable. See the note below the table.                                        |
@@ -216,6 +217,34 @@ it only incidentally.
 The three shapes are kept on branch `case/import-record-history`, unmerged. The
 positive control in it is worth reading first: it is the part that turned two
 silent greens into a finding.
+
+### The conditional-summary propagation row
+
+The change makes a write dirty the filtered summaries that depend on it. The
+failure it fixes is legible and worth guarding: a summary that counts only some
+rows keeps its old number after one of those rows changes, with the write
+answering 200 and the source row showing the new value.
+
+Three shapes, and the first two are about the API rather than the bug:
+
+1. **A conditional rollup with the aggregation in the lookup options.** Both
+   columns answered `Unrecognized key: "rollupExpression"` - run 32659440769.
+2. **A conditional rollup with the aggregation in `options.expression`.** Both
+   columns answered `LinkFieldId is required when isLookup attribute is true or
+field type is rollup` - run 32659721790. The public field API has no shape
+   for a rollup that reaches another table by condition instead of by link.
+3. **A conditional lookup of the same column**, which the public API does
+   accept, showing the matching values rather than their total. Green on both
+   columns: the values follow the change on the fix's parent already - run 32660089795.
+
+So the summary this change is about is built through the v2 container's own
+field API, which the product's e2e suite uses and this lab does not. What the
+public API can build propagates correctly either way.
+
+The next attempt needs either a public shape for a conditional rollup - if one
+appears, this becomes a one-line config change on the runner, which is kept -
+or a reason to believe the lookup path can be made to fail. The runner is on
+branch `case/conditional-rollup-propagation`, unmerged.
 
 ## Covered
 
