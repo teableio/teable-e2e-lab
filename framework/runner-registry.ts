@@ -52,6 +52,7 @@ import { runCheckboxClearedDefaultCase } from "./runners/checkbox-cleared-defaul
 import { runCsvHeadersDisabledCase } from "./runners/csv-headers-disabled.runner";
 import { runLinkRenameKeepsConfigCase } from "./runners/link-rename-keeps-config.runner";
 import { runUniqueToggleCleanupCase } from "./runners/unique-toggle-cleanup.runner";
+import { runMultiFieldUpdateRealtimeCase } from "./runners/multi-field-update-realtime.runner";
 import type {
   BugCase,
   BugCaseFor,
@@ -123,6 +124,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "csv-headers-disabled": runCsvHeadersDisabledCase,
   "link-rename-keeps-config": runLinkRenameKeepsConfigCase,
   "unique-toggle-cleanup": runUniqueToggleCleanupCase,
+  "multi-field-update-realtime": runMultiFieldUpdateRealtimeCase,
 };
 
 export const executeRegisteredRunner = (

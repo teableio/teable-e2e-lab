@@ -61,6 +61,7 @@ export interface BugCaseConfigByRunner {
   "csv-headers-disabled": CsvHeadersDisabledCaseConfig;
   "link-rename-keeps-config": LinkRenameKeepsConfigCaseConfig;
   "unique-toggle-cleanup": UniqueToggleCleanupCaseConfig;
+  "multi-field-update-realtime": MultiFieldUpdateRealtimeCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1201,4 +1202,20 @@ export interface UniqueToggleCleanupCaseConfig {
   withLegacyIndex: boolean;
   // The value written twice.
   code: string;
+}
+
+// A client watching a row while several of its cells change in one edit. The
+// change went out as one message per cell, and only some survived, so everyone
+// else saw a row half-updated.
+export interface MultiFieldUpdateRealtimeCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // How many cells the edit changes. At least three: with two, losing one and
+  // applying them in a different order are hard to tell apart.
+  cellCount: number;
+  beforePrefix: string;
+  afterPrefix: string;
+  subscribeTimeoutMs: number;
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
 }
