@@ -1,4 +1,4 @@
-# link/write-answers-with-the-linked-row-name
+# link/editing-another-column-keeps-the-link-name
 
 **T5419** — fixed.
 
@@ -13,6 +13,16 @@ an empty cell, and nothing tells them the write worked.
 A link cell carries two things: the id of the row it points at, and that row's
 title. The title is what gets drawn. The answer to the write carried the id
 alone, and whoever made the change renders that answer.
+
+## Which write
+
+Editing a **different** column on a record whose link is already set. What the
+answer has to carry is then a value this request did not send, merged from the
+record as it stands — which is the merge the fix changed.
+
+Sending the link itself was built first and is green on both columns (run
+32663754305): that reply already carried the title on the fix's parent. The
+runner keeps that shape as a config value.
 
 ## Why the observation is the write's own reply
 

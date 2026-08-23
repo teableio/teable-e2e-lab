@@ -82,23 +82,53 @@ export const runLinkTitleInUpdateResponseCase = async (
       throw new Error("the fixture rows are not in place");
     }
 
+    const setLink = async () =>
+      axios.patch(
+        urlBuilder(UPDATE_RECORD, {
+          tableId: hostTableId,
+          recordId: hostRecordId,
+        }),
+        {
+          fieldKeyType: FieldKeyType.Id,
+          typecast: false,
+          record: { fields: { [linkField.id]: { id: foreignRecordId } } },
+        },
+        { validateStatus: () => true },
+      );
+
+    // For the "touch another column" shape the link is already there before
+    // the write under test: what the answer has to carry is a value this
+    // request did not send, merged from the record as it stands. Setting the
+    // link in the same request is green on both columns - run 32663754305.
+    if (config.write === "otherColumn") {
+      const seeded = await setLink();
+      if (seeded.status < 200 || seeded.status >= 300) {
+        throw new Error(
+          `seeding the link answered ${seeded.status} - the fixture is not in place`,
+        );
+      }
+    }
+
     const probe = await bugCheckpoint(
       "the-write-answers-with-the-linked-row-name",
       async () => {
         // The write, and its own answer. Raw axios so the response is in hand
         // whatever the status.
-        const response = await axios.patch(
-          urlBuilder(UPDATE_RECORD, {
-            tableId: hostTableId,
-            recordId: hostRecordId,
-          }),
-          {
-            fieldKeyType: FieldKeyType.Id,
-            typecast: false,
-            record: { fields: { [linkField.id]: { id: foreignRecordId } } },
-          },
-          { validateStatus: () => true },
-        );
+        const response =
+          config.write === "otherColumn"
+            ? await axios.patch(
+                urlBuilder(UPDATE_RECORD, {
+                  tableId: hostTableId,
+                  recordId: hostRecordId,
+                }),
+                {
+                  fieldKeyType: FieldKeyType.Name,
+                  typecast: false,
+                  record: { fields: { [NAME_FIELD]: config.renamedRowTitle } },
+                },
+                { validateStatus: () => true },
+              )
+            : await setLink();
         const status = response.status;
         const body =
           typeof response.data === "string"
@@ -108,9 +138,16 @@ export const runLinkTitleInUpdateResponseCase = async (
           throw new Error(`setting the link answered ${status}: ${body}`);
         }
 
-        const cell = (
+        const responseFields = (
           response.data as { fields?: Record<string, unknown> } | undefined
-        )?.fields?.[linkField.id];
+        )?.fields;
+        // Addressed by id when the link was written by id, by name when the
+        // write named its columns - the response echoes whichever key the
+        // request used.
+        const cell =
+          config.write === "otherColumn"
+            ? responseFields?.[LINK_FIELD]
+            : responseFields?.[linkField.id];
         const entries = (Array.isArray(cell) ? cell : [cell]).filter(
           (entry): entry is { id?: string; title?: string } =>
             typeof entry === "object" && entry !== null,
@@ -145,6 +182,7 @@ export const runLinkTitleInUpdateResponseCase = async (
 
     return {
       details: {
+        write: config.write,
         foreignTableId,
         hostTableId,
         status: probe.status,

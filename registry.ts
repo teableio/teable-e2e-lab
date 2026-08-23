@@ -28,7 +28,7 @@ import linkCrossBaseLinkClearsOnDeleteCase from "./cases/link/cross-base-link-cl
 import importExcelHeaderBelowA1Case from "./cases/import/excel-header-below-a1.case";
 import selectionPasteByIdLandsOnItsOwnRowsCase from "./cases/selection/paste-by-id-lands-on-its-own-rows.case";
 import searchStaysInsideViewFilterCase from "./cases/search/stays-inside-view-filter.case";
-import linkWriteAnswersWithNameCase from "./cases/link/write-answers-with-the-linked-row-name.case";
+import linkWriteAnswersWithNameCase from "./cases/link/editing-another-column-keeps-the-link-name.case";
 import lookupRollupFilterCase from "./cases/lookup/rollup-condition-is-saved-and-applied.case";
 import tableRestoreScopeCase from "./cases/table/restore-brings-back-only-its-own-delete.case";
 import fieldLegacyIdTableCase from "./cases/field/legacy-field-id-table-still-works.case";

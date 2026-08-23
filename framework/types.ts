@@ -1068,7 +1068,13 @@ export interface RollupFilterPersistsCaseConfig {
 export interface LinkTitleInUpdateResponseCaseConfig {
   baseId: "seed-base";
   tableNamePrefix: string;
+  // Which write is under test. "setLink" sends the link itself; "otherColumn"
+  // touches a different column on a record whose link is already set, so the
+  // answer has to carry a value the request did not send.
+  write: "setLink" | "otherColumn";
   // The linked row's name. Must not be blank - the case is about that name
   // arriving, and an empty one cannot be told from a missing one.
   foreignRowTitle: string;
+  // What the host row's own title is changed to by the "otherColumn" write.
+  renamedRowTitle: string;
 }
