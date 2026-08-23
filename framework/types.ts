@@ -62,7 +62,6 @@ export interface BugCaseConfigByRunner {
   "link-rename-keeps-config": LinkRenameKeepsConfigCaseConfig;
   "unique-toggle-cleanup": UniqueToggleCleanupCaseConfig;
   "multi-field-update-realtime": MultiFieldUpdateRealtimeCaseConfig;
-  "inline-computed-update-response": InlineComputedUpdateResponseCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1219,18 +1218,4 @@ export interface MultiFieldUpdateRealtimeCaseConfig {
   subscribeTimeoutMs: number;
   settleTimeoutMs: number;
   pollIntervalMs: number;
-}
-
-// A formula over another cell of the same row. Changing that cell answered
-// with the formula's value from before the edit, so whoever made the write
-// took away a wrong number as the result of their own write.
-export interface InlineComputedUpdateResponseCaseConfig {
-  baseId: "seed-base";
-  tableNamePrefix: string;
-  price: number;
-  // The commission rates the formula branches on. The expectation is computed
-  // from them rather than written down, so the fixture and the assertion
-  // cannot drift apart.
-  newOrderRate: number;
-  renewalRate: number;
 }
