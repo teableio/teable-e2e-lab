@@ -43,6 +43,7 @@ export interface BugCaseConfigByRunner {
   "restore-conditional-lookup": RestoreConditionalLookupCaseConfig;
   "sparse-view-field-order": SparseViewFieldOrderCaseConfig;
   "conditional-filter-field-refs": ConditionalFilterFieldRefsCaseConfig;
+  "value-normalization": ValueNormalizationCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -915,4 +916,26 @@ export interface ConditionalFilterFieldRefsCaseConfig {
   editedValue: string;
   settleTimeoutMs: number;
   pollIntervalMs: number;
+}
+
+// A value a field cannot hold as written, sent through the typecast path an
+// import or a paste uses. What the field decides to store is what filters,
+// formulas and every later read see, and v2's answers had drifted from v1's.
+export interface ValueNormalizationCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // "invalidDate": a date that does not exist. "ratingFraction": a fractional
+  // rating in a field whose domain is whole stars. "emptyValue": clearing a
+  // cell that held something.
+  variant: "invalidDate" | "ratingFraction" | "emptyValue";
+  // What the cell holds before the write. Only used by "emptyValue", which
+  // needs a cell that was filled before it is cleared.
+  seedValue?: string;
+  // The value written with typecast on.
+  writtenValue: unknown;
+  // What the cell must read afterwards. `null` means the field refused to
+  // invent a value, which for these three is the whole point.
+  expectedStored: unknown;
+  // The rating field's maximum, when there is one.
+  ratingMax: number;
 }
