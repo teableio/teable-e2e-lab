@@ -44,6 +44,7 @@ export interface BugCaseConfigByRunner {
   "sparse-view-field-order": SparseViewFieldOrderCaseConfig;
   "conditional-filter-field-refs": ConditionalFilterFieldRefsCaseConfig;
   "value-normalization": ValueNormalizationCaseConfig;
+  "link-cell-shape": LinkCellShapeCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -938,4 +939,15 @@ export interface ValueNormalizationCaseConfig {
   expectedStored: unknown;
   // The rating field's maximum, when there is one.
   ratingMax: number;
+}
+
+// A link cell written in the shape v1 accepted - an array for a single-value
+// link, a bare object for a multi-value one. v2's strict path rejected both,
+// so integrations written against v1 started answering 400 on the field that
+// connects two tables.
+export interface LinkCellShapeCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Which tolerance is being asked for.
+  shape: "arrayIntoSingle" | "objectIntoMulti";
 }
