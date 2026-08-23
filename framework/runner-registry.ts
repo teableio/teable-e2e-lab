@@ -51,6 +51,7 @@ import { runAggregationMixedCaseCase } from "./runners/aggregation-mixed-case.ru
 import { runCheckboxClearedDefaultCase } from "./runners/checkbox-cleared-default.runner";
 import { runCsvHeadersDisabledCase } from "./runners/csv-headers-disabled.runner";
 import { runLinkRenameKeepsConfigCase } from "./runners/link-rename-keeps-config.runner";
+import { runUniqueToggleCleanupCase } from "./runners/unique-toggle-cleanup.runner";
 import type {
   BugCase,
   BugCaseFor,
@@ -121,6 +122,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "checkbox-cleared-default": runCheckboxClearedDefaultCase,
   "csv-headers-disabled": runCsvHeadersDisabledCase,
   "link-rename-keeps-config": runLinkRenameKeepsConfigCase,
+  "unique-toggle-cleanup": runUniqueToggleCleanupCase,
 };
 
 export const executeRegisteredRunner = (

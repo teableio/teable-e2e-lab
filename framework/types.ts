@@ -60,6 +60,7 @@ export interface BugCaseConfigByRunner {
   "checkbox-cleared-default": CheckboxClearedDefaultCaseConfig;
   "csv-headers-disabled": CsvHeadersDisabledCaseConfig;
   "link-rename-keeps-config": LinkRenameKeepsConfigCaseConfig;
+  "unique-toggle-cleanup": UniqueToggleCleanupCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1186,4 +1187,14 @@ export interface LinkRenameKeepsConfigCaseConfig {
   request: "patchName" | "convertWholeField";
   // The new name. Must differ from the old one, or nothing is being renamed.
   renamedTo: string;
+}
+
+// A column that refuses duplicates, told to stop. Turning the switch on builds
+// something in the database to enforce it; turning it off has to take that
+// away, and it did not.
+export interface UniqueToggleCleanupCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // The value written twice.
+  code: string;
 }
