@@ -1225,6 +1225,10 @@ export interface MultiFieldUpdateRealtimeCaseConfig {
 // descriptions - the instructions whoever fills the rows reads - were dropped
 // on the way, and the copy looks complete without them.
 export interface BaseImportFieldDescriptionCaseConfig {
+  // "describedFields" carries a table whose fields have descriptions;
+  // "noTables" carries a base with no table at all, which the import refused
+  // outright. Both are the same commit.
+  shape: "describedFields" | "noTables";
   namePrefix: string;
   rowTitle: string;
   describedFields: { name: string; description: string }[];
