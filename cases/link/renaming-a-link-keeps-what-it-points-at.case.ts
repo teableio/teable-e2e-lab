@@ -18,6 +18,7 @@ export default defineBugCase({
   config: {
     baseId: "seed-base",
     tableNamePrefix: "e2e-lab-link-rename",
+    request: "patchName",
     renamedTo: "Responsible Person",
   },
 });

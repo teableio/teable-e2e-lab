@@ -14,6 +14,16 @@ whether it holds one row or several, and the column it puts on the other side.
 A rename says nothing about any of that, and a request that changes only the
 name should leave all of it alone.
 
+## Which request
+
+A partial update carrying only the new name. That is what the fix is about:
+"PATCH" means change what I sent and leave the rest, and the rest here is
+everything that makes the column a link.
+
+Sending the whole configuration alongside the name — a full field conversion —
+is green on both columns (run 32668224034). Nothing is lost when nothing is
+omitted, which is why the shape matters. The runner keeps it as a config value.
+
 ## What the checkpoint asserts
 
 Four things about the field afterwards, and one about the other table:

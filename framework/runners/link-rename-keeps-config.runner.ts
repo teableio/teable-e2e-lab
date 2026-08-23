@@ -1,5 +1,10 @@
 import { FieldType, Relationship } from "@teable/core";
-import { axios, CONVERT_FIELD, urlBuilder } from "@teable/openapi";
+import {
+  axios,
+  CONVERT_FIELD,
+  UPDATE_FIELD,
+  urlBuilder,
+} from "@teable/openapi";
 import {
   createField,
   createTable,
@@ -94,21 +99,36 @@ export const runLinkRenameKeepsConfigCase = async (
         // refuses the rename and one that accepts it and loses the
         // configuration are different failures, and the status tells them
         // apart.
-        const response = await axios.put(
-          urlBuilder(CONVERT_FIELD, {
-            tableId: hostTableId,
-            fieldId: linkField.id,
-          }),
-          {
-            name: config.renamedTo,
-            type: FieldType.Link,
-            options: {
-              foreignTableId,
-              relationship: Relationship.ManyOne,
-            },
-          },
-          { validateStatus: () => true },
-        );
+        const response =
+          config.request === "patchName"
+            ? // A partial update carrying only the new name. Nothing else is
+              // sent, and nothing else should change - which is what "PATCH"
+              // means and what the fix is about. Sending the whole
+              // configuration alongside the name is green on both columns,
+              // run 32668224034.
+              await axios.patch(
+                urlBuilder(UPDATE_FIELD, {
+                  tableId: hostTableId,
+                  fieldId: linkField.id,
+                }),
+                { name: config.renamedTo },
+                { validateStatus: () => true },
+              )
+            : await axios.put(
+                urlBuilder(CONVERT_FIELD, {
+                  tableId: hostTableId,
+                  fieldId: linkField.id,
+                }),
+                {
+                  name: config.renamedTo,
+                  type: FieldType.Link,
+                  options: {
+                    foreignTableId,
+                    relationship: Relationship.ManyOne,
+                  },
+                },
+                { validateStatus: () => true },
+              );
         const status = response.status;
         const body =
           typeof response.data === "string"
@@ -176,6 +196,7 @@ export const runLinkRenameKeepsConfigCase = async (
 
     return {
       details: {
+        request: config.request,
         hostTableId,
         foreignTableId,
         status: probe.status,

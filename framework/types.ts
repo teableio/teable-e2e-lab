@@ -1180,6 +1180,10 @@ export interface CsvHeadersDisabledCaseConfig {
 export interface LinkRenameKeepsConfigCaseConfig {
   baseId: "seed-base";
   tableNamePrefix: string;
+  // How the rename is sent. "patchName" is a partial update carrying only the
+  // name, which is what the fix is about; "convertWholeField" sends the whole
+  // configuration alongside and is green on both columns.
+  request: "patchName" | "convertWholeField";
   // The new name. Must differ from the old one, or nothing is being renamed.
   renamedTo: string;
 }
