@@ -46,6 +46,7 @@ places — it cannot be settled and skipped at once.
 | `a9f56d9d51` | T6765 | Written and run: converting a number column into a lookup of a foreign formula completes correctly on the fix's parent, at 1 row and at 40, in about a second. See the note below this table.                                                                                      |
 | `e94ae6db28` | T6767 | Written and run: a formula over a lookup of a link field stored in a leftover TEXT column backfills correctly on the fix's parent. Same note.                                                                                                                                      |
 | `228be9ffa7` | T6770 | Written and run: a lookup of a link field added to a host whose rows are already linked seeds correctly on the fix's parent. Same note.                                                                                                                                            |
+| `e0d3eaf6c`  | T5583 | Written in two shapes - asking for one day, and asking at a day boundary - both with a structured exact-date filter carrying a UTC+8 zone. Green on both columns each time: that path already honours the zone on the fix's parent.                                                |
 | `32a509014`  | T5419 | Written in two shapes - setting the link itself, and touching another column on a record whose link is already set - and green on both columns each time. The half of the fix that remains is in the sdk's record model, which this lab does not exercise.                         |
 | `9bc67c4be`  | T5686 | Written and run: creating a record without a required column that has a default already succeeds on the fix's parent, and the row holds the default. Green on both columns, run 32663341436. Its sibling `cae1c5c10`/T5685 does reproduce and ships.                               |
 | `db020d9ab`  | T6157 | Written in three shapes - a multi-select, a link, and a lookup of a link - and green on both columns each time. Whatever the missing cast broke, a formula written through the public API does not reach it. See the note below.                                                   |
@@ -302,6 +303,35 @@ way to drive.
 If this is attempted again, it needs a client that keeps state across writes
 rather than an HTTP assertion. Branch `case/link-title-in-update-response`,
 unmerged, keeps both shapes as a config value.
+
+### The exact-date-filter timezone row
+
+A date filter saved from the filter panel carries the zone that decides which
+day the date is. Ignoring that zone answers for the neighbouring day, which is
+the kind of wrong worth guarding: the result is a plausible list of records
+rather than an error.
+
+Two shapes, both with the structured `{mode: exactDate, exactDate, timeZone}`
+value and a UTC+8 column, and both green on the fix's parent:
+
+1. **`is`, asking for one day.** Two instants on the same local day returned
+   together, correctly - run 32665470824.
+2. **`isOnOrAfter`, asking at the boundary.** Two instants that are both the
+   12th in UTC, one of them 00:30 on the 13th locally: only the local-13th row
+   came back, correctly - run 32666048774.
+
+The second is where a mishandled zone shows most sharply, and it did not show.
+So whatever this fix repaired, the exact-date path reachable from the record
+list already honours the zone on the parent.
+
+The change spans 32 files, including the filter documentation and the rollout
+admin, so the failing shape is likely a different filter mode - the relative
+modes (`today`, `pastWeek`, `withIn`) or the `exactFormatDate` variant, none of
+which were tried. That is where a next attempt starts.
+
+The shapes live on the `legacy-date-filter` runner, which ships
+`filter/plain-date-string-filters-a-date-column` for the sibling fix T5584;
+its `filterValue` and `operator` config values keep both of these reachable.
 
 ## Covered
 
