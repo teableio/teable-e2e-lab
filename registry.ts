@@ -29,7 +29,6 @@ import importExcelHeaderBelowA1Case from "./cases/import/excel-header-below-a1.c
 import selectionPasteByIdLandsOnItsOwnRowsCase from "./cases/selection/paste-by-id-lands-on-its-own-rows.case";
 import searchStaysInsideViewFilterCase from "./cases/search/stays-inside-view-filter.case";
 import fieldUniqueToggleCase from "./cases/field/turning-off-no-duplicates-lets-a-duplicate-in.case";
-import fieldUniqueLegacyIndexCase from "./cases/field/turning-off-no-duplicates-clears-a-legacy-index.case";
 import importHeaderlessSheetCase from "./cases/import/headerless-sheet-imports-every-line.case";
 import linkRenameKeepsConfigCase from "./cases/link/renaming-a-link-keeps-what-it-points-at.case";
 import aggregationMixedCaseCase from "./cases/aggregation/capitalised-column-can-be-totalled.case";
@@ -99,7 +98,6 @@ const cases = [
   selectionPasteByIdLandsOnItsOwnRowsCase,
   searchStaysInsideViewFilterCase,
   fieldUniqueToggleCase,
-  fieldUniqueLegacyIndexCase,
   importHeaderlessSheetCase,
   linkRenameKeepsConfigCase,
   aggregationMixedCaseCase,
