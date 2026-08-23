@@ -31,6 +31,8 @@ import searchStaysInsideViewFilterCase from "./cases/search/stays-inside-view-fi
 import lookupConditionalForeignRefCase from "./cases/lookup/conditional-filter-over-a-foreign-table.case";
 import recordInvalidDateCase from "./cases/record/invalid-date-is-not-invented.case";
 import recordRatingDomainCase from "./cases/record/rating-is-stored-in-whole-stars.case";
+import linkSingleArrayCase from "./cases/link/single-link-accepts-a-one-entry-array.case";
+import linkMultiObjectCase from "./cases/link/multi-link-accepts-a-bare-object.case";
 import recordLegacyIdStillComputesCase from "./cases/record/legacy-id-row-still-computes.case";
 import lookupConditionalRestoreCase from "./cases/lookup/conditional-lookup-survives-restore.case";
 import viewAddedFieldLandsLastCase from "./cases/view/added-field-lands-after-legacy-columns.case";
@@ -81,6 +83,8 @@ const cases = [
   lookupConditionalForeignRefCase,
   recordInvalidDateCase,
   recordRatingDomainCase,
+  linkSingleArrayCase,
+  linkMultiObjectCase,
   recordLegacyIdStillComputesCase,
   lookupConditionalRestoreCase,
   viewAddedFieldLandsLastCase,
