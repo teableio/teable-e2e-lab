@@ -46,6 +46,7 @@ places — it cannot be settled and skipped at once.
 | `a9f56d9d51` | T6765 | Written and run: converting a number column into a lookup of a foreign formula completes correctly on the fix's parent, at 1 row and at 40, in about a second. See the note below this table.                                                                                      |
 | `e94ae6db28` | T6767 | Written and run: a formula over a lookup of a link field stored in a leftover TEXT column backfills correctly on the fix's parent. Same note.                                                                                                                                      |
 | `228be9ffa7` | T6770 | Written and run: a lookup of a link field added to a host whose rows are already linked seeds correctly on the fix's parent. Same note.                                                                                                                                            |
+| `32a509014`  | T5419 | Written in two shapes - setting the link itself, and touching another column on a record whose link is already set - and green on both columns each time. The half of the fix that remains is in the sdk's record model, which this lab does not exercise.                         |
 | `9bc67c4be`  | T5686 | Written and run: creating a record without a required column that has a default already succeeds on the fix's parent, and the row holds the default. Green on both columns, run 32663341436. Its sibling `cae1c5c10`/T5685 does reproduce and ships.                               |
 | `db020d9ab`  | T6157 | Written in three shapes - a multi-select, a link, and a lookup of a link - and green on both columns each time. Whatever the missing cast broke, a formula written through the public API does not reach it. See the note below.                                                   |
 | `ccc43864e`  | T6406 | Written in three shapes. A conditional rollup cannot be created through the public field API at all - it refuses a rollup with no link field - and the conditional lookup that can be created propagates correctly on the fix's parent. See the note below.                        |
@@ -275,6 +276,32 @@ attempted again, those are the next things to try, and the ledger row should be
 deleted rather than extended if one of them reproduces.
 
 Branch `case/find-over-multi-value`, unmerged.
+
+### The unresolved-link-value row
+
+A link cell carries the id of the row it points at and that row's title, and
+the title is what the grid draws. The report is that after a write the cell
+goes blank: the answer to the write carried the id alone, and whoever made the
+change renders that answer.
+
+Two shapes were built, both asserting on the write's own reply rather than a
+read afterwards - a read resolves the title for itself, so a case checking one
+would pass while the person who made the change still sees nothing:
+
+1. **Sending the link itself.** Green on both columns - run 32663754305.
+2. **Touching a different column on a record whose link is already set**, so
+   the reply has to carry a value the request did not send. Green on both
+   columns - run 32664049848.
+
+The commit changes two things: the v2 update handler's response fields, and the
+sdk's record model, which merges a write's answer into what the browser is
+already holding. Both server shapes answer with the title on the fix's parent,
+which leaves the sdk half - and that is a browser-side merge this lab has no
+way to drive.
+
+If this is attempted again, it needs a client that keeps state across writes
+rather than an HTTP assertion. Branch `case/link-title-in-update-response`,
+unmerged, keeps both shapes as a config value.
 
 ## Covered
 
