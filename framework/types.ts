@@ -39,6 +39,7 @@ export interface BugCaseConfigByRunner {
   "paste-over-pending-field": PasteOverPendingFieldCaseConfig;
   "delete-collateral": DeleteCollateralCaseConfig;
   "duplicate-shared-view": DuplicateSharedViewCaseConfig;
+  "legacy-record-id": LegacyRecordIdCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -830,4 +831,26 @@ export interface DuplicateSharedViewCaseConfig {
   baseId: "seed-base";
   tableNamePrefix: string;
   rowTitle: string;
+}
+
+// A row whose id body is not the 16 characters this version generates - what
+// an imported or migrated base carries, because v1 only enforced the prefix.
+// v2 parsed ids strictly and the row's computed update failed deterministically
+// and dead-lettered.
+export interface LegacyRecordIdCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // The id the migrated row is given. Must keep the `rec` prefix - v1 did
+  // enforce that - and must not have a 16-character body, which is exactly
+  // what this version generates. The runner refuses both.
+  legacyRecordId: string;
+  // Rows with ordinary ids, sharing the write. They are what shows whether the
+  // one unparseable row took the batch with it.
+  ordinaryRowCount: number;
+  // The value every row holds first, and what they are all changed to. They
+  // must differ, or the write queues no recompute.
+  seedValue: string;
+  updatedValue: string;
+  settleTimeoutMs: number;
+  settlePollIntervalMs: number;
 }
