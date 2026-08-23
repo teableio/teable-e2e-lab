@@ -46,6 +46,7 @@ places — it cannot be settled and skipped at once.
 | `a9f56d9d51` | T6765 | Written and run: converting a number column into a lookup of a foreign formula completes correctly on the fix's parent, at 1 row and at 40, in about a second. See the note below this table.                                                                                      |
 | `e94ae6db28` | T6767 | Written and run: a formula over a lookup of a link field stored in a leftover TEXT column backfills correctly on the fix's parent. Same note.                                                                                                                                      |
 | `228be9ffa7` | T6770 | Written and run: a lookup of a link field added to a host whose rows are already linked seeds correctly on the fix's parent. Same note.                                                                                                                                            |
+| `175d1de3f`  | T6728 | Written in three shapes and run three times. Every trigger a small fixture can reach through the public API computes inline, and inline compute fails closed identically on both sides of the fix. See the note below the table.                                                   |
 
 ### The three computed-backfill rows
 
@@ -82,6 +83,42 @@ The work is kept rather than thrown away: branch
 four shapes, their fixture checks and the type-agreement probe. If a seam
 appears that drives the conversion the way the v2 container does, start there —
 the fixtures are correct, they simply have nothing to catch.
+
+### The oversized-computed-cell row
+
+The change isolates a computed cell that is over the 262144-byte ceiling
+instead of failing the task it belongs to. Before it, one row whose formula
+result was too big took every other row recomputing in the same pass down with
+it — a real failure, and a legible one: the write answers 200 and the
+neighbouring cells simply stop updating.
+
+Three shapes were built and run. None of them reached the code the fix
+changes, and each failed to for a different reason worth writing down, because
+each looks like the obvious way to write this case:
+
+1. **Creating the formula field last**, so the creation backfill computes every
+   row. Green on both columns: it stored a 300000-byte computed cell on the
+   fix's parent as well as on `develop`. The ceiling is enforced in the
+   pipeline's record-change path, and the backfill never consults it. Run 32649775516.
+2. **A bulk write on the table the formula lives on.** Red on both columns, and
+   red at the write itself, which was refused with the data-safety error. That
+   compute runs inline, and inline compute fails closed by design — the change
+   says so in as many words.
+   Run 32650260500.
+3. **The formula in a second table, reading the first through a link**, on the
+   theory that a recompute past the first dependency level is handed to the
+   outbox worker. Red on both columns again, the same refusal at the same
+   place. Run 32650718295.
+
+The isolation belongs to the async worker: it is the only caller that asks for
+it. So a case has to make the recompute go to the worker, and the one route
+left is volume — the inline path is capped at 2000 dirty rows per table, so a
+fixture would have to dirty more than that in one write and then wait out a
+real worker pass. That is a different class of fixture from anything here
+today, and it is where the next attempt should start rather than reshaping the
+small ones again.
+
+The three shapes are kept on branch `case/computed-oversized-cell`, unmerged.
 
 ## Covered
 
