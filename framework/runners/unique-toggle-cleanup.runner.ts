@@ -72,7 +72,12 @@ export const runUniqueToggleCleanupCase = async (
       const db = fixtureDb(context.app);
       const { schema, table: physicalTable } = await db.physicalTable(tableId);
       const column = await db.physicalColumn(codeField.id);
-      legacyIndexName = `${physicalTable}_${column}_unique`.slice(0, 63);
+      // The v1 naming: schema, table, three underscores, the FIELD id. The
+      // current code writes `<table>_<column>_unique`, so using that name
+      // collides with the index the product just made - measured, run
+      // 32669273437 answered 42P07 on both columns.
+      legacyIndexName =
+        `${schema}_${physicalTable}___${codeField.id}_unique`.slice(0, 63);
       await db.execute(
         `CREATE UNIQUE INDEX "${legacyIndexName}" ON "${schema}"."${physicalTable}" ("${column}")`,
       );
