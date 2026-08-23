@@ -42,6 +42,7 @@ export interface BugCaseConfigByRunner {
   "legacy-record-id": LegacyRecordIdCaseConfig;
   "restore-conditional-lookup": RestoreConditionalLookupCaseConfig;
   "sparse-view-field-order": SparseViewFieldOrderCaseConfig;
+  "conditional-filter-field-refs": ConditionalFilterFieldRefsCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -885,4 +886,33 @@ export interface SparseViewFieldOrderCaseConfig {
   // is merely off by one.
   legacyFieldNames: string[];
   addedFieldName: string;
+}
+
+// A conditional lookup whose condition compares two columns of one table
+// against each other. Which table those columns belong to picks the failure:
+// naming the source table on both sides probed the referenced column on the
+// wrong alias, naming the host table on both sides resolved the filter field
+// against the source table and did not find it. Both dead-lettered the table's
+// whole computed run as a code bug, on every recompute.
+export interface ConditionalFilterFieldRefsCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Which table the condition's two sides name. "sourceBothSides" is kept
+  // because the runner still supports it and a future attempt at T6615 starts
+  // there; no case uses it today - see docs/triage-ledger.md.
+  source: "sourceBothSides" | "hostBothSides";
+  // The table being read from. For "sourceBothSides" exactly one row's keys
+  // agree, and its value is what every host row must end up showing; for
+  // "hostBothSides" there is exactly one row, because that condition selects
+  // every source row and more than one would raise a different question - how
+  // several matches are joined.
+  foreignRows: { name: string; left: string; right: string; value: string }[];
+  // The table the lookup lives on. Its own two key columns are what
+  // "hostBothSides" compares.
+  hostRows: { name: string; left: string; right: string }[];
+  // What the selected source row's value is changed to, to force a recompute
+  // after the backfill.
+  editedValue: string;
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
 }

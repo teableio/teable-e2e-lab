@@ -28,6 +28,7 @@ import linkCrossBaseLinkClearsOnDeleteCase from "./cases/link/cross-base-link-cl
 import importExcelHeaderBelowA1Case from "./cases/import/excel-header-below-a1.case";
 import selectionPasteByIdLandsOnItsOwnRowsCase from "./cases/selection/paste-by-id-lands-on-its-own-rows.case";
 import searchStaysInsideViewFilterCase from "./cases/search/stays-inside-view-filter.case";
+import lookupConditionalForeignRefCase from "./cases/lookup/conditional-filter-over-a-foreign-table.case";
 import recordLegacyIdStillComputesCase from "./cases/record/legacy-id-row-still-computes.case";
 import lookupConditionalRestoreCase from "./cases/lookup/conditional-lookup-survives-restore.case";
 import viewAddedFieldLandsLastCase from "./cases/view/added-field-lands-after-legacy-columns.case";
@@ -75,6 +76,7 @@ const cases = [
   importExcelHeaderBelowA1Case,
   selectionPasteByIdLandsOnItsOwnRowsCase,
   searchStaysInsideViewFilterCase,
+  lookupConditionalForeignRefCase,
   recordLegacyIdStillComputesCase,
   lookupConditionalRestoreCase,
   viewAddedFieldLandsLastCase,
