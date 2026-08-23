@@ -23,32 +23,42 @@ too big silently stopping the rest of the table is not.
 
 ## How the case is built
 
-Five rows and a formula, all computing normally, then one write that changes
-every row: four to a new small value, one to a value whose formula result
-crosses the ceiling. They recompute as a single batch, which is where a
-rejected cell takes the rest with it.
+A source table and a host table. Each host row links to one source row, looks
+up its text, and computes a formula over that lookup. Everything computes
+normally on the seed values first — if the chain did not work, "the ordinary
+rows lost their values" would be describing a formula that never produced any.
 
-The trigger has to be a record write. The first version of this case created
-the formula field last and let the creation backfill do the computing; it
-stored a 300000-byte computed cell on both `d28589d10` and `develop` (run
-32649775516), because the ceiling is enforced in the pipeline's record-change
-path and the backfill never consults it. That measurement is why the case is
-shaped this way.
+Then one write changes every source row at once: the ordinary ones to a new
+small value, one to a value whose host-side result crosses the ceiling. The
+host rows recompute as a single task, which is where a rejected cell takes the
+rest with it.
 
-The assertion is the ordinary rows, and it is a wait rather than a check: the
-pipeline is asynchronous and reports nothing to the caller, so a value that
-never arrives is the failure. Too short a timeout and a slow-but-working
-pipeline reads as the bug; the budget here is 90 seconds against a backfill
-that normally settles in seconds.
+## Why it is shaped like that
+
+Two earlier shapes measured the constraints, and both are worth keeping
+because each looks like a simpler way to write this case:
+
+1. **Creating the formula field last** and letting the creation backfill
+   compute was green on both columns: it stored a 300000-byte computed cell on
+   `d28589d10` as well as on `develop`. The ceiling is enforced in the
+   pipeline's record-change path, and the backfill never consults it. Run 32649775516.
+2. **Writing to the same table the formula lives on** was red on both columns,
+   with the write itself refused. That compute runs synchronously, and
+   synchronous compute fails closed by design — the change says so. Run 32650260500.
+
+The isolation the fix adds belongs to the async worker, and work reaches the
+worker when it is past the first dependency level (same-table recomputes stay
+inline below 2000 dirty rows). So the formula has to sit in a second table
+reading the first through a link. That is also the ordinary production shape:
+a rollup or lookup over another table is where a cell grows without anyone
+deciding to make it big.
 
 Every number in the fixture is checked against the product's own limits before
-anything is built: the computed result has to cross the ceiling, the source
-cell has to stay under the ordinary cell ceiling (or the write is refused and
-the formula never runs at all), and the ordinary rows have to compute to
-something well inside it. The long cell is also read back at full length before
-the formula exists — a source value quietly truncated on write would compute to
-something legal, and the case would be green on both sides of the fix while
-appearing to test the overflow.
+anything is built: the host result has to cross the ceiling, the source cell
+has to stay under the ordinary cell ceiling (or the write is refused and the
+formula never runs), the ordinary rows have to compute well inside it, and the
+seed value has to differ from what the ordinary rows are changed to — a write
+that stores the same value queues no recompute at all.
 
 ## What it does not say
 
