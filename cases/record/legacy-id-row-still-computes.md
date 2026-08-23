@@ -43,6 +43,16 @@ has to answer with the id the fixture gave it, and every row has to already
 compute the seed value. Without the second check, "the rows stopped computing"
 would be describing a formula that never worked.
 
+## What the pre-fix column actually returns
+
+Not a silent dead letter. The write itself is refused: `Invalid recordId in
+UpdateRecordsCommand`, measured on `c7fc39d40` in run 32652943571.
+
+That is the same strict parse the issue describes, met one step earlier than
+expected — so on this path the row is not merely uncomputable, it cannot be
+edited at all. The assertion covers both: it waits for every row's computed
+value to follow the write, and a refused write can never produce one.
+
 ## Limits
 
 One legacy id shape, eight characters of body. The fix accepts one to
