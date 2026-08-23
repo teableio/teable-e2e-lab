@@ -46,6 +46,7 @@ places — it cannot be settled and skipped at once.
 | `a9f56d9d51` | T6765 | Written and run: converting a number column into a lookup of a foreign formula completes correctly on the fix's parent, at 1 row and at 40, in about a second. See the note below this table.                                                                                      |
 | `e94ae6db28` | T6767 | Written and run: a formula over a lookup of a link field stored in a leftover TEXT column backfills correctly on the fix's parent. Same note.                                                                                                                                      |
 | `228be9ffa7` | T6770 | Written and run: a lookup of a link field added to a host whose rows are already linked seeds correctly on the fix's parent. Same note.                                                                                                                                            |
+| `db020d9ab`  | T6157 | Written in three shapes - a multi-select, a link, and a lookup of a link - and green on both columns each time. Whatever the missing cast broke, a formula written through the public API does not reach it. See the note below.                                                   |
 | `ccc43864e`  | T6406 | Written in three shapes. A conditional rollup cannot be created through the public field API at all - it refuses a rollup with no link field - and the conditional lookup that can be created propagates correctly on the fix's parent. See the note below.                        |
 | `45828597b`  | T6524 | Written and run three times. The last shape proved the observation is unavailable here: editing a cell writes no record history in this environment at all, within 60 seconds, so "the import wrote none" cannot be told from "nothing writes any". See the note below.            |
 | `dfe6a1ebc`  | T6614 | Written in three shapes and run three times, green on both columns each time. The dangling reference a `deleted_time` fixture produces does not reach the SQL builder the fix changes. See the note below the table.                                                               |
@@ -245,6 +246,34 @@ The next attempt needs either a public shape for a conditional rollup - if one
 appears, this becomes a one-line config change on the runner, which is kept -
 or a reason to believe the lookup path can be made to fail. The runner is on
 branch `case/conditional-rollup-propagation`, unmerged.
+
+### The FIND-over-a-multi-valued-column row
+
+The change casts both operands of `FIND`/`SEARCH` to text, because `POSITION`
+fails when it is handed multi-select or link jsonb. The failure would be
+legible - a formula that works over a text column produces an empty column
+when pointed at a multi-valued one, with no error to read.
+
+Three shapes were built, each a different storage form, and all three are green
+on both columns:
+
+1. **A multi-select column** - run 32661588045.
+2. **A link column**, an array of objects rather than of strings - run 32661887104.
+3. **A lookup of the linked rows' names**, an array of plain values - run 32662204754.
+
+The first two are the shapes the commit itself names, which is what makes the
+result worth recording rather than filing as a bad guess. A formula written
+through the public field API compiles to something that already handles all
+three on the fix's parent: either the cast was already present on this path, or
+the path that lacked it is reached another way.
+
+The runner keeps all three as a config value, so re-checking any of them is one
+word. What it does not cover: `SEARCH`, which the fix changes alongside `FIND`,
+and `TEXTBEFORE`, whose SQL snapshots the commit also updates. If a case is
+attempted again, those are the next things to try, and the ledger row should be
+deleted rather than extended if one of them reproduces.
+
+Branch `case/find-over-multi-value`, unmerged.
 
 ## Covered
 
