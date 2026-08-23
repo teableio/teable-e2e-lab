@@ -57,6 +57,7 @@ import { runBaseImportFieldDescriptionCase } from "./runners/base-import-field-d
 import { runUserWriteScopeCase } from "./runners/user-write-scope.runner";
 import { runOrphanLinkFieldDeleteCase } from "./runners/orphan-link-field-delete.runner";
 import { runTextToDateConversionCase } from "./runners/text-to-date-conversion.runner";
+import { runButtonDisplayChangeCase } from "./runners/button-display-change.runner";
 import type {
   BugCase,
   BugCaseFor,
@@ -133,6 +134,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "user-write-scope": runUserWriteScopeCase,
   "orphan-link-field-delete": runOrphanLinkFieldDeleteCase,
   "text-to-date-conversion": runTextToDateConversionCase,
+  "button-display-change": runButtonDisplayChangeCase,
 };
 
 export const executeRegisteredRunner = (

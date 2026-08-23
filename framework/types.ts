@@ -66,6 +66,7 @@ export interface BugCaseConfigByRunner {
   "user-write-scope": UserWriteScopeCaseConfig;
   "orphan-link-field-delete": OrphanLinkFieldDeleteCaseConfig;
   "text-to-date-conversion": TextToDateConversionCaseConfig;
+  "button-display-change": ButtonDisplayChangeCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1274,4 +1275,25 @@ export interface TextToDateConversionCaseConfig {
   // "empty" for a value that is not a date and has to end up cleared,
   // "date" for one that has to survive. The fixture needs both.
   rows: { name: string; text: string; becomes: "empty" | "date" }[];
+}
+
+// A button column's label, colour, cap and confirmation dialog - presentation
+// and click policy - edited while every row already carries a click count. The
+// edit was treated as a change to what the column holds, so the counts were
+// rewritten.
+export interface ButtonDisplayChangeCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  rowTitles: string[];
+  // Something other than zero, or a wiped count and the seeded one are the
+  // same number.
+  seededCount: number;
+  labelBefore: string;
+  labelAfter: string;
+  colorBefore: string;
+  colorAfter: string;
+  maxCountBefore: number;
+  maxCountAfter: number;
+  confirmTitle: string;
+  confirmDescription: string;
 }
