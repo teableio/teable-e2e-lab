@@ -37,6 +37,7 @@ export interface BugCaseConfigByRunner {
   "user-field-notify-burst": UserFieldNotifyBurstCaseConfig;
   "user-group-identity": UserGroupIdentityCaseConfig;
   "paste-over-pending-field": PasteOverPendingFieldCaseConfig;
+  "delete-collateral": DeleteCollateralCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -800,4 +801,22 @@ export interface PasteOverPendingFieldCaseConfig {
   // differ from each other - see the runner.
   firstValue: string;
   lastValue: string;
+}
+
+// Two ways a delete took more than it was asked for, on one runner because the
+// shape is the same: delete something, then look at what was standing next to
+// it.
+export interface DeleteCollateralCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // "sharedColumn": two live fields mapped to one physical column, and the
+  // delete of one drops the column both name. The collision is written with
+  // SQL - it is the outcome of a race, and re-enacting the race would test
+  // timing rather than the delete.
+  // "repeatedDelete": deleting records that are already gone.
+  variant: "sharedColumn" | "repeatedDelete";
+  rowCount: number;
+  // Prefix of the values the surviving field holds. Read back before and after
+  // the delete, so the assertion is about data rather than about a status.
+  keptValuePrefix: string;
 }
