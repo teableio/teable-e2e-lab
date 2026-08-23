@@ -42,6 +42,7 @@ export interface BugCaseConfigByRunner {
   "legacy-record-id": LegacyRecordIdCaseConfig;
   "restore-conditional-lookup": RestoreConditionalLookupCaseConfig;
   "sparse-view-field-order": SparseViewFieldOrderCaseConfig;
+  "import-record-history": ImportRecordHistoryCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -885,4 +886,20 @@ export interface SparseViewFieldOrderCaseConfig {
   // is merely off by one.
   legacyFieldNames: string[];
   addedFieldName: string;
+}
+
+// An import into an existing table, and the table's record history afterwards.
+// Creating a record through the product writes no history - a new row has no
+// previous value - and importing is creating rows, but the import wrote one
+// null-to-value entry per non-empty cell.
+export interface ImportRecordHistoryCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Rows in the sheet, two columns each, every cell filled. At least two: one
+  // row times two columns is a count that could be reached by accident.
+  importedRows: number;
+  // History is written by a projection behind the import's own response, so
+  // the case watches for this long rather than reading once.
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
 }
