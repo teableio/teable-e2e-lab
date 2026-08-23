@@ -1,5 +1,5 @@
 import { FieldKeyType, FieldType } from "@teable/core";
-import { axios, CREATE_RECORDS, urlBuilder } from "@teable/openapi";
+import { axios, CREATE_RECORD, urlBuilder } from "@teable/openapi";
 import { createTable, permanentDeleteTable } from "../../../utils/init-app";
 import { bugCheckpoint } from "../checkpoint";
 import { fixtureDb } from "../fixture-db";
@@ -73,7 +73,7 @@ export const runUserWriteScopeCase = async (
     // the generated client throws it away along with the body.
     const writeByEmail = async (title: string, email: string) =>
       axios.post(
-        urlBuilder(CREATE_RECORDS, { tableId }),
+        urlBuilder(CREATE_RECORD, { tableId }),
         {
           fieldKeyType: FieldKeyType.Name,
           typecast: true,
