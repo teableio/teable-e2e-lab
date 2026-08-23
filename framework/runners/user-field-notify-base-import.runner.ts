@@ -211,9 +211,17 @@ export const runUserFieldNotifyBaseImportCase = async (
         `exporting ${sourceBase.id} returned no file: ${JSON.stringify(exported.data)}`,
       );
     }
-    const downloaded = await axios.get<ArrayBuffer>(previewUrl, {
+    // The export's preview URL may come back absolute or rooted at the app,
+    // depending on how the storage provider builds it. Resolving it against
+    // the app URL covers both, and the first run of this case failed with
+    // "Invalid URL" because it assumed one of them.
+    const downloadUrl = /^https?:\/\//.test(previewUrl)
+      ? previewUrl
+      : new URL(previewUrl, context.appUrl).toString();
+    const downloaded = await axios.get<ArrayBuffer>(downloadUrl, {
       responseType: "arraybuffer",
       baseURL: "",
+      headers: context.cookie ? { Cookie: context.cookie } : undefined,
     });
     const zip = Buffer.from(downloaded.data);
     if (zip.byteLength === 0) {
@@ -329,6 +337,7 @@ export const runUserFieldNotifyBaseImportCase = async (
         assigneeId: assignee.id,
         controlLatencyMs,
         exportedBytes: zip.byteLength,
+        downloadUrl,
         assignedRecordId: assignedRow.id,
         quietForMs: probe.quietForMs,
       },
