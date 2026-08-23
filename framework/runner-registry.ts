@@ -43,6 +43,7 @@ import { runLegacyFieldIdCase } from "./runners/legacy-field-id.runner";
 import { runNestedLookupRenameCase } from "./runners/nested-lookup-rename.runner";
 import { runTableRestoreScopeCase } from "./runners/table-restore-scope.runner";
 import { runRollupFilterPersistsCase } from "./runners/rollup-filter-persists.runner";
+import { runLinkTitleInUpdateResponseCase } from "./runners/link-title-in-update-response.runner";
 import type {
   BugCase,
   BugCaseFor,
@@ -105,6 +106,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "nested-lookup-rename": runNestedLookupRenameCase,
   "table-restore-scope": runTableRestoreScopeCase,
   "rollup-filter-persists": runRollupFilterPersistsCase,
+  "link-title-in-update-response": runLinkTitleInUpdateResponseCase,
 };
 
 export const executeRegisteredRunner = (

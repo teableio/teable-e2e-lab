@@ -52,6 +52,7 @@ export interface BugCaseConfigByRunner {
   "nested-lookup-rename": NestedLookupRenameCaseConfig;
   "table-restore-scope": TableRestoreScopeCaseConfig;
   "rollup-filter-persists": RollupFilterPersistsCaseConfig;
+  "link-title-in-update-response": LinkTitleInUpdateResponseCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1058,4 +1059,16 @@ export interface RollupFilterPersistsCaseConfig {
   items: { name: string; category: string; amount: number }[];
   settleTimeoutMs: number;
   pollIntervalMs: number;
+}
+
+// Setting a link on a record, and the answer to that write. A link cell
+// carries the id of the row it points at and that row's title; the reply
+// carried the id alone, so the cell in front of whoever made the change stayed
+// blank until something else refreshed it.
+export interface LinkTitleInUpdateResponseCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // The linked row's name. Must not be blank - the case is about that name
+  // arriving, and an empty one cannot be told from a missing one.
+  foreignRowTitle: string;
 }
