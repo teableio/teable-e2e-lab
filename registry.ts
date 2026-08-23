@@ -42,6 +42,7 @@ import tableRestoreScopeCase from "./cases/table/restore-brings-back-only-its-ow
 import fieldLegacyIdTableCase from "./cases/field/legacy-field-id-table-still-works.case";
 import lookupNestedRenameCase from "./cases/lookup/renaming-a-nested-lookup-keeps-its-choices.case";
 import realtimeManualSortCase from "./cases/realtime/manual-sort-reaches-the-open-page.case";
+import multiFieldUpdateRealtimeCase from "./cases/realtime/multi-field-update-reaches-the-open-page.case";
 import fieldRatingConversionCase from "./cases/field/rating-conversion-normalizes-existing-values.case";
 import linkTwoToOneTableCase from "./cases/link/two-links-to-one-table-get-two-columns.case";
 import lookupConditionalForeignRefCase from "./cases/lookup/conditional-filter-over-a-foreign-table.case";
@@ -111,6 +112,7 @@ const cases = [
   fieldLegacyIdTableCase,
   lookupNestedRenameCase,
   realtimeManualSortCase,
+  multiFieldUpdateRealtimeCase,
   fieldRatingConversionCase,
   linkTwoToOneTableCase,
   lookupConditionalForeignRefCase,
