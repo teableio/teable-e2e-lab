@@ -18,10 +18,18 @@ other, and the import dialog has a switch that says so.
 
 With that switch off, the first line was dropped anyway.
 
+## Which entry point
+
+The one that creates the table as it goes — that is the handler the fix
+changes. Adding the same lines to a table that already exists keeps the first
+line on the fix's parent (run 32667570622), so the runner keeps that shape as a
+config value.
+
 ## How the case is built
 
 Three lines, no header, imported with the switch set to treat every line as a
-record.
+record. The check is on the values each row carries rather than on which column
+carries them: a table the import builds names its own columns.
 
 At least two lines are required: with one, a dropped first line and an import
 that did nothing look the same.

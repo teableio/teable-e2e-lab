@@ -19,6 +19,7 @@ export default defineBugCase({
   config: {
     baseId: "seed-base",
     tableNamePrefix: "e2e-lab-csv-no-header",
+    mode: "newTable",
     rows: [
       { ref: "REF-001", note: "the first line" },
       { ref: "REF-002", note: "the second line" },

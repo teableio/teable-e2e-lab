@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { FieldKeyType, FieldType } from "@teable/core";
 import {
   analyzeFile as apiAnalyzeFile,
+  importTableFromFile as apiImportTableFromFile,
   getRecords as apiGetRecords,
   getSignature as apiGetSignature,
   inplaceImportTableFromFile as apiInplaceImport,
@@ -41,6 +42,7 @@ export const runCsvHeadersDisabledCase = async (
   const baseId = globalThis.testConfig.baseId;
   const suffix = `${config.tableNamePrefix}-${context.runId}`;
   const csvPath = join(tmpdir(), `e2e-lab-csv-headers-${context.runId}.csv`);
+  const createdTableIds: string[] = [];
   let tableId = "";
 
   if (config.rows.length < 2) {
@@ -59,6 +61,7 @@ export const runCsvHeadersDisabledCase = async (
       records: [],
     });
     tableId = table.id;
+    createdTableIds.unshift(table.id);
     const firstFieldId = table.fields.find(
       (field: { name: string }) => field.name === FIRST_COLUMN,
     )?.id;
@@ -107,35 +110,74 @@ export const runCsvHeadersDisabledCase = async (
     const probe = await bugCheckpoint(
       "a-headerless-sheet-imports-every-line",
       async () => {
-        const imported = await apiInplaceImport(baseId, tableId, {
-          attachmentUrl,
-          fileType: SUPPORTEDTYPE.CSV,
-          insertConfig: {
-            sourceWorkSheetKey: worksheetKey,
-            // The switch: the first line is a record, not a header.
-            excludeFirstRow: false,
-            sourceColumnMap: { [firstFieldId]: 0, [secondFieldId]: 1 },
-          },
-        });
-        const routing = assertServedByV2(imported.headers, {
-          operation: "PATCH /import/{baseId}/{tableId}",
-          feature: "importRecords",
-        });
+        // Which import. The fix is in the handler that creates the table as it
+        // goes; adding the lines to a table that already exists keeps the
+        // first line on both columns - run 32667570622.
+        let observedTableId = tableId;
+        let routing;
+        if (config.mode === "inplace") {
+          const imported = await apiInplaceImport(baseId, tableId, {
+            attachmentUrl,
+            fileType: SUPPORTEDTYPE.CSV,
+            insertConfig: {
+              sourceWorkSheetKey: worksheetKey,
+              // The switch: the first line is a record, not a header.
+              excludeFirstRow: false,
+              sourceColumnMap: { [firstFieldId]: 0, [secondFieldId]: 1 },
+            },
+          });
+          routing = assertServedByV2(imported.headers, {
+            operation: "PATCH /import/{baseId}/{tableId}",
+            feature: "importRecords",
+          });
+        } else {
+          const columns = analyzed.data.worksheets[worksheetKey].columns;
+          const imported = await apiImportTableFromFile(baseId, {
+            attachmentUrl,
+            fileType: SUPPORTEDTYPE.CSV,
+            worksheets: {
+              [worksheetKey]: {
+                name: `${suffix}-imported`,
+                columns: columns.map((column: unknown, index: number) => ({
+                  ...(column as Record<string, unknown>),
+                  sourceColumnIndex: index,
+                })),
+                // The same switch, on the entry point that builds the table.
+                useFirstRowAsHeader: false,
+                importData: true,
+              },
+            },
+            tz: "UTC",
+          });
+          routing = assertServedByV2(imported.headers, {
+            operation: "POST /import/{baseId}",
+            feature: "importCsv",
+          });
+          const createdId = imported.data?.[0]?.id;
+          if (!createdId) {
+            throw new Error(
+              `the import created no table: ${JSON.stringify(imported.data)}`,
+            );
+          }
+          createdTableIds.unshift(createdId);
+          observedTableId = createdId;
+        }
 
-        const after = await apiGetRecords(tableId, {
+        const after = await apiGetRecords(observedTableId, {
           fieldKeyType: FieldKeyType.Name,
           take: config.rows.length + 5,
         });
+        // Column names differ between the two entry points - the created table
+        // names its columns itself - so the check is on the values a row
+        // carries rather than on which column carries them.
         const landed = after.data.records.map(
-          (record: { fields: Record<string, unknown> }) => ({
-            ref: String(record.fields[FIRST_COLUMN] ?? ""),
-            note: String(record.fields[SECOND_COLUMN] ?? ""),
-          }),
+          (record: { fields: Record<string, unknown> }) =>
+            Object.values(record.fields).map(String),
         );
         const missing = config.rows.filter(
           (row) =>
             !landed.some(
-              (entry) => entry.ref === row.ref && entry.note === row.note,
+              (values) => values.includes(row.ref) && values.includes(row.note),
             ),
         );
         if (missing.length > 0) {
@@ -159,6 +201,7 @@ export const runCsvHeadersDisabledCase = async (
     return {
       details: {
         tableId,
+        mode: config.mode,
         lines: config.rows.length,
         routing: probe.routing,
         landed: probe.landed,
@@ -166,13 +209,13 @@ export const runCsvHeadersDisabledCase = async (
     };
   } finally {
     await unlink(csvPath).catch(() => undefined);
-    if (tableId) {
+    for (const created of createdTableIds) {
       try {
-        await permanentDeleteTable(baseId, tableId);
+        await permanentDeleteTable(baseId, created);
       } catch (error) {
         // Cleanup is the case's own housekeeping - the product did not fail.
         console.warn(
-          `[e2e-lab] cleanup failed for ${bugCase.id} (table ${tableId}): ${
+          `[e2e-lab] cleanup failed for ${bugCase.id} (table ${created}): ${
             error instanceof Error ? error.message : String(error)
           }`,
         );

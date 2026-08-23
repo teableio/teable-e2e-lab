@@ -1164,6 +1164,10 @@ export interface CheckboxClearedDefaultCaseConfig {
 export interface CsvHeadersDisabledCaseConfig {
   baseId: "seed-base";
   tableNamePrefix: string;
+  // Which entry point. The fix is in the handler that creates the table as it
+  // goes; "inplace" adds the lines to a table that already exists and keeps
+  // the first line on both columns.
+  mode: "inplace" | "newTable";
   // The lines of the sheet. At least two: with one, a dropped first line and
   // an import that did nothing look the same.
   rows: { ref: string; note: string }[];
