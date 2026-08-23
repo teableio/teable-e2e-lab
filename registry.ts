@@ -30,6 +30,7 @@ import selectionPasteByIdLandsOnItsOwnRowsCase from "./cases/selection/paste-by-
 import searchStaysInsideViewFilterCase from "./cases/search/stays-inside-view-filter.case";
 import fieldDeleteSparesSharedColumnCase from "./cases/field/delete-spares-a-field-sharing-its-column.case";
 import recordRepeatedDeleteIsIdempotentCase from "./cases/record/repeated-delete-is-idempotent.case";
+import tableDuplicateWithSharedViewCase from "./cases/table/duplicate-with-shared-view.case";
 import selectionPasteAcrossPendingFieldCase from "./cases/selection/paste-across-pending-field.case";
 import selectionPasteByIdAcrossPendingFieldCase from "./cases/selection/paste-by-id-across-pending-field.case";
 import tableTrashDegradesInboundLinkWithoutDisplayColumnCase from "./cases/table/trash-degrades-inbound-link-without-display-column.case";
@@ -73,6 +74,7 @@ const cases = [
   searchStaysInsideViewFilterCase,
   fieldDeleteSparesSharedColumnCase,
   recordRepeatedDeleteIsIdempotentCase,
+  tableDuplicateWithSharedViewCase,
   userFieldGroupFoldsDriftedSnapshotsCase,
   userFieldGroupKeepsLegacyIdOutOfEmptyCase,
   userFieldGroupKeepsUnwrappedCellOutOfEmptyCase,

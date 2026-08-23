@@ -38,6 +38,7 @@ export interface BugCaseConfigByRunner {
   "user-group-identity": UserGroupIdentityCaseConfig;
   "paste-over-pending-field": PasteOverPendingFieldCaseConfig;
   "delete-collateral": DeleteCollateralCaseConfig;
+  "duplicate-shared-view": DuplicateSharedViewCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -819,4 +820,14 @@ export interface DeleteCollateralCaseConfig {
   // Prefix of the values the surviving field holds. Read back before and after
   // the delete, so the assertion is about data rather than about a status.
   keptValuePrefix: string;
+}
+
+// A table with a shared view, duplicated. Sharing mints a credential that is
+// unique across the instance - it is the address of a public page - and the
+// copy carried the source's, so the insert met the unique index and the whole
+// duplicate failed.
+export interface DuplicateSharedViewCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  rowTitle: string;
 }
