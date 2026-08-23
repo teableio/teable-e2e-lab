@@ -28,6 +28,7 @@ import linkCrossBaseLinkClearsOnDeleteCase from "./cases/link/cross-base-link-cl
 import importExcelHeaderBelowA1Case from "./cases/import/excel-header-below-a1.case";
 import selectionPasteByIdLandsOnItsOwnRowsCase from "./cases/selection/paste-by-id-lands-on-its-own-rows.case";
 import searchStaysInsideViewFilterCase from "./cases/search/stays-inside-view-filter.case";
+import tableRestoreScopeCase from "./cases/table/restore-brings-back-only-its-own-delete.case";
 import fieldLegacyIdTableCase from "./cases/field/legacy-field-id-table-still-works.case";
 import lookupNestedRenameCase from "./cases/lookup/renaming-a-nested-lookup-keeps-its-choices.case";
 import realtimeManualSortCase from "./cases/realtime/manual-sort-reaches-the-open-page.case";
@@ -86,6 +87,7 @@ const cases = [
   importExcelHeaderBelowA1Case,
   selectionPasteByIdLandsOnItsOwnRowsCase,
   searchStaysInsideViewFilterCase,
+  tableRestoreScopeCase,
   fieldLegacyIdTableCase,
   lookupNestedRenameCase,
   realtimeManualSortCase,

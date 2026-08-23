@@ -41,6 +41,7 @@ import { runManualSortRealtimeCase } from "./runners/manual-sort-realtime.runner
 import { runRepeatedForeignLinksCase } from "./runners/repeated-foreign-links.runner";
 import { runLegacyFieldIdCase } from "./runners/legacy-field-id.runner";
 import { runNestedLookupRenameCase } from "./runners/nested-lookup-rename.runner";
+import { runTableRestoreScopeCase } from "./runners/table-restore-scope.runner";
 import type {
   BugCase,
   BugCaseFor,
@@ -101,6 +102,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "repeated-foreign-links": runRepeatedForeignLinksCase,
   "legacy-field-id": runLegacyFieldIdCase,
   "nested-lookup-rename": runNestedLookupRenameCase,
+  "table-restore-scope": runTableRestoreScopeCase,
 };
 
 export const executeRegisteredRunner = (
