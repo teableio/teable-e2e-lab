@@ -46,6 +46,7 @@ import { runRollupFilterPersistsCase } from "./runners/rollup-filter-persists.ru
 import { runLookupRetargetCase } from "./runners/lookup-retarget.runner";
 import { runRequiredDefaultCase } from "./runners/required-default.runner";
 import { runLegacyDateFilterCase } from "./runners/legacy-date-filter.runner";
+import { runFormulaOverDateLookupCase } from "./runners/formula-over-date-lookup.runner";
 import type {
   BugCase,
   BugCaseFor,
@@ -111,6 +112,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "lookup-retarget": runLookupRetargetCase,
   "required-default": runRequiredDefaultCase,
   "legacy-date-filter": runLegacyDateFilterCase,
+  "formula-over-date-lookup": runFormulaOverDateLookupCase,
 };
 
 export const executeRegisteredRunner = (

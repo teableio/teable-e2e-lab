@@ -55,6 +55,7 @@ export interface BugCaseConfigByRunner {
   "lookup-retarget": LookupRetargetCaseConfig;
   "required-default": RequiredDefaultCaseConfig;
   "legacy-date-filter": LegacyDateFilterCaseConfig;
+  "formula-over-date-lookup": FormulaOverDateLookupCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1104,4 +1105,22 @@ export interface LegacyDateFilterCaseConfig {
   // one are both caught.
   rows: { name: string; date: string }[];
   filterDate: string;
+}
+
+// A formula reading a date that came from another table. A lookup of a date is
+// stored as json rather than as a date, and the formula had to unwrap it
+// before treating it as one - so the computed update failed, and a failed
+// computed task takes the table's other computed columns with it.
+export interface FormulaOverDateLookupCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // The source row's date and status, before and after the write. Each pair
+  // has to differ, or the write queues no recompute and the columns would
+  // still read what the first pass put there.
+  dateBefore: string;
+  dateAfter: string;
+  statusBefore: string;
+  statusAfter: string;
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
 }
