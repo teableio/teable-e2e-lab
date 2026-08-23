@@ -49,6 +49,7 @@ export interface BugCaseConfigByRunner {
   "manual-sort-realtime": ManualSortRealtimeCaseConfig;
   "repeated-foreign-links": RepeatedForeignLinksCaseConfig;
   "legacy-field-id": LegacyFieldIdCaseConfig;
+  "find-over-multi-value": FindOverMultiValueCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1013,4 +1014,19 @@ export interface LegacyFieldIdCaseConfig {
   legacyFieldId: string;
   seedValue: string;
   updatedValue: string;
+}
+
+// A formula searching a multi-select cell for a word. The column holds several
+// values rather than one string, and the query built for it asked Postgres to
+// search inside a jsonb value with a text operator - which fails, and fails
+// the whole computed task with it.
+export interface FindOverMultiValueCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // The word the formula looks for. One row's tags must contain it and one
+  // row's must not.
+  needle: string;
+  rows: { name: string; tags: string[] }[];
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
 }
