@@ -54,6 +54,7 @@ export interface BugCaseConfigByRunner {
   "rollup-filter-persists": RollupFilterPersistsCaseConfig;
   "lookup-retarget": LookupRetargetCaseConfig;
   "required-default": RequiredDefaultCaseConfig;
+  "legacy-date-filter": LegacyDateFilterCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1087,4 +1088,20 @@ export interface RequiredDefaultCaseConfig {
   // added to a table that already holds rows.
   moment: "onCreate" | "onAddField";
   defaultValue: string;
+}
+
+// A date filter sent as a plain date string, the way v1 took it and v1-era
+// clients still send it. v2 did not recognise the bare string, so the filter
+// matched nothing - and an empty result reads as "there is nothing there".
+export interface LegacyDateFilterCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Display zone of the date column. Pinned so the dates read the same
+  // everywhere rather than being load-bearing.
+  timeZone: string;
+  // The rows, and which date the filter asks for. At least one row must be on
+  // that date and at least one must not, so an empty answer and an unfiltered
+  // one are both caught.
+  rows: { name: string; date: string }[];
+  filterDate: string;
 }
