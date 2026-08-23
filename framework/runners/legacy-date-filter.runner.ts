@@ -39,12 +39,31 @@ export const runLegacyDateFilterCase = async (
   const suffix = `${config.tableNamePrefix}-${context.runId}`;
   let tableId = "";
 
-  const wanted = config.rows.filter((row) => row.date === config.filterDate);
-  const others = config.rows.filter((row) => row.date !== config.filterDate);
-  if (wanted.length < 1 || others.length < 1) {
+  // "is" on a date column means the same day, not the same instant - measured
+  // on develop in run 32664447076, where a filter naming 09:00 returned the
+  // row at 18:30 as well. So the expectation is computed by day, in the
+  // column's own zone, and the fixture keeps two rows on the filtered day at
+  // different times to hold that distinction in place.
+  const dayOf = (value: string) =>
+    new Intl.DateTimeFormat("en-CA", {
+      timeZone: config.timeZone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date(value));
+  const filterDay = dayOf(config.filterDate);
+  const wanted = config.rows.filter((row) => dayOf(row.date) === filterDay);
+  const others = config.rows.filter((row) => dayOf(row.date) !== filterDay);
+  if (wanted.length < 2 || others.length < 1) {
     throw new Error(
-      "the fixture needs a row on the filtered date and a row on another one - otherwise an empty answer " +
-        "and an unfiltered one cannot both be caught",
+      "the fixture needs at least two rows on the filtered day - at different times, so a filter matching " +
+        "the instant rather than the day is caught - and at least one row on another day",
+    );
+  }
+  if (new Set(wanted.map((row) => row.date)).size !== wanted.length) {
+    throw new Error(
+      "the rows on the filtered day have to be at different times, or matching the instant and matching " +
+        "the day look the same",
     );
   }
 
@@ -125,7 +144,9 @@ export const runLegacyDateFilterCase = async (
               `${JSON.stringify(expected)}` +
               (names.length === 0
                 ? " - an empty answer reads as: there is nothing there"
-                : ""),
+                : names.length === 1
+                  ? " - one row is the instant, not the day"
+                  : ""),
           );
         }
         return { names };

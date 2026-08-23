@@ -21,13 +21,18 @@ v2 did not recognise it, and an unrecognised filter value matched nothing.
 
 Three rows across two days, and a filter asking for one of them.
 
-Both a row on the filtered date and a row on another one are required. With
-only matching rows, a filter that was ignored entirely would return everything
-and look correct; with only non-matching rows, one that matched nothing would.
-The fixture catches both, and the failure message says which happened.
+Both rows on the filtered day and a row on another one are required. With only
+matching rows, a filter that was ignored entirely would return everything and
+look correct; with only non-matching rows, one that matched nothing would. The
+fixture catches both, and the failure message says which happened — including
+the one-row case, which means the instant was matched rather than the day.
 
-Two rows share the filtered date at different times of day, so a filter that
-matched on the exact instant rather than the day would be caught too.
+Two rows share the filtered day at different times, and that distinction is the
+sharp end of this case: `is` on a date column means the same **day**, not the
+same instant. Measured on `develop` in run 32664447076, a filter naming 09:00
+returns the 18:30 row as well; on the fix's parent it returned only the exact
+instant. The first version of this case expected string equality and failed on
+the fixed build for that reason.
 
 ## Limits
 
