@@ -28,6 +28,7 @@ import linkCrossBaseLinkClearsOnDeleteCase from "./cases/link/cross-base-link-cl
 import importExcelHeaderBelowA1Case from "./cases/import/excel-header-below-a1.case";
 import selectionPasteByIdLandsOnItsOwnRowsCase from "./cases/selection/paste-by-id-lands-on-its-own-rows.case";
 import searchStaysInsideViewFilterCase from "./cases/search/stays-inside-view-filter.case";
+import fieldRequiredDefaultBackfillCase from "./cases/field/required-default-backfills-existing-rows.case";
 import lookupRollupFilterCase from "./cases/lookup/rollup-condition-is-saved-and-applied.case";
 import lookupRetargetCase from "./cases/lookup/repointed-lookup-shows-its-new-target.case";
 import tableRestoreScopeCase from "./cases/table/restore-brings-back-only-its-own-delete.case";
@@ -89,6 +90,7 @@ const cases = [
   importExcelHeaderBelowA1Case,
   selectionPasteByIdLandsOnItsOwnRowsCase,
   searchStaysInsideViewFilterCase,
+  fieldRequiredDefaultBackfillCase,
   lookupRollupFilterCase,
   lookupRetargetCase,
   tableRestoreScopeCase,

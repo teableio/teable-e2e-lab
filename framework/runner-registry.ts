@@ -44,6 +44,7 @@ import { runNestedLookupRenameCase } from "./runners/nested-lookup-rename.runner
 import { runTableRestoreScopeCase } from "./runners/table-restore-scope.runner";
 import { runRollupFilterPersistsCase } from "./runners/rollup-filter-persists.runner";
 import { runLookupRetargetCase } from "./runners/lookup-retarget.runner";
+import { runRequiredDefaultCase } from "./runners/required-default.runner";
 import type {
   BugCase,
   BugCaseFor,
@@ -107,6 +108,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "table-restore-scope": runTableRestoreScopeCase,
   "rollup-filter-persists": runRollupFilterPersistsCase,
   "lookup-retarget": runLookupRetargetCase,
+  "required-default": runRequiredDefaultCase,
 };
 
 export const executeRegisteredRunner = (

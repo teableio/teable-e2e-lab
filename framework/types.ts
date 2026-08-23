@@ -53,6 +53,7 @@ export interface BugCaseConfigByRunner {
   "table-restore-scope": TableRestoreScopeCaseConfig;
   "rollup-filter-persists": RollupFilterPersistsCaseConfig;
   "lookup-retarget": LookupRetargetCaseConfig;
+  "required-default": RequiredDefaultCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1073,4 +1074,17 @@ export interface LookupRetargetCaseConfig {
   textValue: string;
   settleTimeoutMs: number;
   pollIntervalMs: number;
+}
+
+// A required column with a default value. "Required" and "has a default"
+// belong together - the default is the answer for everyone who does not supply
+// one - and the order was wrong in two places, each rejecting an ordinary
+// request.
+export interface RequiredDefaultCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // "onCreate": a record created without the column. "onAddField": the column
+  // added to a table that already holds rows.
+  moment: "onCreate" | "onAddField";
+  defaultValue: string;
 }
