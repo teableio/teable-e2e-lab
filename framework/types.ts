@@ -35,6 +35,7 @@ export interface BugCaseConfigByRunner {
   "user-field-notify-bulk-action": UserFieldNotifyBulkActionCaseConfig;
   "user-field-notify-replay": UserFieldNotifyReplayCaseConfig;
   "user-field-notify-burst": UserFieldNotifyBurstCaseConfig;
+  "user-field-notify-base-import": UserFieldNotifyBaseImportCaseConfig;
   "user-group-identity": UserGroupIdentityCaseConfig;
   "paste-over-pending-field": PasteOverPendingFieldCaseConfig;
 }
@@ -800,4 +801,28 @@ export interface PasteOverPendingFieldCaseConfig {
   // differ from each other - see the runner.
   firstValue: string;
   lastValue: string;
+}
+
+// A second person assigned in a user field, in a base that is exported and
+// imported back -> checkpoint: their notification list stays empty for the
+// whole quiet budget. The third path named in T6662, and the largest: an
+// import rebuilds every table in the file, so every user cell in it arrives
+// populated at once.
+export interface UserFieldNotifyBaseImportCaseConfig {
+  baseId: "seed-base";
+  // Names the space, both bases, the tables and the assignee address. This
+  // case builds its own space rather than working in the seed base, because
+  // importing a base creates one.
+  namePrefix: string;
+  rowTitle: string;
+  // How long the first assignment's notification may take before the case
+  // gives up and calls the pipeline broken.
+  notifyTimeoutMs: number;
+  // How long silence has to hold after the import. Refused at runtime if it is
+  // not at least three times the control latency actually observed.
+  quietTimeoutMs: number;
+  // How long the imported copy may take to show the assignment. Not the same
+  // clock as the quiet budget.
+  rowVisibleTimeoutMs: number;
+  pollIntervalMs: number;
 }
