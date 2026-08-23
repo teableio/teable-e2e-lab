@@ -47,6 +47,7 @@ import { runLookupRetargetCase } from "./runners/lookup-retarget.runner";
 import { runRequiredDefaultCase } from "./runners/required-default.runner";
 import { runLegacyDateFilterCase } from "./runners/legacy-date-filter.runner";
 import { runFormulaOverDateLookupCase } from "./runners/formula-over-date-lookup.runner";
+import { runAggregationMixedCaseCase } from "./runners/aggregation-mixed-case.runner";
 import type {
   BugCase,
   BugCaseFor,
@@ -113,6 +114,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "required-default": runRequiredDefaultCase,
   "legacy-date-filter": runLegacyDateFilterCase,
   "formula-over-date-lookup": runFormulaOverDateLookupCase,
+  "aggregation-mixed-case": runAggregationMixedCaseCase,
 };
 
 export const executeRegisteredRunner = (

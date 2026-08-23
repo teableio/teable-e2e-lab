@@ -28,6 +28,7 @@ import linkCrossBaseLinkClearsOnDeleteCase from "./cases/link/cross-base-link-cl
 import importExcelHeaderBelowA1Case from "./cases/import/excel-header-below-a1.case";
 import selectionPasteByIdLandsOnItsOwnRowsCase from "./cases/selection/paste-by-id-lands-on-its-own-rows.case";
 import searchStaysInsideViewFilterCase from "./cases/search/stays-inside-view-filter.case";
+import aggregationMixedCaseCase from "./cases/aggregation/capitalised-column-can-be-totalled.case";
 import filterPlainDateStringCase from "./cases/filter/plain-date-string-filters-a-date-column.case";
 import formulaOverDateLookupCase from "./cases/formula/formula-over-a-looked-up-date-follows-a-change.case";
 import fieldRequiredDefaultBackfillCase from "./cases/field/required-default-backfills-existing-rows.case";
@@ -92,6 +93,7 @@ const cases = [
   importExcelHeaderBelowA1Case,
   selectionPasteByIdLandsOnItsOwnRowsCase,
   searchStaysInsideViewFilterCase,
+  aggregationMixedCaseCase,
   filterPlainDateStringCase,
   formulaOverDateLookupCase,
   fieldRequiredDefaultBackfillCase,
