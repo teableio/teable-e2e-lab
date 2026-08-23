@@ -29,6 +29,7 @@ import importExcelHeaderBelowA1Case from "./cases/import/excel-header-below-a1.c
 import selectionPasteByIdLandsOnItsOwnRowsCase from "./cases/selection/paste-by-id-lands-on-its-own-rows.case";
 import searchStaysInsideViewFilterCase from "./cases/search/stays-inside-view-filter.case";
 import importHeaderlessSheetCase from "./cases/import/headerless-sheet-imports-every-line.case";
+import linkRenameKeepsConfigCase from "./cases/link/renaming-a-link-keeps-what-it-points-at.case";
 import aggregationMixedCaseCase from "./cases/aggregation/capitalised-column-can-be-totalled.case";
 import fieldCheckboxClearedDefaultCase from "./cases/field/clearing-a-checkbox-default-saves.case";
 import filterPlainDateStringCase from "./cases/filter/plain-date-string-filters-a-date-column.case";
@@ -96,6 +97,7 @@ const cases = [
   selectionPasteByIdLandsOnItsOwnRowsCase,
   searchStaysInsideViewFilterCase,
   importHeaderlessSheetCase,
+  linkRenameKeepsConfigCase,
   aggregationMixedCaseCase,
   fieldCheckboxClearedDefaultCase,
   filterPlainDateStringCase,
