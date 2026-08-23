@@ -58,6 +58,7 @@ export interface BugCaseConfigByRunner {
   "formula-over-date-lookup": FormulaOverDateLookupCaseConfig;
   "aggregation-mixed-case": AggregationMixedCaseCaseConfig;
   "checkbox-cleared-default": CheckboxClearedDefaultCaseConfig;
+  "csv-headers-disabled": CsvHeadersDisabledCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1156,4 +1157,18 @@ export interface CheckboxClearedDefaultCaseConfig {
   // What the column defaults to before the edit. There has to be a default to
   // clear, or the case would pass anywhere.
   startsTicked: boolean;
+}
+
+// A sheet whose first line is data rather than a header, imported with the
+// dialog's switch set to say so. The first line was dropped anyway.
+export interface CsvHeadersDisabledCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Which entry point. The fix is in the handler that creates the table as it
+  // goes; "inplace" adds the lines to a table that already exists and keeps
+  // the first line on both columns.
+  mode: "inplace" | "newTable";
+  // The lines of the sheet. At least two: with one, a dropped first line and
+  // an import that did nothing look the same.
+  rows: { ref: string; note: string }[];
 }
