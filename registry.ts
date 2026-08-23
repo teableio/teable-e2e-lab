@@ -33,6 +33,7 @@ import recordInvalidDateCase from "./cases/record/invalid-date-is-not-invented.c
 import recordRatingDomainCase from "./cases/record/rating-is-stored-in-whole-stars.case";
 import linkSingleArrayCase from "./cases/link/single-link-accepts-a-one-entry-array.case";
 import linkMultiObjectCase from "./cases/link/multi-link-accepts-a-bare-object.case";
+import linkNullTitleCase from "./cases/link/link-to-a-row-without-a-name-rewrites.case";
 import recordLegacyIdStillComputesCase from "./cases/record/legacy-id-row-still-computes.case";
 import lookupConditionalRestoreCase from "./cases/lookup/conditional-lookup-survives-restore.case";
 import viewAddedFieldLandsLastCase from "./cases/view/added-field-lands-after-legacy-columns.case";
@@ -85,6 +86,7 @@ const cases = [
   recordRatingDomainCase,
   linkSingleArrayCase,
   linkMultiObjectCase,
+  linkNullTitleCase,
   recordLegacyIdStillComputesCase,
   lookupConditionalRestoreCase,
   viewAddedFieldLandsLastCase,

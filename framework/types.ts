@@ -948,6 +948,8 @@ export interface ValueNormalizationCaseConfig {
 export interface LinkCellShapeCaseConfig {
   baseId: "seed-base";
   tableNamePrefix: string;
-  // Which tolerance is being asked for.
-  shape: "arrayIntoSingle" | "objectIntoMulti";
+  // Which tolerance is being asked for. "nullTitle" is a different fix with
+  // the same shape of failure: a link to a row whose primary cell is empty is
+  // stored as {id, title: null}, and write validation rejected the null title.
+  shape: "arrayIntoSingle" | "objectIntoMulti" | "nullTitle";
 }
