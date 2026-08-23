@@ -61,3 +61,27 @@ nothing that could notify anyone, and would pass on every commit.
 answers before its rows land, so waiting for the row is not waiting for the
 notification. The quiet budget starts when the import request returns, which is
 when the notifications it would have produced are scheduled.
+
+## Importing a whole base: built, run, not kept
+
+T6662's title names three paths — CSV import, base import, duplicating a
+table. Two of them are this group's cases. The third was written afterwards
+and is not here, because it is green on both columns.
+
+The case built its own space, a source base with one assigned row, exported
+that base, uploaded the file back through the ordinary attachment path, and
+imported it. The imported copy carries the assignment — the fixture check for
+that ran and passed, so this is not a case that failed to build its
+precondition. Then nothing arrived: 25 seconds of silence on `cd09b156b`, the
+fix's parent, against a control notification that took 527ms on the same
+commit. Run 32651690581.
+
+So on this path the pre-fix behavior already matches what the issue asks for.
+Why is not established here. Reading the issue does not settle it either: the
+confidence note marks the two bolded rows — CSV import and table duplicate —
+as read line by line, and base import is inside the same bolded entry as CSV
+import rather than being its own row. It may be that the two share a heading
+in the issue but not a code path.
+
+The work is kept on branch `case/notify-base-import`, unmerged. If the base
+import path changes, it is a working fixture already.
