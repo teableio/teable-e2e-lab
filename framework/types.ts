@@ -821,6 +821,11 @@ export interface ComputedOversizedCellCaseConfig {
   // The rows that were never the problem, and the whole observation. Their own
   // computed result has to stay well inside the ceiling.
   ordinaryRowCount: number;
+  // What every row holds before the write under test, and what the ordinary
+  // rows are changed to by it. They must differ: a write that stores the same
+  // value queues no recompute, and the cells would still read what the seed
+  // put there.
+  seedValue: string;
   ordinaryValue: string;
   // The computed pipeline is async and nothing reports its failure to the
   // caller, so waiting is the assertion: too short and a slow-but-working

@@ -1,5 +1,8 @@
 import { FieldKeyType, FieldType } from "@teable/core";
-import { getRecords as apiGetRecords } from "@teable/openapi";
+import {
+  getRecords as apiGetRecords,
+  updateRecords as apiUpdateRecords,
+} from "@teable/openapi";
 import {
   createField,
   createTable,
@@ -10,9 +13,15 @@ import { assertServedByV2 } from "../engine";
 import type { BugCaseFor, BugProbeResult, BugRunContext } from "../types";
 import type { ComputedOversizedCellCaseConfig } from "../types";
 
-// One row whose formula result is over the size limit, sharing a table with
-// ordinary rows -> add the formula so every row computes in one pass ->
-// checkpoint: the ordinary rows get their values.
+// A formula over a text column, then one bulk write that changes every row -
+// one of them to a value whose formula result is over the size limit ->
+// checkpoint: the ordinary rows in that same write get their new values.
+//
+// The trigger has to be a record write, not the backfill that runs when a
+// formula field is created. The ceiling is enforced in the computed pipeline's
+// record-change path, and the first version of this case triggered the
+// backfill instead: it stored a 300000-byte computed cell on both sides of the
+// fix, because that path never consults the limit. Measured, run 32649775516.
 //
 // A computed cell has a ceiling. A formula that multiplies a long text value
 // can cross it on one row while every other row in the table stays far below
@@ -82,6 +91,12 @@ export const runComputedOversizedCellCase = async (
         "they have to be the rows that were never the problem",
     );
   }
+  if (config.seedValue === config.ordinaryValue) {
+    throw new Error(
+      "the seed value and the value the ordinary rows are changed to are the same - " +
+        "the write would queue no recompute and the cells would still read the seed's result",
+    );
+  }
   if (config.ordinaryRowCount < 1) {
     throw new Error(
       "there has to be at least one ordinary row - it is the whole observation",
@@ -106,11 +121,11 @@ export const runComputedOversizedCellCase = async (
         {
           fields: {
             [NAME_FIELD]: OVERSIZED_ROW,
-            [SOURCE_FIELD]: oversizedValue,
+            [SOURCE_FIELD]: config.seedValue,
           },
         },
         ...ordinaryNames.map((name) => ({
-          fields: { [NAME_FIELD]: name, [SOURCE_FIELD]: config.ordinaryValue },
+          fields: { [NAME_FIELD]: name, [SOURCE_FIELD]: config.seedValue },
         })),
       ],
     });
@@ -129,6 +144,7 @@ export const runComputedOversizedCellCase = async (
       });
       return {
         headers: response.headers,
+        ids: response.data.records.map((record: { id: string }) => record.id),
         rows: response.data.records.map(
           (record: { fields: Record<string, unknown> }) => ({
             name: String(record.fields[NAME_FIELD] ?? ""),
@@ -139,44 +155,73 @@ export const runComputedOversizedCellCase = async (
       };
     };
 
-    // Fixture verification, outside the checkpoint and before the formula
-    // exists: the long value really landed at full length. A source cell that
-    // was quietly truncated on write would compute to something well inside
-    // the limit, and the case would be green on both sides of the fix while
-    // appearing to test the overflow.
-    const seeded = await readRows();
+    // The formula exists before the write under test, so the pass that has to
+    // survive is a recompute driven by a record change rather than the
+    // creation backfill.
+    await createField(tableId, {
+      name: COMPUTED_FIELD,
+      type: FieldType.Formula,
+      options: {
+        expression: `REPT({${sourceField.id}}, ${config.repeatTimes})`,
+      },
+    });
+
+    // Fixture verification, outside the checkpoint: every row is seeded, and
+    // every row already computes. If the formula did not work on the seed
+    // values, "the ordinary rows lost their values" would be describing a
+    // formula that never produced any.
+    const seededExpected = config.seedValue.repeat(config.repeatTimes);
+    const settleSeed = async () => {
+      const deadline = Date.now() + config.settleTimeoutMs;
+      for (;;) {
+        const current = await readRows();
+        const unset = current.rows.filter(
+          (row) => String(row.computed ?? "") !== seededExpected,
+        );
+        if (
+          unset.length === 0 &&
+          current.rows.length === config.ordinaryRowCount + 1
+        ) {
+          return current;
+        }
+        if (Date.now() >= deadline) {
+          throw new Error(
+            `the seed values never computed: ${unset.length} of ${current.rows.length} rows do not read ` +
+              `${JSON.stringify(seededExpected)} after ${config.settleTimeoutMs}ms - the fixture is not in place`,
+          );
+        }
+        await sleep(config.settlePollIntervalMs);
+      }
+    };
+    const seeded = await settleSeed();
     const routing = assertServedByV2(seeded.headers, {
       operation: "GET /table/{tableId}/record",
       feature: "getRecords",
     });
-    const seededOversized = seeded.rows.find(
-      (row) => row.name === OVERSIZED_ROW,
+    const recordIdByName = new Map(
+      seeded.rows.map((row, index) => [row.name, seeded.ids[index]]),
     );
-    if (seededOversized?.source.length !== config.oversizedChars) {
-      throw new Error(
-        `the long source cell reads ${seededOversized?.source.length ?? "no"} characters, expected ` +
-          `${config.oversizedChars} - the fixture is not in place`,
-      );
-    }
-    if (seeded.rows.length !== config.ordinaryRowCount + 1) {
-      throw new Error(
-        `seeded ${seeded.rows.length} rows, expected ${config.ordinaryRowCount + 1}`,
-      );
-    }
 
     const probe = await bugCheckpoint(
       "ordinary-rows-still-compute",
       async () => {
-        // Adding the formula computes every row in one pass, which is where a
-        // single failing cell takes the rest with it. Creating it after the
-        // rows exist is deliberate: this is the backfill, not a row-at-a-time
-        // recompute.
-        await createField(tableId, {
-          name: COMPUTED_FIELD,
-          type: FieldType.Formula,
-          options: {
-            expression: `REPT({${sourceField.id}}, ${config.repeatTimes})`,
-          },
+        // One write covering every row: the ordinary ones get a new small
+        // value, and the long one gets a value whose formula result is over
+        // the ceiling. They recompute as one batch, which is where a single
+        // rejected cell took the rest with it.
+        await apiUpdateRecords(tableId, {
+          fieldKeyType: FieldKeyType.Name,
+          typecast: false,
+          records: [
+            {
+              id: recordIdByName.get(OVERSIZED_ROW) ?? "",
+              fields: { [SOURCE_FIELD]: oversizedValue },
+            },
+            ...ordinaryNames.map((name) => ({
+              id: recordIdByName.get(name) ?? "",
+              fields: { [SOURCE_FIELD]: config.ordinaryValue },
+            })),
+          ],
         });
 
         const deadline = Date.now() + config.settleTimeoutMs;
@@ -203,7 +248,7 @@ export const runComputedOversizedCellCase = async (
         }
 
         throw new Error(
-          `${missing.length} of ${config.ordinaryRowCount} ordinary rows never got their computed value after ` +
+          `${missing.length} of ${config.ordinaryRowCount} ordinary rows never got their new computed value after ` +
             `${config.settleTimeoutMs}ms (${missing.slice(0, 3).join(", ")}) - the one oversized row took the ` +
             "whole batch with it",
         );

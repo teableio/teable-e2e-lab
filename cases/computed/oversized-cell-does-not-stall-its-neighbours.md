@@ -23,9 +23,17 @@ too big silently stopping the rest of the table is not.
 
 ## How the case is built
 
-One long row and four ordinary ones, then the formula is added — creating it
-after the rows exist means the first pass is a backfill over all of them, which
-is where a single failing cell takes the batch with it.
+Five rows and a formula, all computing normally, then one write that changes
+every row: four to a new small value, one to a value whose formula result
+crosses the ceiling. They recompute as a single batch, which is where a
+rejected cell takes the rest with it.
+
+The trigger has to be a record write. The first version of this case created
+the formula field last and let the creation backfill do the computing; it
+stored a 300000-byte computed cell on both `d28589d10` and `develop` (run
+32649775516), because the ceiling is enforced in the pipeline's record-change
+path and the backfill never consults it. That measurement is why the case is
+shaped this way.
 
 The assertion is the ordinary rows, and it is a wait rather than a check: the
 pipeline is asynchronous and reports nothing to the caller, so a value that

@@ -23,6 +23,7 @@ export default defineBugCase({
     oversizedChars: 100_000,
     repeatTimes: 3,
     ordinaryRowCount: 4,
+    seedValue: "seed",
     ordinaryValue: "ordinary",
     settleTimeoutMs: 90_000,
     settlePollIntervalMs: 1_000,
