@@ -145,11 +145,6 @@ export const runFormulaOverDateLookupCase = async (
         linkFieldId: linkField.id,
       },
     });
-    await createField(hostTableId, {
-      name: FORMULA_FIELD,
-      type: FieldType.Formula,
-      options: { expression: `{${dateLookup.id}}` },
-    });
     await createRecords(hostTableId, {
       fieldKeyType: FieldKeyType.Name,
       typecast: false,
@@ -180,6 +175,25 @@ export const runFormulaOverDateLookupCase = async (
       };
     };
 
+    const settleNeighbour = async (status: string, what: string) => {
+      const deadline = Date.now() + config.settleTimeoutMs;
+      let seen = "";
+      for (;;) {
+        const current = await readRow();
+        seen = current.status;
+        if (seen === status) {
+          return current;
+        }
+        if (Date.now() >= deadline) {
+          throw new Error(
+            `after ${config.settleTimeoutMs}ms ${what} reads ${JSON.stringify(seen)}, expected ` +
+              `${JSON.stringify(status)}`,
+          );
+        }
+        await sleep(config.pollIntervalMs);
+      }
+    };
+
     const settle = async (date: string, status: string, what: string) => {
       const day = date.slice(0, 10);
       const deadline = Date.now() + config.settleTimeoutMs;
@@ -201,15 +215,15 @@ export const runFormulaOverDateLookupCase = async (
       }
     };
 
-    // Fixture verification, outside the checkpoint: both columns computed once
-    // already. A formula that never worked would make "it stopped following"
-    // describe something that never followed.
-    const seeded = await settle(
-      config.dateBefore,
+    // Fixture verification, outside the checkpoint: the neighbouring column
+    // computed once already, before the formula exists. That is what makes
+    // "it stopped following" a statement about the formula's arrival rather
+    // than about a column that never worked.
+    const seededNeighbour = await settleNeighbour(
       config.statusBefore,
-      "the columns before the change",
+      "the neighbouring column before the formula exists",
     );
-    const routing = assertServedByV2(seeded.headers, {
+    const routing = assertServedByV2(seededNeighbour.headers, {
       operation: "GET /table/{tableId}/record",
       feature: "getRecords",
     });
@@ -217,6 +231,22 @@ export const runFormulaOverDateLookupCase = async (
     const probe = await bugCheckpoint(
       "formula-over-a-looked-up-date-follows-a-change",
       async () => {
+        // Creating the formula is inside the checkpoint: on the fix's parent
+        // the failure arrives here, as a backfill that cannot cast the
+        // looked-up date, and a field created outside would report that as a
+        // broken case rather than as the bug - which is what the first run of
+        // this case did, run 32664841696.
+        await createField(hostTableId, {
+          name: FORMULA_FIELD,
+          type: FieldType.Formula,
+          options: { expression: `{${dateLookup.id}}` },
+        });
+        await settle(
+          config.dateBefore,
+          config.statusBefore,
+          "the columns once the formula exists",
+        );
+
         await apiUpdateRecords(sourceTableId, {
           fieldKeyType: FieldKeyType.Name,
           typecast: false,

@@ -28,10 +28,17 @@ The status lookup is the point. It is what shows the failure spreading past the
 column that caused it, and asserting it is what makes this case about the
 reported symptom rather than about the formula alone.
 
-Both columns are checked before the change — a formula that never worked would
-make "it stopped following" describe something that never followed — and the
-two dates and two statuses have to differ, or the write queues no recompute at
-all.
+The neighbouring column is checked **before the formula exists**, which is what
+makes "it stopped following" a statement about the formula's arrival rather
+than about a column that never worked. The two dates and two statuses have to
+differ, or the write queues no recompute at all.
+
+## Where the formula is created
+
+Inside the checkpoint. On the fix's parent the failure arrives at creation —
+`cannot cast type jsonb to timestamp with time zone`, measured in run
+32664841696 — and a field created outside would report that as a broken case
+rather than as the bug. The first run of this case did exactly that.
 
 ## Its sibling
 
