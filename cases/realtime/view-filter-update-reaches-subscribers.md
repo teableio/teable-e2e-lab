@@ -68,3 +68,21 @@ Going over the wire is not incidental to this bug either. The op that broke
 was well-formed in memory and instruction-less only **once serialized**, so an
 in-process subscription — which is what `ShareDbService.connect()` gives, since
 that class is the sharedb _server_ — could miss it entirely.
+
+## It also covers a second fix
+
+`674ff3d7b` (T6563, "Socket Error when clearing view filters") was triaged as a
+candidate for a new case and turned out not to need one: this case already
+clears a filter as part of its round trip, and running it against that commit's
+parent `5ef3e4f37` reproduces — the subscribed client errors while waiting for
+the filter it was just given. Green on `develop`. Run 32654702809.
+
+So the commit is declared in `sourceCommits` here rather than being re-triaged
+later. The two fixes are different code — one emits an op with no instruction
+when a filter is set from nothing, the other when it is cleared — but a
+subscriber that has to survive both is one assertion, and splitting it would
+give two cases that fail together.
+
+The `bug.issue` field still names T6608, which is the issue this case was
+written for. T6563 has no separate case; this paragraph is where it is
+recorded.
