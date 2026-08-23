@@ -888,26 +888,28 @@ export interface SparseViewFieldOrderCaseConfig {
   addedFieldName: string;
 }
 
-// A conditional lookup whose condition compares two columns of the table it
-// lives on. Both sides of the field reference name a host field, which the
-// set-based query paths could not generate SQL for - so the whole computed run
-// for that table dead-lettered as a code bug, on every recompute.
+// A conditional lookup whose condition compares two columns of one table
+// against each other. Which table those columns belong to picks the failure:
+// naming the source table on both sides probed the referenced column on the
+// wrong alias, naming the host table on both sides resolved the filter field
+// against the source table and did not find it. Both dead-lettered the table's
+// whole computed run as a code bug, on every recompute.
 export interface ConditionalFilterFieldRefsCaseConfig {
   baseId: "seed-base";
   tableNamePrefix: string;
-  // Where the looked-up value comes from. "selfTable": the host's own value
-  // column, so the reference sides and the lookup source are one table.
-  // "foreignTable": another table, while the condition still compares two host
-  // columns.
-  source: "selfTable" | "foreignTable";
-  // At least one row whose keys agree and at least one where they do not, or
-  // the condition answers the same for every row and matching nothing looks
-  // like matching.
-  rows: { name: string; left: string; right: string; value: string }[];
-  // The value the foreign row holds, when there is one.
-  foreignValue: string;
-  // What the matched value is changed to, to force a recompute after the
-  // backfill.
+  // Which table the condition's two sides name.
+  source: "sourceBothSides" | "hostBothSides";
+  // The table being read from. For "sourceBothSides" exactly one row's keys
+  // agree, and its value is what every host row must end up showing; for
+  // "hostBothSides" there is exactly one row, because that condition selects
+  // every source row and more than one would raise a different question - how
+  // several matches are joined.
+  foreignRows: { name: string; left: string; right: string; value: string }[];
+  // The table the lookup lives on. Its own two key columns are what
+  // "hostBothSides" compares.
+  hostRows: { name: string; left: string; right: string }[];
+  // What the selected source row's value is changed to, to force a recompute
+  // after the backfill.
   editedValue: string;
   settleTimeoutMs: number;
   pollIntervalMs: number;

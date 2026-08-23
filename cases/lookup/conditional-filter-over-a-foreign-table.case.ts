@@ -19,13 +19,20 @@ export default defineBugCase({
   },
   config: {
     baseId: "seed-base",
-    tableNamePrefix: "e2e-lab-cond-foreign-ref",
-    source: "foreignTable",
-    rows: [
-      { name: "keys-agree", left: "K1", right: "K1", value: "ignored" },
-      { name: "keys-differ", left: "K1", right: "K2", value: "ignored" },
+    tableNamePrefix: "e2e-lab-cond-host-ref",
+    source: "hostBothSides",
+    foreignRows: [
+      {
+        name: "the-only-source-row",
+        left: "S1",
+        right: "S1",
+        value: "from-the-other-table",
+      },
     ],
-    foreignValue: "from-the-other-table",
+    hostRows: [
+      { name: "keys-agree", left: "K1", right: "K1" },
+      { name: "keys-differ", left: "K1", right: "K2" },
+    ],
     editedValue: "changed-over-there",
     settleTimeoutMs: 90_000,
     pollIntervalMs: 1_000,
