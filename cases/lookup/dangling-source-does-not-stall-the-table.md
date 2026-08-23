@@ -43,10 +43,17 @@ formula over its own title. Editing the title makes the table recompute, and
 the dangling lookup is in that same pass. The assertion is that the healthy
 column follows the new title.
 
-The first version of this case asserted only that the plain edit read back,
-and it was green on both columns (run 32654069014): editing a text field
-queues no recompute involving the lookup, so the SQL that fails was never
-generated. The healthy computed column is what puts the broken one in the pass.
+Two earlier shapes were green on both columns, and each says something about
+where the failure lives:
+
+1. Asserting only that a plain text edit read back — run 32654069014. Editing
+   a text field queues no recompute involving the lookup at all.
+2. Adding the healthy computed column and editing the title — run 32654350507.
+   The healthy column recomputed on its own without the lookup's SQL being
+   generated.
+
+So the trigger has to touch the source side: the case now edits the source row
+first, which is what dirties the host's lookup, and only then the host title.
 
 The assertion waits rather than checking once, because the failure is
 asynchronous — the write is accepted and then nothing happens.

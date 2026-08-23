@@ -229,6 +229,22 @@ export const runDanglingComputedSourceCase = async (
         // the title, and the dangling lookup is in the same computed pass -
         // which is the point: the broken column should not be able to stop the
         // one next to it.
+        // Touch the source row first. That is what dirties the host's lookup,
+        // and the lookup is the column whose SQL cannot be generated - a
+        // recompute that never involves it never reaches the failure. Two
+        // earlier shapes of this case were green on both columns for exactly
+        // that reason; see the case doc.
+        await apiUpdateRecords(sourceTableId, {
+          fieldKeyType: FieldKeyType.Name,
+          typecast: false,
+          records: [
+            {
+              id: sourceRecordId,
+              fields: { [SOURCE_NAME_FIELD]: config.editedTitle },
+            },
+          ],
+        });
+
         await apiUpdateRecords(hostTableId, {
           fieldKeyType: FieldKeyType.Name,
           typecast: false,
