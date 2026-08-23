@@ -29,6 +29,7 @@ import importExcelHeaderBelowA1Case from "./cases/import/excel-header-below-a1.c
 import selectionPasteByIdLandsOnItsOwnRowsCase from "./cases/selection/paste-by-id-lands-on-its-own-rows.case";
 import searchStaysInsideViewFilterCase from "./cases/search/stays-inside-view-filter.case";
 import lookupRollupFilterCase from "./cases/lookup/rollup-condition-is-saved-and-applied.case";
+import lookupRetargetCase from "./cases/lookup/repointed-lookup-shows-its-new-target.case";
 import tableRestoreScopeCase from "./cases/table/restore-brings-back-only-its-own-delete.case";
 import fieldLegacyIdTableCase from "./cases/field/legacy-field-id-table-still-works.case";
 import lookupNestedRenameCase from "./cases/lookup/renaming-a-nested-lookup-keeps-its-choices.case";
@@ -89,6 +90,7 @@ const cases = [
   selectionPasteByIdLandsOnItsOwnRowsCase,
   searchStaysInsideViewFilterCase,
   lookupRollupFilterCase,
+  lookupRetargetCase,
   tableRestoreScopeCase,
   fieldLegacyIdTableCase,
   lookupNestedRenameCase,
