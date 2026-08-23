@@ -28,6 +28,8 @@ import linkCrossBaseLinkClearsOnDeleteCase from "./cases/link/cross-base-link-cl
 import importExcelHeaderBelowA1Case from "./cases/import/excel-header-below-a1.case";
 import selectionPasteByIdLandsOnItsOwnRowsCase from "./cases/selection/paste-by-id-lands-on-its-own-rows.case";
 import searchStaysInsideViewFilterCase from "./cases/search/stays-inside-view-filter.case";
+import selectionPasteAcrossPendingFieldCase from "./cases/selection/paste-across-pending-field.case";
+import selectionPasteByIdAcrossPendingFieldCase from "./cases/selection/paste-by-id-across-pending-field.case";
 import tableTrashDegradesInboundLinkWithoutDisplayColumnCase from "./cases/table/trash-degrades-inbound-link-without-display-column.case";
 import userFieldImportDoesNotNotifyAssigneeCase from "./cases/user-field/import-does-not-notify-assignee.case";
 import userFieldTableDuplicateDoesNotNotifyAssigneeCase from "./cases/user-field/table-duplicate-does-not-notify-assignee.case";
@@ -70,6 +72,8 @@ const cases = [
   userFieldGroupFoldsDriftedSnapshotsCase,
   userFieldGroupKeepsLegacyIdOutOfEmptyCase,
   userFieldGroupKeepsUnwrappedCellOutOfEmptyCase,
+  selectionPasteAcrossPendingFieldCase,
+  selectionPasteByIdAcrossPendingFieldCase,
   tableTrashDegradesInboundLinkWithoutDisplayColumnCase,
   userFieldImportDoesNotNotifyAssigneeCase,
   userFieldTableDuplicateDoesNotNotifyAssigneeCase,

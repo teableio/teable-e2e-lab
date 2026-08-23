@@ -36,6 +36,7 @@ export interface BugCaseConfigByRunner {
   "user-field-notify-replay": UserFieldNotifyReplayCaseConfig;
   "user-field-notify-burst": UserFieldNotifyBurstCaseConfig;
   "user-group-identity": UserGroupIdentityCaseConfig;
+  "paste-over-pending-field": PasteOverPendingFieldCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -782,4 +783,21 @@ export interface UserGroupIdentityCaseConfig {
   broken:
     | { kind: "partition"; buckets: string[][] }
     | { kind: "headerlessRowSegments" };
+}
+
+// A field left marked pending with no physical column behind it - what a
+// schema operation that died partway leaves - and a paste whose selection
+// spans it. The write asked for every field in the selection, reached for a
+// column that is not there, and took the ordinary columns down with it.
+export interface PasteOverPendingFieldCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Which paste request the product sends. "range" is the grid's own,
+  // addressed by column position; "byId" addresses fields by id. Different
+  // request handling, same selection.
+  paste: "range" | "byId";
+  // Written to the two ordinary columns around the pending one. They have to
+  // differ from each other - see the runner.
+  firstValue: string;
+  lastValue: string;
 }
