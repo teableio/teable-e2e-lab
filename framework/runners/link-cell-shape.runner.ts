@@ -30,6 +30,12 @@ import type { LinkCellShapeCaseConfig } from "../types";
 // Strict, not typecast: typecast is the import path and is allowed to reshape
 // what it gets. This is the path an API client uses when it believes it is
 // sending well-formed values, which is where the tolerance was lost.
+//
+// The third shape here is a different fix with the same shape of failure. A
+// link to a row whose primary cell is empty persists as {id, title: null},
+// because there is no title to carry. Write validation then rejected the null
+// title, so every later rewrite of that cell - reselecting the row, an import,
+// an automation - answered 400 on a link that the product itself had written.
 
 const NAME_FIELD = "Name";
 const LINK_FIELD = "Link";
@@ -52,7 +58,13 @@ export const runLinkCellShapeCase = async (
       fields: [
         { name: NAME_FIELD, type: FieldType.SingleLineText, isPrimary: true },
       ],
-      records: [{ fields: { [NAME_FIELD]: FOREIGN_ROW } }],
+      // The empty-primary shape needs a foreign row with nothing in its
+      // primary cell - that is what makes the stored link title null.
+      records: [
+        config.shape === "nullTitle"
+          ? { fields: {} }
+          : { fields: { [NAME_FIELD]: FOREIGN_ROW } },
+      ],
     });
     foreignTableId = foreignTable.id;
     const foreignRecordId = foreignTable.records[0]?.id;
@@ -76,9 +88,9 @@ export const runLinkCellShapeCase = async (
       options: {
         foreignTableId,
         relationship:
-          config.shape === "arrayIntoSingle"
-            ? Relationship.ManyOne
-            : Relationship.ManyMany,
+          config.shape === "objectIntoMulti"
+            ? Relationship.ManyMany
+            : Relationship.ManyOne,
       },
     });
 
@@ -112,7 +124,11 @@ export const runLinkCellShapeCase = async (
     const written =
       config.shape === "arrayIntoSingle"
         ? [{ id: foreignRecordId }]
-        : { id: foreignRecordId };
+        : config.shape === "objectIntoMulti"
+          ? { id: foreignRecordId }
+          : // What the product stores for a row with no primary value, sent
+            // back the way a reselect or an import sends it.
+            { id: foreignRecordId, title: null };
 
     // Raw axios with the status open: before the fix this request is refused,
     // and the generated client drops the response with it. typecast stays off
