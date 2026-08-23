@@ -28,6 +28,8 @@ import linkCrossBaseLinkClearsOnDeleteCase from "./cases/link/cross-base-link-cl
 import importExcelHeaderBelowA1Case from "./cases/import/excel-header-below-a1.case";
 import selectionPasteByIdLandsOnItsOwnRowsCase from "./cases/selection/paste-by-id-lands-on-its-own-rows.case";
 import searchStaysInsideViewFilterCase from "./cases/search/stays-inside-view-filter.case";
+import fieldDeleteSparesSharedColumnCase from "./cases/field/delete-spares-a-field-sharing-its-column.case";
+import recordRepeatedDeleteIsIdempotentCase from "./cases/record/repeated-delete-is-idempotent.case";
 import selectionPasteAcrossPendingFieldCase from "./cases/selection/paste-across-pending-field.case";
 import selectionPasteByIdAcrossPendingFieldCase from "./cases/selection/paste-by-id-across-pending-field.case";
 import tableTrashDegradesInboundLinkWithoutDisplayColumnCase from "./cases/table/trash-degrades-inbound-link-without-display-column.case";
@@ -69,6 +71,8 @@ const cases = [
   importExcelHeaderBelowA1Case,
   selectionPasteByIdLandsOnItsOwnRowsCase,
   searchStaysInsideViewFilterCase,
+  fieldDeleteSparesSharedColumnCase,
+  recordRepeatedDeleteIsIdempotentCase,
   userFieldGroupFoldsDriftedSnapshotsCase,
   userFieldGroupKeepsLegacyIdOutOfEmptyCase,
   userFieldGroupKeepsUnwrappedCellOutOfEmptyCase,
