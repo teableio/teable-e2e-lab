@@ -62,6 +62,7 @@ export interface BugCaseConfigByRunner {
   "link-rename-keeps-config": LinkRenameKeepsConfigCaseConfig;
   "unique-toggle-cleanup": UniqueToggleCleanupCaseConfig;
   "multi-field-update-realtime": MultiFieldUpdateRealtimeCaseConfig;
+  "date-comparison-boolean": DateComparisonBooleanCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1218,4 +1219,18 @@ export interface MultiFieldUpdateRealtimeCaseConfig {
   subscribeTimeoutMs: number;
   settleTimeoutMs: number;
   pollIntervalMs: number;
+}
+
+// A date comparison joined into a status column with AND or OR. The comparison
+// was not recognised as producing a yes or no, so every row that had a date at
+// all came out yes and the column stopped dividing the table.
+export interface DateComparisonBooleanCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  combinator: "AND" | "OR";
+  left: { fn: "IS_AFTER" | "IS_BEFORE" | "IS_SAME"; date: string };
+  right: { fn: "IS_AFTER" | "IS_BEFORE" | "IS_SAME"; date: string };
+  // One row the comparison includes and one it excludes. With only one side, a
+  // column stuck on yes and a correct column look the same.
+  rows: { name: string; date: string; expected: boolean }[];
 }
