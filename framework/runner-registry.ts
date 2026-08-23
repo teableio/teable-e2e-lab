@@ -45,6 +45,7 @@ import { runTableRestoreScopeCase } from "./runners/table-restore-scope.runner";
 import { runRollupFilterPersistsCase } from "./runners/rollup-filter-persists.runner";
 import { runLookupRetargetCase } from "./runners/lookup-retarget.runner";
 import { runRequiredDefaultCase } from "./runners/required-default.runner";
+import { runLegacyDateFilterCase } from "./runners/legacy-date-filter.runner";
 import type {
   BugCase,
   BugCaseFor,
@@ -109,6 +110,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "rollup-filter-persists": runRollupFilterPersistsCase,
   "lookup-retarget": runLookupRetargetCase,
   "required-default": runRequiredDefaultCase,
+  "legacy-date-filter": runLegacyDateFilterCase,
 };
 
 export const executeRegisteredRunner = (
