@@ -57,6 +57,7 @@ export interface BugCaseConfigByRunner {
   "legacy-date-filter": LegacyDateFilterCaseConfig;
   "formula-over-date-lookup": FormulaOverDateLookupCaseConfig;
   "aggregation-mixed-case": AggregationMixedCaseCaseConfig;
+  "checkbox-cleared-default": CheckboxClearedDefaultCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1144,4 +1145,15 @@ export interface AggregationMixedCaseCaseConfig {
   // The choices, and what each row selects, for the multi-valued shape.
   tags: string[];
   rowTags: string[][];
+}
+
+// A checkbox that defaults to ticked, and the edit that clears that default.
+// The field's schema only accepted true or false, so saying "no default" -
+// which is null, not false - was refused.
+export interface CheckboxClearedDefaultCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // What the column defaults to before the edit. There has to be a default to
+  // clear, or the case would pass anywhere.
+  startsTicked: boolean;
 }
