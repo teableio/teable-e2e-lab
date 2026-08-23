@@ -897,7 +897,9 @@ export interface SparseViewFieldOrderCaseConfig {
 export interface ConditionalFilterFieldRefsCaseConfig {
   baseId: "seed-base";
   tableNamePrefix: string;
-  // Which table the condition's two sides name.
+  // Which table the condition's two sides name. "sourceBothSides" is kept
+  // because the runner still supports it and a future attempt at T6615 starts
+  // there; no case uses it today - see docs/triage-ledger.md.
   source: "sourceBothSides" | "hostBothSides";
   // The table being read from. For "sourceBothSides" exactly one row's keys
   // agree, and its value is what every host row must end up showing; for

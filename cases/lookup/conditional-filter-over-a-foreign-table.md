@@ -1,24 +1,35 @@
 # lookup/conditional-filter-over-a-foreign-table
 
-**T6599** — fixed. On the `conditional-filter-field-refs` runner; the shared
-design is described in
-`lookup/conditional-filter-compares-two-own-columns`.
+**T6599** — fixed. On the `conditional-filter-field-refs` runner.
 
-## This variant
+## What the user sees
 
-The same condition — two columns of the host table compared against each other
-— while the value being looked up comes from a different table.
+A conditional lookup that never fills in, on a table that then stops keeping up
+with edits. Both are the same failure: the computed run for that table dies
+before producing anything.
 
-That is a different failure with the same symptom. The set-based
-field-reference fast paths resolve the filter's field against the foreign
-table; a host-table field is not there, so SQL generation failed with a bare
-`Field not found` and the computed run dead-lettered as an obsolete plan.
+## Why
 
-The two cases exist separately because the two fixes are separate: one projects
-the referenced field ids into the pruned source relation, the other falls back
-to the lateral path when a field-reference group cannot be resolved. A single
-case would go red for whichever failure it met first and say nothing about the
-other.
+A conditional lookup matches rows by a condition instead of following a link,
+and the condition can name a field rather than a constant. Here both sides name
+a column of the table the lookup lives on, while the value comes from another
+table.
+
+The set-based field-reference fast paths resolve the filter's field against the
+table being read from. A host-table field is not there, so SQL generation
+failed with a bare `Field not found` and the computed run dead-lettered as an
+obsolete plan — non-retryable, on every recompute.
+
+Nothing here is written with SQL: the shape is built through the field editor,
+which is what makes it worth guarding.
+
+## The sibling that is not here
+
+`bfe5599ed` (T6615) fixes the mirror image — a condition naming the _source_
+table on both sides. It was built on this same runner and does not reproduce:
+that condition selects every source row on the fix's parent and on `develop`
+alike. It is recorded in `docs/triage-ledger.md`, and the runner keeps its
+`sourceBothSides` shape so a future attempt starts from one config value.
 
 The looked-up value lives on the source table here, so the recompute half of
 the assertion edits the source row — the host's own columns are only the

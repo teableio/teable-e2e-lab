@@ -47,6 +47,7 @@ places — it cannot be settled and skipped at once.
 | `e94ae6db28` | T6767 | Written and run: a formula over a lookup of a link field stored in a leftover TEXT column backfills correctly on the fix's parent. Same note.                                                                                                                                      |
 | `228be9ffa7` | T6770 | Written and run: a lookup of a link field added to a host whose rows are already linked seeds correctly on the fix's parent. Same note.                                                                                                                                            |
 | `dfe6a1ebc`  | T6614 | Written in three shapes and run three times, green on both columns each time. The dangling reference a `deleted_time` fixture produces does not reach the SQL builder the fix changes. See the note below the table.                                                               |
+| `bfe5599ed`  | T6615 | Written and run: a conditional lookup whose condition compares two columns of its source table selects every source row on the fix's parent and on `develop` alike, so the two columns are indistinguishable. See the note below the table.                                        |
 | `175d1de3f`  | T6728 | Written in three shapes and run three times. Every trigger a small fixture can reach through the public API computes inline, and inline compute fails closed identically on both sides of the fix. See the note below the table.                                                   |
 
 ### The three computed-backfill rows
@@ -152,6 +153,36 @@ The next attempt should start by making a lookup actually fail SQL generation -
 confirm the "Field not found" error can be produced at all - before building a
 case around surviving it. The three shapes are kept on branch
 `case/dangling-computed-source`, unmerged.
+
+### The self-referencing conditional filter row
+
+The change is about a conditional lookup whose filter names a column of the
+table being read from on both sides of a field reference. Before it, the
+builder swapped the two sides and probed the referenced column on the source
+alias, answering `column s.<name> does not exist` and dead-lettering the
+table's whole computed run.
+
+Two shapes were built:
+
+1. **Source table, condition, and lookup value all on the host table.** Errored
+   at field creation on both columns — `column h.Left_Key does not exist`,
+   `develop` included. The product does not build that shape at all, so it
+   reproduces nothing. Run 32655173550.
+2. **A source table with two key columns, the condition comparing them.** Red on
+   both columns for the same reason: the lookup returned the values of _every_
+   source row, the non-matching one included, on the fix's parent and on
+   `develop` alike. Run 32655607286.
+
+The second result is what closes it for now: on this fixture the condition is
+not a row filter on either side of the fix, so there is nothing for a case to
+tell apart. Either the filter needs a shape this attempt did not find, or the
+production occurrence carries persisted filter state that the field editor does
+not produce.
+
+The sibling fix `3eff0a100` (T6599), whose filter names the _host_ table on
+both sides, does reproduce and ships as
+`lookup/conditional-filter-over-a-foreign-table`. Its runner still supports the
+source-side shape, so a future attempt starts by changing one config value.
 
 ## Covered
 
