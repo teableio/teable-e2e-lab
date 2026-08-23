@@ -28,7 +28,7 @@ import linkCrossBaseLinkClearsOnDeleteCase from "./cases/link/cross-base-link-cl
 import importExcelHeaderBelowA1Case from "./cases/import/excel-header-below-a1.case";
 import selectionPasteByIdLandsOnItsOwnRowsCase from "./cases/selection/paste-by-id-lands-on-its-own-rows.case";
 import searchStaysInsideViewFilterCase from "./cases/search/stays-inside-view-filter.case";
-import formulaFindLinkedColumnCase from "./cases/formula/find-searches-a-linked-column.case";
+import formulaFindLookedUpColumnCase from "./cases/formula/find-searches-a-looked-up-column.case";
 import fieldLegacyIdTableCase from "./cases/field/legacy-field-id-table-still-works.case";
 import realtimeManualSortCase from "./cases/realtime/manual-sort-reaches-the-open-page.case";
 import fieldRatingConversionCase from "./cases/field/rating-conversion-normalizes-existing-values.case";
@@ -86,7 +86,7 @@ const cases = [
   importExcelHeaderBelowA1Case,
   selectionPasteByIdLandsOnItsOwnRowsCase,
   searchStaysInsideViewFilterCase,
-  formulaFindLinkedColumnCase,
+  formulaFindLookedUpColumnCase,
   fieldLegacyIdTableCase,
   realtimeManualSortCase,
   fieldRatingConversionCase,

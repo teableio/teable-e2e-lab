@@ -1026,7 +1026,7 @@ export interface FindOverMultiValueCaseConfig {
   // Which multi-valued column the formula searches. The commit names both
   // shapes; "multiSelect" is green on both columns, so "link" is what a case
   // uses.
-  column: "multiSelect" | "link";
+  column: "multiSelect" | "link" | "lookup";
   // The word the formula looks for. One row's tags must contain it and one
   // row's must not.
   needle: string;

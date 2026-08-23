@@ -3,6 +3,7 @@ import { getRecords as apiGetRecords } from "@teable/openapi";
 import {
   createField,
   createTable,
+  getFields,
   permanentDeleteTable,
 } from "../../../utils/init-app";
 import { bugCheckpoint } from "../checkpoint";
@@ -29,6 +30,7 @@ import type { FindOverMultiValueCaseConfig } from "../types";
 
 const NAME_FIELD = "Name";
 const TAGS_FIELD = "Tags";
+const LOOKED_UP_FIELD = "Tag Names";
 const FOUND_FIELD = "Found";
 
 const sleep = (ms: number) =>
@@ -68,7 +70,7 @@ export const runFindOverMultiValueCase = async (
     // cell would. The commit names both shapes, and the multi-select one is
     // green on both columns - run 32661588045.
     const foreignIdByTag = new Map<string, string>();
-    if (config.column === "link") {
+    if (config.column === "link" || config.column === "lookup") {
       const foreignTable = await createTable(baseId, {
         name: `${suffix}-tags`,
         fields: [
@@ -88,7 +90,7 @@ export const runFindOverMultiValueCase = async (
       name: suffix,
       fields: [
         { name: NAME_FIELD, type: FieldType.SingleLineText, isPrimary: true },
-        config.column === "link"
+        config.column === "link" || config.column === "lookup"
           ? {
               name: TAGS_FIELD,
               type: FieldType.Link,
@@ -112,18 +114,42 @@ export const runFindOverMultiValueCase = async (
         fields: {
           [NAME_FIELD]: row.name,
           [TAGS_FIELD]:
-            config.column === "link"
+            config.column === "link" || config.column === "lookup"
               ? row.tags.map((tag) => ({ id: foreignIdByTag.get(tag) }))
               : row.tags,
         },
       })),
     });
     tableId = table.id;
-    const tagsFieldId = table.fields.find(
+    const linkFieldId = table.fields.find(
       (field: { name: string }) => field.name === TAGS_FIELD,
     )?.id;
-    if (!tagsFieldId) {
+    if (!linkFieldId) {
       throw new Error(`Table ${tableId} is not in place`);
+    }
+
+    // For the lookup shape the formula reads a lookup of the linked rows'
+    // names rather than the link itself: a jsonb array of plain values instead
+    // of an array of objects, which is a different thing to search inside.
+    let tagsFieldId = linkFieldId;
+    if (config.column === "lookup") {
+      const foreignNameFieldId = (await getFields(foreignTableId)).find(
+        (field: { name: string }) => field.name === NAME_FIELD,
+      )?.id;
+      if (!foreignNameFieldId) {
+        throw new Error(`Foreign table ${foreignTableId} is not in place`);
+      }
+      const lookup = await createField(tableId, {
+        name: LOOKED_UP_FIELD,
+        type: FieldType.SingleLineText,
+        isLookup: true,
+        lookupOptions: {
+          foreignTableId,
+          lookupFieldId: foreignNameFieldId,
+          linkFieldId,
+        },
+      });
+      tagsFieldId = lookup.id;
     }
 
     const readRows = async () => {

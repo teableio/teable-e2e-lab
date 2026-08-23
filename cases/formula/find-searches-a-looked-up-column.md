@@ -1,11 +1,11 @@
-# formula/find-searches-a-linked-column
+# formula/find-searches-a-looked-up-column
 
 **T6157** — fixed.
 
 ## What the user sees
 
 A formula that works fine over a text column produces nothing at all when
-pointed at a column of linked records. Not an error, not a zero — an empty column, with
+pointed at a column looked up through a link. Not an error, not a zero — an empty column, with
 nothing anywhere to say why.
 
 ## Why
@@ -35,7 +35,10 @@ same for a reason that is not the formula.
 
 ## Which column shape
 
-Link cells. The commit names two — a multi-select and a link — and the
-multi-select shape was built first and is green on both columns (run
-32661588045): whatever fails, it does not fail there. The runner keeps that
-shape as a config value.
+A lookup of the linked rows' names — a jsonb array of plain values, rather than
+an array of objects.
+
+The commit names a multi-select and a link, and both were built first and are
+green on both columns: run 32661588045 for the multi-select, 32661887104 for
+the link. Whatever fails, it does not fail in either. The runner keeps all
+three shapes as a config value, so re-checking any of them is one word.
