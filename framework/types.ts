@@ -37,6 +37,7 @@ export interface BugCaseConfigByRunner {
   "user-field-notify-burst": UserFieldNotifyBurstCaseConfig;
   "user-group-identity": UserGroupIdentityCaseConfig;
   "paste-over-pending-field": PasteOverPendingFieldCaseConfig;
+  "computed-oversized-cell": ComputedOversizedCellCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -800,4 +801,30 @@ export interface PasteOverPendingFieldCaseConfig {
   // differ from each other - see the runner.
   firstValue: string;
   lastValue: string;
+}
+
+// One row whose formula result crosses the computed-cell size ceiling, sharing
+// a table with ordinary rows -> the whole computed task failed as a unit and
+// dead-lettered, so the ordinary rows never got their values either.
+//
+// Every number here is checked against the product's own limits before the
+// fixture is built; see the runner.
+export interface ComputedOversizedCellCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Characters in the one long source cell. Must stay under the cell ceiling
+  // on its own - otherwise the write is refused and the formula never runs -
+  // while `oversizedChars * repeatTimes` crosses the computed ceiling.
+  oversizedChars: number;
+  // How many times the formula repeats the source value.
+  repeatTimes: number;
+  // The rows that were never the problem, and the whole observation. Their own
+  // computed result has to stay well inside the ceiling.
+  ordinaryRowCount: number;
+  ordinaryValue: string;
+  // The computed pipeline is async and nothing reports its failure to the
+  // caller, so waiting is the assertion: too short and a slow-but-working
+  // pipeline reads as the bug.
+  settleTimeoutMs: number;
+  settlePollIntervalMs: number;
 }

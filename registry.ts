@@ -30,6 +30,7 @@ import selectionPasteByIdLandsOnItsOwnRowsCase from "./cases/selection/paste-by-
 import searchStaysInsideViewFilterCase from "./cases/search/stays-inside-view-filter.case";
 import selectionPasteAcrossPendingFieldCase from "./cases/selection/paste-across-pending-field.case";
 import selectionPasteByIdAcrossPendingFieldCase from "./cases/selection/paste-by-id-across-pending-field.case";
+import computedOversizedCellCase from "./cases/computed/oversized-cell-does-not-stall-its-neighbours.case";
 import tableTrashDegradesInboundLinkWithoutDisplayColumnCase from "./cases/table/trash-degrades-inbound-link-without-display-column.case";
 import userFieldImportDoesNotNotifyAssigneeCase from "./cases/user-field/import-does-not-notify-assignee.case";
 import userFieldTableDuplicateDoesNotNotifyAssigneeCase from "./cases/user-field/table-duplicate-does-not-notify-assignee.case";
@@ -74,6 +75,7 @@ const cases = [
   userFieldGroupKeepsUnwrappedCellOutOfEmptyCase,
   selectionPasteAcrossPendingFieldCase,
   selectionPasteByIdAcrossPendingFieldCase,
+  computedOversizedCellCase,
   tableTrashDegradesInboundLinkWithoutDisplayColumnCase,
   userFieldImportDoesNotNotifyAssigneeCase,
   userFieldTableDuplicateDoesNotNotifyAssigneeCase,

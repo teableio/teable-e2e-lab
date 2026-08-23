@@ -20,6 +20,7 @@ import { runRequiredLinkRefreshCase } from "./runners/required-link-refresh.runn
 import { runStaleLookupRecastCase } from "./runners/stale-lookup-recast.runner";
 import { runSearchViewFilterCase } from "./runners/search-view-filter.runner";
 import { runPasteOverPendingFieldCase } from "./runners/paste-over-pending-field.runner";
+import { runComputedOversizedCellCase } from "./runners/computed-oversized-cell.runner";
 import { runShareSaveCase } from "./runners/share-save.runner";
 import { runTableTrashInboundLinkCase } from "./runners/table-trash-inbound-link.runner";
 import { runUserFieldNotifyBulkActionCase } from "./runners/user-field-notify-bulk-action.runner";
@@ -75,6 +76,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "user-field-notify-replay": runUserFieldNotifyReplayCase,
   "user-field-notify-burst": runUserFieldNotifyBurstCase,
   "paste-over-pending-field": runPasteOverPendingFieldCase,
+  "computed-oversized-cell": runComputedOversizedCellCase,
 };
 
 export const executeRegisteredRunner = (
