@@ -14,6 +14,7 @@ import tableTrashDegradesInboundLinkCase from "./cases/table/trash-degrades-inbo
 import linkRequiredLinkBlocksOwnerDeleteCase from "./cases/link/required-link-blocks-owner-delete.case";
 import recordLegacyUniqueViolationNamesFieldCase from "./cases/record/legacy-unique-violation-names-field.case";
 import userFieldPasteNonCollaboratorValueCase from "./cases/user-field/paste-non-collaborator-value.case";
+import userWriteScopeCase from "./cases/user-field/write-stays-inside-the-base.case";
 import userFieldGroupFoldsDriftedSnapshotsCase from "./cases/user-field/group-folds-drifted-snapshots.case";
 import userFieldGroupKeepsLegacyIdOutOfEmptyCase from "./cases/user-field/group-keeps-legacy-id-out-of-empty.case";
 import userFieldGroupKeepsUnwrappedCellOutOfEmptyCase from "./cases/user-field/group-keeps-unwrapped-cell-out-of-empty.case";
@@ -89,6 +90,7 @@ const cases = [
   linkRequiredLinkBlocksOwnerDeleteCase,
   recordLegacyUniqueViolationNamesFieldCase,
   userFieldPasteNonCollaboratorValueCase,
+  userWriteScopeCase,
   lookupStaleTextMetadataRecastsOnRebuildCase,
   lookupStaleTextMetadataSurvivesDisplayConvertCase,
   lookupNullMultiplicityScalarRefreshesCase,
