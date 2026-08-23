@@ -46,6 +46,7 @@ places — it cannot be settled and skipped at once.
 | `a9f56d9d51` | T6765 | Written and run: converting a number column into a lookup of a foreign formula completes correctly on the fix's parent, at 1 row and at 40, in about a second. See the note below this table.                                                                                      |
 | `e94ae6db28` | T6767 | Written and run: a formula over a lookup of a link field stored in a leftover TEXT column backfills correctly on the fix's parent. Same note.                                                                                                                                      |
 | `228be9ffa7` | T6770 | Written and run: a lookup of a link field added to a host whose rows are already linked seeds correctly on the fix's parent. Same note.                                                                                                                                            |
+| `a5a492ca9`  | T5386 | The older-name half of the same issue. A hand-made standalone unique index under the v1 name survives switching the constraint off on **both** columns, so nothing tells them apart. The current-name half `a3067488b` does reproduce and ships. See the note below.               |
 | `e0d3eaf6c`  | T5583 | Written in two shapes - asking for one day, and asking at a day boundary - both with a structured exact-date filter carrying a UTC+8 zone. Green on both columns each time: that path already honours the zone on the fix's parent.                                                |
 | `32a509014`  | T5419 | Written in two shapes - setting the link itself, and touching another column on a record whose link is already set - and green on both columns each time. The half of the fix that remains is in the sdk's record model, which this lab does not exercise.                         |
 | `9bc67c4be`  | T5686 | Written and run: creating a record without a required column that has a default already succeeds on the fix's parent, and the row holds the default. Green on both columns, run 32663341436. Its sibling `cae1c5c10`/T5685 does reproduce and ships.                               |
@@ -332,6 +333,38 @@ which were tried. That is where a next attempt starts.
 The shapes live on the `legacy-date-filter` runner, which ships
 `filter/plain-date-string-filters-a-date-column` for the sibling fix T5584;
 its `filterValue` and `operator` config values keep both of these reachable.
+
+### The legacy unique index row
+
+T5386 was fixed twice: once for the index the current code writes
+(`a3067488b`, which ships as
+`field/turning-off-no-duplicates-lets-a-duplicate-in`) and once for indexes an
+older version left behind (`a5a492ca9`).
+
+The second was built on the same runner, with a standalone unique index created
+by SQL under the v1 name - schema, table, three underscores, the field id.
+Switching the column's constraint off leaves that index in place on the fix's
+parent **and on `develop`**, so the two columns answer the same way and the
+case cannot tell them apart. Run 32669542088.
+
+What that means is not established here, and the difference matters:
+
+- the fixture may not be building the state the fix targets. An index made by
+  hand over a v2 column is not the same artefact as one an upgrade left, even
+  under the same name; and
+- there may be a real gap on `develop`.
+
+Nothing in the run separates those, so this row claims only the first: the case
+as built does not discriminate. Anyone picking it up should start by finding a
+base that genuinely came through the upgrade, or by reading what the fix
+matches on, rather than by trusting the name.
+
+One earlier attempt is worth knowing about: naming the index
+`<table>_<column>_unique` collides with the index the product itself writes,
+and both columns answer 42P07. Run 32669273437.
+
+The shape stays on branch `case/unique-toggle-cleanup` behind the runner's
+`withLegacyIndex` config value.
 
 ## Covered
 
