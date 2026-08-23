@@ -63,12 +63,16 @@ export const runConditionalRollupPropagationCase = async (
         "everything would move for the wrong reason",
     );
   }
-  const initialTotal = matching.reduce((sum, row) => sum + row.price, 0);
-  const editedTotal = initialTotal - matching[0].price + config.editedPrice;
-  if (editedTotal === initialTotal) {
+  const initialTotal = matching.map((row) => row.price);
+  const editedTotal = matching.map((row, index) =>
+    index === 0 ? config.editedPrice : row.price,
+  );
+  if (
+    [...editedTotal].sort().join(",") === [...initialTotal].sort().join(",")
+  ) {
     throw new Error(
-      "the edited price gives the same total - the case could not tell a summary that followed the change " +
-        "from one that ignored it",
+      "the edited price leaves the matching values unchanged - the case could not tell a summary that " +
+        "followed the change from one that ignored it",
     );
   }
 
@@ -112,15 +116,17 @@ export const runConditionalRollupPropagationCase = async (
     // link between the tables - the condition is the whole relationship.
     await createField(reportTableId, {
       name: TOTAL_FIELD,
-      type: FieldType.Rollup,
+      // A conditional lookup rather than a conditional rollup. Two runs
+      // established why: the public field API puts the aggregation in
+      // `options.expression` (run 32659440769 answered "Unrecognized key"),
+      // and then refuses a rollup with no link field at all - "LinkFieldId is
+      // required when isLookup attribute is true or field type is rollup",
+      // run 32659721790. A conditional lookup takes the same condition with no
+      // link and shows the matching values themselves, which is the same
+      // propagation question one step earlier.
+      type: FieldType.Number,
       isLookup: true,
       isConditionalLookup: true,
-      // A rollup carries its aggregation in `options.expression`; the
-      // condition rides in the lookup options, where an ordinary rollup would
-      // instead name a link field. The first run put the expression in the
-      // lookup options and both columns answered "Unrecognized key" -
-      // run 32659440769.
-      options: { expression: "sum({values})" },
       lookupOptions: {
         foreignTableId: sourceTableId,
         lookupFieldId: priceFieldId,
@@ -142,24 +148,29 @@ export const runConditionalRollupPropagationCase = async (
         fieldKeyType: FieldKeyType.Name,
         take: 1,
       });
-      return {
-        headers: response.headers,
-        total: response.data.records[0]?.fields[TOTAL_FIELD] ?? null,
-      };
+      const cell = response.data.records[0]?.fields[TOTAL_FIELD];
+      const values = (Array.isArray(cell) ? cell : cell == null ? [] : [cell])
+        .map((entry) => Number(entry))
+        .sort((left, right) => left - right);
+      return { headers: response.headers, values };
     };
 
-    const settle = async (expected: number, what: string) => {
+    const settle = async (expected: number[], what: string) => {
+      const wanted = [...expected]
+        .sort((left, right) => left - right)
+        .join(",");
       const deadline = Date.now() + config.settleTimeoutMs;
-      let seen: unknown = null;
+      let seen: number[] = [];
       for (;;) {
         const current = await readTotal();
-        seen = current.total;
-        if (Number(seen) === expected) {
+        seen = current.values;
+        if (seen.join(",") === wanted) {
           return current;
         }
         if (Date.now() >= deadline) {
           throw new Error(
-            `after ${config.settleTimeoutMs}ms ${what} reads ${JSON.stringify(seen)}, expected ${expected}`,
+            `after ${config.settleTimeoutMs}ms ${what} reads ${JSON.stringify(seen)}, expected ` +
+              `${JSON.stringify([...expected].sort((left, right) => left - right))}`,
           );
         }
         await sleep(config.pollIntervalMs);
@@ -202,7 +213,7 @@ export const runConditionalRollupPropagationCase = async (
           ],
         });
         await settle(editedTotal, "the summary after the change");
-        return { total: editedTotal };
+        return { values: editedTotal };
       },
     );
 
@@ -227,9 +238,9 @@ export const runConditionalRollupPropagationCase = async (
         sourceTableId,
         reportTableId,
         routing,
-        initialTotal,
-        totalAfterCountedChange: probe.total,
-        totalAfterExcludedChange: afterExcluded.total,
+        matchedValuesAtStart: initialTotal,
+        matchedValuesAfterCountedChange: probe.values,
+        matchedValuesAfterExcludedChange: afterExcluded.values,
       },
     };
   } finally {

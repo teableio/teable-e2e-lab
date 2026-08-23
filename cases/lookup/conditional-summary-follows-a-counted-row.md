@@ -20,9 +20,25 @@ Nothing fails: the write answers 200 and the source row is correct. Only the
 number beside it is wrong, which is the kind of wrong that gets copied into a
 report before anyone notices.
 
+## A lookup rather than a rollup
+
+The column here shows the matching prices rather than their sum, and that is a
+constraint rather than a choice. Two runs established it: the public field API
+puts a rollup's aggregation in `options.expression` (run 32659440769 answered
+`Unrecognized key`), and then refuses a rollup that names no link field at all
+— `LinkFieldId is required` — in run 32659721790. A conditional rollup is
+reachable from the v2 container's own API and not from the one a person or an
+integration uses.
+
+A conditional lookup takes the same condition with no link and shows the
+matching values themselves. It is the same propagation question one step
+earlier: the summary is derived from those values, and if they do not move,
+nothing downstream can.
+
 ## How the case is built
 
-Three products in two categories, and a summary totalling one category. The
+Three products in two categories, and a column showing the prices of one
+category. The
 fixture needs a row the condition ignores as well as rows it counts: a summary
 that counted everything would move for the right reason by accident.
 
