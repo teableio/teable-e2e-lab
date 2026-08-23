@@ -8,8 +8,8 @@ import { defineBugCase } from "../../framework/types";
 // The user's version is short: a formula that works on a text column produces
 // nothing at all when pointed at a multi-select, with no error to read.
 export default defineBugCase({
-  id: "formula/find-searches-a-multi-select",
-  title: "A formula can search a multi-select column for a word",
+  id: "formula/find-searches-a-linked-column",
+  title: "A formula can search a linked column for a word",
   runner: "find-over-multi-value",
   timeoutMs: 300_000,
   bug: {
@@ -20,6 +20,7 @@ export default defineBugCase({
   config: {
     baseId: "seed-base",
     tableNamePrefix: "e2e-lab-find-multi",
+    column: "link",
     needle: "urgent",
     rows: [
       { name: "has-it", tags: ["urgent", "backend"] },

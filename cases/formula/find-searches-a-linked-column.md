@@ -1,25 +1,25 @@
-# formula/find-searches-a-multi-select
+# formula/find-searches-a-linked-column
 
 **T6157** — fixed.
 
 ## What the user sees
 
 A formula that works fine over a text column produces nothing at all when
-pointed at a multi-select. Not an error, not a zero — an empty column, with
+pointed at a column of linked records. Not an error, not a zero — an empty column, with
 nothing anywhere to say why.
 
 ## Why
 
-`FIND` asks whether one piece of text contains another. A multi-select cell —
-or a link cell, which is the same shape underneath — holds several values
-rather than one string, and the query built for it asked Postgres to search
+`FIND` asks whether one piece of text contains another. A link cell — or a
+multi-select, which is the same shape underneath — holds several values rather
+than one string, and the query built for it asked Postgres to search
 inside a jsonb value with a text operator. That fails, and it fails the whole
 computed task, which is why the column stays empty rather than showing a
 mistake in one row.
 
 ## How the case is built
 
-Two rows: one whose tags contain the word, one whose do not.
+Two rows: one linked to a row whose name contains the word, one not.
 
 The second row is what makes the first meaningful. If nothing were supposed to
 match, a column of "no" and a column that never computed would look identical —
@@ -33,7 +33,9 @@ The selections are read back before the formula is added, so a multi-select
 that stored nothing would be caught rather than making every row's answer the
 same for a reason that is not the formula.
 
-## Limits
+## Which column shape
 
-Multi-select only. The same failure applies to link cells — the commit names
-both — and nothing here covers that shape.
+Link cells. The commit names two — a multi-select and a link — and the
+multi-select shape was built first and is green on both columns (run
+32661588045): whatever fails, it does not fail there. The runner keeps that
+shape as a config value.

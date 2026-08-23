@@ -1,4 +1,4 @@
-import { Colors, FieldKeyType, FieldType } from "@teable/core";
+import { Colors, FieldKeyType, FieldType, Relationship } from "@teable/core";
 import { getRecords as apiGetRecords } from "@teable/openapi";
 import {
   createField,
@@ -60,25 +60,62 @@ export const runFindOverMultiValueCase = async (
 
   const palette = [Colors.BlueBright, Colors.GreenBright, Colors.OrangeBright];
   const allTags = [...new Set(config.rows.flatMap((row) => row.tags))];
+  let foreignTableId = "";
 
   try {
+    // The link shape needs somewhere to link to: one foreign row per tag,
+    // named after it, so a link cell reads as the same words a multi-select
+    // cell would. The commit names both shapes, and the multi-select one is
+    // green on both columns - run 32661588045.
+    const foreignIdByTag = new Map<string, string>();
+    if (config.column === "link") {
+      const foreignTable = await createTable(baseId, {
+        name: `${suffix}-tags`,
+        fields: [
+          { name: NAME_FIELD, type: FieldType.SingleLineText, isPrimary: true },
+        ],
+        records: allTags.map((tag) => ({ fields: { [NAME_FIELD]: tag } })),
+      });
+      foreignTableId = foreignTable.id;
+      for (const record of foreignTable.records as {
+        id: string;
+        fields: Record<string, unknown>;
+      }[]) {
+        foreignIdByTag.set(String(record.fields[NAME_FIELD]), record.id);
+      }
+    }
     const table = await createTable(baseId, {
       name: suffix,
       fields: [
         { name: NAME_FIELD, type: FieldType.SingleLineText, isPrimary: true },
-        {
-          name: TAGS_FIELD,
-          type: FieldType.MultipleSelect,
-          options: {
-            choices: allTags.map((name, index) => ({
-              name,
-              color: palette[index % palette.length],
-            })),
-          },
-        },
+        config.column === "link"
+          ? {
+              name: TAGS_FIELD,
+              type: FieldType.Link,
+              options: {
+                foreignTableId,
+                relationship: Relationship.ManyMany,
+              },
+            }
+          : {
+              name: TAGS_FIELD,
+              type: FieldType.MultipleSelect,
+              options: {
+                choices: allTags.map((name, index) => ({
+                  name,
+                  color: palette[index % palette.length],
+                })),
+              },
+            },
       ],
       records: config.rows.map((row) => ({
-        fields: { [NAME_FIELD]: row.name, [TAGS_FIELD]: row.tags },
+        fields: {
+          [NAME_FIELD]: row.name,
+          [TAGS_FIELD]:
+            config.column === "link"
+              ? row.tags.map((tag) => ({ id: foreignIdByTag.get(tag) }))
+              : row.tags,
+        },
       })),
     });
     tableId = table.id;
@@ -123,7 +160,13 @@ export const runFindOverMultiValueCase = async (
         (record: { fields: Record<string, unknown> }) =>
           String(record.fields[NAME_FIELD] ?? "") === row.name,
       )?.fields[TAGS_FIELD];
-      const storedTags = Array.isArray(stored) ? stored.map(String) : [];
+      const storedTags = Array.isArray(stored)
+        ? stored.map((entry) =>
+            typeof entry === "object" && entry !== null
+              ? String((entry as { title?: string }).title ?? "")
+              : String(entry),
+          )
+        : [];
       if (storedTags.join("|") !== row.tags.join("|")) {
         throw new Error(
           `"${row.name}" holds ${JSON.stringify(storedTags)}, expected ${JSON.stringify(row.tags)} - ` +
@@ -193,13 +236,16 @@ export const runFindOverMultiValueCase = async (
       },
     };
   } finally {
-    if (tableId) {
+    for (const created of [tableId, foreignTableId]) {
+      if (!created) {
+        continue;
+      }
       try {
-        await permanentDeleteTable(baseId, tableId);
+        await permanentDeleteTable(baseId, created);
       } catch (error) {
         // Cleanup is the case's own housekeeping - the product did not fail.
         console.warn(
-          `[e2e-lab] cleanup failed for ${bugCase.id} (table ${tableId}): ${
+          `[e2e-lab] cleanup failed for ${bugCase.id} (table ${created}): ${
             error instanceof Error ? error.message : String(error)
           }`,
         );
