@@ -62,28 +62,35 @@ export const runRepeatedForeignLinksCase = async (
     });
     referenceTableId = referenceTable.id;
 
-    // Both links in the same create. That is the fixture: planning them one at
-    // a time is what the product does from the field editor, and it works -
-    // the collision needs two links planned against the same starting state.
-    const hostTable = await createTable(baseId, {
-      name: `${suffix}-host`,
-      fields: [
-        { name: NAME_FIELD, type: FieldType.SingleLineText, isPrimary: true },
-        ...config.linkFieldNames.map((name) => ({
-          name,
-          type: FieldType.Link,
-          options: {
-            relationship: Relationship.ManyMany,
-            foreignTableId: referenceTable.id,
-          },
-        })),
-      ],
-    });
-    hostTableId = hostTable.id;
-
     const probe = await bugCheckpoint(
       "two-links-to-one-table-get-two-columns",
       async () => {
+        // Both links in the same create, and the create is inside the
+        // checkpoint: where the collision lands decides what the user sees,
+        // and one of the outcomes is this request being refused outright.
+        // Creating the table outside would report that refusal as a broken
+        // case rather than as the bug - which is what the first run of this
+        // case did, run 32658657786.
+        const hostTable = await createTable(baseId, {
+          name: `${suffix}-host`,
+          fields: [
+            {
+              name: NAME_FIELD,
+              type: FieldType.SingleLineText,
+              isPrimary: true,
+            },
+            ...config.linkFieldNames.map((name) => ({
+              name,
+              type: FieldType.Link,
+              options: {
+                relationship: Relationship.ManyMany,
+                foreignTableId: referenceTable.id,
+              },
+            })),
+          ],
+        });
+        hostTableId = hostTable.id;
+
         const hostLinks = (hostTable.fields ?? []).filter(
           (field: { type: string }) => field.type === FieldType.Link,
         );

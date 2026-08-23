@@ -38,6 +38,14 @@ does not see, and it is the worse failure: shared storage means a row linked
 through one field shows up in the other, with nothing in the interface
 suggesting why.
 
+## Where the create sits
+
+Inside the checkpoint, not before it. One of the outcomes of the collision is
+the create request being refused outright — measured on `e6111bf09`, which
+answers `Field names must be unique` — and a table built outside the checkpoint
+would report that refusal as a broken case rather than as the bug. The first
+run of this case did exactly that (run 32658657786).
+
 ## Limits
 
 Two many-many links. The fix is about planning names against rolling state, and
