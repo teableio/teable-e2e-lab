@@ -7,6 +7,7 @@ import baseShareSaveIntoExistingBaseTwiceCase from "./cases/base-share/save-into
 import baseImportFieldDescriptionCase from "./cases/base-share/import-keeps-field-descriptions.case";
 import baseImportNoTablesCase from "./cases/base-share/import-of-a-base-without-tables.case";
 import viewIncompleteFilterConditionSurvivesCase from "./cases/view/incomplete-filter-condition-survives.case";
+import meFilterInViewCase from "./cases/view/a-view-filtered-to-me.case";
 import formRequiredComputedCase from "./cases/view/a-form-with-a-required-automatic-column.case";
 import filterScalarLookupNoneOfLoadsCase from "./cases/filter/scalar-lookup-none-of-loads.case";
 import lookupUserSnapshotDateSortSpansGroupCase from "./cases/lookup/user-snapshot-date-sort-spans-group.case";
@@ -21,6 +22,7 @@ import linkPickerPrimaryFieldCase from "./cases/link/picker-keeps-the-name-colum
 import orphanLinkFieldDeleteCase from "./cases/link/delete-a-link-whose-table-is-gone.case";
 import linkOneoneDeleteKeepsTableReadableCase from "./cases/link/oneone-delete-keeps-table-readable.case";
 import tableTrashDegradesInboundLinkCase from "./cases/table/trash-degrades-inbound-link.case";
+import duplicateSelectChoiceCase from "./cases/table/a-table-with-a-repeated-choice.case";
 import restoreInboundLinkCase from "./cases/table/restore-brings-back-the-links-to-it.case";
 import tableUsableAfterFailedUpdateCase from "./cases/table/usable-after-a-refused-column-change.case";
 import deleteErrorStateTableCase from "./cases/table/delete-a-table-whose-creation-failed.case";
@@ -110,6 +112,7 @@ const cases = [
   baseImportFieldDescriptionCase,
   baseImportNoTablesCase,
   viewIncompleteFilterConditionSurvivesCase,
+  meFilterInViewCase,
   formRequiredComputedCase,
   filterScalarLookupNoneOfLoadsCase,
   lookupUserSnapshotDateSortSpansGroupCase,
@@ -124,6 +127,7 @@ const cases = [
   orphanLinkFieldDeleteCase,
   linkOneoneDeleteKeepsTableReadableCase,
   tableTrashDegradesInboundLinkCase,
+  duplicateSelectChoiceCase,
   restoreInboundLinkCase,
   tableUsableAfterFailedUpdateCase,
   deleteErrorStateTableCase,
