@@ -19,29 +19,31 @@ import {
   permanentDeleteTable,
 } from "../../../utils/init-app";
 import { bugCheckpoint } from "../checkpoint";
+import { fixtureDb } from "../fixture-db";
 import type { BugCaseFor, BugProbeResult, BugRunContext } from "../types";
 import type { LookupOfRollupViewOpenCaseConfig } from "../types";
 
 // Three tables in a chain - rate rows roll up into an employee's highest rate,
-// and a payroll line looks that rate up - plus a view that filters on another
-// looked-up column -> checkpoint: the payroll view opens and shows the line.
+// and a payroll line looks that rate up - whose looked-up total has lost the
+// settings that say what it totals -> checkpoint: a view filtered on another
+// looked-up column opens and shows the line.
 //
-// Nothing here is damaged on purpose. Every column is made the way the field
-// dialog makes it, and the shape is the ordinary one for a payroll sheet: the
-// numbers live on their own rows, the employee carries the highest of them,
-// and the payroll line borrows both that number and the employee's site so a
-// view can be filtered by site.
+// The shape is the ordinary one for a payroll sheet: the numbers live on their
+// own rows, the employee carries the highest of them, and the payroll line
+// borrows both that number and the employee's site so a view can be filtered
+// by site. Built that way and left alone, the chain works on both sides of
+// this fix - measured, run 32708030924 - so the case does not stop there.
 //
-// The chain still stopped working. A looked-up total is stored without the
-// settings that say what it totals - the copy the lookup carries is enough to
-// display it and not enough to load it - and the table it sits on cannot be
-// loaded at all. The person sees a payroll view that will not open, with a
-// message about a rule they never wrote.
+// What breaks it is the copy of the totalling rule the looked-up column
+// carries going missing: enough left to display the column, not enough to load
+// the table it sits on. The sibling case
+// (record/a-row-when-a-looked-up-total-lost-its-rule, T6911) shows that from
+// that state a row can still be added and the table still lists. This case is
+// the half that was still broken afterwards: the view will not open, and the
+// person is told about a rule they never wrote.
 //
-// This is the same missing rule as the case that writes it with SQL
-// (record/a-row-when-a-looked-up-total-lost-its-rule, T6911), reached instead
-// by building the chain through the ordinary requests - which is why that case
-// stays green on this fix's parent and this one does not.
+// The missing rule is written with SQL because no request produces it, which
+// is also why nobody can put it back from the interface.
 
 const NAME_FIELD = "Name";
 const SITE_FIELD = "Site";
@@ -203,65 +205,91 @@ export const runLookupOfRollupViewOpenCase = async (
       },
     });
 
-    // Everything from here is inside the checkpoint, because everything from
-    // here is the symptom. The looked-up total is the column that cannot be
-    // loaded, so the request that makes it, every request that follows on the
-    // same table, and the view read at the end all belong to the report.
+    const rateLookup = await createField(payroll.id, {
+      name: ROLLUP_FIELD,
+      type: FieldType.Rollup,
+      isLookup: true,
+      options: {
+        expression: "max({values})",
+        formatting: { type: NumberFormattingType.Decimal, precision: 2 },
+      },
+      lookupOptions: {
+        foreignTableId: employees.id,
+        linkFieldId: payrollLink.id,
+        lookupFieldId: rollup.id,
+      },
+    });
+
+    const line = await apiCreateRecords(payroll.id, {
+      fieldKeyType: FieldKeyType.Id,
+      records: [
+        {
+          fields: {
+            [payroll.fields[0].id]: config.payrollLineTitle,
+            [payrollLink.id]: { id: employeeId },
+          },
+        },
+      ],
+    });
+    const lineId = line.data.records[0]?.id;
+    if (!lineId) {
+      throw new Error("adding a payroll line returned no row");
+    }
+
+    // The view a person opens: filtered and sorted on the borrowed site.
+    const view = await apiCreateView(payroll.id, {
+      name: "Unpaid",
+      type: ViewType.Grid,
+      filter: {
+        conjunction: "and",
+        filterSet: [
+          {
+            fieldId: siteLookup.id,
+            operator: isAnyOf.value,
+            value: config.sites,
+          },
+        ],
+      },
+      sort: {
+        sortObjs: [{ fieldId: siteLookup.id, order: "asc" }],
+        manualSort: false,
+      },
+    });
+
+    // Fixture verification, still outside the checkpoint: the view opens and
+    // shows the line with both borrowed values before anything is damaged.
+    // Without this, a view that never worked and a view broken by the missing
+    // rule would look the same.
+    const beforeDamage = await apiGetRecords(payroll.id, {
+      fieldKeyType: FieldKeyType.Id,
+      viewId: view.data.id,
+      take: 10,
+    });
+    const beforeFields = beforeDamage.data.records[0]?.fields ?? {};
+    if (
+      beforeDamage.data.records.length !== 1 ||
+      Number(beforeFields[rateLookup.id]) !== config.rate ||
+      beforeFields[siteLookup.id] !== keptSite
+    ) {
+      throw new Error(
+        `the payroll view does not work before the rule goes missing: ${beforeDamage.data.records.length} rows, ` +
+          `rate ${JSON.stringify(beforeFields[rateLookup.id])}, site ${JSON.stringify(beforeFields[siteLookup.id])}`,
+      );
+    }
+
+    // Setup: the borrowed total keeps its shape and loses the rule - what a
+    // column converted back and forth can be left with. No request produces
+    // this state, so it is written directly.
+    const db = fixtureDb(context.app);
+    await db.execute(
+      `UPDATE "field" SET "type" = 'rollup', "is_lookup" = true, "options" = $1 WHERE "id" = $2`,
+      JSON.stringify({ formatting: { type: "decimal", precision: 2 } }),
+      rateLookup.id,
+    );
+
     const probe = await bugCheckpoint(
       "a-payroll-view-opens-over-a-looked-up-total",
       async () => {
-        const rateLookup = await createField(payroll.id, {
-          name: ROLLUP_FIELD,
-          type: FieldType.Rollup,
-          isLookup: true,
-          options: {
-            expression: "max({values})",
-            formatting: { type: NumberFormattingType.Decimal, precision: 2 },
-          },
-          lookupOptions: {
-            foreignTableId: employees.id,
-            linkFieldId: payrollLink.id,
-            lookupFieldId: rollup.id,
-          },
-        });
-
-        const line = await apiCreateRecords(payroll.id, {
-          fieldKeyType: FieldKeyType.Id,
-          records: [
-            {
-              fields: {
-                [payroll.fields[0].id]: config.payrollLineTitle,
-                [payrollLink.id]: { id: employeeId },
-              },
-            },
-          ],
-        });
-        const lineId = line.data.records[0]?.id;
-        if (!lineId) {
-          throw new Error("adding a payroll line returned no row");
-        }
-
-        // The view a person actually opens: filtered and sorted on the looked
-        // up site.
-        const view = await apiCreateView(payroll.id, {
-          name: "Unpaid",
-          type: ViewType.Grid,
-          filter: {
-            conjunction: "and",
-            filterSet: [
-              {
-                fieldId: siteLookup.id,
-                operator: isAnyOf.value,
-                value: config.sites,
-              },
-            ],
-          },
-          sort: {
-            sortObjs: [{ fieldId: siteLookup.id, order: "asc" }],
-            manualSort: false,
-          },
-        });
-
         const opened = await apiGetRecords(payroll.id, {
           fieldKeyType: FieldKeyType.Id,
           viewId: view.data.id,
@@ -273,11 +301,6 @@ export const runLookupOfRollupViewOpenCase = async (
           );
         }
         const fields = opened.data.records[0].fields;
-        if (Number(fields[rateLookup.id]) !== config.rate) {
-          throw new Error(
-            `the payroll line borrows a highest rate of ${JSON.stringify(fields[rateLookup.id])}, expected ${config.rate}`,
-          );
-        }
         if (fields[siteLookup.id] !== keptSite) {
           throw new Error(
             `the payroll line borrows a site of ${JSON.stringify(fields[siteLookup.id])}, expected ${JSON.stringify(keptSite)}`,
