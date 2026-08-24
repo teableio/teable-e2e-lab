@@ -67,6 +67,7 @@ export interface BugCaseConfigByRunner {
   "orphan-link-field-delete": OrphanLinkFieldDeleteCaseConfig;
   "text-to-date-conversion": TextToDateConversionCaseConfig;
   "button-display-change": ButtonDisplayChangeCaseConfig;
+  "link-picker-primary-field": LinkPickerPrimaryFieldCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1296,4 +1297,19 @@ export interface ButtonDisplayChangeCaseConfig {
   maxCountAfter: number;
   confirmTitle: string;
   confirmDescription: string;
+}
+
+// A link column configured to show certain columns of the table it points at.
+// Not ticking the name column took the name out of the picker, leaving rows
+// identified by the extra column alone.
+export interface LinkPickerPrimaryFieldCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  hostRowTitle: string;
+  linkFieldName: string;
+  shownFieldName: string;
+  // A third column, ticked by nobody: the picker must not answer with
+  // everything either.
+  hiddenFieldName: string;
+  rows: { name: string; shown: string; hidden: string }[];
 }

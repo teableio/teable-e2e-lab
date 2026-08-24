@@ -9,6 +9,7 @@ import filterScalarLookupNoneOfLoadsCase from "./cases/filter/scalar-lookup-none
 import lookupUserSnapshotDateSortSpansGroupCase from "./cases/lookup/user-snapshot-date-sort-spans-group.case";
 import formulaScalarValueOverLinkedTextCase from "./cases/formula/scalar-value-over-linked-text.case";
 import linkRequiredLinkKeepsSiblingRefreshCase from "./cases/link/required-link-keeps-sibling-refresh.case";
+import linkPickerPrimaryFieldCase from "./cases/link/picker-keeps-the-name-column.case";
 import orphanLinkFieldDeleteCase from "./cases/link/delete-a-link-whose-table-is-gone.case";
 import linkOneoneDeleteKeepsTableReadableCase from "./cases/link/oneone-delete-keeps-table-readable.case";
 import tableTrashDegradesInboundLinkCase from "./cases/table/trash-degrades-inbound-link.case";
@@ -88,6 +89,7 @@ const cases = [
   lookupUserSnapshotDateSortSpansGroupCase,
   formulaScalarValueOverLinkedTextCase,
   linkRequiredLinkKeepsSiblingRefreshCase,
+  linkPickerPrimaryFieldCase,
   orphanLinkFieldDeleteCase,
   linkOneoneDeleteKeepsTableReadableCase,
   tableTrashDegradesInboundLinkCase,
