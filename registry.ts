@@ -10,6 +10,7 @@ import viewIncompleteFilterConditionSurvivesCase from "./cases/view/incomplete-f
 import meFilterInViewCase from "./cases/view/a-view-filtered-to-me.case";
 import formRequiredComputedCase from "./cases/view/a-form-with-a-required-automatic-column.case";
 import filterScalarLookupNoneOfLoadsCase from "./cases/filter/scalar-lookup-none-of-loads.case";
+import isWithinTodayFilterCase from "./cases/filter/a-filter-that-says-today.case";
 import lookupUserSnapshotDateSortSpansGroupCase from "./cases/lookup/user-snapshot-date-sort-spans-group.case";
 import rollupMetadataRenameCase from "./cases/lookup/rename-a-rollup-keeps-its-total.case";
 import formulaScalarValueOverLinkedTextCase from "./cases/formula/scalar-value-over-linked-text.case";
@@ -116,6 +117,7 @@ const cases = [
   meFilterInViewCase,
   formRequiredComputedCase,
   filterScalarLookupNoneOfLoadsCase,
+  isWithinTodayFilterCase,
   lookupUserSnapshotDateSortSpansGroupCase,
   rollupMetadataRenameCase,
   formulaScalarValueOverLinkedTextCase,

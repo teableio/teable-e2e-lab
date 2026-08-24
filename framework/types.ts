@@ -92,6 +92,7 @@ export interface BugCaseConfigByRunner {
   "me-filter-in-view": MeFilterInViewCaseConfig;
   "duplicate-select-choice": DuplicateSelectChoiceCaseConfig;
   "datetime-diff-default-unit": DatetimeDiffDefaultUnitCaseConfig;
+  "is-within-today-filter": IsWithinTodayFilterCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1624,5 +1625,16 @@ export interface DatetimeDiffDefaultUnitCaseConfig {
   rowTitle: string;
   started: string;
   finished: string;
+  timeZone: string;
+}
+
+// A relative date filter - "today". Asking for it was not understood, so the
+// answer was everything or nothing, and both look ordinary.
+export interface IsWithinTodayFilterCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  yesterdayRowTitle: string;
+  todayRowTitle: string;
+  tomorrowRowTitle: string;
   timeZone: string;
 }
