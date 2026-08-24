@@ -117,6 +117,7 @@ The shape is gone; the runner is not kept.
 | `b90f13537` | T3810 | Written and run: a file uploaded into a cell reaches a watching page carrying its temporary address on the fix's parent too (run 32696695384), so both columns look the same. The single-upload path is evidently decorated already; the fix also touches the batch-create and batch-update projections, which need an attachment token to reach and were not tried. |
 | `384d2dad1` | T3531 | Written in two shapes and run twice, green on both columns each time: filling a two-way link in from the far side already reaches the near side, and clearing it from there already clears it. Many-to-many in run 32697213211, one-many in run 32697577570. |
 | `2d93fbef4` | T3303 | Written and run: a formula comparing a number column against blank already answers per row on the fix's parent, empty and zero included (run 32698802701). The half that was broken is the v1 generated-column conversion in `sql-conversion.visitor.ts`, which the lab does not exercise - the same file as the T5496 row above. |
+| `7829d83c6` | T6925 | Written in two shapes and run twice, green on both columns each time: an overdue column added over existing rows computes on the fix's parent, whether written as a bare yes/no comparison (run 32705428574) or as an IF() returning two words (run 32704974280). The commit's own reproduction goes through the computed backfill a **field conversion** runs - `table.update` - not the pass that fills a newly created column, and that path was not tried. |
 
 ### The date comparison inside AND or OR
 

@@ -95,7 +95,6 @@ export interface BugCaseConfigByRunner {
   "is-within-today-filter": IsWithinTodayFilterCaseConfig;
   "sparse-batch-update": SparseBatchUpdateCaseConfig;
   "lookup-of-rollup-create": LookupOfRollupCreateCaseConfig;
-  "overdue-formula-backfill": OverdueFormulaBackfillCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1672,16 +1671,4 @@ export interface LookupOfRollupCreateCaseConfig {
   usageRowTitle: string;
   firstAmount: number;
   secondAmount: number;
-}
-
-// An "is this overdue" column: now against a deadline worked out from when the
-// row was created. The comparison was compiled as though the timestamps were
-// text, the database refused it, and the column was never filled in.
-export interface OverdueFormulaBackfillCaseConfig {
-  baseId: "seed-base";
-  tableNamePrefix: string;
-  rowTitles: string[];
-  hours: number;
-  settleTimeoutMs: number;
-  pollIntervalMs: number;
 }

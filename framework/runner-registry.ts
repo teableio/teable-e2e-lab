@@ -86,7 +86,6 @@ import { runDatetimeDiffDefaultUnitCase } from "./runners/datetime-diff-default-
 import { runIsWithinTodayFilterCase } from "./runners/is-within-today-filter.runner";
 import { runSparseBatchUpdateCase } from "./runners/sparse-batch-update.runner";
 import { runLookupOfRollupCreateCase } from "./runners/lookup-of-rollup-create.runner";
-import { runOverdueFormulaBackfillCase } from "./runners/overdue-formula-backfill.runner";
 import type {
   BugCase,
   BugCaseFor,
@@ -192,7 +191,6 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "is-within-today-filter": runIsWithinTodayFilterCase,
   "sparse-batch-update": runSparseBatchUpdateCase,
   "lookup-of-rollup-create": runLookupOfRollupCreateCase,
-  "overdue-formula-backfill": runOverdueFormulaBackfillCase,
 };
 
 export const executeRegisteredRunner = (
