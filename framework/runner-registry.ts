@@ -60,6 +60,7 @@ import { runTextToDateConversionCase } from "./runners/text-to-date-conversion.r
 import { runButtonDisplayChangeCase } from "./runners/button-display-change.runner";
 import { runLinkPickerPrimaryFieldCase } from "./runners/link-picker-primary-field.runner";
 import { runRollupMetadataRenameCase } from "./runners/rollup-metadata-rename.runner";
+import { runClearedDefaultCase } from "./runners/cleared-default.runner";
 import type {
   BugCase,
   BugCaseFor,
@@ -139,6 +140,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "button-display-change": runButtonDisplayChangeCase,
   "link-picker-primary-field": runLinkPickerPrimaryFieldCase,
   "rollup-metadata-rename": runRollupMetadataRenameCase,
+  "cleared-default": runClearedDefaultCase,
 };
 
 export const executeRegisteredRunner = (

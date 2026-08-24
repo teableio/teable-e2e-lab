@@ -35,6 +35,9 @@ import importExcelHeaderBelowA1Case from "./cases/import/excel-header-below-a1.c
 import selectionPasteByIdLandsOnItsOwnRowsCase from "./cases/selection/paste-by-id-lands-on-its-own-rows.case";
 import searchStaysInsideViewFilterCase from "./cases/search/stays-inside-view-filter.case";
 import fieldUniqueToggleCase from "./cases/field/turning-off-no-duplicates-lets-a-duplicate-in.case";
+import clearNumberDefaultCase from "./cases/field/clear-a-number-default.case";
+import clearDateDefaultCase from "./cases/field/clear-a-date-default.case";
+import clearSelectDefaultCase from "./cases/field/clear-a-select-default.case";
 import buttonDisplayChangeCase from "./cases/field/button-rename-keeps-click-counts.case";
 import textToDateConversionCase from "./cases/field/convert-text-with-impossible-dates.case";
 import importHeaderlessSheetCase from "./cases/import/headerless-sheet-imports-every-line.case";
@@ -113,6 +116,9 @@ const cases = [
   selectionPasteByIdLandsOnItsOwnRowsCase,
   searchStaysInsideViewFilterCase,
   fieldUniqueToggleCase,
+  clearNumberDefaultCase,
+  clearDateDefaultCase,
+  clearSelectDefaultCase,
   buttonDisplayChangeCase,
   textToDateConversionCase,
   importHeaderlessSheetCase,
