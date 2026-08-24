@@ -95,7 +95,6 @@ export interface BugCaseConfigByRunner {
   "is-within-today-filter": IsWithinTodayFilterCaseConfig;
   "sparse-batch-update": SparseBatchUpdateCaseConfig;
   "lookup-of-rollup-create": LookupOfRollupCreateCaseConfig;
-  "lookup-of-rollup-view-open": LookupOfRollupViewOpenCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1665,17 +1664,6 @@ export interface SparseBatchUpdateCaseConfig {
 // settings lost the rule for that total. Adding a row, listing rows and
 // opening the view were all refused, with a message about a rule the user
 // never wrote.
-export interface LookupOfRollupViewOpenCaseConfig {
-  baseId: "seed-base";
-  tableNamePrefix: string;
-  employeeName: string;
-  payrollLineTitle: string;
-  // The choices on the employee's site column, in order: the first is the one
-  // the fixture's employee is at. Two at least - see the runner.
-  sites: string[];
-  rate: number;
-}
-
 export interface LookupOfRollupCreateCaseConfig {
   baseId: "seed-base";
   tableNamePrefix: string;
