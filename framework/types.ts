@@ -85,6 +85,7 @@ export interface BugCaseConfigByRunner {
   "grouped-range-offset": GroupedRangeOffsetCaseConfig;
   "table-usable-after-failed-update": TableUsableAfterFailedUpdateCaseConfig;
   "restore-inbound-link": RestoreInboundLinkCaseConfig;
+  "oversized-select-choice": OversizedSelectChoiceCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1543,4 +1544,16 @@ export interface RestoreInboundLinkCaseConfig {
   foreignDetail: string;
   settleTimeoutMs: number;
   pollIntervalMs: number;
+}
+
+// A text column with an entry longer than a choice name may be, turned into a
+// list of choices. The long entry became an option: a paragraph in the
+// dropdown, in every filter and in every colour rule.
+export interface OversizedSelectChoiceCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // The product's limit on how long a choice name may be.
+  limit: number;
+  oversizedLength: number;
+  shortValues: [string, string];
 }

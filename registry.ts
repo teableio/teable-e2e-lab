@@ -50,6 +50,7 @@ import groupedRangeOffsetCase from "./cases/selection/paste-in-a-grouped-view.ca
 import tiedSortOffsetCase from "./cases/selection/paste-lands-on-the-row-you-see.case";
 import searchStaysInsideViewFilterCase from "./cases/search/stays-inside-view-filter.case";
 import fieldUniqueToggleCase from "./cases/field/turning-off-no-duplicates-lets-a-duplicate-in.case";
+import oversizedSelectChoiceCase from "./cases/field/a-value-too-long-to-be-a-choice.case";
 import clearNumberDefaultCase from "./cases/field/clear-a-number-default.case";
 import clearDateDefaultCase from "./cases/field/clear-a-date-default.case";
 import clearSelectDefaultCase from "./cases/field/clear-a-select-default.case";
@@ -146,6 +147,7 @@ const cases = [
   tiedSortOffsetCase,
   searchStaysInsideViewFilterCase,
   fieldUniqueToggleCase,
+  oversizedSelectChoiceCase,
   clearNumberDefaultCase,
   clearDateDefaultCase,
   clearSelectDefaultCase,
