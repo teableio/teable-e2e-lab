@@ -93,6 +93,7 @@ export interface BugCaseConfigByRunner {
   "duplicate-select-choice": DuplicateSelectChoiceCaseConfig;
   "datetime-diff-default-unit": DatetimeDiffDefaultUnitCaseConfig;
   "is-within-today-filter": IsWithinTodayFilterCaseConfig;
+  "sparse-batch-update": SparseBatchUpdateCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1637,4 +1638,18 @@ export interface IsWithinTodayFilterCaseConfig {
   todayRowTitle: string;
   tomorrowRowTitle: string;
   timeZone: string;
+}
+
+// One write covering several rows, mentioning a column for some of them and
+// not for others. The rows that did not mention it had it cleared, with
+// nothing failing and nothing reported.
+export interface SparseBatchUpdateCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  untouchedRowTitle: string;
+  writtenRowTitle: string;
+  statusKept: string;
+  statusWritten: string;
+  notesBefore: string;
+  notesAfter: string;
 }
