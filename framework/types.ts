@@ -86,6 +86,7 @@ export interface BugCaseConfigByRunner {
   "table-usable-after-failed-update": TableUsableAfterFailedUpdateCaseConfig;
   "restore-inbound-link": RestoreInboundLinkCaseConfig;
   "oversized-select-choice": OversizedSelectChoiceCaseConfig;
+  "timezone-alias": TimezoneAliasCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1556,4 +1557,14 @@ export interface OversizedSelectChoiceCaseConfig {
   limit: number;
   oversizedLength: number;
   shortValues: [string, string];
+}
+
+// A date column in a time zone named the way older systems name it. The
+// accepted list held only the current names, so the request was refused.
+export interface TimezoneAliasCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // An older name for a zone that is still what many systems send.
+  aliasZone: string;
+  value: string;
 }

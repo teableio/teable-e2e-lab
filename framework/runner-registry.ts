@@ -77,6 +77,7 @@ import { runGroupedRangeOffsetCase } from "./runners/grouped-range-offset.runner
 import { runTableUsableAfterFailedUpdateCase } from "./runners/table-usable-after-failed-update.runner";
 import { runRestoreInboundLinkCase } from "./runners/restore-inbound-link.runner";
 import { runOversizedSelectChoiceCase } from "./runners/oversized-select-choice.runner";
+import { runTimezoneAliasCase } from "./runners/timezone-alias.runner";
 import type {
   BugCase,
   BugCaseFor,
@@ -173,6 +174,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "table-usable-after-failed-update": runTableUsableAfterFailedUpdateCase,
   "restore-inbound-link": runRestoreInboundLinkCase,
   "oversized-select-choice": runOversizedSelectChoiceCase,
+  "timezone-alias": runTimezoneAliasCase,
 };
 
 export const executeRegisteredRunner = (
