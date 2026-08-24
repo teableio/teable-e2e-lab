@@ -90,6 +90,7 @@ export interface BugCaseConfigByRunner {
   "duplicate-field-realtime": DuplicateFieldRealtimeCaseConfig;
   "user-field-notify-on-assign": UserFieldNotifyOnAssignCaseConfig;
   "me-filter-in-view": MeFilterInViewCaseConfig;
+  "duplicate-select-choice": DuplicateSelectChoiceCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1600,4 +1601,15 @@ export interface MeFilterInViewCaseConfig {
   tableNamePrefix: string;
   mineRowTitle: string;
   unassignedRowTitle: string;
+}
+
+// A status column whose stored settings list the same choice twice - what an
+// import that ran twice or a merged option list leaves behind. Reading the
+// table then failed outright, for every row and everyone.
+export interface DuplicateSelectChoiceCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  repeatedChoice: string;
+  otherChoice: string;
+  rowTitles: string[];
 }

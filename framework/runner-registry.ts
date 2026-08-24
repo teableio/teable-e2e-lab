@@ -81,6 +81,7 @@ import { runTimezoneAliasCase } from "./runners/timezone-alias.runner";
 import { runDuplicateFieldRealtimeCase } from "./runners/duplicate-field-realtime.runner";
 import { runUserFieldNotifyOnAssignCase } from "./runners/user-field-notify-on-assign.runner";
 import { runMeFilterInViewCase } from "./runners/me-filter-in-view.runner";
+import { runDuplicateSelectChoiceCase } from "./runners/duplicate-select-choice.runner";
 import type {
   BugCase,
   BugCaseFor,
@@ -181,6 +182,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "duplicate-field-realtime": runDuplicateFieldRealtimeCase,
   "user-field-notify-on-assign": runUserFieldNotifyOnAssignCase,
   "me-filter-in-view": runMeFilterInViewCase,
+  "duplicate-select-choice": runDuplicateSelectChoiceCase,
 };
 
 export const executeRegisteredRunner = (
