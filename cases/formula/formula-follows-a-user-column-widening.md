@@ -9,7 +9,8 @@ owner now has two, an approval that needed one signature now needs a pair. The
 column changes shape: it starts holding a list.
 
 A formula reading that column goes on producing what it produced for one
-person. So the column says two owners and the column derived from it says one,
+person — measured on the fix's parent, it produces the characters `["test"]`
+as a piece of text rather than a list of one name. So the column says two owners and the column derived from it says one,
 and everything downstream — an export, a filter, a message built from the
 formula — keeps working with the wrong shape and never says so.
 
