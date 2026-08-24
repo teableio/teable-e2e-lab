@@ -119,8 +119,15 @@ export const runGeneratedFormulaColumnCase = async (
         const settled = await apiGetRecord(tableId, recordId, {
           fieldKeyType: FieldKeyType.Id,
         });
+        // The column is numeric in the database and reads back as a string
+        // through this path, so the comparison is on the number - measured on
+        // develop in run 32684136417, where it came back as "14".
         const label = settled.data.fields[formulaField.id];
-        if (label !== config.quantityAfter * 2) {
+        if (
+          label === null ||
+          label === undefined ||
+          Number(label) !== config.quantityAfter * 2
+        ) {
           throw new Error(
             `after the edit the worked-out column holds ${JSON.stringify(label)}, expected ` +
               `${config.quantityAfter * 2}`,
