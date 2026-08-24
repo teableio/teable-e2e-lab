@@ -21,6 +21,9 @@ export default defineBugCase({
     foreignRowTitle: "foreign-row",
     // The first is deleted; the other two have to survive it.
     rowTitles: ["row-to-delete", "row-that-stays", "another-row-that-stays"],
-    missingTableId: "tblMissingForeignTable",
+    // v2 parses ids strictly, so the table that is not there still has to be
+    // spelled like a table id - run 32679844170 answered "Invalid TableId" on
+    // both columns until it was.
+    missingTableId: "tblMissingForeign00",
   },
 });
