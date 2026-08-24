@@ -16,6 +16,7 @@ import isWithinTodayFilterCase from "./cases/filter/a-filter-that-says-today.cas
 import lookupUserSnapshotDateSortSpansGroupCase from "./cases/lookup/user-snapshot-date-sort-spans-group.case";
 import rollupMetadataRenameCase from "./cases/lookup/rename-a-rollup-keeps-its-total.case";
 import formulaScalarValueOverLinkedTextCase from "./cases/formula/scalar-value-over-linked-text.case";
+import overdueFormulaBackfillCase from "./cases/formula/an-is-this-overdue-column.case";
 import datetimeDiffDefaultUnitCase from "./cases/formula/a-gap-between-two-dates.case";
 import userMultiplicityFormulaCase from "./cases/formula/formula-follows-a-user-column-widening.case";
 import formulaErrorRepairCase from "./cases/formula/repairing-a-formula-clears-its-error.case";
@@ -126,6 +127,7 @@ const cases = [
   lookupUserSnapshotDateSortSpansGroupCase,
   rollupMetadataRenameCase,
   formulaScalarValueOverLinkedTextCase,
+  overdueFormulaBackfillCase,
   datetimeDiffDefaultUnitCase,
   userMultiplicityFormulaCase,
   formulaErrorRepairCase,
