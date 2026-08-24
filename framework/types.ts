@@ -87,6 +87,7 @@ export interface BugCaseConfigByRunner {
   "restore-inbound-link": RestoreInboundLinkCaseConfig;
   "oversized-select-choice": OversizedSelectChoiceCaseConfig;
   "timezone-alias": TimezoneAliasCaseConfig;
+  "duplicate-field-realtime": DuplicateFieldRealtimeCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1567,4 +1568,15 @@ export interface TimezoneAliasCaseConfig {
   // An older name for a zone that is still what many systems send.
   aliasZone: string;
   value: string;
+}
+
+// A column duplicated while other people have the table open. Nothing
+// announced the copy, so it was invisible to them until a reload.
+export interface DuplicateFieldRealtimeCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  rowTitle: string;
+  copyName: string;
+  subscribeTimeoutMs: number;
+  settleTimeoutMs: number;
 }
