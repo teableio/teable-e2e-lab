@@ -21,6 +21,19 @@ answered successfully and left the column would be a different failure with the
 same appearance. And the plain column beside it is still there: a delete that
 cleared more than it was asked to would be worse than one that refused.
 
+## Two commits, one column
+
+The same delete was refused twice, in two different places, and this case is
+red on both parents:
+
+| commit's parent     | what the delete answers                                              |
+| ------------------- | -------------------------------------------------------------------- |
+| `76d463d8b` (T6539) | `Failed to update table schema: relation "bse….tbl…" does not exist` |
+| `6421635ca` (T4927) | `Foreign tables not found: tbl…`                                     |
+
+Measured in runs 32674133437 and 32679450371. The second was found by running
+this case against the older fix's parent rather than by writing anything new.
+
 ## What the fixture has to hold
 
 The state is real but no request produces it: the table's metadata is
