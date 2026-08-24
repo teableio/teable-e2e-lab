@@ -74,7 +74,10 @@ export const runSymmetricLinkWriteCase = async (
       name: LINK_FIELD,
       type: FieldType.Link,
       options: {
-        relationship: Relationship.ManyMany,
+        // One-many, so the column the product makes on the other table holds
+        // a single value rather than a list. Many-many is green on both
+        // columns (run 32697213211): that shape already propagates.
+        relationship: Relationship.OneMany,
         foreignTableId: items.id,
         isOneWay: false,
       },
@@ -124,7 +127,7 @@ export const runSymmetricLinkWriteCase = async (
         // Fill the relationship in from the item's side.
         await apiUpdateRecord(items.id, itemId, {
           fieldKeyType: FieldKeyType.Id,
-          record: { fields: { [symmetricFieldId]: [{ id: orderId }] } },
+          record: { fields: { [symmetricFieldId]: { id: orderId } } },
         });
 
         const linked = await orderLinks();
@@ -139,7 +142,7 @@ export const runSymmetricLinkWriteCase = async (
         // let go too.
         await apiUpdateRecord(items.id, itemId, {
           fieldKeyType: FieldKeyType.Id,
-          record: { fields: { [symmetricFieldId]: [] } },
+          record: { fields: { [symmetricFieldId]: null } },
         });
         const cleared = await orderLinks();
         if (cleared.some((entry) => entry.id === itemId)) {
