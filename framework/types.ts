@@ -83,6 +83,7 @@ export interface BugCaseConfigByRunner {
   "lookup-config-realtime": LookupConfigRealtimeCaseConfig;
   "user-multiplicity-formula": UserMultiplicityFormulaCaseConfig;
   "grouped-range-offset": GroupedRangeOffsetCaseConfig;
+  "table-usable-after-failed-update": TableUsableAfterFailedUpdateCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1514,4 +1515,18 @@ export interface GroupedRangeOffsetCaseConfig {
   groupOrder: "asc" | "desc";
   pasteAtOffset: number;
   pastedValue: string;
+}
+
+// A column change the data refuses. The failure is correct; what followed was
+// not - the table was left marked as not finished being set up, and everything
+// after it was refused.
+export interface TableUsableAfterFailedUpdateCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Has to contain an empty cell, or the change would succeed and there would
+  // be no failure to recover from.
+  values: string[];
+  rowAddedAfter: string;
+  valueAddedAfter: string;
+  renamedTo: string;
 }
