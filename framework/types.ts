@@ -67,7 +67,6 @@ export interface BugCaseConfigByRunner {
   "orphan-link-field-delete": OrphanLinkFieldDeleteCaseConfig;
   "text-to-date-conversion": TextToDateConversionCaseConfig;
   "button-display-change": ButtonDisplayChangeCaseConfig;
-  "lookup-of-formula-edit": LookupOfFormulaEditCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1297,16 +1296,4 @@ export interface ButtonDisplayChangeCaseConfig {
   maxCountAfter: number;
   confirmTitle: string;
   confirmDescription: string;
-}
-
-// A column looking up a computed value across a link. It carried a copy of the
-// foreign formula's expression, and that copy made the column fail its own
-// validation, so it displayed the right number and could not be edited.
-export interface LookupOfFormulaEditCaseConfig {
-  baseId: "seed-base";
-  tableNamePrefix: string;
-  hostRowTitle: string;
-  foreignRowTitle: string;
-  amount: number;
-  newName: string;
 }
