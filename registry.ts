@@ -44,6 +44,7 @@ import undoDeleteRecordsUndoRestoresAllCase from "./cases/undo/delete-records-un
 import linkCrossBaseLinkClearsOnDeleteCase from "./cases/link/cross-base-link-clears-on-delete.case";
 import importExcelHeaderBelowA1Case from "./cases/import/excel-header-below-a1.case";
 import selectionPasteByIdLandsOnItsOwnRowsCase from "./cases/selection/paste-by-id-lands-on-its-own-rows.case";
+import groupedRangeOffsetCase from "./cases/selection/paste-in-a-grouped-view.case";
 import tiedSortOffsetCase from "./cases/selection/paste-lands-on-the-row-you-see.case";
 import searchStaysInsideViewFilterCase from "./cases/search/stays-inside-view-filter.case";
 import fieldUniqueToggleCase from "./cases/field/turning-off-no-duplicates-lets-a-duplicate-in.case";
@@ -137,6 +138,7 @@ const cases = [
   linkCrossBaseLinkClearsOnDeleteCase,
   importExcelHeaderBelowA1Case,
   selectionPasteByIdLandsOnItsOwnRowsCase,
+  groupedRangeOffsetCase,
   tiedSortOffsetCase,
   searchStaysInsideViewFilterCase,
   fieldUniqueToggleCase,
