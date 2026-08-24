@@ -4,13 +4,13 @@ import {
   FieldType,
   NumberFormattingType,
   Relationship,
+  ViewType,
   isAnyOf,
 } from "@teable/core";
 import {
   createRecords as apiCreateRecords,
   getRecords as apiGetRecords,
   createView as apiCreateView,
-  ViewType,
 } from "@teable/openapi";
 import {
   createField,
