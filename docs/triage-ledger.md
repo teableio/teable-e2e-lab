@@ -114,6 +114,7 @@ the fix's summary describes the html clipboard that a grid copy writes. The
 next thing to try is that html payload rather than the structured one.
 
 The shape is gone; the runner is not kept.
+| `b90f13537` | T3810 | Written and run: a file uploaded into a cell reaches a watching page carrying its temporary address on the fix's parent too (run 32696695384), so both columns look the same. The single-upload path is evidently decorated already; the fix also touches the batch-create and batch-update projections, which need an attachment token to reach and were not tried. |
 
 ### The date comparison inside AND or OR
 
