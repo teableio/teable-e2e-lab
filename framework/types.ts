@@ -81,6 +81,7 @@ export interface BugCaseConfigByRunner {
   "tied-sort-offset": TiedSortOffsetCaseConfig;
   "form-required-computed": FormRequiredComputedCaseConfig;
   "lookup-config-realtime": LookupConfigRealtimeCaseConfig;
+  "user-multiplicity-formula": UserMultiplicityFormulaCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1486,6 +1487,16 @@ export interface LookupConfigRealtimeCaseConfig {
   firstValue: string;
   secondValue: string;
   subscribeTimeoutMs: number;
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
+}
+
+// A member column widened from one person to several. The column starts
+// holding a list; a formula reading it went on producing what it produced for
+// one person, so the two disagree about their shape.
+export interface UserMultiplicityFormulaCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
   settleTimeoutMs: number;
   pollIntervalMs: number;
 }

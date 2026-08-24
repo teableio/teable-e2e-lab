@@ -12,6 +12,7 @@ import filterScalarLookupNoneOfLoadsCase from "./cases/filter/scalar-lookup-none
 import lookupUserSnapshotDateSortSpansGroupCase from "./cases/lookup/user-snapshot-date-sort-spans-group.case";
 import rollupMetadataRenameCase from "./cases/lookup/rename-a-rollup-keeps-its-total.case";
 import formulaScalarValueOverLinkedTextCase from "./cases/formula/scalar-value-over-linked-text.case";
+import userMultiplicityFormulaCase from "./cases/formula/formula-follows-a-user-column-widening.case";
 import formulaErrorRepairCase from "./cases/formula/repairing-a-formula-clears-its-error.case";
 import linkRequiredLinkKeepsSiblingRefreshCase from "./cases/link/required-link-keeps-sibling-refresh.case";
 import incomingLinkCleanupCase from "./cases/link/deleting-a-row-clears-links-pointing-at-it.case";
@@ -107,6 +108,7 @@ const cases = [
   lookupUserSnapshotDateSortSpansGroupCase,
   rollupMetadataRenameCase,
   formulaScalarValueOverLinkedTextCase,
+  userMultiplicityFormulaCase,
   formulaErrorRepairCase,
   linkRequiredLinkKeepsSiblingRefreshCase,
   incomingLinkCleanupCase,
