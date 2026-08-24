@@ -69,6 +69,7 @@ import { runIncomingLinkCleanupCase } from "./runners/incoming-link-cleanup.runn
 import { runFormulaErrorRepairCase } from "./runners/formula-error-repair.runner";
 import { runSelectOptionRemovalRealtimeCase } from "./runners/select-option-removal-realtime.runner";
 import { runAppendImportComputedCase } from "./runners/append-import-computed.runner";
+import { runTiedSortOffsetCase } from "./runners/tied-sort-offset.runner";
 import type {
   BugCase,
   BugCaseFor,
@@ -157,6 +158,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "formula-error-repair": runFormulaErrorRepairCase,
   "select-option-removal-realtime": runSelectOptionRemovalRealtimeCase,
   "append-import-computed": runAppendImportComputedCase,
+  "tied-sort-offset": runTiedSortOffsetCase,
 };
 
 export const executeRegisteredRunner = (
