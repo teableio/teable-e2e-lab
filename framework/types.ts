@@ -72,6 +72,7 @@ export interface BugCaseConfigByRunner {
   "cleared-default": ClearedDefaultCaseConfig;
   "legacy-generated-audit-column": LegacyGeneratedAuditColumnCaseConfig;
   "delete-error-state-table": DeleteErrorStateTableCaseConfig;
+  "link-paste-formula-title": LinkPasteFormulaTitleCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1362,4 +1363,15 @@ export interface LegacyGeneratedAuditColumnCaseConfig {
 export interface DeleteErrorStateTableCaseConfig {
   baseId: "seed-base";
   tableNamePrefix: string;
+}
+
+// A link pointing at a table whose first column is worked out rather than
+// typed. Matching a pasted name against it was refused, so the ordinary way of
+// filling a link column in failed on exactly those tables.
+export interface LinkPasteFormulaTitleCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  hostRowTitle: string;
+  prefix: string;
+  foreignRows: string[];
 }

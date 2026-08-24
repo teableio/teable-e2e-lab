@@ -63,6 +63,7 @@ import { runRollupMetadataRenameCase } from "./runners/rollup-metadata-rename.ru
 import { runClearedDefaultCase } from "./runners/cleared-default.runner";
 import { runLegacyGeneratedAuditColumnCase } from "./runners/legacy-generated-audit-column.runner";
 import { runDeleteErrorStateTableCase } from "./runners/delete-error-state-table.runner";
+import { runLinkPasteFormulaTitleCase } from "./runners/link-paste-formula-title.runner";
 import type {
   BugCase,
   BugCaseFor,
@@ -145,6 +146,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "cleared-default": runClearedDefaultCase,
   "legacy-generated-audit-column": runLegacyGeneratedAuditColumnCase,
   "delete-error-state-table": runDeleteErrorStateTableCase,
+  "link-paste-formula-title": runLinkPasteFormulaTitleCase,
 };
 
 export const executeRegisteredRunner = (

@@ -11,6 +11,7 @@ import lookupUserSnapshotDateSortSpansGroupCase from "./cases/lookup/user-snapsh
 import rollupMetadataRenameCase from "./cases/lookup/rename-a-rollup-keeps-its-total.case";
 import formulaScalarValueOverLinkedTextCase from "./cases/formula/scalar-value-over-linked-text.case";
 import linkRequiredLinkKeepsSiblingRefreshCase from "./cases/link/required-link-keeps-sibling-refresh.case";
+import linkPasteFormulaTitleCase from "./cases/link/paste-a-name-that-is-worked-out.case";
 import linkPickerPrimaryFieldCase from "./cases/link/picker-keeps-the-name-column.case";
 import orphanLinkFieldDeleteCase from "./cases/link/delete-a-link-whose-table-is-gone.case";
 import linkOneoneDeleteKeepsTableReadableCase from "./cases/link/oneone-delete-keeps-table-readable.case";
@@ -97,6 +98,7 @@ const cases = [
   rollupMetadataRenameCase,
   formulaScalarValueOverLinkedTextCase,
   linkRequiredLinkKeepsSiblingRefreshCase,
+  linkPasteFormulaTitleCase,
   linkPickerPrimaryFieldCase,
   orphanLinkFieldDeleteCase,
   linkOneoneDeleteKeepsTableReadableCase,
