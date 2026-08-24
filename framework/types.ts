@@ -74,6 +74,7 @@ export interface BugCaseConfigByRunner {
   "delete-error-state-table": DeleteErrorStateTableCaseConfig;
   "link-paste-formula-title": LinkPasteFormulaTitleCaseConfig;
   "generated-formula-column": GeneratedFormulaColumnCaseConfig;
+  "incoming-link-cleanup": IncomingLinkCleanupCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1386,4 +1387,18 @@ export interface GeneratedFormulaColumnCaseConfig {
   rowTitle: string;
   quantityBefore: number;
   quantityAfter: number;
+}
+
+// Deleting a row has to clear it out of every cell that pointed at it. The
+// clearing skipped link columns carrying the stored shape an older version
+// wrote, leaving cells that name a row which is not there.
+export interface IncomingLinkCleanupCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  deletedRowTitle: string;
+  // A second row on the far side, pointed at by a second cell: the delete has
+  // to leave that one alone.
+  keptRowTitle: string;
+  pointingRowTitle: string;
+  otherRowTitle: string;
 }

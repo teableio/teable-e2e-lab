@@ -65,6 +65,7 @@ import { runLegacyGeneratedAuditColumnCase } from "./runners/legacy-generated-au
 import { runDeleteErrorStateTableCase } from "./runners/delete-error-state-table.runner";
 import { runLinkPasteFormulaTitleCase } from "./runners/link-paste-formula-title.runner";
 import { runGeneratedFormulaColumnCase } from "./runners/generated-formula-column.runner";
+import { runIncomingLinkCleanupCase } from "./runners/incoming-link-cleanup.runner";
 import type {
   BugCase,
   BugCaseFor,
@@ -149,6 +150,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "delete-error-state-table": runDeleteErrorStateTableCase,
   "link-paste-formula-title": runLinkPasteFormulaTitleCase,
   "generated-formula-column": runGeneratedFormulaColumnCase,
+  "incoming-link-cleanup": runIncomingLinkCleanupCase,
 };
 
 export const executeRegisteredRunner = (
