@@ -70,6 +70,7 @@ import { runFormulaErrorRepairCase } from "./runners/formula-error-repair.runner
 import { runSelectOptionRemovalRealtimeCase } from "./runners/select-option-removal-realtime.runner";
 import { runAppendImportComputedCase } from "./runners/append-import-computed.runner";
 import { runTiedSortOffsetCase } from "./runners/tied-sort-offset.runner";
+import { runFormRequiredComputedCase } from "./runners/form-required-computed.runner";
 import type {
   BugCase,
   BugCaseFor,
@@ -159,6 +160,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "select-option-removal-realtime": runSelectOptionRemovalRealtimeCase,
   "append-import-computed": runAppendImportComputedCase,
   "tied-sort-offset": runTiedSortOffsetCase,
+  "form-required-computed": runFormRequiredComputedCase,
 };
 
 export const executeRegisteredRunner = (

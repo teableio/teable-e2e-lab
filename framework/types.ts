@@ -79,6 +79,7 @@ export interface BugCaseConfigByRunner {
   "select-option-removal-realtime": SelectOptionRemovalRealtimeCaseConfig;
   "append-import-computed": AppendImportComputedCaseConfig;
   "tied-sort-offset": TiedSortOffsetCaseConfig;
+  "form-required-computed": FormRequiredComputedCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1462,4 +1463,13 @@ export interface TiedSortOffsetCaseConfig {
   rowTitles: string[];
   draggedRowTitle: string;
   pastedValue: string;
+}
+
+// A form whose settings mark a column the product fills in itself as required.
+// Every submission was refused for a column the person filling the form cannot
+// see and could not fill in.
+export interface FormRequiredComputedCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  submittedName: string;
 }
