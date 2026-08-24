@@ -91,6 +91,7 @@ The shapes are gone; the runner is not kept.
 | `cfdbb6d37` | T3701 | Keeps the `is distinct from` guard on a formula backfill so unchanged rows are not rewritten. The values are identical either way - the commit's own test asserts on the generated SQL and on how many backfills start. Performance shape. |
 | `5d49826f0` | - | Needs thousands of rows pointing at one group through a many-many link, so the reverse projection exceeds the computed-cell limit; the commit's own fixture is 5,200 rows. Too large for this lab's per-case budget, and the same subject as the T6728 row above. |
 | `4eb2d5884` | T5469 | Written and run: deleting a row whose link points at a table that is gone succeeds on the fix's parent (run 32680133538). The record-delete half of the fix is in the v1 backend's link service; the v2 half is the junction-table rule, which the shipped `link/delete-a-link-whose-table-is-gone` already exercises. |
+| `b80a3a947` | T5369 | Row-order index names collide only when they pass 63 characters. The name is `idx_<dbTableName>___row_<viewId>`, and tables in this lab carry the table id as their `dbTableName` (seen as `bse….tbl…` in the errors of runs 32676958449 and 32684390532), which puts every name near 49 characters. Nothing a request can ask for makes it longer. |
 
 ### The name on a pasted link cell
 
