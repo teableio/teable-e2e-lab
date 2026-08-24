@@ -70,6 +70,7 @@ export interface BugCaseConfigByRunner {
   "link-picker-primary-field": LinkPickerPrimaryFieldCaseConfig;
   "rollup-metadata-rename": RollupMetadataRenameCaseConfig;
   "cleared-default": ClearedDefaultCaseConfig;
+  "legacy-generated-audit-column": LegacyGeneratedAuditColumnCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1343,4 +1344,13 @@ export interface ClearedDefaultCaseConfig {
   choices: string[];
   rowBeforeTitle: string;
   rowAfterTitle: string;
+}
+
+// A table whose "created by" column is one the database fills in itself, the
+// way tables migrated from the previous version carry it. The product wrote
+// the author in on every insert, and Postgres refused the whole insert.
+export interface LegacyGeneratedAuditColumnCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  rowTitle: string;
 }

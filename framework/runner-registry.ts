@@ -61,6 +61,7 @@ import { runButtonDisplayChangeCase } from "./runners/button-display-change.runn
 import { runLinkPickerPrimaryFieldCase } from "./runners/link-picker-primary-field.runner";
 import { runRollupMetadataRenameCase } from "./runners/rollup-metadata-rename.runner";
 import { runClearedDefaultCase } from "./runners/cleared-default.runner";
+import { runLegacyGeneratedAuditColumnCase } from "./runners/legacy-generated-audit-column.runner";
 import type {
   BugCase,
   BugCaseFor,
@@ -141,6 +142,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "link-picker-primary-field": runLinkPickerPrimaryFieldCase,
   "rollup-metadata-rename": runRollupMetadataRenameCase,
   "cleared-default": runClearedDefaultCase,
+  "legacy-generated-audit-column": runLegacyGeneratedAuditColumnCase,
 };
 
 export const executeRegisteredRunner = (
