@@ -78,11 +78,28 @@ export const runSelectOptionRemovalRealtimeCase = async (
     tableId = table.id;
     const statusField = table.fields.find(
       (field: { name: string }) => field.name === STATUS_FIELD,
-    );
+    ) as
+      | {
+          id: string;
+          options?: {
+            choices?: { id?: string; name: string; color?: string }[];
+          };
+        }
+      | undefined;
     const retiredRecordId = table.records[0]?.id;
     const keptRecordId = table.records[1]?.id;
     if (!statusField?.id || !retiredRecordId || !keptRecordId) {
       throw new Error(`Table ${tableId} is not in place`);
+    }
+
+    const choices = statusField.options?.choices ?? [];
+    const keptChoice = choices.find(
+      (choice) => choice.name === config.keptChoice,
+    );
+    if (!keptChoice) {
+      throw new Error(
+        `${STATUS_FIELD} does not offer ${config.keptChoice} - the fixture is not in place`,
+      );
     }
 
     client = realtimeClient(context.appUrl, context.cookie);
@@ -126,13 +143,16 @@ export const runSelectOptionRemovalRealtimeCase = async (
     const probe = await bugCheckpoint(
       "retiring-a-choice-empties-the-rows-that-held-it",
       async () => {
-        // Remove the choice from the column, leaving the other one.
+        // Remove the choice from the column, leaving the other one exactly
+        // as it is - the surviving choice is sent back with its own id.
+        // Sending it as a fresh {name, color} retires both: the rows holding
+        // it point at a choice that no longer exists (measured in run
+        // 32686879476, where the surviving row went empty for 20s on both
+        // columns).
         await convertField(tableId, statusField.id, {
           name: STATUS_FIELD,
           type: FieldType.SingleSelect,
-          options: {
-            choices: [{ name: config.keptChoice, color: Colors.Green }],
-          },
+          options: { choices: [keptChoice] },
         });
 
         // Both conditions together, polled to the deadline: the row that
