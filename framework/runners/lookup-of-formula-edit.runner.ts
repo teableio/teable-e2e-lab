@@ -15,8 +15,8 @@ import { bugCheckpoint } from "../checkpoint";
 import type { BugCaseFor, BugProbeResult, BugRunContext } from "../types";
 import type { LookupOfFormulaEditCaseConfig } from "../types";
 
-// A column that looks up a formula on the table it links to -> re-point it at
-// a plain column on the same link -> checkpoint: the edit is accepted.
+// A column that looks up a formula on the table it links to -> turn it into a
+// plain column -> checkpoint: the edit is accepted.
 //
 // Looking up a computed value across a link is ordinary: an order row showing
 // the customer's calculated tier, a task showing its project's completion.
@@ -145,9 +145,10 @@ export const runLookupOfFormulaEditCase = async (
     const probe = await bugCheckpoint(
       "a-lookup-of-a-formula-can-still-be-edited",
       async () => {
-        // Re-point the column at a plain number on the same link. Renaming
-        // it is accepted on both columns - measured in run 32675528990 - so
-        // the subject is the edit that rewrites what the column looks up.
+        // Turn the column into a plain number field - stop it being a lookup
+        // at all. Two weaker edits are accepted on both columns: renaming it
+        // (run 32675528990) and re-pointing it at another column on the same
+        // link (run 32675852808).
         // Raw axios with the status open: the refusal carries a message worth
         // reporting, and the generated client throws it away.
         const response = await axios.put(
@@ -158,18 +159,12 @@ export const runLookupOfFormulaEditCase = async (
           {
             name: config.newName,
             type: FieldType.Number,
-            isLookup: true,
-            lookupOptions: {
-              foreignTableId: foreign.id,
-              linkFieldId: linkField.id,
-              lookupFieldId: amountFieldId,
-            },
           },
           { validateStatus: () => true },
         );
         if (response.status < 200 || response.status >= 300) {
           throw new Error(
-            `re-pointing a lookup of a formula answered ${response.status}: ${JSON.stringify(response.data)} - ` +
+            `converting a lookup of a formula answered ${response.status}: ${JSON.stringify(response.data)} - ` +
               "the column displays the right number and cannot be edited",
           );
         }
@@ -185,16 +180,12 @@ export const runLookupOfFormulaEditCase = async (
             `the edit was accepted but the column is still called ${JSON.stringify(renamed?.name)}`,
           );
         }
-        const pointsAt = (
-          renamed as { lookupOptions?: { lookupFieldId?: string } }
-        ).lookupOptions?.lookupFieldId;
-        if (pointsAt !== amountFieldId) {
+        if ((renamed as { isLookup?: boolean }).isLookup) {
           throw new Error(
-            `the edit was accepted but the column still looks up ${JSON.stringify(pointsAt)} rather than the ` +
-              "plain number it was re-pointed at",
+            "the edit was accepted but the column is still a lookup",
           );
         }
-        return { name: renamed.name, pointsAt };
+        return { name: renamed.name, pointsAt: null };
       },
     );
 
