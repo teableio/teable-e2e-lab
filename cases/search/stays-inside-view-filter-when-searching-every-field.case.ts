@@ -1,24 +1,29 @@
 import { defineBugCase } from "../../framework/types";
 
-// T6874: searching a view found rows the view does not show. Search-count and
-// search-index applied only the filter the client sent in the request, so a
-// request that named a view and nothing else searched the entire table - the
-// grid's own search box sends exactly that request, and answered with hits on
-// rows the user had filtered away.
+// T6916: the same failure as its sibling, reached the way the grid's search
+// box actually reaches it - the term on its own, searched across every column,
+// with a date column among them. The view's filter was dropped, so the search
+// answered with rows the person had filtered away; they are in a view for a
+// reason, and the search is the one place where that reason is easiest to
+// forget.
+//
+// The sibling `search/stays-inside-view-filter` names one column to search and
+// was green on this fix's parent (run 32703022098), which is why this shape
+// needed a case of its own.
 export default defineBugCase({
-  id: "search/stays-inside-view-filter",
-  title: "Searching a view finds only rows the view shows",
+  id: "search/stays-inside-view-filter-when-searching-every-field",
+  title: "Searching every field stays inside the view filter",
   runner: "search-view-filter",
   timeoutMs: 120_000,
   bug: {
-    issue: "T6874",
+    issue: "T6916",
     status: "fixed",
-    sourceCommits: ["a0531e540"],
+    sourceCommits: ["e686cd95d"],
   },
   config: {
     baseId: "seed-base",
-    scope: "oneField",
-    tableNamePrefix: "e2e-lab-search-view-filter",
+    scope: "everyField",
+    tableNamePrefix: "e2e-lab-search-every-field",
     searchTerm: "Cupcake",
     // All four quadrants of (inside the view, matched by the search). The
     // three the runner requires are here twice over, so a single mis-seeded

@@ -1,4 +1,10 @@
-import { FieldKeyType, FieldType, is } from "@teable/core";
+import {
+  DateFormattingPreset,
+  FieldKeyType,
+  FieldType,
+  is,
+  TimeFormatting,
+} from "@teable/core";
 import {
   getRecords as apiGetRecords,
   getSearchCount,
@@ -29,6 +35,7 @@ import type { SearchViewFilterCaseConfig } from "../types";
 // behavior nobody is testing here.
 
 const NAME_FIELD = "Name";
+const DATE_FIELD = "When";
 const REGION_FIELD = "Region";
 const TYPE_FIELD = "Type";
 const KEPT_REGION = "Keep";
@@ -116,12 +123,34 @@ export const runSearchViewFilterCase = async (
             choices: [{ name: config.searchTerm }, { name: OTHER_TYPE }],
           },
         },
+        // A date column, present only in the every-field shape: searching
+        // every field means the date column is searched too, and that is what
+        // dropped the view's filter (T6916). It carries no part of the
+        // fixture's meaning - the two axes stay the region and the type.
+        ...(config.scope === "everyField"
+          ? [
+              {
+                name: DATE_FIELD,
+                type: FieldType.Date,
+                options: {
+                  formatting: {
+                    date: DateFormattingPreset.ISO,
+                    time: TimeFormatting.None,
+                    timeZone: "UTC",
+                  },
+                },
+              },
+            ]
+          : []),
       ],
       records: config.rows.map((row) => ({
         fields: {
           [NAME_FIELD]: row.name,
           [REGION_FIELD]: row.inView ? KEPT_REGION : DROPPED_REGION,
           [TYPE_FIELD]: row.matches ? config.searchTerm : OTHER_TYPE,
+          ...(config.scope === "everyField"
+            ? { [DATE_FIELD]: "2026-03-01T00:00:00.000Z" }
+            : {}),
         },
       })),
     });
@@ -150,11 +179,14 @@ export const runSearchViewFilterCase = async (
       );
     }
 
-    const search: [string, string, boolean] = [
-      config.searchTerm,
-      typeField.id,
-      true,
-    ];
+    // Naming a field searches that field. Sending the term on its own is the
+    // search box at the top of the grid: every field at once, the date column
+    // included - which is the shape where the view's filter was dropped
+    // (T6916).
+    const search: [string, string, boolean] | [string] =
+      config.scope === "everyField"
+        ? [config.searchTerm]
+        : [config.searchTerm, typeField.id, true];
     const expectedNames = config.rows
       .filter((row) => row.inView && row.matches)
       .map((row) => row.name)

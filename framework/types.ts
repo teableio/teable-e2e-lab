@@ -700,6 +700,11 @@ export interface PasteByIdAlignmentCaseConfig {
 export interface SearchViewFilterCaseConfig {
   baseId: "seed-base";
   tableNamePrefix: string;
+  // "oneField" names the searched column; "everyField" sends the term on its
+  // own, the way the grid's search box does, and adds a date column so the
+  // search covers one - which is the shape where the view's filter was
+  // dropped.
+  scope: "oneField" | "everyField";
   // The needle. It is the name of one choice on the searched single-select
   // field, so a row either carries it in that cell or does not - no partial
   // matches to reason about.
