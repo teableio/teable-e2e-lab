@@ -59,6 +59,7 @@ import { runOrphanLinkFieldDeleteCase } from "./runners/orphan-link-field-delete
 import { runTextToDateConversionCase } from "./runners/text-to-date-conversion.runner";
 import { runButtonDisplayChangeCase } from "./runners/button-display-change.runner";
 import { runLinkPickerPrimaryFieldCase } from "./runners/link-picker-primary-field.runner";
+import { runRollupMetadataRenameCase } from "./runners/rollup-metadata-rename.runner";
 import type {
   BugCase,
   BugCaseFor,
@@ -137,6 +138,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "text-to-date-conversion": runTextToDateConversionCase,
   "button-display-change": runButtonDisplayChangeCase,
   "link-picker-primary-field": runLinkPickerPrimaryFieldCase,
+  "rollup-metadata-rename": runRollupMetadataRenameCase,
 };
 
 export const executeRegisteredRunner = (
