@@ -91,6 +91,9 @@ export interface BugCaseConfigByRunner {
   "user-field-notify-on-assign": UserFieldNotifyOnAssignCaseConfig;
   "me-filter-in-view": MeFilterInViewCaseConfig;
   "duplicate-select-choice": DuplicateSelectChoiceCaseConfig;
+  "datetime-diff-default-unit": DatetimeDiffDefaultUnitCaseConfig;
+  "is-within-today-filter": IsWithinTodayFilterCaseConfig;
+  "sparse-batch-update": SparseBatchUpdateCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1612,4 +1615,41 @@ export interface DuplicateSelectChoiceCaseConfig {
   repeatedChoice: string;
   otherChoice: string;
   rowTitles: string[];
+}
+
+// The gap between two dates, written without naming a unit. The language
+// promises seconds; the answer came back in days - the same number divided by
+// 86,400, with nothing marking it as the wrong unit.
+export interface DatetimeDiffDefaultUnitCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  rowTitle: string;
+  started: string;
+  finished: string;
+  timeZone: string;
+}
+
+// A relative date filter - "today". Asking for it was not understood, so the
+// answer was everything or nothing, and both look ordinary.
+export interface IsWithinTodayFilterCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  yesterdayRowTitle: string;
+  todayRowTitle: string;
+  tomorrowRowTitle: string;
+  timeZone: string;
+}
+
+// One write covering several rows, mentioning a column for some of them and
+// not for others. The rows that did not mention it had it cleared, with
+// nothing failing and nothing reported.
+export interface SparseBatchUpdateCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  untouchedRowTitle: string;
+  writtenRowTitle: string;
+  statusKept: string;
+  statusWritten: string;
+  notesBefore: string;
+  notesAfter: string;
 }

@@ -1,5 +1,6 @@
 import smokeAuthUserCase from "./cases/smoke/auth-user.case";
 import recordBulkUpdate100MixedLandsCase from "./cases/record/bulk-update-100-mixed-lands.case";
+import sparseBatchUpdateCase from "./cases/record/a-batch-write-leaves-what-it-did-not-mention.case";
 import generatedFormulaColumnCase from "./cases/record/edit-a-cell-behind-a-generated-formula.case";
 import legacyGeneratedAuditColumnCase from "./cases/record/add-a-row-to-a-legacy-table.case";
 import recordCollapsedDateGroupStaysHiddenCase from "./cases/record/collapsed-date-group-stays-hidden.case";
@@ -10,9 +11,11 @@ import viewIncompleteFilterConditionSurvivesCase from "./cases/view/incomplete-f
 import meFilterInViewCase from "./cases/view/a-view-filtered-to-me.case";
 import formRequiredComputedCase from "./cases/view/a-form-with-a-required-automatic-column.case";
 import filterScalarLookupNoneOfLoadsCase from "./cases/filter/scalar-lookup-none-of-loads.case";
+import isWithinTodayFilterCase from "./cases/filter/a-filter-that-says-today.case";
 import lookupUserSnapshotDateSortSpansGroupCase from "./cases/lookup/user-snapshot-date-sort-spans-group.case";
 import rollupMetadataRenameCase from "./cases/lookup/rename-a-rollup-keeps-its-total.case";
 import formulaScalarValueOverLinkedTextCase from "./cases/formula/scalar-value-over-linked-text.case";
+import datetimeDiffDefaultUnitCase from "./cases/formula/a-gap-between-two-dates.case";
 import userMultiplicityFormulaCase from "./cases/formula/formula-follows-a-user-column-widening.case";
 import formulaErrorRepairCase from "./cases/formula/repairing-a-formula-clears-its-error.case";
 import linkRequiredLinkKeepsSiblingRefreshCase from "./cases/link/required-link-keeps-sibling-refresh.case";
@@ -105,6 +108,7 @@ import type { BugCase } from "./framework/types";
 const cases = [
   smokeAuthUserCase,
   recordBulkUpdate100MixedLandsCase,
+  sparseBatchUpdateCase,
   generatedFormulaColumnCase,
   legacyGeneratedAuditColumnCase,
   recordCollapsedDateGroupStaysHiddenCase,
@@ -115,9 +119,11 @@ const cases = [
   meFilterInViewCase,
   formRequiredComputedCase,
   filterScalarLookupNoneOfLoadsCase,
+  isWithinTodayFilterCase,
   lookupUserSnapshotDateSortSpansGroupCase,
   rollupMetadataRenameCase,
   formulaScalarValueOverLinkedTextCase,
+  datetimeDiffDefaultUnitCase,
   userMultiplicityFormulaCase,
   formulaErrorRepairCase,
   linkRequiredLinkKeepsSiblingRefreshCase,
