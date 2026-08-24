@@ -80,7 +80,6 @@ import { runOversizedSelectChoiceCase } from "./runners/oversized-select-choice.
 import { runTimezoneAliasCase } from "./runners/timezone-alias.runner";
 import { runDuplicateFieldRealtimeCase } from "./runners/duplicate-field-realtime.runner";
 import { runUserFieldNotifyOnAssignCase } from "./runners/user-field-notify-on-assign.runner";
-import { runBlankNumberFormulaCase } from "./runners/blank-number-formula.runner";
 import type {
   BugCase,
   BugCaseFor,
@@ -180,7 +179,6 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "timezone-alias": runTimezoneAliasCase,
   "duplicate-field-realtime": runDuplicateFieldRealtimeCase,
   "user-field-notify-on-assign": runUserFieldNotifyOnAssignCase,
-  "blank-number-formula": runBlankNumberFormulaCase,
 };
 
 export const executeRegisteredRunner = (

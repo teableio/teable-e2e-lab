@@ -89,7 +89,6 @@ export interface BugCaseConfigByRunner {
   "timezone-alias": TimezoneAliasCaseConfig;
   "duplicate-field-realtime": DuplicateFieldRealtimeCaseConfig;
   "user-field-notify-on-assign": UserFieldNotifyOnAssignCaseConfig;
-  "blank-number-formula": BlankNumberFormulaCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1591,16 +1590,4 @@ export interface UserFieldNotifyOnAssignCaseConfig {
   rowTitle: string;
   notifyTimeoutMs: number;
   pollIntervalMs: number;
-}
-
-// A formula asking whether a number column is filled in. An empty cell was not
-// treated as blank, so the rows the question is about answered like the filled
-// ones.
-export interface BlankNumberFormulaCaseConfig {
-  baseId: "seed-base";
-  tableNamePrefix: string;
-  // null means the cell is left empty. The fixture needs both kinds.
-  rows: { name: string; amount: number | null }[];
-  emptyAnswer: string;
-  filledAnswer: string;
 }
