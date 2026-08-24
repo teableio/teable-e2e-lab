@@ -78,7 +78,12 @@ export const runUserMultiplicityFormulaCase = async (
       records: [
         {
           fields: {
-            [userField.id]: { id: globalThis.testConfig.userId },
+            // A user cell needs the name as well as the id - run 32690596776
+            // answered "expected string, received undefined at title".
+            [userField.id]: {
+              id: globalThis.testConfig.userId,
+              title: globalThis.testConfig.userName,
+            },
           },
         },
       ],
