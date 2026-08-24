@@ -27,6 +27,7 @@ import deleteErrorStateTableCase from "./cases/table/delete-a-table-whose-creati
 import linkRequiredLinkBlocksOwnerDeleteCase from "./cases/link/required-link-blocks-owner-delete.case";
 import recordLegacyUniqueViolationNamesFieldCase from "./cases/record/legacy-unique-violation-names-field.case";
 import userFieldPasteNonCollaboratorValueCase from "./cases/user-field/paste-non-collaborator-value.case";
+import userFieldNotifyOnAssignCase from "./cases/user-field/assigning-someone-tells-them.case";
 import userWriteScopeCase from "./cases/user-field/write-stays-inside-the-base.case";
 import userFieldGroupFoldsDriftedSnapshotsCase from "./cases/user-field/group-folds-drifted-snapshots.case";
 import userFieldGroupKeepsLegacyIdOutOfEmptyCase from "./cases/user-field/group-keeps-legacy-id-out-of-empty.case";
@@ -39,6 +40,7 @@ import importExcelDuplicateHeadersCase from "./cases/import/excel-duplicate-head
 import appendImportComputedCase from "./cases/import/appended-rows-get-their-computed-values.case";
 import auditFieldsLastModifiedByResolvesNameCase from "./cases/audit-fields/last-modified-by-resolves-name.case";
 import realtimeViewFilterUpdateReachesSubscribersCase from "./cases/realtime/view-filter-update-reaches-subscribers.case";
+import duplicateFieldRealtimeCase from "./cases/realtime/a-duplicated-column-reaches-the-open-page.case";
 import lookupConfigRealtimeCase from "./cases/realtime/lookup-config-change-reaches-the-page.case";
 import selectOptionRemovalRealtimeCase from "./cases/realtime/retiring-a-choice-reaches-the-open-page.case";
 import realtimeViewGroupAndSortReachSubscribersCase from "./cases/realtime/view-group-and-sort-reach-subscribers.case";
@@ -128,6 +130,7 @@ const cases = [
   linkRequiredLinkBlocksOwnerDeleteCase,
   recordLegacyUniqueViolationNamesFieldCase,
   userFieldPasteNonCollaboratorValueCase,
+  userFieldNotifyOnAssignCase,
   userWriteScopeCase,
   lookupStaleTextMetadataRecastsOnRebuildCase,
   lookupStaleTextMetadataSurvivesDisplayConvertCase,
@@ -137,6 +140,7 @@ const cases = [
   appendImportComputedCase,
   auditFieldsLastModifiedByResolvesNameCase,
   realtimeViewFilterUpdateReachesSubscribersCase,
+  duplicateFieldRealtimeCase,
   lookupConfigRealtimeCase,
   selectOptionRemovalRealtimeCase,
   realtimeViewGroupAndSortReachSubscribersCase,
