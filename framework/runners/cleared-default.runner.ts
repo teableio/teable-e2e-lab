@@ -1,4 +1,10 @@
-import { Colors, FieldKeyType, FieldType } from "@teable/core";
+import {
+  Colors,
+  DateFormattingPreset,
+  FieldKeyType,
+  FieldType,
+  TimeFormatting,
+} from "@teable/core";
 import {
   axios,
   createRecords as apiCreateRecords,
@@ -47,7 +53,17 @@ const fieldDefinition = (config: ClearedDefaultCaseConfig) => {
       return {
         name: SUBJECT_FIELD,
         type: FieldType.Date,
-        options: { defaultValue: config.dateDefault },
+        options: {
+          formatting: {
+            date: DateFormattingPreset.ISO,
+            time: TimeFormatting.None,
+            timeZone: config.timeZone,
+          },
+          // A date column's default is not a date - it is "now", filled in
+          // when the row is made. Measured in run 32677332329, where anything
+          // else is refused at creation.
+          defaultValue: "now",
+        },
       };
     case "singleSelect":
       return {

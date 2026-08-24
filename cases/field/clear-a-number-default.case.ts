@@ -15,7 +15,7 @@ export default defineBugCase({
     tableNamePrefix: "e2e-lab-default-number",
     column: "number",
     numberDefault: 1,
-    dateDefault: "2026-03-01T00:00:00.000Z",
+    timeZone: "UTC",
     choices: ["Todo", "Doing"],
     rowBeforeTitle: "created-before-the-edit",
     rowAfterTitle: "created-after-the-edit",

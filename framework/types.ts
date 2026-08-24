@@ -1336,7 +1336,8 @@ export interface ClearedDefaultCaseConfig {
   tableNamePrefix: string;
   column: "number" | "date" | "singleSelect";
   numberDefault: number;
-  dateDefault: string;
+  // A date column's default is "now"; the zone is what its formatting says.
+  timeZone: string;
   // The first choice is the default; the list needs a second one so a default
   // is a choice rather than the only possibility.
   choices: string[];
