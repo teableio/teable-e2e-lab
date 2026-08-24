@@ -6,6 +6,7 @@
 // panels — the card shows the bug × commit grid, lists what needs a human
 // (regressions, errors, unexpectedly-fixed), and links the run.
 
+import { countOutcomes } from "./comparison-model.mjs";
 import { readFile } from "node:fs/promises";
 import { env, requiredEnv } from "./env.mjs";
 
@@ -74,7 +75,21 @@ export const buildFeishuCard = ({ comparison, runUrl }) => {
   // The grid alone carries the comparison: a row reading ❌ then ✅ already
   // says "fixed between these two commits", so spelling the transition out
   // again next to it only competed with the table for the reader's attention.
-  const lines = ["```", ...buildComparisonGrid(comparison), "```", ""];
+  // A full run against one commit is a yes-or-no question, and a chat card
+  // cannot fold a grid away: 80 rows of ticks push the part that matters off
+  // the screen. The counts stand in for the grid, and the failures below are
+  // untouched - they are what someone would scroll for.
+  const singleColumn = comparison.commits.length === 1;
+  const lines = singleColumn
+    ? (() => {
+        const { total, passed, failed } = countOutcomes(comparison);
+        const [column] = comparison.commits;
+        return [
+          `**${total} case${total === 1 ? "" : "s"}** on \`${columnLabel(column)}\` — **${passed} passed**, **${failed} failed**.`,
+          "",
+        ];
+      })()
+    : ["```", ...buildComparisonGrid(comparison), "```", ""];
 
   const failureLines = [];
   for (const failure of comparison.failures.regressions) {

@@ -158,3 +158,46 @@ test("the card carries the grid inside a fenced block and links the run", () => 
   assert.match(content, /https:\/\/example\.test\/run\/1/);
   assert.equal(card.card.header.template, "green");
 });
+
+test("a single-commit run sends the counts instead of the grid", () => {
+  const sha = "d".repeat(40);
+  const comparison = {
+    commits: [{ ref: "develop", sha, short: sha.slice(0, 10) }],
+    rows: [
+      {
+        caseId: "record/x",
+        issue: "T1",
+        status: "fixed",
+        cells: [{ sha, short: sha.slice(0, 10), verdict: "pass" }],
+        transitions: [],
+      },
+      {
+        caseId: "record/y",
+        issue: "T2",
+        status: "fixed",
+        cells: [{ sha, short: sha.slice(0, 10), verdict: "regression" }],
+        transitions: [],
+      },
+    ],
+    failures: {
+      regressions: [{ caseId: "record/y", sha }],
+      errors: [],
+      missing: [],
+      unplanned: [],
+      duplicates: [],
+      unknownVerdicts: [],
+    },
+    notices: { unexpectedlyFixed: [] },
+    passed: false,
+  };
+  const card = buildFeishuCard({
+    comparison,
+    runUrl: "https://example.invalid/run",
+  });
+  const text = JSON.stringify(card);
+  assert.match(text, /\*\*2 cases\*\* on/);
+  assert.match(text, /\*\*1 passed\*\*, \*\*1 failed\*\*/);
+  // The grid is gone, the failure line is not.
+  assert.doesNotMatch(text, /record\/x/);
+  assert.match(text, /Regression\*\* record\/y/);
+});

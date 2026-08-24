@@ -194,3 +194,73 @@ assert.deepEqual(
 );
 
 console.log("comparison model ok");
+
+// A full run against one commit is read as "did anything break": the counts go
+// on top and the per-case table folds away. A multi-commit run keeps it open,
+// because the columns beside each other are the whole point.
+{
+  const develop = [
+    {
+      name: "c1",
+      position: 1,
+      ref: "develop",
+      sha: sha("d"),
+      short: short("d"),
+      gating: true,
+    },
+  ];
+  const comparison = buildComparison({
+    caseCatalog: CATALOG,
+    executePlan: develop,
+    payloads: [
+      payload("record/x", sha("d"), "absent", "pass"),
+      payload("record/y", sha("d"), "present", "regression"),
+    ],
+  });
+  const markdown = renderComparisonMarkdown(comparison);
+  assert.match(markdown, /\*\*2 cases\*\* ran on/);
+  assert.match(markdown, /\*\*1 passed\*\*, \*\*1 failed\*\*/);
+  assert.match(markdown, /<details>/);
+  assert.match(markdown, /<summary>Per-case results \(2\)<\/summary>/);
+  // The rows are still there, folded rather than dropped.
+  assert.match(markdown, /record\/x/);
+  assert.match(markdown, /record\/y/);
+  // And the actionable part stays outside the fold.
+  assert.match(markdown, /### ❌ Regressions/);
+
+  const multi = buildComparison({
+    caseCatalog: [CATALOG[0]],
+    executePlan: COMMITS,
+    payloads: [
+      payload("record/x", sha("a"), "present", "expected-fail"),
+      payload("record/x", sha("b"), "present", "expected-fail"),
+      payload("record/x", sha("c"), "absent", "pass"),
+    ],
+  });
+  assert.doesNotMatch(renderComparisonMarkdown(multi), /<details>/);
+}
+
+// A case that is declared open and behaves as declared counts as passed - the
+// question the single-column run answers is whether anything broke, and a
+// known-unfixed bug reproducing is not something breaking.
+{
+  const develop = [
+    {
+      name: "c1",
+      position: 1,
+      ref: "develop",
+      sha: sha("e"),
+      short: short("e"),
+      gating: true,
+    },
+  ];
+  const comparison = buildComparison({
+    caseCatalog: [CATALOG[1]],
+    executePlan: develop,
+    payloads: [payload("record/y", sha("e"), "present", "expected-fail")],
+  });
+  assert.match(
+    renderComparisonMarkdown(comparison),
+    /\*\*1 case\*\* ran on .* \*\*1 passed\*\*, \*\*0 failed\*\*/,
+  );
+}
