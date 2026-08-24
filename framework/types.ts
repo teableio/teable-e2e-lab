@@ -96,6 +96,7 @@ export interface BugCaseConfigByRunner {
   "sparse-batch-update": SparseBatchUpdateCaseConfig;
   "lookup-of-rollup-create": LookupOfRollupCreateCaseConfig;
   "ai-config-only-change-plan": AiConfigOnlyChangePlanCaseConfig;
+  "empty-write-normalization": EmptyWriteNormalizationCaseConfig;
   "single-field-pending-state": SingleFieldPendingStateCaseConfig;
 }
 
@@ -1676,6 +1677,15 @@ export interface SingleFieldPendingStateCaseConfig {
   // have, "still busy" is the correct answer - see the runner.
   settleAttempts: number;
   settleIntervalMs: number;
+}
+
+export interface EmptyWriteNormalizationCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  filledRowName: string;
+  untouchedRowName: string;
+  notes: string;
+  tags: string[];
 }
 
 export interface AiConfigOnlyChangePlanCaseConfig {
