@@ -60,6 +60,33 @@ places — it cannot be settled and skipped at once.
 | `3ff04d015`  | T5453 | Written in two shapes and run twice, green on both columns each time: a single-cell edit already answers with the row's formula recomputed on the fix's parent. See the note below the table.                                                                                                                              |
 | `0a12e96a0`  | T5496 | The fix is in the v1 generated-column SQL conversion, which nothing in v2 imports. Written in two shapes and run twice anyway; green on both columns each time. See the note below the table.                                                                                                                              |
 | `d134190e7`  | -     | Fast undo after a selection delete could restore nothing while still reporting success. The existing sentinel `undo/delete-records-undo-restores-all` was run against this parent and passed at 12 rows (run 32674455220) - the trash projection keeps up at that size. The commit's own reproduction is a 10k-row delete. |
+| `98790484e`  | T6332 | Written in three shapes and run three times, green on both columns each time: renaming, re-pointing and un-lookup-ing a lookup of a formula are all accepted on the fix's parent. See the note below the table.                                                                                                            |
+
+### Editing a lookup of a formula
+
+`98790484e` / T6332. A column looking up a computed value across a link carried
+a copy of the foreign formula's expression, and the fix stops that copy being
+made so the column no longer blocks edit and convert.
+
+| shape                                                     | pre-fix `d84818878` / `develop` | run         |
+| --------------------------------------------------------- | ------------------------------- | ----------- |
+| rename the column                                         | ✅ / ✅                         | 32675528990 |
+| re-point it at a plain number on the same link            | ✅ / ✅                         | 32675852808 |
+| convert it into a plain number field, not a lookup at all | ✅ / ✅                         | 32676121196 |
+
+All three were accepted on the fix's parent, and the control - the same edits
+on a lookup of a plain column - was accepted too, so nothing separates the
+columns.
+
+**Why is not established.** The fix touches create, convert, hydrate and
+persistence; a lookup of a formula built through the public API on a
+single-level formula may simply never carry the copied expression that the
+blocking depends on. The next thing to try is a foreign formula whose
+expression cannot be parsed outside its own table - one referencing several
+fields, or a formula over a lookup - since it is the parse of the copied
+expression that failed.
+
+The shapes are gone; the runner is not kept.
 
 ### The date comparison inside AND or OR
 
