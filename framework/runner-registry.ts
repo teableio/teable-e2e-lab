@@ -72,6 +72,7 @@ import { runAppendImportComputedCase } from "./runners/append-import-computed.ru
 import { runTiedSortOffsetCase } from "./runners/tied-sort-offset.runner";
 import { runFormRequiredComputedCase } from "./runners/form-required-computed.runner";
 import { runLookupConfigRealtimeCase } from "./runners/lookup-config-realtime.runner";
+import { runUserMultiplicityFormulaCase } from "./runners/user-multiplicity-formula.runner";
 import type {
   BugCase,
   BugCaseFor,
@@ -163,6 +164,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "tied-sort-offset": runTiedSortOffsetCase,
   "form-required-computed": runFormRequiredComputedCase,
   "lookup-config-realtime": runLookupConfigRealtimeCase,
+  "user-multiplicity-formula": runUserMultiplicityFormulaCase,
 };
 
 export const executeRegisteredRunner = (
