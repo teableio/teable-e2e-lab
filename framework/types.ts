@@ -73,6 +73,7 @@ export interface BugCaseConfigByRunner {
   "legacy-generated-audit-column": LegacyGeneratedAuditColumnCaseConfig;
   "delete-error-state-table": DeleteErrorStateTableCaseConfig;
   "link-paste-formula-title": LinkPasteFormulaTitleCaseConfig;
+  "generated-formula-column": GeneratedFormulaColumnCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1374,4 +1375,15 @@ export interface LinkPasteFormulaTitleCaseConfig {
   hostRowTitle: string;
   prefix: string;
   foreignRows: string[];
+}
+
+// A formula column the database works out itself, the way tables carried over
+// from the previous version store them. The product recalculated it by writing
+// into it, the write was refused, and the edit that triggered it went too.
+export interface GeneratedFormulaColumnCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  rowTitle: string;
+  quantityBefore: number;
+  quantityAfter: number;
 }

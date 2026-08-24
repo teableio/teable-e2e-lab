@@ -1,5 +1,6 @@
 import smokeAuthUserCase from "./cases/smoke/auth-user.case";
 import recordBulkUpdate100MixedLandsCase from "./cases/record/bulk-update-100-mixed-lands.case";
+import generatedFormulaColumnCase from "./cases/record/edit-a-cell-behind-a-generated-formula.case";
 import legacyGeneratedAuditColumnCase from "./cases/record/add-a-row-to-a-legacy-table.case";
 import recordCollapsedDateGroupStaysHiddenCase from "./cases/record/collapsed-date-group-stays-hidden.case";
 import baseShareSaveIntoExistingBaseTwiceCase from "./cases/base-share/save-into-existing-base-twice.case";
@@ -87,6 +88,7 @@ import type { BugCase } from "./framework/types";
 const cases = [
   smokeAuthUserCase,
   recordBulkUpdate100MixedLandsCase,
+  generatedFormulaColumnCase,
   legacyGeneratedAuditColumnCase,
   recordCollapsedDateGroupStaysHiddenCase,
   baseShareSaveIntoExistingBaseTwiceCase,
