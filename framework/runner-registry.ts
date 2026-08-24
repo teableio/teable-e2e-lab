@@ -62,6 +62,7 @@ import { runLinkPickerPrimaryFieldCase } from "./runners/link-picker-primary-fie
 import { runRollupMetadataRenameCase } from "./runners/rollup-metadata-rename.runner";
 import { runClearedDefaultCase } from "./runners/cleared-default.runner";
 import { runLegacyGeneratedAuditColumnCase } from "./runners/legacy-generated-audit-column.runner";
+import { runDeleteWithBrokenLinkCase } from "./runners/delete-with-broken-link.runner";
 import type {
   BugCase,
   BugCaseFor,
@@ -143,6 +144,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "rollup-metadata-rename": runRollupMetadataRenameCase,
   "cleared-default": runClearedDefaultCase,
   "legacy-generated-audit-column": runLegacyGeneratedAuditColumnCase,
+  "delete-with-broken-link": runDeleteWithBrokenLinkCase,
 };
 
 export const executeRegisteredRunner = (

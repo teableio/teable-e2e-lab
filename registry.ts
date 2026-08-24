@@ -1,5 +1,6 @@
 import smokeAuthUserCase from "./cases/smoke/auth-user.case";
 import recordBulkUpdate100MixedLandsCase from "./cases/record/bulk-update-100-mixed-lands.case";
+import deleteWithBrokenLinkCase from "./cases/record/delete-a-row-with-a-broken-link.case";
 import legacyGeneratedAuditColumnCase from "./cases/record/add-a-row-to-a-legacy-table.case";
 import recordCollapsedDateGroupStaysHiddenCase from "./cases/record/collapsed-date-group-stays-hidden.case";
 import baseShareSaveIntoExistingBaseTwiceCase from "./cases/base-share/save-into-existing-base-twice.case";
@@ -85,6 +86,7 @@ import type { BugCase } from "./framework/types";
 const cases = [
   smokeAuthUserCase,
   recordBulkUpdate100MixedLandsCase,
+  deleteWithBrokenLinkCase,
   legacyGeneratedAuditColumnCase,
   recordCollapsedDateGroupStaysHiddenCase,
   baseShareSaveIntoExistingBaseTwiceCase,

@@ -71,6 +71,7 @@ export interface BugCaseConfigByRunner {
   "rollup-metadata-rename": RollupMetadataRenameCaseConfig;
   "cleared-default": ClearedDefaultCaseConfig;
   "legacy-generated-audit-column": LegacyGeneratedAuditColumnCaseConfig;
+  "delete-with-broken-link": DeleteWithBrokenLinkCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1353,4 +1354,16 @@ export interface LegacyGeneratedAuditColumnCaseConfig {
   baseId: "seed-base";
   tableNamePrefix: string;
   rowTitle: string;
+}
+
+// A link column pointing at a table that is gone. Deleting a row clears it out
+// of every link it takes part in, and that clearing is addressed to the missing
+// table - so the delete failed and the rows could not be removed.
+export interface DeleteWithBrokenLinkCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  foreignRowTitle: string;
+  // The first is the row that gets deleted; the rest have to survive.
+  rowTitles: string[];
+  missingTableId: string;
 }
