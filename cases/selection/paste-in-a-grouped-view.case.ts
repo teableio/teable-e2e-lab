@@ -9,7 +9,7 @@ import { defineBugCase } from "../../framework/types";
 // an error.
 export default defineBugCase({
   id: "selection/paste-in-a-grouped-view",
-  title: "A paste in a grouped view lands on the row at that position",
+  title: "A grouped view and a paste agree on which row is which",
   runner: "grouped-range-offset",
   timeoutMs: 180_000,
   bug: {
