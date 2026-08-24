@@ -24,5 +24,7 @@ export default defineBugCase({
     hostRowTitle: "host-row",
     foreignRowTitle: "Account 1042",
     foreignDetail: "the detail looked up",
+    settleTimeoutMs: 30_000,
+    pollIntervalMs: 1_000,
   },
 });

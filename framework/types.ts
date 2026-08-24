@@ -1541,4 +1541,6 @@ export interface RestoreInboundLinkCaseConfig {
   hostRowTitle: string;
   foreignRowTitle: string;
   foreignDetail: string;
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
 }

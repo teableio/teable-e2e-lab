@@ -166,7 +166,26 @@ export const runRestoreInboundLinkCase = async (
       async () => {
         await apiRestoreTrash(trashId);
 
-        const after = await readHost();
+        // Polled rather than read once: bringing the table back is several
+        // steps, and the columns on the other table are the last of them.
+        const deadline = Date.now() + config.settleTimeoutMs;
+        let after = await readHost();
+        for (;;) {
+          after = await readHost();
+          if (
+            after.linkType === FieldType.Link &&
+            after.lookupCell === config.foreignDetail
+          ) {
+            break;
+          }
+          if (Date.now() >= deadline) {
+            break;
+          }
+          await new Promise<void>((resolveSleep) => {
+            setTimeout(resolveSleep, config.pollIntervalMs);
+          });
+        }
+
         if (after.linkType !== FieldType.Link) {
           throw new Error(
             `after restoring the table, the column pointing at it is ${JSON.stringify(after.linkType)} ` +
