@@ -91,6 +91,7 @@ export interface BugCaseConfigByRunner {
   "user-field-notify-on-assign": UserFieldNotifyOnAssignCaseConfig;
   "me-filter-in-view": MeFilterInViewCaseConfig;
   "duplicate-select-choice": DuplicateSelectChoiceCaseConfig;
+  "datetime-diff-default-unit": DatetimeDiffDefaultUnitCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1612,4 +1613,16 @@ export interface DuplicateSelectChoiceCaseConfig {
   repeatedChoice: string;
   otherChoice: string;
   rowTitles: string[];
+}
+
+// The gap between two dates, written without naming a unit. The language
+// promises seconds; the answer came back in days - the same number divided by
+// 86,400, with nothing marking it as the wrong unit.
+export interface DatetimeDiffDefaultUnitCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  rowTitle: string;
+  started: string;
+  finished: string;
+  timeZone: string;
 }

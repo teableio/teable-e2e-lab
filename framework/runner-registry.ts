@@ -82,6 +82,7 @@ import { runDuplicateFieldRealtimeCase } from "./runners/duplicate-field-realtim
 import { runUserFieldNotifyOnAssignCase } from "./runners/user-field-notify-on-assign.runner";
 import { runMeFilterInViewCase } from "./runners/me-filter-in-view.runner";
 import { runDuplicateSelectChoiceCase } from "./runners/duplicate-select-choice.runner";
+import { runDatetimeDiffDefaultUnitCase } from "./runners/datetime-diff-default-unit.runner";
 import type {
   BugCase,
   BugCaseFor,
@@ -183,6 +184,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "user-field-notify-on-assign": runUserFieldNotifyOnAssignCase,
   "me-filter-in-view": runMeFilterInViewCase,
   "duplicate-select-choice": runDuplicateSelectChoiceCase,
+  "datetime-diff-default-unit": runDatetimeDiffDefaultUnitCase,
 };
 
 export const executeRegisteredRunner = (
