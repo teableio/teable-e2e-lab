@@ -88,6 +88,7 @@ export interface BugCaseConfigByRunner {
   "oversized-select-choice": OversizedSelectChoiceCaseConfig;
   "timezone-alias": TimezoneAliasCaseConfig;
   "duplicate-field-realtime": DuplicateFieldRealtimeCaseConfig;
+  "attachment-realtime": AttachmentRealtimeCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1579,4 +1580,18 @@ export interface DuplicateFieldRealtimeCaseConfig {
   copyName: string;
   subscribeTimeoutMs: number;
   settleTimeoutMs: number;
+}
+
+// A file attached while other people have the row open. The message pushed to
+// them carried the file without the temporary address it is read through, so
+// the attachment could not be opened until they reloaded.
+export interface AttachmentRealtimeCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  rowTitle: string;
+  fileName: string;
+  fileContents: string;
+  subscribeTimeoutMs: number;
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
 }
