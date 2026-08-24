@@ -1,15 +1,19 @@
 import { defineBugCase } from "../../framework/types";
 
-// T4661: some column changes are refused by the data already in the table -
-// turning on "no duplicates" over a column that has duplicates is the everyday
-// example, and being refused is correct. What was not correct is what followed:
-// the failed attempt left the table marked as not finished being set up, and
-// everything after it was refused too - reading it, adding a row, changing the
-// column back. One rejected settings change and the table was gone until
-// someone with database access lifted the mark.
+// T4661. Two things this case measures, in order.
+//
+// Turning on "must be filled in" for a column that already has an empty cell
+// has to be refused: accepting it leaves the table holding a row its own rule
+// forbids, and nothing will ever say so. On the fix's parent it was accepted.
+//
+// Then, what the fix itself is about: a change the table refuses used to leave
+// the table marked as not finished being set up, so reading it, adding a row
+// and changing the column again were all refused afterwards - one rejected
+// settings change and the table was gone until someone with database access
+// lifted the mark.
 export default defineBugCase({
   id: "table/usable-after-a-refused-column-change",
-  title: "A refused column change leaves the table usable",
+  title: "Requiring a value is refused while a cell is still empty",
   runner: "table-usable-after-failed-update",
   timeoutMs: 180_000,
   bug: {

@@ -65,30 +65,28 @@ export const runTableUsableAfterFailedUpdateCase = async (
       throw new Error(`Table ${tableId} is not in place`);
     }
 
-    // The change that cannot be applied, outside the checkpoint: it is refused
-    // on both sides of the fix, and being refused is correct.
-    //
-    // "Must be filled in" over a column with an empty cell, rather than "no
-    // duplicates" over a repeat: the second is turned away by validation
-    // before the change is attempted at all, so it never reaches the part that
-    // could leave the table marked unfinished (run 32692598187, green on both
-    // columns).
-    const refused = await axios.put(
-      urlBuilder(CONVERT_FIELD, { tableId, fieldId: codeFieldId }),
-      { name: CODE_FIELD, type: FieldType.SingleLineText, notNull: true },
-      { validateStatus: () => true },
-    );
-    if (refused.status >= 200 && refused.status < 300) {
-      throw new Error(
-        `requiring a value in a column that has an empty cell answered ${refused.status} - it was applied, ` +
-          "so there is no failure for the table to recover from and this case cannot see anything",
-      );
-    }
-
     const probe = await bugCheckpoint(
-      "a-refused-column-change-leaves-the-table-usable",
+      "requiring-a-value-is-refused-while-a-cell-is-empty",
       async () => {
-        // Everything the person would do next.
+        // Turning on "must be filled in" over a column that already has an
+        // empty cell. It has to be refused: accepting it leaves the table
+        // holding a row the rule forbids, so the rule is broken from the
+        // moment it is switched on and nothing will ever say so.
+        const refused = await axios.put(
+          urlBuilder(CONVERT_FIELD, { tableId, fieldId: codeFieldId }),
+          { name: CODE_FIELD, type: FieldType.SingleLineText, notNull: true },
+          { validateStatus: () => true },
+        );
+        if (refused.status >= 200 && refused.status < 300) {
+          throw new Error(
+            `requiring a value in a column that has an empty cell answered ${refused.status} - the rule is ` +
+              "on and the empty row is still there, so the table holds a row its own rule forbids",
+          );
+        }
+
+        // And everything the person would do next. A refused change used to
+        // leave the table marked as not finished being set up, so reading it,
+        // adding a row and changing the column again were all refused too.
         const read = await apiGetRecords(tableId, {
           fieldKeyType: FieldKeyType.Name,
           take: config.values.length,
