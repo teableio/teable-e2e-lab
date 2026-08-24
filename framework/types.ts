@@ -82,6 +82,7 @@ export interface BugCaseConfigByRunner {
   "form-required-computed": FormRequiredComputedCaseConfig;
   "lookup-config-realtime": LookupConfigRealtimeCaseConfig;
   "user-multiplicity-formula": UserMultiplicityFormulaCaseConfig;
+  "grouped-range-offset": GroupedRangeOffsetCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1499,4 +1500,18 @@ export interface UserMultiplicityFormulaCaseConfig {
   tableNamePrefix: string;
   settleTimeoutMs: number;
   pollIntervalMs: number;
+}
+
+// A grouped view, and an operation addressed by position. The operation worked
+// out which rows it meant without applying the grouping, so it counted from a
+// different order than the screen shows.
+export interface GroupedRangeOffsetCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Created in an order that interleaves the groups, so grouping genuinely
+  // rearranges them.
+  rows: { name: string; group: string }[];
+  groupOrder: "asc" | "desc";
+  pasteAtOffset: number;
+  pastedValue: string;
 }
