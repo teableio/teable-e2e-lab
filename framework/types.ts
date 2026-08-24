@@ -71,6 +71,7 @@ export interface BugCaseConfigByRunner {
   "rollup-metadata-rename": RollupMetadataRenameCaseConfig;
   "cleared-default": ClearedDefaultCaseConfig;
   "legacy-generated-audit-column": LegacyGeneratedAuditColumnCaseConfig;
+  "delete-error-state-table": DeleteErrorStateTableCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1353,4 +1354,12 @@ export interface LegacyGeneratedAuditColumnCaseConfig {
   baseId: "seed-base";
   tableNamePrefix: string;
   rowTitle: string;
+}
+
+// A table left marked as broken when its creation failed part way through.
+// Delete looked for a working table, did not find one, and refused - so the
+// half-made table could not be cleaned up.
+export interface DeleteErrorStateTableCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
 }

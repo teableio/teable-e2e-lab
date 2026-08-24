@@ -15,6 +15,7 @@ import linkPickerPrimaryFieldCase from "./cases/link/picker-keeps-the-name-colum
 import orphanLinkFieldDeleteCase from "./cases/link/delete-a-link-whose-table-is-gone.case";
 import linkOneoneDeleteKeepsTableReadableCase from "./cases/link/oneone-delete-keeps-table-readable.case";
 import tableTrashDegradesInboundLinkCase from "./cases/table/trash-degrades-inbound-link.case";
+import deleteErrorStateTableCase from "./cases/table/delete-a-table-whose-creation-failed.case";
 import linkRequiredLinkBlocksOwnerDeleteCase from "./cases/link/required-link-blocks-owner-delete.case";
 import recordLegacyUniqueViolationNamesFieldCase from "./cases/record/legacy-unique-violation-names-field.case";
 import userFieldPasteNonCollaboratorValueCase from "./cases/user-field/paste-non-collaborator-value.case";
@@ -100,6 +101,7 @@ const cases = [
   orphanLinkFieldDeleteCase,
   linkOneoneDeleteKeepsTableReadableCase,
   tableTrashDegradesInboundLinkCase,
+  deleteErrorStateTableCase,
   linkRequiredLinkBlocksOwnerDeleteCase,
   recordLegacyUniqueViolationNamesFieldCase,
   userFieldPasteNonCollaboratorValueCase,
