@@ -88,6 +88,8 @@ expression that failed.
 
 The shapes are gone; the runner is not kept.
 | `6421635ca` | T6106 | Written and run: a pasted link cell reaches a watching client carrying the linked record's name on the fix's parent, so both columns look the same. See the note below the table. |
+| `cfdbb6d37` | T3701 | Keeps the `is distinct from` guard on a formula backfill so unchanged rows are not rewritten. The values are identical either way - the commit's own test asserts on the generated SQL and on how many backfills start. Performance shape. |
+| `5d49826f0` | - | Needs thousands of rows pointing at one group through a many-many link, so the reverse projection exceeds the computed-cell limit; the commit's own fixture is 5,200 rows. Too large for this lab's per-case budget, and the same subject as the T6728 row above. |
 
 ### The name on a pasted link cell
 
