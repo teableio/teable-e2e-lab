@@ -88,6 +88,7 @@ export interface BugCaseConfigByRunner {
   "oversized-select-choice": OversizedSelectChoiceCaseConfig;
   "timezone-alias": TimezoneAliasCaseConfig;
   "duplicate-field-realtime": DuplicateFieldRealtimeCaseConfig;
+  "symmetric-link-write": SymmetricLinkWriteCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1579,4 +1580,13 @@ export interface DuplicateFieldRealtimeCaseConfig {
   copyName: string;
   subscribeTimeoutMs: number;
   settleTimeoutMs: number;
+}
+
+// A two-way link written from the far side. The near side did not follow, so
+// one relationship read differently depending on which table was open.
+export interface SymmetricLinkWriteCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  orderTitle: string;
+  itemTitle: string;
 }

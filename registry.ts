@@ -15,6 +15,7 @@ import formulaScalarValueOverLinkedTextCase from "./cases/formula/scalar-value-o
 import userMultiplicityFormulaCase from "./cases/formula/formula-follows-a-user-column-widening.case";
 import formulaErrorRepairCase from "./cases/formula/repairing-a-formula-clears-its-error.case";
 import linkRequiredLinkKeepsSiblingRefreshCase from "./cases/link/required-link-keeps-sibling-refresh.case";
+import symmetricLinkWriteCase from "./cases/link/writing-one-side-reaches-the-other.case";
 import incomingLinkCleanupCase from "./cases/link/deleting-a-row-clears-links-pointing-at-it.case";
 import linkPasteFormulaTitleCase from "./cases/link/paste-a-name-that-is-worked-out.case";
 import linkPickerPrimaryFieldCase from "./cases/link/picker-keeps-the-name-column.case";
@@ -117,6 +118,7 @@ const cases = [
   userMultiplicityFormulaCase,
   formulaErrorRepairCase,
   linkRequiredLinkKeepsSiblingRefreshCase,
+  symmetricLinkWriteCase,
   incomingLinkCleanupCase,
   linkPasteFormulaTitleCase,
   linkPickerPrimaryFieldCase,
