@@ -75,6 +75,7 @@ export interface BugCaseConfigByRunner {
   "link-paste-formula-title": LinkPasteFormulaTitleCaseConfig;
   "generated-formula-column": GeneratedFormulaColumnCaseConfig;
   "incoming-link-cleanup": IncomingLinkCleanupCaseConfig;
+  "formula-error-repair": FormulaErrorRepairCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1401,4 +1402,17 @@ export interface IncomingLinkCleanupCaseConfig {
   keptRowTitle: string;
   pointingRowTitle: string;
   otherRowTitle: string;
+}
+
+// A formula left marked broken when the column it read was deleted, then
+// repointed at another column. The repair was accepted without the mark being
+// cleared, so the column kept its warning and its old values.
+export interface FormulaErrorRepairCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  rowTitle: string;
+  // Different text in the two columns, or a formula still reading the deleted
+  // one and a formula reading the new one give the same answer.
+  sourceValue: string;
+  fallbackValue: string;
 }
