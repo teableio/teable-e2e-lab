@@ -24,8 +24,9 @@ export default defineBugCase({
       { ref: "imported-1", amount: 200 },
       { ref: "imported-2", amount: 300 },
     ],
-    // Whole numbers throughout, so the expected values are exact.
-    multiplier: 1.1,
+    // A whole number: the product stores what the arithmetic gives, and 1.1
+    // would make 100 into 110.00000000000001.
+    multiplier: 2,
     settleTimeoutMs: 60_000,
     pollIntervalMs: 1_000,
   },

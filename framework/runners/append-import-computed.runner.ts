@@ -60,8 +60,16 @@ export const runAppendImportComputedCase = async (
     );
   }
 
-  const derived = (amount: number) =>
-    Math.round(amount * config.multiplier * 100) / 100;
+  // Whole numbers only: the product stores what the arithmetic gives, and a
+  // fractional multiplier makes that 110.00000000000001 rather than 110 - run
+  // 32687675515 failed its own fixture check on exactly that.
+  if (!Number.isInteger(config.multiplier)) {
+    throw new Error(
+      "the multiplier has to be a whole number, or the expected value and the stored one differ in the " +
+        "last decimal place for reasons that have nothing to do with the import",
+    );
+  }
+  const derived = (amount: number) => amount * config.multiplier;
 
   try {
     const table = await createTable(baseId, {
