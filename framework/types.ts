@@ -88,6 +88,7 @@ export interface BugCaseConfigByRunner {
   "oversized-select-choice": OversizedSelectChoiceCaseConfig;
   "timezone-alias": TimezoneAliasCaseConfig;
   "duplicate-field-realtime": DuplicateFieldRealtimeCaseConfig;
+  "user-field-notify-on-assign": UserFieldNotifyOnAssignCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1579,4 +1580,14 @@ export interface DuplicateFieldRealtimeCaseConfig {
   copyName: string;
   subscribeTimeoutMs: number;
   settleTimeoutMs: number;
+}
+
+// Assigning someone in a member column has to tell them. Nothing was sent, so
+// the row said the work was theirs and they had no way to know.
+export interface UserFieldNotifyOnAssignCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  rowTitle: string;
+  notifyTimeoutMs: number;
+  pollIntervalMs: number;
 }

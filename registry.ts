@@ -27,6 +27,7 @@ import deleteErrorStateTableCase from "./cases/table/delete-a-table-whose-creati
 import linkRequiredLinkBlocksOwnerDeleteCase from "./cases/link/required-link-blocks-owner-delete.case";
 import recordLegacyUniqueViolationNamesFieldCase from "./cases/record/legacy-unique-violation-names-field.case";
 import userFieldPasteNonCollaboratorValueCase from "./cases/user-field/paste-non-collaborator-value.case";
+import userFieldNotifyOnAssignCase from "./cases/user-field/assigning-someone-tells-them.case";
 import userWriteScopeCase from "./cases/user-field/write-stays-inside-the-base.case";
 import userFieldGroupFoldsDriftedSnapshotsCase from "./cases/user-field/group-folds-drifted-snapshots.case";
 import userFieldGroupKeepsLegacyIdOutOfEmptyCase from "./cases/user-field/group-keeps-legacy-id-out-of-empty.case";
@@ -129,6 +130,7 @@ const cases = [
   linkRequiredLinkBlocksOwnerDeleteCase,
   recordLegacyUniqueViolationNamesFieldCase,
   userFieldPasteNonCollaboratorValueCase,
+  userFieldNotifyOnAssignCase,
   userWriteScopeCase,
   lookupStaleTextMetadataRecastsOnRebuildCase,
   lookupStaleTextMetadataSurvivesDisplayConvertCase,
