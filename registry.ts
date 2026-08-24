@@ -1,6 +1,7 @@
 import smokeAuthUserCase from "./cases/smoke/auth-user.case";
 import recordBulkUpdate100MixedLandsCase from "./cases/record/bulk-update-100-mixed-lands.case";
 import lookupOfRollupCreateCase from "./cases/record/a-row-when-a-looked-up-total-lost-its-rule.case";
+import aiConfigOnlyChangePlanCase from "./cases/field/change-only-the-instruction-behind-a-column.case";
 import sparseBatchUpdateCase from "./cases/record/a-batch-write-leaves-what-it-did-not-mention.case";
 import generatedFormulaColumnCase from "./cases/record/edit-a-cell-behind-a-generated-formula.case";
 import legacyGeneratedAuditColumnCase from "./cases/record/add-a-row-to-a-legacy-table.case";
@@ -111,6 +112,7 @@ const cases = [
   smokeAuthUserCase,
   recordBulkUpdate100MixedLandsCase,
   lookupOfRollupCreateCase,
+  aiConfigOnlyChangePlanCase,
   sparseBatchUpdateCase,
   generatedFormulaColumnCase,
   legacyGeneratedAuditColumnCase,
