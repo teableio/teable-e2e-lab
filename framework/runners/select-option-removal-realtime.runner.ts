@@ -135,6 +135,13 @@ export const runSelectOptionRemovalRealtimeCase = async (
           },
         });
 
+        // Both conditions together, polled to the deadline: the row that
+        // held the retired choice empties, and the row holding the surviving
+        // one still shows it. Polling for both rather than checking the
+        // second once means a client that is briefly cleared and then told
+        // the value again is not reported as a loss - measured in run
+        // 32686564098, where the second row read empty at the instant the
+        // first one cleared.
         const deadline = Date.now() + config.settleTimeoutMs;
         for (;;) {
           const failures = [
@@ -146,14 +153,20 @@ export const runSelectOptionRemovalRealtimeCase = async (
               `a watching client errored while the change arrived: ${JSON.stringify(failures)}`,
             );
           }
-          if (seen(retiredSubscription!) === null) {
+          const retiredNow = seen(retiredSubscription!);
+          const keptNow = seen(keptSubscription!);
+          if (retiredNow === null && keptNow === config.keptChoice) {
             break;
           }
           if (Date.now() >= deadline) {
             throw new Error(
-              `after ${config.settleTimeoutMs}ms the watching client still shows ` +
-                `${JSON.stringify(seen(retiredSubscription!))} on ${config.retiredRowTitle} - a status the ` +
-                "column no longer offers, which cannot be filtered for or chosen again",
+              `after ${config.settleTimeoutMs}ms the watching clients show ` +
+                `${JSON.stringify({ [config.retiredRowTitle]: retiredNow, [config.keptRowTitle]: keptNow })}, ` +
+                `expected ${JSON.stringify({ [config.retiredRowTitle]: null, [config.keptRowTitle]: config.keptChoice })}` +
+                (retiredNow !== null
+                  ? ` - ${config.retiredRowTitle} still shows a status the column no longer offers, which ` +
+                    "cannot be filtered for or chosen again"
+                  : ` - ${config.keptRowTitle} lost the choice that was kept`),
             );
           }
           await new Promise<void>((resolveSleep) => {
@@ -161,14 +174,6 @@ export const runSelectOptionRemovalRealtimeCase = async (
           });
         }
 
-        // The other half: the row holding the surviving choice must not be
-        // cleared with it.
-        if (seen(keptSubscription!) !== config.keptChoice) {
-          throw new Error(
-            `removing ${config.retiredChoice} also cleared ${config.keptRowTitle}, which held ` +
-              `${config.keptChoice}`,
-          );
-        }
         return { keptStillShows: seen(keptSubscription!) };
       },
     );
