@@ -9,7 +9,7 @@ import { defineBugCase } from "../../framework/types";
 // change is untouched.
 export default defineBugCase({
   id: "selection/paste-lands-on-the-row-you-see",
-  title: "A paste lands on the row shown at that position",
+  title: "A sorted view keeps the order rows were dragged into",
   runner: "tied-sort-offset",
   timeoutMs: 180_000,
   bug: {

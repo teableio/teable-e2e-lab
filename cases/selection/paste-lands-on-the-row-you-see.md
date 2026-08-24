@@ -7,7 +7,10 @@
 A view sorted by status or by owner, where most rows share the same value, with
 a couple of rows dragged to the top by hand. That is an ordinary personal view.
 
-Pasting into a row puts the value on a different row. The row that was selected
+Sorting throws the drag away: the view comes back in creation order and every
+row someone pulled to the top is back where it started.
+
+Downstream of that, pasting into a row puts the value on a different row. The row that was selected
 is untouched. Nothing about it looks like an error — a value appears in the
 column, just not where it was put — so the wrong row is found later, by someone
 who has no reason to connect it to a paste.
