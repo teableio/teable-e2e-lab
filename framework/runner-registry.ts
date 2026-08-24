@@ -79,7 +79,6 @@ import { runRestoreInboundLinkCase } from "./runners/restore-inbound-link.runner
 import { runOversizedSelectChoiceCase } from "./runners/oversized-select-choice.runner";
 import { runTimezoneAliasCase } from "./runners/timezone-alias.runner";
 import { runDuplicateFieldRealtimeCase } from "./runners/duplicate-field-realtime.runner";
-import { runSymmetricLinkWriteCase } from "./runners/symmetric-link-write.runner";
 import type {
   BugCase,
   BugCaseFor,
@@ -178,7 +177,6 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "oversized-select-choice": runOversizedSelectChoiceCase,
   "timezone-alias": runTimezoneAliasCase,
   "duplicate-field-realtime": runDuplicateFieldRealtimeCase,
-  "symmetric-link-write": runSymmetricLinkWriteCase,
 };
 
 export const executeRegisteredRunner = (
