@@ -19,6 +19,7 @@ import { runRequiredLinkBlocksDeleteCase } from "./runners/required-link-blocks-
 import { runRequiredLinkRefreshCase } from "./runners/required-link-refresh.runner";
 import { runStaleLookupRecastCase } from "./runners/stale-lookup-recast.runner";
 import { runSearchViewFilterCase } from "./runners/search-view-filter.runner";
+import { runMixedFieldSearchViewFilterCase } from "./runners/mixed-field-search-view-filter.runner";
 import { runDeleteCollateralCase } from "./runners/delete-collateral.runner";
 import { runPasteOverPendingFieldCase } from "./runners/paste-over-pending-field.runner";
 import { runDuplicateSharedViewCase } from "./runners/duplicate-shared-view.runner";
@@ -125,6 +126,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "excel-import-offset-header": runExcelImportOffsetHeaderCase,
   "paste-by-id-alignment": runPasteByIdAlignmentCase,
   "search-view-filter": runSearchViewFilterCase,
+  "mixed-field-search-view-filter": runMixedFieldSearchViewFilterCase,
   "delete-collateral": runDeleteCollateralCase,
   "user-field-notify-bulk-action": runUserFieldNotifyBulkActionCase,
   "user-field-notify-replay": runUserFieldNotifyReplayCase,
