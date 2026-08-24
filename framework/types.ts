@@ -32,6 +32,7 @@ export interface BugCaseConfigByRunner {
   "excel-import-offset-header": ExcelImportOffsetHeaderCaseConfig;
   "paste-by-id-alignment": PasteByIdAlignmentCaseConfig;
   "search-view-filter": SearchViewFilterCaseConfig;
+  "mixed-field-search-view-filter": MixedFieldSearchViewFilterCaseConfig;
   "user-field-notify-bulk-action": UserFieldNotifyBulkActionCaseConfig;
   "user-field-notify-replay": UserFieldNotifyReplayCaseConfig;
   "user-field-notify-burst": UserFieldNotifyBurstCaseConfig;
@@ -704,6 +705,22 @@ export interface SearchViewFilterCaseConfig {
   // The rows, one per name. The runner refuses a set that does not populate
   // all three quadrants it needs; see rowProblems() for which and why.
   rows: { name: string; inView: boolean; matches: boolean }[];
+}
+
+// Save two AND view filters -> search a text and date field together ->
+// checkpoint: the returned rows and row count remain inside both filters.
+export interface MixedFieldSearchViewFilterCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  timeZone: string;
+  searchTerm: string;
+  targetDate: string;
+  otherDate: string;
+  keptCategory: string;
+  droppedCategory: string;
+  expectedRowTitle: string;
+  sameDateOutsideViewTitle: string;
+  otherDateRowTitle: string;
 }
 
 // A second person assigned in a user field -> move that assignment in bulk ->
