@@ -95,6 +95,8 @@ export interface BugCaseConfigByRunner {
   "is-within-today-filter": IsWithinTodayFilterCaseConfig;
   "sparse-batch-update": SparseBatchUpdateCaseConfig;
   "lookup-of-rollup-create": LookupOfRollupCreateCaseConfig;
+  "ai-config-only-change-plan": AiConfigOnlyChangePlanCaseConfig;
+  "single-field-pending-state": SingleFieldPendingStateCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1664,6 +1666,28 @@ export interface SparseBatchUpdateCaseConfig {
 // settings lost the rule for that total. Adding a row, listing rows and
 // opening the view were all refused, with a message about a rule the user
 // never wrote.
+export interface SingleFieldPendingStateCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  rowTitle: string;
+  memberName: string;
+  memberHandle: string;
+  // How long to let the worked-out columns settle before looking. Until they
+  // have, "still busy" is the correct answer - see the runner.
+  settleAttempts: number;
+  settleIntervalMs: number;
+}
+
+export interface AiConfigOnlyChangePlanCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // The instruction behind the column, and the model it names. The new model
+  // has to differ from the old one - see the runner.
+  modelKey: string;
+  newModelKey: string;
+  prompt: string;
+}
+
 export interface LookupOfRollupCreateCaseConfig {
   baseId: "seed-base";
   tableNamePrefix: string;
