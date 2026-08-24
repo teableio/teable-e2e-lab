@@ -1,5 +1,7 @@
 import { defineBugCase } from "../../framework/types";
 
+// Y155 / T6856.
+
 // A collapsed date group is hidden by excluding its rows from the row query,
 // and that exclusion is derived from the group key. The derivation re-reads the
 // key - an absolute instant - as if it were wall-clock time, so it drifts by
@@ -13,7 +15,7 @@ import { defineBugCase } from "../../framework/types";
 // ships, so Asia/Shanghai here is not an exotic choice - it is the ordinary
 // configuration of every deployment east of UTC.
 export default defineBugCase({
-  id: "record/collapsed-date-group-stays-hidden",
+  id: "record/y155-collapsed-date-group-stays-hidden",
   title: "Collapsing a date group hides exactly that group's rows",
   runner: "group-collapse",
   timeoutMs: 120_000,

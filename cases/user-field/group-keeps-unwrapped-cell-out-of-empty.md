@@ -1,7 +1,7 @@
 # user-field/group-keeps-unwrapped-cell-out-of-empty
 
 **T6626** — fixed. On the `user-group-identity` runner; the shared design is
-described in `user-field/group-folds-drifted-snapshots`.
+described in `user-field/y196-group-folds-drifted-snapshots`.
 
 ## This variant
 

@@ -1,13 +1,13 @@
 import { defineBugCase } from "../../framework/types";
 
-// T6626: grouping by a user field grouped by the stored cell, and a user cell
+// Y196 / T6626: grouping by a user field grouped by the stored cell, and a user cell
 // is a write-time snapshot of the collaborator. One person who has changed
 // their email or gained an avatar therefore arrives as several different
 // values, and the grid drew one group header per snapshot generation - the
 // same collaborator repeated down the group list, their rows split between
 // the copies.
 export default defineBugCase({
-  id: "user-field/group-folds-drifted-snapshots",
+  id: "user-field/y196-group-folds-drifted-snapshots",
   title:
     "Grouping by a user field folds one collaborator's snapshots into one group",
   runner: "user-group-identity",

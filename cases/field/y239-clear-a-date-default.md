@@ -1,10 +1,10 @@
-# field/clear-a-number-default
+# field/y239-clear-a-date-default
 
 **T6107** — fixed.
 
 ## What the user sees
 
-A number column fills new rows in with a value — a quantity that starts every new row at 1. Taking that default away is
+A date column fills new rows in with a value — a date that fills every new row in. Taking that default away is
 refused: the dialog will not save. The only way out is to delete the column and
 build it again, which takes its data and everything pointing at it along.
 
@@ -26,7 +26,7 @@ nothing.
 
 ## Its siblings
 
-`field/clearing-a-checkbox-default-saves` is the same edit on a checkbox, from
+`field/y225-clearing-a-checkbox-default-saves` is the same edit on a checkbox, from
 a different fix. The other two columns from this one are
-`field/clear-a-number-default`, `field/clear-a-date-default` and
-`field/clear-a-select-default`.
+`field/y238-clear-a-number-default`, `field/y239-clear-a-date-default` and
+`field/y240-clear-a-select-default`.

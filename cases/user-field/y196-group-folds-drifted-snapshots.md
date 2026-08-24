@@ -1,4 +1,4 @@
-# user-field/group-folds-drifted-snapshots
+# user-field/y196-group-folds-drifted-snapshots
 
 **T6626** — fixed. The lead case of three on the `user-group-identity` runner;
 the other two are `user-field/group-keeps-legacy-id-out-of-empty` and

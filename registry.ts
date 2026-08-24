@@ -2,7 +2,7 @@ import smokeAuthUserCase from "./cases/smoke/auth-user.case";
 import recordBulkUpdate100MixedLandsCase from "./cases/record/bulk-update-100-mixed-lands.case";
 import generatedFormulaColumnCase from "./cases/record/edit-a-cell-behind-a-generated-formula.case";
 import legacyGeneratedAuditColumnCase from "./cases/record/add-a-row-to-a-legacy-table.case";
-import recordCollapsedDateGroupStaysHiddenCase from "./cases/record/collapsed-date-group-stays-hidden.case";
+import recordY155CollapsedDateGroupStaysHiddenCase from "./cases/record/y155-collapsed-date-group-stays-hidden.case";
 import baseShareSaveIntoExistingBaseTwiceCase from "./cases/base-share/save-into-existing-base-twice.case";
 import baseImportFieldDescriptionCase from "./cases/base-share/import-keeps-field-descriptions.case";
 import baseImportNoTablesCase from "./cases/base-share/import-of-a-base-without-tables.case";
@@ -14,7 +14,7 @@ import rollupMetadataRenameCase from "./cases/lookup/rename-a-rollup-keeps-its-t
 import formulaScalarValueOverLinkedTextCase from "./cases/formula/scalar-value-over-linked-text.case";
 import userMultiplicityFormulaCase from "./cases/formula/formula-follows-a-user-column-widening.case";
 import formulaErrorRepairCase from "./cases/formula/repairing-a-formula-clears-its-error.case";
-import linkRequiredLinkKeepsSiblingRefreshCase from "./cases/link/required-link-keeps-sibling-refresh.case";
+import linkY161RequiredLinkKeepsSiblingRefreshCase from "./cases/link/y161-required-link-keeps-sibling-refresh.case";
 import incomingLinkCleanupCase from "./cases/link/deleting-a-row-clears-links-pointing-at-it.case";
 import linkPasteFormulaTitleCase from "./cases/link/paste-a-name-that-is-worked-out.case";
 import linkPickerPrimaryFieldCase from "./cases/link/picker-keeps-the-name-column.case";
@@ -29,7 +29,7 @@ import recordLegacyUniqueViolationNamesFieldCase from "./cases/record/legacy-uni
 import userFieldPasteNonCollaboratorValueCase from "./cases/user-field/paste-non-collaborator-value.case";
 import userFieldNotifyOnAssignCase from "./cases/user-field/assigning-someone-tells-them.case";
 import userWriteScopeCase from "./cases/user-field/write-stays-inside-the-base.case";
-import userFieldGroupFoldsDriftedSnapshotsCase from "./cases/user-field/group-folds-drifted-snapshots.case";
+import userFieldY196GroupFoldsDriftedSnapshotsCase from "./cases/user-field/y196-group-folds-drifted-snapshots.case";
 import userFieldGroupKeepsLegacyIdOutOfEmptyCase from "./cases/user-field/group-keeps-legacy-id-out-of-empty.case";
 import userFieldGroupKeepsUnwrappedCellOutOfEmptyCase from "./cases/user-field/group-keeps-unwrapped-cell-out-of-empty.case";
 import lookupStaleTextMetadataRecastsOnRebuildCase from "./cases/lookup/stale-text-metadata-recasts-on-rebuild.case";
@@ -38,7 +38,7 @@ import lookupNullMultiplicityScalarRefreshesCase from "./cases/lookup/null-multi
 import lookupNullMultiplicityScalarConvertsCase from "./cases/lookup/null-multiplicity-scalar-converts.case";
 import importExcelDuplicateHeadersCase from "./cases/import/excel-duplicate-headers.case";
 import appendImportComputedCase from "./cases/import/appended-rows-get-their-computed-values.case";
-import auditFieldsLastModifiedByResolvesNameCase from "./cases/audit-fields/last-modified-by-resolves-name.case";
+import auditFieldsY182LastModifiedByResolvesNameCase from "./cases/audit-fields/y182-last-modified-by-resolves-name.case";
 import realtimeViewFilterUpdateReachesSubscribersCase from "./cases/realtime/view-filter-update-reaches-subscribers.case";
 import duplicateFieldRealtimeCase from "./cases/realtime/a-duplicated-column-reaches-the-open-page.case";
 import lookupConfigRealtimeCase from "./cases/realtime/lookup-config-change-reaches-the-page.case";
@@ -54,19 +54,19 @@ import searchStaysInsideViewFilterCase from "./cases/search/stays-inside-view-fi
 import fieldUniqueToggleCase from "./cases/field/turning-off-no-duplicates-lets-a-duplicate-in.case";
 import timezoneAliasCase from "./cases/field/a-date-column-in-an-aliased-timezone.case";
 import oversizedSelectChoiceCase from "./cases/field/a-value-too-long-to-be-a-choice.case";
-import clearNumberDefaultCase from "./cases/field/clear-a-number-default.case";
-import clearDateDefaultCase from "./cases/field/clear-a-date-default.case";
-import clearSelectDefaultCase from "./cases/field/clear-a-select-default.case";
+import fieldY238ClearNumberDefaultCase from "./cases/field/y238-clear-a-number-default.case";
+import fieldY239ClearDateDefaultCase from "./cases/field/y239-clear-a-date-default.case";
+import fieldY240ClearSelectDefaultCase from "./cases/field/y240-clear-a-select-default.case";
 import buttonDisplayChangeCase from "./cases/field/button-rename-keeps-click-counts.case";
 import textToDateConversionCase from "./cases/field/convert-text-with-impossible-dates.case";
 import importHeaderlessSheetCase from "./cases/import/headerless-sheet-imports-every-line.case";
 import linkRenameKeepsConfigCase from "./cases/link/renaming-a-link-keeps-what-it-points-at.case";
 import aggregationMixedCaseCase from "./cases/aggregation/capitalised-column-can-be-totalled.case";
-import fieldCheckboxClearedDefaultCase from "./cases/field/clearing-a-checkbox-default-saves.case";
+import fieldY225CheckboxClearedDefaultCase from "./cases/field/y225-clearing-a-checkbox-default-saves.case";
 import filterPlainDateStringCase from "./cases/filter/plain-date-string-filters-a-date-column.case";
 import formulaOverDateLookupCase from "./cases/formula/formula-over-a-looked-up-date-follows-a-change.case";
 import fieldRequiredDefaultBackfillCase from "./cases/field/required-default-backfills-existing-rows.case";
-import lookupRollupFilterCase from "./cases/lookup/rollup-condition-is-saved-and-applied.case";
+import lookupY219RollupFilterCase from "./cases/lookup/y219-rollup-condition-is-saved-and-applied.case";
 import lookupRetargetCase from "./cases/lookup/repointed-lookup-shows-its-new-target.case";
 import tableRestoreScopeCase from "./cases/table/restore-brings-back-only-its-own-delete.case";
 import fieldLegacyIdTableCase from "./cases/field/legacy-field-id-table-still-works.case";
@@ -77,7 +77,7 @@ import fieldRatingConversionCase from "./cases/field/rating-conversion-normalize
 import linkTwoToOneTableCase from "./cases/link/two-links-to-one-table-get-two-columns.case";
 import lookupConditionalForeignRefCase from "./cases/lookup/conditional-filter-over-a-foreign-table.case";
 import recordInvalidDateCase from "./cases/record/invalid-date-is-not-invented.case";
-import recordRatingDomainCase from "./cases/record/rating-is-stored-in-whole-stars.case";
+import recordY209RatingDomainCase from "./cases/record/y209-rating-is-stored-in-whole-stars.case";
 import linkSingleArrayCase from "./cases/link/single-link-accepts-a-one-entry-array.case";
 import linkMultiObjectCase from "./cases/link/multi-link-accepts-a-bare-object.case";
 import linkNullTitleCase from "./cases/link/link-to-a-row-without-a-name-rewrites.case";
@@ -105,7 +105,7 @@ const cases = [
   recordBulkUpdate100MixedLandsCase,
   generatedFormulaColumnCase,
   legacyGeneratedAuditColumnCase,
-  recordCollapsedDateGroupStaysHiddenCase,
+  recordY155CollapsedDateGroupStaysHiddenCase,
   baseShareSaveIntoExistingBaseTwiceCase,
   baseImportFieldDescriptionCase,
   baseImportNoTablesCase,
@@ -117,7 +117,7 @@ const cases = [
   formulaScalarValueOverLinkedTextCase,
   userMultiplicityFormulaCase,
   formulaErrorRepairCase,
-  linkRequiredLinkKeepsSiblingRefreshCase,
+  linkY161RequiredLinkKeepsSiblingRefreshCase,
   incomingLinkCleanupCase,
   linkPasteFormulaTitleCase,
   linkPickerPrimaryFieldCase,
@@ -138,7 +138,7 @@ const cases = [
   lookupNullMultiplicityScalarConvertsCase,
   importExcelDuplicateHeadersCase,
   appendImportComputedCase,
-  auditFieldsLastModifiedByResolvesNameCase,
+  auditFieldsY182LastModifiedByResolvesNameCase,
   realtimeViewFilterUpdateReachesSubscribersCase,
   duplicateFieldRealtimeCase,
   lookupConfigRealtimeCase,
@@ -154,19 +154,19 @@ const cases = [
   fieldUniqueToggleCase,
   timezoneAliasCase,
   oversizedSelectChoiceCase,
-  clearNumberDefaultCase,
-  clearDateDefaultCase,
-  clearSelectDefaultCase,
+  fieldY238ClearNumberDefaultCase,
+  fieldY239ClearDateDefaultCase,
+  fieldY240ClearSelectDefaultCase,
   buttonDisplayChangeCase,
   textToDateConversionCase,
   importHeaderlessSheetCase,
   linkRenameKeepsConfigCase,
   aggregationMixedCaseCase,
-  fieldCheckboxClearedDefaultCase,
+  fieldY225CheckboxClearedDefaultCase,
   filterPlainDateStringCase,
   formulaOverDateLookupCase,
   fieldRequiredDefaultBackfillCase,
-  lookupRollupFilterCase,
+  lookupY219RollupFilterCase,
   lookupRetargetCase,
   tableRestoreScopeCase,
   fieldLegacyIdTableCase,
@@ -177,7 +177,7 @@ const cases = [
   linkTwoToOneTableCase,
   lookupConditionalForeignRefCase,
   recordInvalidDateCase,
-  recordRatingDomainCase,
+  recordY209RatingDomainCase,
   linkSingleArrayCase,
   linkMultiObjectCase,
   linkNullTitleCase,
@@ -187,7 +187,7 @@ const cases = [
   fieldDeleteSparesSharedColumnCase,
   recordRepeatedDeleteIsIdempotentCase,
   tableDuplicateWithSharedViewCase,
-  userFieldGroupFoldsDriftedSnapshotsCase,
+  userFieldY196GroupFoldsDriftedSnapshotsCase,
   userFieldGroupKeepsLegacyIdOutOfEmptyCase,
   userFieldGroupKeepsUnwrappedCellOutOfEmptyCase,
   selectionPasteAcrossPendingFieldCase,

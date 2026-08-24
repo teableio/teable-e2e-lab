@@ -50,7 +50,7 @@ field it renamed would have been green on the broken build.
 What matters is what the column _is_ now. A reply that echoed the request would
 say nothing about that, and this repository has already had one case where the
 broken build answered 200 and changed nothing —
-`field/clearing-a-checkbox-default-saves`.
+`field/y225-clearing-a-checkbox-default-saves`.
 
 The status is still kept, because a build that refuses the rename and one that
 accepts it and loses the configuration are different failures.
