@@ -68,6 +68,7 @@ export interface BugCaseConfigByRunner {
   "text-to-date-conversion": TextToDateConversionCaseConfig;
   "button-display-change": ButtonDisplayChangeCaseConfig;
   "link-picker-primary-field": LinkPickerPrimaryFieldCaseConfig;
+  "rollup-metadata-rename": RollupMetadataRenameCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1312,4 +1313,16 @@ export interface LinkPickerPrimaryFieldCaseConfig {
   // everything either.
   hiddenFieldName: string;
   rows: { name: string; shown: string; hidden: string }[];
+}
+
+// A rollup column on a table whose storage predates the current layout,
+// renamed. The rename recomputed the whole column, and the recompute cannot be
+// written into that older storage, so the rename was refused.
+export interface RollupMetadataRenameCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  hostRowTitle: string;
+  amounts: number[];
+  renamedTo: string;
+  newDescription: string;
 }

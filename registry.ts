@@ -7,6 +7,7 @@ import baseImportNoTablesCase from "./cases/base-share/import-of-a-base-without-
 import viewIncompleteFilterConditionSurvivesCase from "./cases/view/incomplete-filter-condition-survives.case";
 import filterScalarLookupNoneOfLoadsCase from "./cases/filter/scalar-lookup-none-of-loads.case";
 import lookupUserSnapshotDateSortSpansGroupCase from "./cases/lookup/user-snapshot-date-sort-spans-group.case";
+import rollupMetadataRenameCase from "./cases/lookup/rename-a-rollup-keeps-its-total.case";
 import formulaScalarValueOverLinkedTextCase from "./cases/formula/scalar-value-over-linked-text.case";
 import linkRequiredLinkKeepsSiblingRefreshCase from "./cases/link/required-link-keeps-sibling-refresh.case";
 import linkPickerPrimaryFieldCase from "./cases/link/picker-keeps-the-name-column.case";
@@ -87,6 +88,7 @@ const cases = [
   viewIncompleteFilterConditionSurvivesCase,
   filterScalarLookupNoneOfLoadsCase,
   lookupUserSnapshotDateSortSpansGroupCase,
+  rollupMetadataRenameCase,
   formulaScalarValueOverLinkedTextCase,
   linkRequiredLinkKeepsSiblingRefreshCase,
   linkPickerPrimaryFieldCase,
