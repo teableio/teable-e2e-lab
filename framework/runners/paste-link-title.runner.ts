@@ -96,15 +96,24 @@ export const runPasteLinkTitleCase = async (
       { timeoutMs: config.subscribeTimeoutMs },
     );
 
-    const seenLink = () =>
-      (subscription?.data()?.fields ?? {})[linkField.id] as
-        | { id?: string; title?: unknown }
-        | undefined;
+    // A link cell reads back as one object or as a list of them depending on
+    // how the write came in, so both shapes are flattened before looking for
+    // the name (run 32678584833, where the pasted cell arrived as a list).
+    const seenLink = () => {
+      const raw = (subscription?.data()?.fields ?? {})[linkField.id];
+      if (raw === undefined || raw === null) return undefined;
+      const entries = (Array.isArray(raw) ? raw : [raw]) as {
+        id?: string;
+        title?: unknown;
+      }[];
+      return entries[0];
+    };
+    const seenRaw = () => (subscription?.data()?.fields ?? {})[linkField.id];
 
     // Fixture verification, outside the checkpoint: the watching client holds
     // the row with the cell still empty. Starting from a filled cell would
     // make the assertion unfalsifiable.
-    await subscription.waitFor(() => seenLink() === undefined, {
+    await subscription.waitFor(() => seenRaw() === undefined, {
       timeoutMs: config.subscribeTimeoutMs,
       describe: "the row with its link cell still empty",
     });
@@ -158,7 +167,7 @@ export const runPasteLinkTitleCase = async (
         }
 
         throw new Error(
-          `after ${config.settleTimeoutMs}ms the watching client holds ${JSON.stringify(seen ?? null)} in ` +
+          `after ${config.settleTimeoutMs}ms the watching client holds ${JSON.stringify(seenRaw() ?? null)} in ` +
             `${LINK_FIELD}, expected the name ${JSON.stringify(config.foreignRowTitle)}` +
             (seen?.id === foreignRecordId
               ? " - the right record, with nothing to call it by, so the column reads Untitled to everyone " +
