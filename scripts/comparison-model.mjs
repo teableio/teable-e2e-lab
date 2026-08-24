@@ -162,7 +162,31 @@ const describeTransition = (transition) =>
     ? `fixed between ${transition.fromShort}..${transition.toShort}`
     : `regressed between ${transition.fromShort}..${transition.toShort}`;
 
+// A full run against a single commit - the develop-only sweep - is read as
+// "did anything break", not case by case. Its table is one column of ticks,
+// which is a page of scrolling to reach the part that matters, so the counts
+// go on top and the table folds away. Multi-commit runs keep the table open:
+// there the columns beside each other are the whole point.
+export const countOutcomes = (comparison) => {
+  let passed = 0;
+  let failed = 0;
+  for (const row of comparison.rows) {
+    // One column, and by construction it is the gating one, so a reproduced
+    // bug counts as a failure here.
+    const cell = row.cells[0];
+    const isFailure =
+      cell.missing || cell.verdict === "error" || cell.verdict === "regression";
+    if (isFailure) {
+      failed += 1;
+    } else {
+      passed += 1;
+    }
+  }
+  return { total: comparison.rows.length, passed, failed };
+};
+
 export const renderComparisonMarkdown = (comparison) => {
+  const singleColumn = comparison.commits.length === 1;
   const header = [
     "## Bug × commit",
     "",
@@ -188,7 +212,26 @@ export const renderComparisonMarkdown = (comparison) => {
       "while ❌ on an older column is simply the world before the fix. 💥 fails on every column.",
   ];
 
-  const sections = [...header, ...body, ...legend];
+  const sections = singleColumn
+    ? (() => {
+        const { total, passed, failed } = countOutcomes(comparison);
+        const [{ short }] = comparison.commits;
+        return [
+          "## Bug × commit",
+          "",
+          `**${total} case${total === 1 ? "" : "s"}** ran on \`${short}\` — **${passed} passed**, **${failed} failed**.`,
+          "",
+          "<details>",
+          `<summary>Per-case results (${total})</summary>`,
+          "",
+          ...header.slice(2),
+          ...body,
+          ...legend,
+          "",
+          "</details>",
+        ];
+      })()
+    : [...header, ...body, ...legend];
 
   if (comparison.failures.regressions.length > 0) {
     sections.push("", "### ❌ Regressions");
