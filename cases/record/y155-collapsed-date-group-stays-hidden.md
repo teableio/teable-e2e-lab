@@ -1,4 +1,4 @@
-# record/collapsed-date-group-stays-hidden
+# record/y155-collapsed-date-group-stays-hidden
 
 ## Where the bug came from
 

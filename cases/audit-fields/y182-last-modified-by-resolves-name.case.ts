@@ -1,6 +1,6 @@
 import { defineBugCase } from "../../framework/types";
 
-// T6641: v2's record-read hydration enriched public user cells but
+// Y182 / T6641: v2's record-read hydration enriched public user cells but
 // deliberately skipped `lastModifiedBy`. Cells carrying their own snapshot
 // were unaffected, so the gap only showed on the ones that do not: a legacy
 // cell holding the bare user id, and a NULL cell whose editor is known only
@@ -8,7 +8,7 @@ import { defineBugCase } from "../../framework/types";
 // title, and the record card showed `usreOCcpI0QR2B2XLLr` where a name
 // belongs.
 export default defineBugCase({
-  id: "audit-fields/last-modified-by-resolves-name",
+  id: "audit-fields/y182-last-modified-by-resolves-name",
   title: "LastModifiedBy shows the editor's name, not their raw user id",
   runner: "audit-user-name-resolves",
   timeoutMs: 180_000,

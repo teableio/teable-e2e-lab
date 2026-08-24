@@ -1,11 +1,11 @@
 import { defineBugCase } from "../../framework/types";
 
-// T6515: a rating field is whole stars by definition, and typecast stored a
+// Y209 / T6515: a rating field is whole stars by definition, and typecast stored a
 // fractional value as written. 2.7 sat in a column whose domain says 1 to 5
 // integers, so filters and comparisons that trust that domain disagreed with
 // what the grid drew.
 export default defineBugCase({
-  id: "record/rating-is-stored-in-whole-stars",
+  id: "record/y209-rating-is-stored-in-whole-stars",
   title: "A fractional rating is rounded into the field's own domain",
   runner: "value-normalization",
   timeoutMs: 180_000,

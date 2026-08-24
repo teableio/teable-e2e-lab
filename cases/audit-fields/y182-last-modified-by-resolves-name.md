@@ -1,4 +1,4 @@
-# audit-fields/last-modified-by-resolves-name
+# audit-fields/y182-last-modified-by-resolves-name
 
 **Bug:** T6641 — the record card's `Editor` field showed a raw user id
 (`usreOCcpI0QR2B2XLLr`) instead of the editor's name.

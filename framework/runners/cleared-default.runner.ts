@@ -29,7 +29,7 @@ import type { ClearedDefaultCaseConfig } from "../types";
 // and the way out was to delete the column and build it again, taking its data
 // and everything pointing at it along.
 //
-// The shipped `field/clearing-a-checkbox-default-saves` is the same edit on a
+// The shipped `field/y225-clearing-a-checkbox-default-saves` is the same edit on a
 // checkbox. These are the other types people actually set defaults on: a
 // status that starts at "Todo", a quantity that starts at 1, a date that
 // starts today.

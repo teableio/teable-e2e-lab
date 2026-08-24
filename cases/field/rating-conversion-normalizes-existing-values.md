@@ -41,6 +41,6 @@ to answer for.
 
 ## Its sibling
 
-`record/rating-is-stored-in-whole-stars` asks the same question about a write
+`record/y209-rating-is-stored-in-whole-stars` asks the same question about a write
 rather than a conversion. A field can acquire a value outside its domain either
 way, and the two paths were fixed separately.

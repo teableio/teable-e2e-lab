@@ -1,7 +1,7 @@
 # record/invalid-date-is-not-invented
 
 **T6517** — fixed. The lead case of two on the `value-normalization` runner;
-the sibling is `record/rating-is-stored-in-whole-stars`, and the shared design
+the sibling is `record/y209-rating-is-stored-in-whole-stars`, and the shared design
 is here.
 
 ## What the user sees

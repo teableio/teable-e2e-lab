@@ -1,4 +1,4 @@
-# record/rating-is-stored-in-whole-stars
+# record/y209-rating-is-stored-in-whole-stars
 
 **T6515** — fixed. On the `value-normalization` runner; the shared design is
 described in `record/invalid-date-is-not-invented`.
