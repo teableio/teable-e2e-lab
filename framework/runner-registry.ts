@@ -67,6 +67,7 @@ import { runLinkPasteFormulaTitleCase } from "./runners/link-paste-formula-title
 import { runGeneratedFormulaColumnCase } from "./runners/generated-formula-column.runner";
 import { runIncomingLinkCleanupCase } from "./runners/incoming-link-cleanup.runner";
 import { runFormulaErrorRepairCase } from "./runners/formula-error-repair.runner";
+import { runSelectOptionRemovalRealtimeCase } from "./runners/select-option-removal-realtime.runner";
 import type {
   BugCase,
   BugCaseFor,
@@ -153,6 +154,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "generated-formula-column": runGeneratedFormulaColumnCase,
   "incoming-link-cleanup": runIncomingLinkCleanupCase,
   "formula-error-repair": runFormulaErrorRepairCase,
+  "select-option-removal-realtime": runSelectOptionRemovalRealtimeCase,
 };
 
 export const executeRegisteredRunner = (

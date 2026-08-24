@@ -34,6 +34,7 @@ import lookupNullMultiplicityScalarConvertsCase from "./cases/lookup/null-multip
 import importExcelDuplicateHeadersCase from "./cases/import/excel-duplicate-headers.case";
 import auditFieldsLastModifiedByResolvesNameCase from "./cases/audit-fields/last-modified-by-resolves-name.case";
 import realtimeViewFilterUpdateReachesSubscribersCase from "./cases/realtime/view-filter-update-reaches-subscribers.case";
+import selectOptionRemovalRealtimeCase from "./cases/realtime/retiring-a-choice-reaches-the-open-page.case";
 import realtimeViewGroupAndSortReachSubscribersCase from "./cases/realtime/view-group-and-sort-reach-subscribers.case";
 import undoDeleteRecordsUndoRestoresAllCase from "./cases/undo/delete-records-undo-restores-all.case";
 import linkCrossBaseLinkClearsOnDeleteCase from "./cases/link/cross-base-link-clears-on-delete.case";
@@ -121,6 +122,7 @@ const cases = [
   importExcelDuplicateHeadersCase,
   auditFieldsLastModifiedByResolvesNameCase,
   realtimeViewFilterUpdateReachesSubscribersCase,
+  selectOptionRemovalRealtimeCase,
   realtimeViewGroupAndSortReachSubscribersCase,
   undoDeleteRecordsUndoRestoresAllCase,
   linkCrossBaseLinkClearsOnDeleteCase,

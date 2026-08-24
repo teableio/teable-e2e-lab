@@ -76,6 +76,7 @@ export interface BugCaseConfigByRunner {
   "generated-formula-column": GeneratedFormulaColumnCaseConfig;
   "incoming-link-cleanup": IncomingLinkCleanupCaseConfig;
   "formula-error-repair": FormulaErrorRepairCaseConfig;
+  "select-option-removal-realtime": SelectOptionRemovalRealtimeCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1415,4 +1416,19 @@ export interface FormulaErrorRepairCaseConfig {
   // one and a formula reading the new one give the same answer.
   sourceValue: string;
   fallbackValue: string;
+}
+
+// A choice retired from a status column. Nothing was pushed for the rows that
+// held it, so open screens went on showing a status the column no longer
+// offers - unfilterable and unchoosable - until a reload.
+export interface SelectOptionRemovalRealtimeCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  retiredChoice: string;
+  keptChoice: string;
+  retiredRowTitle: string;
+  keptRowTitle: string;
+  subscribeTimeoutMs: number;
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
 }
