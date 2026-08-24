@@ -114,7 +114,10 @@ export const runPasteLinkTitleCase = async (
       async () => {
         // The clipboard the grid writes when a link cell is copied: the
         // record's id and the name it is called by.
-        const response = await axios.post(
+        // PATCH, not POST: the paste endpoint answers 404 to a POST, which
+        // reads as "the bug" and is really the case addressing the wrong verb
+        // (run 32678300431).
+        const response = await axios.patch(
           urlBuilder(PASTE_URL, { tableId: host.id }),
           {
             viewId,
