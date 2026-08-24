@@ -20,8 +20,9 @@ export default defineBugCase({
   config: {
     baseId: "seed-base",
     tableNamePrefix: "e2e-lab-failed-update",
-    // The repeat is the point: it is what makes the change impossible.
-    duplicateValues: ["AAA", "BBB", "AAA"],
+    // The empty cell is the point: it is what makes "must be filled in"
+    // impossible to apply.
+    values: ["AAA", "", "CCC"],
     rowAddedAfter: "added-after-the-failure",
     valueAddedAfter: "CCC",
     renamedTo: "Code, renamed",

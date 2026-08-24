@@ -39,9 +39,9 @@ export const runTableUsableAfterFailedUpdateCase = async (
   const suffix = `${config.tableNamePrefix}-${context.runId}`;
   let tableId = "";
 
-  if (new Set(config.duplicateValues).size === config.duplicateValues.length) {
+  if (!config.values.some((value) => value === "")) {
     throw new Error(
-      "the column has to start with a repeated value, or the change would be applied and there would be no " +
+      "the column has to start with an empty cell, or the change would be applied and there would be no " +
         "failure to recover from",
     );
   }
@@ -53,7 +53,7 @@ export const runTableUsableAfterFailedUpdateCase = async (
         { name: NAME_FIELD, type: FieldType.SingleLineText, isPrimary: true },
         { name: CODE_FIELD, type: FieldType.SingleLineText },
       ],
-      records: config.duplicateValues.map((value, index) => ({
+      records: config.values.map((value, index) => ({
         fields: { [NAME_FIELD]: `row-${index + 1}`, [CODE_FIELD]: value },
       })),
     });
@@ -67,15 +67,21 @@ export const runTableUsableAfterFailedUpdateCase = async (
 
     // The change that cannot be applied, outside the checkpoint: it is refused
     // on both sides of the fix, and being refused is correct.
+    //
+    // "Must be filled in" over a column with an empty cell, rather than "no
+    // duplicates" over a repeat: the second is turned away by validation
+    // before the change is attempted at all, so it never reaches the part that
+    // could leave the table marked unfinished (run 32692598187, green on both
+    // columns).
     const refused = await axios.put(
       urlBuilder(CONVERT_FIELD, { tableId, fieldId: codeFieldId }),
-      { name: CODE_FIELD, type: FieldType.SingleLineText, unique: true },
+      { name: CODE_FIELD, type: FieldType.SingleLineText, notNull: true },
       { validateStatus: () => true },
     );
     if (refused.status >= 200 && refused.status < 300) {
       throw new Error(
-        `turning on "no duplicates" over a repeated value answered ${refused.status} - it was applied, so ` +
-          "there is no failure for the table to recover from and this case cannot see anything",
+        `requiring a value in a column that has an empty cell answered ${refused.status} - it was applied, ` +
+          "so there is no failure for the table to recover from and this case cannot see anything",
       );
     }
 
@@ -85,12 +91,12 @@ export const runTableUsableAfterFailedUpdateCase = async (
         // Everything the person would do next.
         const read = await apiGetRecords(tableId, {
           fieldKeyType: FieldKeyType.Name,
-          take: config.duplicateValues.length,
+          take: config.values.length,
         });
-        if (read.data.records.length !== config.duplicateValues.length) {
+        if (read.data.records.length !== config.values.length) {
           throw new Error(
             `after the refused change the table reads ${read.data.records.length} rows, expected ` +
-              `${config.duplicateValues.length}`,
+              `${config.values.length}`,
           );
         }
 

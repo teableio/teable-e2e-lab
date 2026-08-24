@@ -1523,9 +1523,9 @@ export interface GroupedRangeOffsetCaseConfig {
 export interface TableUsableAfterFailedUpdateCaseConfig {
   baseId: "seed-base";
   tableNamePrefix: string;
-  // Has to contain a repeat, or the change would succeed and there would be no
-  // failure to recover from.
-  duplicateValues: string[];
+  // Has to contain an empty cell, or the change would succeed and there would
+  // be no failure to recover from.
+  values: string[];
   rowAddedAfter: string;
   valueAddedAfter: string;
   renamedTo: string;
