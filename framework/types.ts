@@ -84,6 +84,7 @@ export interface BugCaseConfigByRunner {
   "user-multiplicity-formula": UserMultiplicityFormulaCaseConfig;
   "grouped-range-offset": GroupedRangeOffsetCaseConfig;
   "table-usable-after-failed-update": TableUsableAfterFailedUpdateCaseConfig;
+  "restore-inbound-link": RestoreInboundLinkCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1529,4 +1530,17 @@ export interface TableUsableAfterFailedUpdateCaseConfig {
   rowAddedAfter: string;
   valueAddedAfter: string;
   renamedTo: string;
+}
+
+// A table other tables link to, trashed and restored. The restore brought the
+// table back and left the columns pointing at it behind - no longer links, no
+// longer holding the row they pointed at.
+export interface RestoreInboundLinkCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  hostRowTitle: string;
+  foreignRowTitle: string;
+  foreignDetail: string;
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
 }
