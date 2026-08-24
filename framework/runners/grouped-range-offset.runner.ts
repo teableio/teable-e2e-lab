@@ -101,22 +101,22 @@ export const runGroupedRangeOffsetCase = async (
       );
     };
 
-    // Fixture verification, outside the checkpoint: grouping really did
-    // rearrange the rows. If the grouped order matched the order they were
-    // created in, both ways of counting would agree and the case would prove
-    // nothing.
-    const before = await visibleOrder();
-    const created = config.rows.map((row) => row.name);
-    if (before.map((row) => row.name).join(",") === created.join(",")) {
-      throw new Error(
-        `the grouped view shows ${JSON.stringify(before.map((row) => row.name))}, the same order the rows ` +
-          "were created in - the fixture is not in place",
-      );
-    }
-
     const probe = await bugCheckpoint(
-      "a-paste-in-a-grouped-view-lands-on-the-row-at-that-position",
+      "a-grouped-view-and-a-paste-agree-on-which-row-is-which",
       async () => {
+        // First: the view really is grouped. On the fix's parent it answers in
+        // the order the rows were created (run 32691586917), which is the same
+        // disagreement seen from the other side - and checking it before the
+        // checkpoint reported the bug as a broken fixture.
+        const before = await visibleOrder();
+        const created = config.rows.map((row) => row.name);
+        if (before.map((row) => row.name).join(",") === created.join(",")) {
+          throw new Error(
+            `the grouped view shows ${JSON.stringify(before.map((row) => row.name))}, the same order the ` +
+              "rows were created in - the grouping is not being applied to what the page is shown",
+          );
+        }
+
         const target = before[config.pasteAtOffset];
         if (!target) {
           throw new Error(
@@ -163,14 +163,17 @@ export const runGroupedRangeOffsetCase = async (
               "nobody selected and the selected row is untouched",
           );
         }
-        return { target: target.name };
+        return {
+          target: target.name,
+          groupedOrder: before.map((row) => row.name),
+        };
       },
     );
 
     return {
       details: {
         tableId,
-        groupedOrder: before.map((row) => row.name),
+        groupedOrder: probe.groupedOrder,
         pastedInto: probe.target,
       },
     };

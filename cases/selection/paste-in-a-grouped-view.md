@@ -19,16 +19,21 @@ from an order the screen never showed.
 
 ## What the checkpoint asserts
 
-Which **record** changed, by name. Asserting by position could not see this at
+First that the grouping is applied to what the page is shown at all: on the
+fix's parent the view answers in the order the rows were created (run
+32691586917). Checking that before the checkpoint reported the bug as a broken
+fixture instead.
+
+Then which **record** changed, by name. Asserting by position could not see this at
 all — position is exactly what the two sides disagree about. Exactly one row
 may change, and it has to be the one the grouped view showed at that position.
 
 ## What the fixture has to hold
 
 Rows created in an order that interleaves the groups, so grouping genuinely
-moves them. The runner compares the grouped order against the creation order
-first and refuses to continue if they match, because then both ways of counting
-would agree and the case would prove nothing.
+moves them. If the grouped order matched the creation order, both ways of
+counting would agree and the case would prove nothing — which is why that
+comparison is an assertion rather than a precondition.
 
 ## Its neighbour
 
