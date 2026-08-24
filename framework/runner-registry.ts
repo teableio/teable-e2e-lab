@@ -86,6 +86,7 @@ import { runDatetimeDiffDefaultUnitCase } from "./runners/datetime-diff-default-
 import { runIsWithinTodayFilterCase } from "./runners/is-within-today-filter.runner";
 import { runSparseBatchUpdateCase } from "./runners/sparse-batch-update.runner";
 import { runAiConfigOnlyChangePlanCase } from "./runners/ai-config-only-change-plan.runner";
+import { runSingleFieldPendingStateCase } from "./runners/single-field-pending-state.runner";
 import { runLookupOfRollupCreateCase } from "./runners/lookup-of-rollup-create.runner";
 import type {
   BugCase,
@@ -193,6 +194,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "sparse-batch-update": runSparseBatchUpdateCase,
   "lookup-of-rollup-create": runLookupOfRollupCreateCase,
   "ai-config-only-change-plan": runAiConfigOnlyChangePlanCase,
+  "single-field-pending-state": runSingleFieldPendingStateCase,
 };
 
 export const executeRegisteredRunner = (

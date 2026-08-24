@@ -96,6 +96,7 @@ export interface BugCaseConfigByRunner {
   "sparse-batch-update": SparseBatchUpdateCaseConfig;
   "lookup-of-rollup-create": LookupOfRollupCreateCaseConfig;
   "ai-config-only-change-plan": AiConfigOnlyChangePlanCaseConfig;
+  "single-field-pending-state": SingleFieldPendingStateCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1665,6 +1666,18 @@ export interface SparseBatchUpdateCaseConfig {
 // settings lost the rule for that total. Adding a row, listing rows and
 // opening the view were all refused, with a message about a rule the user
 // never wrote.
+export interface SingleFieldPendingStateCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  rowTitle: string;
+  memberName: string;
+  memberHandle: string;
+  // How long to let the worked-out columns settle before looking. Until they
+  // have, "still busy" is the correct answer - see the runner.
+  settleAttempts: number;
+  settleIntervalMs: number;
+}
+
 export interface AiConfigOnlyChangePlanCaseConfig {
   baseId: "seed-base";
   tableNamePrefix: string;
