@@ -80,6 +80,7 @@ export interface BugCaseConfigByRunner {
   "append-import-computed": AppendImportComputedCaseConfig;
   "tied-sort-offset": TiedSortOffsetCaseConfig;
   "form-required-computed": FormRequiredComputedCaseConfig;
+  "lookup-config-realtime": LookupConfigRealtimeCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1472,4 +1473,19 @@ export interface FormRequiredComputedCaseConfig {
   baseId: "seed-base";
   tableNamePrefix: string;
   submittedName: string;
+}
+
+// A change to a lookup column's settings, pushed to the page that has those
+// settings open. What went out was a stripped-down copy the page has to
+// reject, so the dialog went on showing the old setting until a reload.
+export interface LookupConfigRealtimeCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  hostRowTitle: string;
+  foreignRowTitle: string;
+  firstValue: string;
+  secondValue: string;
+  subscribeTimeoutMs: number;
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
 }

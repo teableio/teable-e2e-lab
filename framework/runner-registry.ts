@@ -71,6 +71,7 @@ import { runSelectOptionRemovalRealtimeCase } from "./runners/select-option-remo
 import { runAppendImportComputedCase } from "./runners/append-import-computed.runner";
 import { runTiedSortOffsetCase } from "./runners/tied-sort-offset.runner";
 import { runFormRequiredComputedCase } from "./runners/form-required-computed.runner";
+import { runLookupConfigRealtimeCase } from "./runners/lookup-config-realtime.runner";
 import type {
   BugCase,
   BugCaseFor,
@@ -161,6 +162,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "append-import-computed": runAppendImportComputedCase,
   "tied-sort-offset": runTiedSortOffsetCase,
   "form-required-computed": runFormRequiredComputedCase,
+  "lookup-config-realtime": runLookupConfigRealtimeCase,
 };
 
 export const executeRegisteredRunner = (
