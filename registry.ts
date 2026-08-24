@@ -7,6 +7,7 @@ import baseShareSaveIntoExistingBaseTwiceCase from "./cases/base-share/save-into
 import baseImportFieldDescriptionCase from "./cases/base-share/import-keeps-field-descriptions.case";
 import baseImportNoTablesCase from "./cases/base-share/import-of-a-base-without-tables.case";
 import viewIncompleteFilterConditionSurvivesCase from "./cases/view/incomplete-filter-condition-survives.case";
+import formRequiredComputedCase from "./cases/view/a-form-with-a-required-automatic-column.case";
 import filterScalarLookupNoneOfLoadsCase from "./cases/filter/scalar-lookup-none-of-loads.case";
 import lookupUserSnapshotDateSortSpansGroupCase from "./cases/lookup/user-snapshot-date-sort-spans-group.case";
 import rollupMetadataRenameCase from "./cases/lookup/rename-a-rollup-keeps-its-total.case";
@@ -100,6 +101,7 @@ const cases = [
   baseImportFieldDescriptionCase,
   baseImportNoTablesCase,
   viewIncompleteFilterConditionSurvivesCase,
+  formRequiredComputedCase,
   filterScalarLookupNoneOfLoadsCase,
   lookupUserSnapshotDateSortSpansGroupCase,
   rollupMetadataRenameCase,
