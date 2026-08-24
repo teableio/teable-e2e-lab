@@ -78,6 +78,7 @@ export interface BugCaseConfigByRunner {
   "formula-error-repair": FormulaErrorRepairCaseConfig;
   "select-option-removal-realtime": SelectOptionRemovalRealtimeCaseConfig;
   "append-import-computed": AppendImportComputedCaseConfig;
+  "tied-sort-offset": TiedSortOffsetCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1447,4 +1448,18 @@ export interface AppendImportComputedCaseConfig {
   multiplier: number;
   settleTimeoutMs: number;
   pollIntervalMs: number;
+}
+
+// A sorted view where every row ties on the sorted column, with one row
+// dragged out of place. Operations addressed by position resolved the tie
+// differently from the grid, so they landed on a row nobody had selected.
+export interface TiedSortOffsetCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Every row carries this, so the sort decides nothing and the view's own
+  // row order decides everything.
+  sharedStatus: string;
+  rowTitles: string[];
+  draggedRowTitle: string;
+  pastedValue: string;
 }
