@@ -99,13 +99,6 @@ export const runTiedSortOffsetCase = async (
       recordIds: [draggedId],
     });
 
-    // Sort the view by the tied column. Rows that tie keep the order above.
-    await axios.put(
-      `/table/${tableId}/view/${viewId}/sort`,
-      { sort: { sortObjs: [{ fieldId: statusFieldId, order: "asc" }] } },
-      { validateStatus: () => true },
-    );
-
     const visibleOrder = async () => {
       const read = await apiGetRecords(tableId, {
         fieldKeyType: FieldKeyType.Name,
@@ -118,25 +111,48 @@ export const runTiedSortOffsetCase = async (
       );
     };
 
-    // Fixture verification, outside the checkpoint: the dragged row really is
-    // at the top, so the order the grid shows is not the order the rows were
-    // created in. Without that the two ways of resolving the tie would agree
-    // and the case would prove nothing.
-    const before = await visibleOrder();
-    if (before[0] !== config.draggedRowTitle) {
+    // Fixture verification, outside the checkpoint: the drag took effect. It
+    // is checked before the sort is applied, because what the sorted view
+    // shows is the thing under test - measured in run 32688452945, where the
+    // pre-fix build answers the sorted view in creation order and a check
+    // here reported it as a broken fixture.
+    const draggedOrder = await visibleOrder();
+    if (draggedOrder[0] !== config.draggedRowTitle) {
       throw new Error(
-        `the view shows ${JSON.stringify(before)}; expected ${config.draggedRowTitle} first - the fixture is ` +
-          "not in place",
+        `after dragging, the view shows ${JSON.stringify(draggedOrder)}; expected ` +
+          `${config.draggedRowTitle} first - the fixture is not in place`,
       );
-    }
-    const targetName = before[1];
-    if (!targetName) {
-      throw new Error("the view has no second row");
     }
 
     const probe = await bugCheckpoint(
-      "an-offset-lands-on-the-row-shown-at-that-offset",
+      "a-sorted-view-keeps-the-order-rows-were-dragged-into",
       async () => {
+        // Sort by the column every row shares. A sort decides the order of
+        // rows whose values differ and nothing else, so the rows have to stay
+        // where they were dragged.
+        const sorted = await axios.put(
+          `/table/${tableId}/view/${viewId}/sort`,
+          { sort: { sortObjs: [{ fieldId: statusFieldId, order: "asc" }] } },
+          { validateStatus: () => true },
+        );
+        if (sorted.status < 200 || sorted.status >= 300) {
+          throw new Error(
+            `sorting the view answered ${sorted.status}: ${JSON.stringify(sorted.data)}`,
+          );
+        }
+
+        const before = await visibleOrder();
+        if (before.join(",") !== draggedOrder.join(",")) {
+          throw new Error(
+            `after sorting by a column every row shares, the view shows ${JSON.stringify(before)}, expected ` +
+              `${JSON.stringify(draggedOrder)} - the rows jumped back out of the order they were dragged into`,
+          );
+        }
+        const targetName = before[1];
+        if (!targetName) {
+          throw new Error("the view has no second row");
+        }
+
         // Paste into the second row on screen, first column.
         const response = await axios.patch(
           urlBuilder(PASTE_URL, { tableId }),
@@ -190,7 +206,7 @@ export const runTiedSortOffsetCase = async (
     return {
       details: {
         tableId,
-        visibleOrderBefore: before,
+        visibleOrderAfterDrag: draggedOrder,
         pastedInto: probe.targetName,
       },
     };

@@ -24,14 +24,23 @@ different way, so the two disagreed about which row is second.
 
 ## What the checkpoint asserts
 
-Which **record** changed, by name — not which position. The whole failure is
-that position and record disagree, so an assertion by position could not see
-it. Exactly one row must change, and it must be the one the view showed at that
-position.
+Two things, in order.
+
+First: after sorting by a column every row shares, the view still shows the
+rows in the order they were dragged into. That is where the two builds differ —
+before the fix a sorted view answers in creation order, throwing away the drag.
+
+Then: pasting into the second row on screen changes the record the view showed
+at that position, identified by name rather than by position. The whole failure
+is that position and record can disagree, so an assertion by position could not
+see it. Exactly one row may change.
 
 ## What the fixture has to hold
 
 Four rows, all sharing the sorted value, with the last dragged to the top. If
 nothing were dragged, both ways of resolving the tie would agree and the case
-would prove nothing; the runner checks the dragged row really is first before
-pasting.
+would prove nothing.
+
+The drag is verified **before** the sort is applied, not after: what the sorted
+view answers is the thing under test, and checking it as a fixture condition
+reported the bug as a broken fixture instead (run 32688452945).
