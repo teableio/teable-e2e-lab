@@ -89,6 +89,7 @@ export interface BugCaseConfigByRunner {
   "timezone-alias": TimezoneAliasCaseConfig;
   "duplicate-field-realtime": DuplicateFieldRealtimeCaseConfig;
   "user-field-notify-on-assign": UserFieldNotifyOnAssignCaseConfig;
+  "me-filter-in-view": MeFilterInViewCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1590,4 +1591,13 @@ export interface UserFieldNotifyOnAssignCaseConfig {
   rowTitle: string;
   notifyTimeoutMs: number;
   pollIntervalMs: number;
+}
+
+// A view saved with the filter "assigned to me". The word was passed to the
+// database as itself, matched nobody, and the view came back empty.
+export interface MeFilterInViewCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  mineRowTitle: string;
+  unassignedRowTitle: string;
 }
