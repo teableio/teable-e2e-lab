@@ -69,6 +69,7 @@ export interface BugCaseConfigByRunner {
   "button-display-change": ButtonDisplayChangeCaseConfig;
   "link-picker-primary-field": LinkPickerPrimaryFieldCaseConfig;
   "rollup-metadata-rename": RollupMetadataRenameCaseConfig;
+  "cleared-default": ClearedDefaultCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1325,4 +1326,20 @@ export interface RollupMetadataRenameCaseConfig {
   amounts: number[];
   renamedTo: string;
   newDescription: string;
+}
+
+// A column that fills new rows in with a value, and the edit that takes that
+// value away. Only text columns accepted it; every other type treated "no
+// default" as "leave it alone".
+export interface ClearedDefaultCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  column: "number" | "date" | "singleSelect";
+  numberDefault: number;
+  dateDefault: string;
+  // The first choice is the default; the list needs a second one so a default
+  // is a choice rather than the only possibility.
+  choices: string[];
+  rowBeforeTitle: string;
+  rowAfterTitle: string;
 }
