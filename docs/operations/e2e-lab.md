@@ -110,15 +110,18 @@ access token stored as the `TEABLE_EE_CHECKOUT_TOKEN` secret (a
 fine-grained PAT with read-only Contents access to that repository is the
 tight grant).
 
-## The develop-push trigger and its check run
+## The teable-ee trigger and its check run
 
-teable-ee's `teable-e2e-lab-trigger.yml` dispatches this workflow on every
-develop push that touches the backend, pinned to that push's SHA — the
-watchdog question "did this commit re-break a fixed bug", asked without anyone
-pressing a button. Before dispatching it opens an **E2E Lab Regression** check
-run on the pushed commit (as the `teable-remote-ci` GitHub App, the same App
-teable-enterprise's remote suites report through) and passes its id here as
-`teable_ee_check_run_id`.
+teable-ee's `teable-e2e-lab-trigger.yml` dispatches this workflow twice over,
+without anyone pressing a button: on every backend-touching PR against
+develop, pinned to the PR's head SHA — the merge gate "did this change
+re-break a fixed bug", asked before the merge — and on every backend-touching
+develop push, pinned to the pushed SHA, the post-merge confirmation on the
+actually-merged combination. Before dispatching it opens an **E2E Lab
+Regression** check run on that commit (as the `teable-remote-ci` GitHub App,
+the same App teable-enterprise's remote suites report through) and passes its
+id here as `teable_ee_check_run_id`. A frontend-only PR gets the same check
+concluded success on the spot over there, with nothing dispatched here.
 
 The report job concludes that check run after the acceptance gate, `always()`,
 with the same verdict the gate reached — success only when acceptance passed,
