@@ -94,6 +94,7 @@ export interface BugCaseConfigByRunner {
   "datetime-diff-default-unit": DatetimeDiffDefaultUnitCaseConfig;
   "is-within-today-filter": IsWithinTodayFilterCaseConfig;
   "sparse-batch-update": SparseBatchUpdateCaseConfig;
+  "lookup-of-rollup-create": LookupOfRollupCreateCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1657,4 +1658,17 @@ export interface SparseBatchUpdateCaseConfig {
   statusWritten: string;
   notesBefore: string;
   notesAfter: string;
+}
+
+// A column looking up a total worked out on another table, whose stored
+// settings lost the rule for that total. Adding a row, listing rows and
+// opening the view were all refused, with a message about a rule the user
+// never wrote.
+export interface LookupOfRollupCreateCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  ownerTitle: string;
+  usageRowTitle: string;
+  firstAmount: number;
+  secondAmount: number;
 }
