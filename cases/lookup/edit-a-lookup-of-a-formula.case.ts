@@ -6,6 +6,7 @@ import { defineBugCase } from "../../framework/types";
 // the right number - and could not be renamed, re-pointed or converted. A
 // column nobody can edit is a small thing until the base needs reorganising,
 // and then it has to be deleted and rebuilt, taking whatever depends on it.
+// Renaming alone is accepted on both columns; the case re-points the lookup.
 export default defineBugCase({
   id: "lookup/edit-a-lookup-of-a-formula",
   title: "A lookup of a formula can still be edited",

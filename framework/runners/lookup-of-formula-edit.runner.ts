@@ -2,6 +2,7 @@ import { FieldKeyType, FieldType, Relationship } from "@teable/core";
 import {
   axios,
   getFields as apiGetFields,
+  CONVERT_FIELD,
   UPDATE_FIELD,
   urlBuilder,
 } from "@teable/openapi";
@@ -14,8 +15,8 @@ import { bugCheckpoint } from "../checkpoint";
 import type { BugCaseFor, BugProbeResult, BugRunContext } from "../types";
 import type { LookupOfFormulaEditCaseConfig } from "../types";
 
-// A column that looks up a formula on the table it links to -> edit that
-// column -> checkpoint: the edit is accepted.
+// A column that looks up a formula on the table it links to -> re-point it at
+// a plain column on the same link -> checkpoint: the edit is accepted.
 //
 // Looking up a computed value across a link is ordinary: an order row showing
 // the customer's calculated tier, a task showing its project's completion.
@@ -144,19 +145,31 @@ export const runLookupOfFormulaEditCase = async (
     const probe = await bugCheckpoint(
       "a-lookup-of-a-formula-can-still-be-edited",
       async () => {
-        // Raw axios with the status open: the refusal carries a message
-        // worth reporting, and the generated client throws it away.
-        const response = await axios.patch(
-          urlBuilder(UPDATE_FIELD, {
+        // Re-point the column at a plain number on the same link. Renaming
+        // it is accepted on both columns - measured in run 32675528990 - so
+        // the subject is the edit that rewrites what the column looks up.
+        // Raw axios with the status open: the refusal carries a message worth
+        // reporting, and the generated client throws it away.
+        const response = await axios.put(
+          urlBuilder(CONVERT_FIELD, {
             tableId: host.id,
             fieldId: lookupOfFormula.id,
           }),
-          { name: config.newName },
+          {
+            name: config.newName,
+            type: FieldType.Number,
+            isLookup: true,
+            lookupOptions: {
+              foreignTableId: foreign.id,
+              linkFieldId: linkField.id,
+              lookupFieldId: amountFieldId,
+            },
+          },
           { validateStatus: () => true },
         );
         if (response.status < 200 || response.status >= 300) {
           throw new Error(
-            `renaming a lookup of a formula answered ${response.status}: ${JSON.stringify(response.data)} - ` +
+            `re-pointing a lookup of a formula answered ${response.status}: ${JSON.stringify(response.data)} - ` +
               "the column displays the right number and cannot be edited",
           );
         }
@@ -169,10 +182,19 @@ export const runLookupOfFormulaEditCase = async (
         );
         if (renamed?.name !== config.newName) {
           throw new Error(
-            `renaming the lookup was accepted but the column is still called ${JSON.stringify(renamed?.name)}`,
+            `the edit was accepted but the column is still called ${JSON.stringify(renamed?.name)}`,
           );
         }
-        return { name: renamed.name };
+        const pointsAt = (
+          renamed as { lookupOptions?: { lookupFieldId?: string } }
+        ).lookupOptions?.lookupFieldId;
+        if (pointsAt !== amountFieldId) {
+          throw new Error(
+            `the edit was accepted but the column still looks up ${JSON.stringify(pointsAt)} rather than the ` +
+              "plain number it was re-pointed at",
+          );
+        }
+        return { name: renamed.name, pointsAt };
       },
     );
 
@@ -182,6 +204,7 @@ export const runLookupOfFormulaEditCase = async (
         foreignTableId: foreign.id,
         lookupFieldId: lookupOfFormula.id,
         renamedTo: probe.name,
+        pointsAt: probe.pointsAt,
       },
     };
   } finally {
