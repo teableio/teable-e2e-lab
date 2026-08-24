@@ -87,6 +87,29 @@ fields, or a formula over a lookup - since it is the parse of the copied
 expression that failed.
 
 The shapes are gone; the runner is not kept.
+| `6421635ca` | T6106 | Written and run: a pasted link cell reaches a watching client carrying the linked record's name on the fix's parent, so both columns look the same. See the note below the table. |
+
+### The name on a pasted link cell
+
+`6421635ca` / T6106. Copying a link cell puts the linked record's id and its
+name on the clipboard; the paste dropped the name, so what was pushed to
+everyone else watching the table read "Untitled" until they reloaded.
+
+The case subscribed to the record document the grid holds - the right place to
+look, because a read over HTTP fills the name in from the database - and after
+the paste the watching client held `{id, title: "Order 1042"}` on both columns.
+Run 32678857252, pre-fix `6b9f25148`.
+
+Two earlier runs of the same case were the case's own faults and are not
+evidence: 32678300431 addressed the paste endpoint with POST where it answers
+PATCH, and 32678584833 read the cell as an object where it arrives as a list.
+
+**Why the parent carried the name is not established.** The likely reading is
+the shape of the paste: this case sends the structured value directly, while
+the fix's summary describes the html clipboard that a grid copy writes. The
+next thing to try is that html payload rather than the structured one.
+
+The shape is gone; the runner is not kept.
 
 ### The date comparison inside AND or OR
 

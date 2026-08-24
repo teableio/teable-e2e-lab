@@ -71,7 +71,6 @@ export interface BugCaseConfigByRunner {
   "rollup-metadata-rename": RollupMetadataRenameCaseConfig;
   "cleared-default": ClearedDefaultCaseConfig;
   "legacy-generated-audit-column": LegacyGeneratedAuditColumnCaseConfig;
-  "paste-link-title": PasteLinkTitleCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1354,18 +1353,4 @@ export interface LegacyGeneratedAuditColumnCaseConfig {
   baseId: "seed-base";
   tableNamePrefix: string;
   rowTitle: string;
-}
-
-// A copied link cell pasted into another row. The clipboard carries the linked
-// record's name along with its id; the paste kept the id and dropped the name,
-// so everyone watching the table saw "Untitled" until they reloaded.
-export interface PasteLinkTitleCaseConfig {
-  baseId: "seed-base";
-  tableNamePrefix: string;
-  foreignRowTitle: string;
-  sourceRowTitle: string;
-  targetRowTitle: string;
-  subscribeTimeoutMs: number;
-  settleTimeoutMs: number;
-  pollIntervalMs: number;
 }
