@@ -32,6 +32,7 @@ import lookupStaleTextMetadataSurvivesDisplayConvertCase from "./cases/lookup/st
 import lookupNullMultiplicityScalarRefreshesCase from "./cases/lookup/null-multiplicity-scalar-refreshes.case";
 import lookupNullMultiplicityScalarConvertsCase from "./cases/lookup/null-multiplicity-scalar-converts.case";
 import importExcelDuplicateHeadersCase from "./cases/import/excel-duplicate-headers.case";
+import appendImportComputedCase from "./cases/import/appended-rows-get-their-computed-values.case";
 import auditFieldsLastModifiedByResolvesNameCase from "./cases/audit-fields/last-modified-by-resolves-name.case";
 import realtimeViewFilterUpdateReachesSubscribersCase from "./cases/realtime/view-filter-update-reaches-subscribers.case";
 import selectOptionRemovalRealtimeCase from "./cases/realtime/retiring-a-choice-reaches-the-open-page.case";
@@ -120,6 +121,7 @@ const cases = [
   lookupNullMultiplicityScalarRefreshesCase,
   lookupNullMultiplicityScalarConvertsCase,
   importExcelDuplicateHeadersCase,
+  appendImportComputedCase,
   auditFieldsLastModifiedByResolvesNameCase,
   realtimeViewFilterUpdateReachesSubscribersCase,
   selectOptionRemovalRealtimeCase,

@@ -77,6 +77,7 @@ export interface BugCaseConfigByRunner {
   "incoming-link-cleanup": IncomingLinkCleanupCaseConfig;
   "formula-error-repair": FormulaErrorRepairCaseConfig;
   "select-option-removal-realtime": SelectOptionRemovalRealtimeCaseConfig;
+  "append-import-computed": AppendImportComputedCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1429,6 +1430,21 @@ export interface SelectOptionRemovalRealtimeCaseConfig {
   retiredRowTitle: string;
   keptRowTitle: string;
   subscribeTimeoutMs: number;
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
+}
+
+// Rows added to an existing table from a file. Nothing told the table's
+// worked-out columns that new rows had arrived, so the imported rows carried
+// the values from the file and nothing else.
+export interface AppendImportComputedCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // The row that is already in the table - the control, which has to keep its
+  // worked-out value throughout.
+  existingRow: { ref: string; amount: number };
+  importedRows: { ref: string; amount: number }[];
+  multiplier: number;
   settleTimeoutMs: number;
   pollIntervalMs: number;
 }
