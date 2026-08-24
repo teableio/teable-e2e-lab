@@ -1,5 +1,6 @@
 import smokeAuthUserCase from "./cases/smoke/auth-user.case";
 import recordBulkUpdate100MixedLandsCase from "./cases/record/bulk-update-100-mixed-lands.case";
+import lookupOfRollupCreateCase from "./cases/record/a-row-when-a-looked-up-total-lost-its-rule.case";
 import sparseBatchUpdateCase from "./cases/record/a-batch-write-leaves-what-it-did-not-mention.case";
 import generatedFormulaColumnCase from "./cases/record/edit-a-cell-behind-a-generated-formula.case";
 import legacyGeneratedAuditColumnCase from "./cases/record/add-a-row-to-a-legacy-table.case";
@@ -56,6 +57,7 @@ import selectionPasteByIdLandsOnItsOwnRowsCase from "./cases/selection/paste-by-
 import groupedRangeOffsetCase from "./cases/selection/paste-in-a-grouped-view.case";
 import tiedSortOffsetCase from "./cases/selection/paste-lands-on-the-row-you-see.case";
 import searchStaysInsideViewFilterCase from "./cases/search/stays-inside-view-filter.case";
+import searchEveryFieldCase from "./cases/search/stays-inside-view-filter-when-searching-every-field.case";
 import fieldUniqueToggleCase from "./cases/field/turning-off-no-duplicates-lets-a-duplicate-in.case";
 import timezoneAliasCase from "./cases/field/a-date-column-in-an-aliased-timezone.case";
 import oversizedSelectChoiceCase from "./cases/field/a-value-too-long-to-be-a-choice.case";
@@ -108,6 +110,7 @@ import type { BugCase } from "./framework/types";
 const cases = [
   smokeAuthUserCase,
   recordBulkUpdate100MixedLandsCase,
+  lookupOfRollupCreateCase,
   sparseBatchUpdateCase,
   generatedFormulaColumnCase,
   legacyGeneratedAuditColumnCase,
@@ -161,6 +164,7 @@ const cases = [
   groupedRangeOffsetCase,
   tiedSortOffsetCase,
   searchStaysInsideViewFilterCase,
+  searchEveryFieldCase,
   fieldUniqueToggleCase,
   timezoneAliasCase,
   oversizedSelectChoiceCase,

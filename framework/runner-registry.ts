@@ -85,6 +85,7 @@ import { runDuplicateSelectChoiceCase } from "./runners/duplicate-select-choice.
 import { runDatetimeDiffDefaultUnitCase } from "./runners/datetime-diff-default-unit.runner";
 import { runIsWithinTodayFilterCase } from "./runners/is-within-today-filter.runner";
 import { runSparseBatchUpdateCase } from "./runners/sparse-batch-update.runner";
+import { runLookupOfRollupCreateCase } from "./runners/lookup-of-rollup-create.runner";
 import type {
   BugCase,
   BugCaseFor,
@@ -189,6 +190,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "datetime-diff-default-unit": runDatetimeDiffDefaultUnitCase,
   "is-within-today-filter": runIsWithinTodayFilterCase,
   "sparse-batch-update": runSparseBatchUpdateCase,
+  "lookup-of-rollup-create": runLookupOfRollupCreateCase,
 };
 
 export const executeRegisteredRunner = (

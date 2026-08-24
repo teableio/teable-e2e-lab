@@ -94,6 +94,7 @@ export interface BugCaseConfigByRunner {
   "datetime-diff-default-unit": DatetimeDiffDefaultUnitCaseConfig;
   "is-within-today-filter": IsWithinTodayFilterCaseConfig;
   "sparse-batch-update": SparseBatchUpdateCaseConfig;
+  "lookup-of-rollup-create": LookupOfRollupCreateCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -700,6 +701,11 @@ export interface PasteByIdAlignmentCaseConfig {
 export interface SearchViewFilterCaseConfig {
   baseId: "seed-base";
   tableNamePrefix: string;
+  // "oneField" names the searched column; "everyField" sends the term on its
+  // own, the way the grid's search box does, and adds a date column so the
+  // search covers one - which is the shape where the view's filter was
+  // dropped.
+  scope: "oneField" | "everyField";
   // The needle. It is the name of one choice on the searched single-select
   // field, so a row either carries it in that cell or does not - no partial
   // matches to reason about.
@@ -1652,4 +1658,17 @@ export interface SparseBatchUpdateCaseConfig {
   statusWritten: string;
   notesBefore: string;
   notesAfter: string;
+}
+
+// A column looking up a total worked out on another table, whose stored
+// settings lost the rule for that total. Adding a row, listing rows and
+// opening the view were all refused, with a message about a rule the user
+// never wrote.
+export interface LookupOfRollupCreateCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  ownerTitle: string;
+  usageRowTitle: string;
+  firstAmount: number;
+  secondAmount: number;
 }
