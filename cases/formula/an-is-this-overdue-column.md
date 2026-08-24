@@ -21,8 +21,14 @@ outright, and the refusal happened while the column was being filled in.
 ## What the checkpoint asserts
 
 Every row has an answer, polled until the column settles. The rows are seconds
-old, so the expected answer is "not overdue" for all of them — what is being
+old, so the expected answer is "no" for all of them — what is being
 measured is that there is an answer at all.
+
+## The formula has to answer yes or no
+
+Written as a bare comparison, so the column holds a yes or a no. Wrapping it in
+`IF()` and returning two words is green on both columns (run 32704974280): it
+is the yes/no shape that was compiled as though the timestamps were text.
 
 ## What the fixture has to hold
 

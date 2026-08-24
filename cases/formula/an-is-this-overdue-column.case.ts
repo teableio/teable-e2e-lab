@@ -22,8 +22,6 @@ export default defineBugCase({
     tableNamePrefix: "e2e-lab-overdue-formula",
     rowTitles: ["first-row", "second-row"],
     hours: 1,
-    overdueAnswer: "overdue",
-    fineAnswer: "not overdue",
     settleTimeoutMs: 60_000,
     pollIntervalMs: 1_000,
   },

@@ -1682,8 +1682,6 @@ export interface OverdueFormulaBackfillCaseConfig {
   tableNamePrefix: string;
   rowTitles: string[];
   hours: number;
-  overdueAnswer: string;
-  fineAnswer: string;
   settleTimeoutMs: number;
   pollIntervalMs: number;
 }

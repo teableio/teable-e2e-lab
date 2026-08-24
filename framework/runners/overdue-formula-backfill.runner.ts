@@ -57,10 +57,15 @@ export const runOverdueFormulaBackfillCase = async (
       name: OVERDUE_FIELD,
       type: FieldType.Formula,
       options: {
-        // Late if the clock has passed a deadline worked out from when the row
-        // appeared. The rows were created seconds ago, so every answer is
-        // "not overdue" - what matters is that there is an answer at all.
-        expression: `IF(NOW() > DATE_ADD(CREATED_TIME(), ${config.hours}, 'hour'), "${config.overdueAnswer}", "${config.fineAnswer}")`,
+        // Late if the clock has passed a deadline worked out from when the
+        // row appeared. Written as a bare comparison, so the column holds a
+        // yes or a no rather than text: wrapping it in IF() and returning two
+        // words is green on both columns (run 32704974280), because it is the
+        // yes/no shape that was compiled as though the timestamps were text.
+        //
+        // The rows were created seconds ago, so every answer is "no" - what
+        // matters is that there is an answer at all.
+        expression: `NOW() > DATE_ADD(CREATED_TIME(), ${config.hours}, 'hour')`,
       },
     });
 
@@ -83,7 +88,7 @@ export const runOverdueFormulaBackfillCase = async (
             ),
           );
           const answered = config.rowTitles.filter(
-            (title) => answers[title] === config.fineAnswer,
+            (title) => answers[title] === false,
           );
           if (answered.length === config.rowTitles.length) {
             return { answers };
@@ -101,7 +106,7 @@ export const runOverdueFormulaBackfillCase = async (
         );
         throw new Error(
           `after ${config.settleTimeoutMs}ms the column reads ${JSON.stringify(answers)}, expected every row ` +
-            `to say ${JSON.stringify(config.fineAnswer)}` +
+            "to say no" +
             (empty.length === config.rowTitles.length
               ? " - the column was never filled in, and an empty overdue column reads as nothing being " +
                 "overdue"
