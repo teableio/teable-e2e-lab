@@ -99,6 +99,11 @@ export const runUserFieldNotifyBulkActionCase = async (
   const csvPath = join(tmpdir(), `e2e-lab-notify-${context.runId}.csv`);
   const createdTableIds: string[] = [];
   let foreignTableId = "";
+  // Notifications the assignee already had on the observed table before the
+  // action ran. Only the one-row copy needs this: it observes the same table
+  // the assignment was made on, so the legitimate "you were assigned" arrives
+  // there too and would otherwise be counted as the copy's doing.
+  const alreadyDelivered = new Set<string>();
 
   try {
     // A real signup rather than a row written into `users`: the assignee has
@@ -135,7 +140,9 @@ export const runUserFieldNotifyBulkActionCase = async (
         { params: { notifyStates: NotificationStatesEnum.Unread } },
       );
       return (response.data.notifications ?? []).filter(
-        (notification: INotification) => notification.url.includes(tableId),
+        (notification: INotification) =>
+          notification.url.includes(tableId) &&
+          !alreadyDelivered.has(notification.id),
       );
     };
 
@@ -301,6 +308,28 @@ export const runUserFieldNotifyBulkActionCase = async (
           `no row on ${subject.tableId} carries ${assignee.email} before the copy - there would be nothing to copy`,
         );
       }
+      // The assignment just made is a real one and does notify. It lands on
+      // this same table, so it is waited for and banked before the copy -
+      // otherwise the copy would be blamed for it. Waiting also proves the
+      // notification path reaches this table, not only the control one.
+      const assignedDeadline = Date.now() + config.notifyTimeoutMs;
+      for (;;) {
+        const delivered = await listNotifications(subject.tableId);
+        if (delivered.length > 0) {
+          for (const notification of delivered) {
+            alreadyDelivered.add(notification.id);
+          }
+          break;
+        }
+        if (Date.now() >= assignedDeadline) {
+          throw new Error(
+            `assigning ${assignee.email} on ${subject.tableId} produced no notification within ${config.notifyTimeoutMs}ms - ` +
+              "the case could not tell the copy's silence from a table nothing reaches",
+          );
+        }
+        await sleep(config.pollIntervalMs);
+      }
+
       const duplicated = await apiDuplicateRecord(
         subject.tableId,
         sourceRow.id,

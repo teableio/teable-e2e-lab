@@ -31,6 +31,11 @@ earned.
 The row really carries the assignee before it is copied — otherwise "nobody was
 notified" could just as well mean "nobody was assigned".
 
+The assignment that sets the row up is a real one and does notify, and it lands
+on the same table the copy is watched on. The case waits for it and banks it
+before copying, so the copy is not blamed for it. Waiting also proves the
+notification path reaches this table and not only the control one.
+
 ## Where the observation comes from
 
 The assignee's own unread list, read as themselves through the endpoint the
