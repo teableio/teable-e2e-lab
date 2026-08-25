@@ -13,6 +13,7 @@ import {
 import type { INotificationVo, IUserMeVo } from "@teable/openapi";
 import {
   analyzeFile as apiAnalyzeFile,
+  duplicateRecord as apiDuplicateRecord,
   duplicateTable as apiDuplicateTable,
   emailBaseInvitation,
   getRecords as apiGetRecords,
@@ -38,9 +39,10 @@ import { assertServedByV2 } from "../engine";
 import type { BugCaseFor, BugProbeResult, BugRunContext } from "../types";
 import type { UserFieldNotifyBulkActionCaseConfig } from "../types";
 
-// A second person assigned in a user field -> move that assignment in bulk
-// (CSV import into an existing table, or duplicating the whole table) ->
-// checkpoint: nothing lands in that person's notification list.
+// A second person assigned in a user field -> move that assignment without
+// making it again (a CSV import into an existing table, duplicating the whole
+// table, or copying one row) -> checkpoint: nothing lands in that person's
+// notification list.
 //
 // A user-field notification means "someone just put you on this". v1 only
 // ever sent it for that. v2 sent it for any record whose user cell arrived
@@ -63,8 +65,11 @@ import type { UserFieldNotifyBulkActionCaseConfig } from "../types";
 // here. If the quiet budget is not comfortably longer than the control took,
 // the case refuses to run rather than report a green it has not earned.
 //
-// The two variants share everything but the bulk operation itself, so they
-// share a runner. Which one runs is `action`.
+// The variants share everything but the operation itself, so they share a
+// runner. Which one runs is `action`. Copying a single row is the smallest of
+// them and arrived last (T6905): the earlier fix covered the bulk paths and
+// left the one-row copy sending, which is the version a person meets by
+// hand rather than through an import.
 
 const TITLE_FIELD = "Title";
 const USER_FIELD = "Assignee";
@@ -279,6 +284,36 @@ export const runUserFieldNotifyBulkActionCase = async (
         operation: "PATCH /import/{baseId}/{tableId}",
         feature: "importRecords",
       });
+    } else if (config.action === "recordDuplicate") {
+      // The row is assigned first, then copied. Copying one row is the
+      // smallest version of the same move: the copy carries a user cell that
+      // was already populated, and nobody is being assigned anything new.
+      await assignOnCreate(subject, config.actionRowTitle);
+      const sourceRows = await apiGetRecords(subject.tableId, {
+        fieldKeyType: FieldKeyType.Id,
+        take: 100,
+      });
+      const sourceRow = sourceRows.data.records.find((record) =>
+        userIds(record.fields[subject.userFieldId]).includes(assignee.id),
+      );
+      if (!sourceRow) {
+        throw new Error(
+          `no row on ${subject.tableId} carries ${assignee.email} before the copy - there would be nothing to copy`,
+        );
+      }
+      const duplicated = await apiDuplicateRecord(
+        subject.tableId,
+        sourceRow.id,
+      );
+      actionRouting = assertServedByV2(duplicated.headers, {
+        operation: "POST /table/{tableId}/record/{recordId}/duplicate",
+        feature: "duplicateRecord",
+      });
+      if (!duplicated.data?.id) {
+        throw new Error(
+          `duplicating ${sourceRow.id} returned no row: ${JSON.stringify(duplicated.data)}`,
+        );
+      }
     } else {
       // A two-way oneMany link hosts its foreign key on the other table, which
       // the duplicate's physical row-copy plan cannot map. Without it the copy

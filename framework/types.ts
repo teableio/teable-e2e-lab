@@ -738,7 +738,7 @@ export interface UserFieldNotifyBulkActionCaseConfig {
   // was already populated; they differ only in how the runner produces it,
   // which is why they share a runner rather than duplicating the control
   // measurement and the quiet loop.
-  action: "import" | "tableDuplicate";
+  action: "import" | "tableDuplicate" | "recordDuplicate";
   // The control row, created on a throwaway table with a plain record create.
   // Its notification is the proof that notifications work here at all.
   controlRowTitle: string;
