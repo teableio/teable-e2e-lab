@@ -34,26 +34,6 @@ runs:
             ;;
         esac
 
-    # Started here and waited for at the bottom, because the images and the
-    # toolchain need nothing from each other. Run in sequence they cost 14s of
-    # the bootstrap on their own; run alongside the dependency install they
-    # cost nothing, and the containers themselves start in under a second once
-    # the layers are local.
-    - name: Start pulling the e2e service images
-      if: inputs.operation == 'bootstrap'
-      shell: bash
-      working-directory: ${{ inputs.teable-ee-path }}
-      run: |
-        set -euo pipefail
-        nohup docker compose \
-          --env-file ./dockers/.env \
-          -f ./dockers/networks.yml \
-          -f ./dockers/database-postgres.yml \
-          -f ./dockers/cache-redis.yml \
-          pull --quiet teable-postgres teable-cache \
-          > "$RUNNER_TEMP/e2e-image-pull.log" 2>&1 &
-        echo $! > "$RUNNER_TEMP/e2e-image-pull.pid"
-
     - name: Setup pnpm
       if: inputs.operation == 'bootstrap'
       uses: pnpm/action-setup@v5
@@ -134,16 +114,6 @@ runs:
         set -euo pipefail
         export DOCKER_UID="$(id -u)"
         export DOCKER_GID="$(getent group docker | cut -d: -f3)"
-
-        # The pull was started before the toolchain; by now it has almost
-        # always finished. Waiting on it rather than letting compose pull again
-        # keeps a slow registry visible as a slow step instead of as a
-        # mysteriously slow container start.
-        if [ -f "$RUNNER_TEMP/e2e-image-pull.pid" ]; then
-          pull_pid="$(cat "$RUNNER_TEMP/e2e-image-pull.pid")"
-          while kill -0 "$pull_pid" 2>/dev/null; do sleep 0.5; done
-          cat "$RUNNER_TEMP/e2e-image-pull.log" || true
-        fi
 
         make docker.create.network
         # A fresh runner has no containers to remove, and docker says so on
