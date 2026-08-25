@@ -104,6 +104,7 @@ export interface BugCaseConfigByRunner {
   "link-picker-share-lookup": LinkPickerShareLookupCaseConfig;
   "manyone-typecast-shape": ManyoneTypecastShapeCaseConfig;
   "row-count-search-projection": RowCountSearchProjectionCaseConfig;
+  "share-copy-outside-panel": ShareCopyOutsidePanelCaseConfig;
   "tracked-modified-sort": TrackedModifiedSortCaseConfig;
   "lookup-of-link-contains": LookupOfLinkContainsCaseConfig;
   "delete-without-undo-capture": DeleteWithoutUndoCaptureCaseConfig;
@@ -1720,6 +1721,15 @@ export interface TrackedModifiedSortCaseConfig {
   // How long to wait between touching rows, so the stored times differ at the
   // second the column is formatted to.
   stepMs: number;
+}
+
+export interface ShareCopyOutsidePanelCaseConfig {
+  baseNamePrefix: string;
+  folderName: string;
+  insideTableName: string;
+  outsideTableName: string;
+  insidePanelName: string;
+  outsidePanelName: string;
 }
 
 export interface RowCountSearchProjectionCaseConfig {
