@@ -98,6 +98,7 @@ export interface BugCaseConfigByRunner {
   "ai-config-only-change-plan": AiConfigOnlyChangePlanCaseConfig;
   "empty-write-normalization": EmptyWriteNormalizationCaseConfig;
   "table-delete-realtime": TableDeleteRealtimeCaseConfig;
+  "archive-recount": ArchiveRecountCaseConfig;
   "lookup-of-link-contains": LookupOfLinkContainsCaseConfig;
   "delete-without-undo-capture": DeleteWithoutUndoCaptureCaseConfig;
   "single-field-pending-state": SingleFieldPendingStateCaseConfig;
@@ -1699,6 +1700,15 @@ export interface LookupOfLinkContainsCaseConfig {
   // the first and not of the second - the runner refuses anything else.
   targetNames: string[];
   searchTerm: string;
+}
+
+export interface ArchiveRecountCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // One counted row per owner. Two owners at least - see the runner.
+  owners: string[];
+  settleAttempts: number;
+  settleIntervalMs: number;
 }
 
 export interface TableDeleteRealtimeCaseConfig {
