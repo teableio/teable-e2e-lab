@@ -89,6 +89,7 @@ import { runAiConfigOnlyChangePlanCase } from "./runners/ai-config-only-change-p
 import { runEmptyWriteNormalizationCase } from "./runners/empty-write-normalization.runner";
 import { runArchiveRecountCase } from "./runners/archive-recount.runner";
 import { runLinkPickerShareLookupCase } from "./runners/link-picker-share-lookup.runner";
+import { runManyoneTypecastShapeCase } from "./runners/manyone-typecast-shape.runner";
 import { runLookupMultiplicityVoCase } from "./runners/lookup-multiplicity-vo.runner";
 import { runProjectedGroupHeadersCase } from "./runners/projected-group-headers.runner";
 import { runTableDeleteRealtimeCase } from "./runners/table-delete-realtime.runner";
@@ -209,6 +210,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "projected-group-headers": runProjectedGroupHeadersCase,
   "lookup-multiplicity-vo": runLookupMultiplicityVoCase,
   "link-picker-share-lookup": runLinkPickerShareLookupCase,
+  "manyone-typecast-shape": runManyoneTypecastShapeCase,
   "tracked-modified-sort": runTrackedModifiedSortCase,
   "lookup-of-link-contains": runLookupOfLinkContainsCase,
   "delete-without-undo-capture": runDeleteWithoutUndoCaptureCase,

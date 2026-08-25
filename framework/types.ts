@@ -102,6 +102,7 @@ export interface BugCaseConfigByRunner {
   "projected-group-headers": ProjectedGroupHeadersCaseConfig;
   "lookup-multiplicity-vo": LookupMultiplicityVoCaseConfig;
   "link-picker-share-lookup": LinkPickerShareLookupCaseConfig;
+  "manyone-typecast-shape": ManyoneTypecastShapeCaseConfig;
   "tracked-modified-sort": TrackedModifiedSortCaseConfig;
   "lookup-of-link-contains": LookupOfLinkContainsCaseConfig;
   "delete-without-undo-capture": DeleteWithoutUndoCaptureCaseConfig;
@@ -1714,6 +1715,14 @@ export interface TrackedModifiedSortCaseConfig {
   // How long to wait between touching rows, so the stored times differ at the
   // second the column is formatted to.
   stepMs: number;
+}
+
+export interface ManyoneTypecastShapeCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  targetName: string;
+  pickedRowName: string;
+  typedRowName: string;
 }
 
 export interface LinkPickerShareLookupCaseConfig {
