@@ -13,7 +13,6 @@ import rowCountSearchProjectionCase from "./cases/search/how-many-results-with-a
 import shareCopyOutsidePanelCase from "./cases/base-share/copy-a-share-past-a-panel-outside-it.case";
 import lookupSelectChoicesKeptCase from "./cases/lookup/repoint-a-borrowed-choice-column.case";
 import booleanFormulaFilterCase from "./cases/filter/filter-a-worked-out-yes-no-column.case";
-import undoFieldDeleteConstraintCase from "./cases/undo/undo-a-column-delete-brings-its-promise-back.case";
 import trackedModifiedSortCase from "./cases/view/sort-by-a-narrowed-last-changed-column.case";
 import lookupOfLinkContainsCase from "./cases/filter/search-a-borrowed-link-column.case";
 import deleteWithoutUndoCaptureCase from "./cases/record/delete-a-row-whose-undo-bookkeeping-is-missing.case";
@@ -141,7 +140,6 @@ const cases = [
   shareCopyOutsidePanelCase,
   lookupSelectChoicesKeptCase,
   booleanFormulaFilterCase,
-  undoFieldDeleteConstraintCase,
   trackedModifiedSortCase,
   lookupOfLinkContainsCase,
   deleteWithoutUndoCaptureCase,

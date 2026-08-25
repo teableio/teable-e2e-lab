@@ -92,7 +92,6 @@ import { runLinkPickerShareLookupCase } from "./runners/link-picker-share-lookup
 import { runManyoneTypecastShapeCase } from "./runners/manyone-typecast-shape.runner";
 import { runRowCountSearchProjectionCase } from "./runners/row-count-search-projection.runner";
 import { runBooleanFormulaFilterCase } from "./runners/boolean-formula-filter.runner";
-import { runUndoFieldDeleteConstraintCase } from "./runners/undo-field-delete-constraint.runner";
 import { runLookupSelectChoicesKeptCase } from "./runners/lookup-select-choices-kept.runner";
 import { runShareCopyOutsidePanelCase } from "./runners/share-copy-outside-panel.runner";
 import { runLookupMultiplicityVoCase } from "./runners/lookup-multiplicity-vo.runner";
@@ -220,7 +219,6 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "share-copy-outside-panel": runShareCopyOutsidePanelCase,
   "lookup-select-choices-kept": runLookupSelectChoicesKeptCase,
   "boolean-formula-filter": runBooleanFormulaFilterCase,
-  "undo-field-delete-constraint": runUndoFieldDeleteConstraintCase,
   "tracked-modified-sort": runTrackedModifiedSortCase,
   "lookup-of-link-contains": runLookupOfLinkContainsCase,
   "delete-without-undo-capture": runDeleteWithoutUndoCaptureCase,

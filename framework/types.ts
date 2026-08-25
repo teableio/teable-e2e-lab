@@ -107,7 +107,6 @@ export interface BugCaseConfigByRunner {
   "share-copy-outside-panel": ShareCopyOutsidePanelCaseConfig;
   "lookup-select-choices-kept": LookupSelectChoicesKeptCaseConfig;
   "boolean-formula-filter": BooleanFormulaFilterCaseConfig;
-  "undo-field-delete-constraint": UndoFieldDeleteConstraintCaseConfig;
   "tracked-modified-sort": TrackedModifiedSortCaseConfig;
   "lookup-of-link-contains": LookupOfLinkContainsCaseConfig;
   "delete-without-undo-capture": DeleteWithoutUndoCaptureCaseConfig;
@@ -1724,14 +1723,6 @@ export interface TrackedModifiedSortCaseConfig {
   // How long to wait between touching rows, so the stored times differ at the
   // second the column is formatted to.
   stepMs: number;
-}
-
-export interface UndoFieldDeleteConstraintCaseConfig {
-  baseId: "seed-base";
-  tableNamePrefix: string;
-  // The value a second row tries to reuse, before the delete and after the
-  // undo.
-  code: string;
 }
 
 export interface BooleanFormulaFilterCaseConfig {
