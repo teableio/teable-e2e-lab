@@ -62,8 +62,11 @@ export const runLocalizedErrorMessageCase = async (
     }
 
     const refusedIn = async (language: string) => {
+      // The language is asked for in every way the product offers: the query
+      // parameter it reads first, and the two headers it falls back to. Only
+      // the header is green on both columns, run 32887126281.
       const response = await axios.post(
-        urlBuilder(CREATE_RECORD, { tableId }),
+        `${urlBuilder(CREATE_RECORD, { tableId })}?lang=${language}`,
         {
           fieldKeyType: FieldKeyType.Id,
           records: [
@@ -76,7 +79,7 @@ export const runLocalizedErrorMessageCase = async (
           ],
         },
         {
-          headers: { "Accept-Language": language },
+          headers: { "Accept-Language": language, "x-lang": language },
           validateStatus: () => true,
         },
       );
