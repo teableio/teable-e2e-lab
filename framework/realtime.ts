@@ -1,5 +1,22 @@
+import { createRequire } from "node:module";
 import { Connection } from "sharedb/lib/client";
-import WebSocket from "ws";
+import type WebSocketType from "ws";
+
+// `ws` is loaded when a case actually opens a socket, not when this module is
+// read. Older teable-ee commits do not carry it, and a top-level import made
+// the whole lab spec fail to load there - every case in the run, not only the
+// ones that watch a page. Reaching further back is worth one lazy require.
+const loadWebSocket = (): typeof WebSocketType => {
+  const require_ = createRequire(import.meta.url);
+  try {
+    return require_("ws") as typeof WebSocketType;
+  } catch (error) {
+    throw new Error(
+      "this case watches a page over a socket, and `ws` is not available on this commit: " +
+        (error instanceof Error ? error.message : String(error)),
+    );
+  }
+};
 
 /**
  * A subscribed client, for bugs whose only symptom reaches the user over the
@@ -117,7 +134,8 @@ export const realtimeClient = (
   const serverId = String(Math.floor(Math.random() * 900) + 100);
   const sessionId = Math.random().toString(36).slice(2, 10);
   const socketUrl = `${appUrl.replace(/^http/, "ws")}/socket/${serverId}/${sessionId}/websocket`;
-  const socket = new WebSocket(socketUrl, { headers: { cookie } });
+  const WebSocketImpl = loadWebSocket();
+  const socket = new WebSocketImpl(socketUrl, { headers: { cookie } });
   const connectionErrors: string[] = [];
 
   // Socket-level listeners, not just ShareDb-level ones. A refused upgrade or
