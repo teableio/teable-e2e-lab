@@ -107,6 +107,9 @@ export interface BugCaseConfigByRunner {
   "share-copy-outside-panel": ShareCopyOutsidePanelCaseConfig;
   "lookup-select-choices-kept": LookupSelectChoicesKeptCaseConfig;
   "boolean-formula-filter": BooleanFormulaFilterCaseConfig;
+  "duplicate-base-recent-list": DuplicateBaseRecentListCaseConfig;
+  "longtext-markdown-convert": LongtextMarkdownConvertCaseConfig;
+  "stale-view-column-meta": StaleViewColumnMetaCaseConfig;
   "tracked-modified-sort": TrackedModifiedSortCaseConfig;
   "lookup-of-link-contains": LookupOfLinkContainsCaseConfig;
   "delete-without-undo-capture": DeleteWithoutUndoCaptureCaseConfig;
@@ -1723,6 +1726,25 @@ export interface TrackedModifiedSortCaseConfig {
   // How long to wait between touching rows, so the stored times differ at the
   // second the column is formatted to.
   stepMs: number;
+}
+
+export interface StaleViewColumnMetaCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // The column that is deleted and whose setting is left behind.
+  deletedColumnName: string;
+}
+
+export interface LongtextMarkdownConvertCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // The one thing the edit actually changes. It has to differ from the
+  // column's name - see the runner.
+  renamedTo: string;
+}
+
+export interface DuplicateBaseRecentListCaseConfig {
+  baseNamePrefix: string;
 }
 
 export interface BooleanFormulaFilterCaseConfig {
