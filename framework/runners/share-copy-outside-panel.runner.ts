@@ -5,6 +5,7 @@ import {
   createBaseNode,
   createBaseShare,
   createPluginPanel as apiCreatePluginPanel,
+  getBaseNodeList as apiGetBaseNodeList,
   getTableList as apiGetTableList,
   listPluginPanels as apiListPluginPanels,
   moveBaseNode as apiMoveBaseNode,
@@ -67,7 +68,18 @@ export const runShareCopyOutsidePanelCase = async (
       ],
       records: [{ fields: { [NAME_FIELD]: "a-row" } }],
     });
-    await apiMoveBaseNode(sourceBaseId, inside.id, { parentId: folderId });
+    // The sidebar addresses a table by its node, not by the table id - moving
+    // one into the folder needs the node that carries it.
+    const nodes = await apiGetBaseNodeList(sourceBaseId);
+    const insideNodeId = nodes.data.find(
+      (node) => node.resourceId === inside.id,
+    )?.id;
+    if (!insideNodeId) {
+      throw new Error(
+        `the base has no node carrying ${inside.id}: ${JSON.stringify(nodes.data.map((node) => node.resourceId))}`,
+      );
+    }
+    await apiMoveBaseNode(sourceBaseId, insideNodeId, { parentId: folderId });
 
     // A table that stays out of the folder - the part of the base that is not
     // being handed over.
