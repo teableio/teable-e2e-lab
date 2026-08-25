@@ -99,6 +99,7 @@ export interface BugCaseConfigByRunner {
   "empty-write-normalization": EmptyWriteNormalizationCaseConfig;
   "table-delete-realtime": TableDeleteRealtimeCaseConfig;
   "archive-recount": ArchiveRecountCaseConfig;
+  "projected-group-headers": ProjectedGroupHeadersCaseConfig;
   "tracked-modified-sort": TrackedModifiedSortCaseConfig;
   "lookup-of-link-contains": LookupOfLinkContainsCaseConfig;
   "delete-without-undo-capture": DeleteWithoutUndoCaptureCaseConfig;
@@ -1711,6 +1712,14 @@ export interface TrackedModifiedSortCaseConfig {
   // How long to wait between touching rows, so the stored times differ at the
   // second the column is formatted to.
   stepMs: number;
+}
+
+export interface ProjectedGroupHeadersCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // One entry per row, naming the group it belongs to. Two different statuses
+  // at least - see the runner.
+  rowStatuses: string[];
 }
 
 export interface ArchiveRecountCaseConfig {
