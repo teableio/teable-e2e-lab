@@ -10,6 +10,7 @@ import lookupMultiplicityVoCase from "./cases/lookup/a-borrowed-people-column-ov
 import linkPickerShareLookupCase from "./cases/link/the-picker-behind-a-borrowed-link.case";
 import manyoneTypecastShapeCase from "./cases/link/fill-a-one-row-link-in-by-name.case";
 import rowCountSearchProjectionCase from "./cases/search/how-many-results-with-a-column-hidden.case";
+import quotedColumnNameFormulaCase from "./cases/formula/a-column-name-with-a-quotation-mark.case";
 import trackedModifiedSortCase from "./cases/view/sort-by-a-narrowed-last-changed-column.case";
 import lookupOfLinkContainsCase from "./cases/filter/search-a-borrowed-link-column.case";
 import deleteWithoutUndoCaptureCase from "./cases/record/delete-a-row-whose-undo-bookkeeping-is-missing.case";
@@ -134,6 +135,7 @@ const cases = [
   linkPickerShareLookupCase,
   manyoneTypecastShapeCase,
   rowCountSearchProjectionCase,
+  quotedColumnNameFormulaCase,
   trackedModifiedSortCase,
   lookupOfLinkContainsCase,
   deleteWithoutUndoCaptureCase,
