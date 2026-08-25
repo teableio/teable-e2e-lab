@@ -121,17 +121,13 @@ const describeMissing = (comparison) => {
   return lines;
 };
 
+// Kept to the fields the schema requires. The first attempt carried styling
+// alongside them and the webhook answered "parse card json err" without saying
+// which field it choked on, so the card asks for nothing it does not need.
 const collapsible = (title, content) => ({
   tag: "collapsible_panel",
   expanded: false,
-  background_style: "grey",
-  header: {
-    title: { tag: "markdown", content: title },
-    vertical_align: "center",
-    icon: { tag: "standard_icon", token: "down-small-ccm_outlined" },
-    icon_position: "right",
-    icon_expanded_angle: -180,
-  },
+  header: { title: { tag: "markdown", content: title } },
   elements: [{ tag: "markdown", content }],
 });
 
@@ -229,8 +225,9 @@ export const buildFeishuCard = ({ comparison, runUrl }) => {
   return {
     msg_type: "interactive",
     card: {
+      // wide_screen_mode belongs to schema 1.0; carrying it into a 2.0 card is
+      // what the webhook rejected the first time this shipped.
       schema: "2.0",
-      config: { wide_screen_mode: true },
       header: {
         title: {
           tag: "plain_text",
