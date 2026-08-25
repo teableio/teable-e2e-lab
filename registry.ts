@@ -6,6 +6,7 @@ import emptyWriteNormalizationCase from "./cases/record/clear-a-cell-and-have-it
 import tableDeleteRealtimeCase from "./cases/realtime/deleting-a-table-reaches-the-open-page.case";
 import archiveRecountCase from "./cases/record/archive-the-rows-a-count-was-counting.case";
 import projectedGroupHeadersCase from "./cases/view/a-grouped-view-asked-for-one-column.case";
+import lookupMultiplicityVoCase from "./cases/lookup/a-borrowed-people-column-over-many-rows.case";
 import trackedModifiedSortCase from "./cases/view/sort-by-a-narrowed-last-changed-column.case";
 import lookupOfLinkContainsCase from "./cases/filter/search-a-borrowed-link-column.case";
 import deleteWithoutUndoCaptureCase from "./cases/record/delete-a-row-whose-undo-bookkeeping-is-missing.case";
@@ -125,6 +126,7 @@ const cases = [
   tableDeleteRealtimeCase,
   archiveRecountCase,
   projectedGroupHeadersCase,
+  lookupMultiplicityVoCase,
   trackedModifiedSortCase,
   lookupOfLinkContainsCase,
   deleteWithoutUndoCaptureCase,
