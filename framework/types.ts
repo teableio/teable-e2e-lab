@@ -110,6 +110,9 @@ export interface BugCaseConfigByRunner {
   "duplicate-base-recent-list": DuplicateBaseRecentListCaseConfig;
   "longtext-markdown-convert": LongtextMarkdownConvertCaseConfig;
   "stale-view-column-meta": StaleViewColumnMetaCaseConfig;
+  "nested-filter-conjunction": NestedFilterConjunctionCaseConfig;
+  "conditional-rollup-user-match": ConditionalRollupUserMatchCaseConfig;
+  "formula-over-system-columns": FormulaOverSystemColumnsCaseConfig;
   "tracked-modified-sort": TrackedModifiedSortCaseConfig;
   "lookup-of-link-contains": LookupOfLinkContainsCaseConfig;
   "delete-without-undo-capture": DeleteWithoutUndoCaptureCaseConfig;
@@ -1726,6 +1729,35 @@ export interface TrackedModifiedSortCaseConfig {
   // How long to wait between touching rows, so the stored times differ at the
   // second the column is formatted to.
   stepMs: number;
+}
+
+export interface FormulaOverSystemColumnsCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  rowTitle: string;
+}
+
+export interface ConditionalRollupUserMatchCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  staffedRowName: string;
+  emptyRowName: string;
+  // Hours on tasks the person owns, and on tasks nobody owns. Both lists have
+  // to hold something - see the runner.
+  ownedHours: number[];
+  unownedHours: number[];
+  settleAttempts: number;
+  settleIntervalMs: number;
+}
+
+export interface NestedFilterConjunctionCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // One row per value. Both wanted values have to be present, they have to
+  // differ, and at least one row has to hold neither - see the runner.
+  statuses: number[];
+  firstWanted: number;
+  secondWanted: number;
 }
 
 export interface StaleViewColumnMetaCaseConfig {
