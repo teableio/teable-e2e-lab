@@ -17,6 +17,22 @@ const timeout = process.env.CI ? 60_000 : 10_000;
 const e2eLabSpec =
   "../../community/apps/nestjs-backend/test/e2e-lab/e2e-lab.e2e-spec.ts";
 
+// How many cases may be in flight at once. Cases became overlappable when each
+// got its own base (framework/case-base.ts); before that they shared one and
+// had to run one at a time.
+//
+// Two, not four. Most of what overlapping buys back is idle waiting — a case
+// watching for a notification that must not arrive — so the width does not
+// have to be large to collect it. Four was: it ran the suite in 81s against
+// 150s serial, and then timed out base-share/import-keeps-field-descriptions
+// twice, a case that finishes in under a second on its own. Those cases move
+// a whole base through export and import, and four of them against one app
+// process is more than the machine has to give.
+//
+// Override with E2E_LAB_CONCURRENCY to bisect a case that only misbehaves
+// alongside others; 1 restores the old serial order.
+const concurrency = Number(process.env.E2E_LAB_CONCURRENCY ?? 2);
+
 export default defineConfig({
   resolve: {
     conditions: ["@teable/source"],
@@ -46,6 +62,7 @@ export default defineConfig({
     passWithNoTests: false,
     pool: "forks",
     fileParallelism: false,
+    maxConcurrency: concurrency,
     sequence: {
       hooks: "stack",
     },

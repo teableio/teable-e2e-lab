@@ -41,7 +41,7 @@ that first assignment produces is free — and it is the control. Waiting for it
 establishes both that notifications work on this commit and how long they take
 here; the quiet budget is refused at runtime unless it is at least three times
 the latency actually measured. Observed so far: a little over half a second,
-against a 25-second budget.
+against a 5-second budget.
 
 It is then marked read through the endpoint behind the bell icon's "mark all
 read", and the runner checks the unread list is actually empty afterwards. That

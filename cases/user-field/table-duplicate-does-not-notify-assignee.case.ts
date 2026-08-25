@@ -23,7 +23,7 @@ export default defineBugCase({
     controlRowTitle: "control-assignment",
     actionRowTitle: "duplicated row",
     notifyTimeoutMs: 20_000,
-    quietTimeoutMs: 25_000,
+    quietTimeoutMs: 5_000,
     rowVisibleTimeoutMs: 60_000,
     pollIntervalMs: 500,
   },

@@ -1,6 +1,7 @@
 import { performance } from "node:perf_hooks";
 import { writeBugArtifacts, type BugArtifactPayload } from "./artifacts";
 import { normalizeBugError, toBugTestFailure } from "./bug-error";
+import { withCaseBase } from "./case-base";
 import { executeRegisteredRunner } from "./runner-registry";
 import { LAB_ENGINE } from "./engine";
 import { resolveVerdict, verdictFailsCi } from "./verdict";
@@ -32,8 +33,16 @@ export const runBugCase = async (
 
   let probe: BugProbeResult | undefined;
   let caught: unknown;
+  let caseBaseId: string | undefined;
+  // The base is acquired inside the same try the runner runs in, so a failure
+  // to get one is caught and reported through the ordinary artifact path
+  // instead of escaping as a bare vitest error. See framework/case-base.ts for
+  // why every case gets its own.
   try {
-    probe = await executeRegisteredRunner(bugCase, context);
+    probe = await withCaseBase(bugCase.id, context.runId, async (baseId) => {
+      caseBaseId = baseId;
+      return executeRegisteredRunner(bugCase, context);
+    });
   } catch (error) {
     caught = error;
   }
@@ -60,7 +69,12 @@ export const runBugCase = async (
     startedAt: startedAt.toISOString(),
     finishedAt: new Date().toISOString(),
     durationMs: performance.now() - started,
-    details: probe?.details,
+    // The base id is stamped even when the case failed: the base is where the
+    // evidence is, and on a failure it is the thing someone will want to open.
+    details:
+      probe?.details || caseBaseId
+        ? { ...probe?.details, ...(caseBaseId ? { caseBaseId } : {}) }
+        : undefined,
     ...(caught !== undefined ? { error: normalizeBugError(caught) } : {}),
     ...(caught instanceof BugPresentError
       ? {

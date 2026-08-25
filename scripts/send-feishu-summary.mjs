@@ -1,10 +1,18 @@
 // One Feishu card per run, built from comparison.json — the same model the
 // acceptance gate judged, so the card can never disagree with the verdict.
 //
-// Kept deliberately small next to perf-lab's sender: bug results are
-// deterministic, so there are no noise caveats, no baselines, and no folded
-// panels — the card shows the bug × commit grid, lists what needs a human
-// (regressions, errors, unexpectedly-fixed), and links the run.
+// The card has one hard rule: nothing above the fold grows with the number of
+// cases. A run that ends before its cases start produces one "result missing"
+// per case, and the card that printed all of them printed the same fact 106
+// times and pushed the run link off the screen. A grid of 106 rows in a chat
+// message does the same thing for a different reason. Both now live inside
+// collapsible panels, which card schema 2.0 provides and 1.0 did not — the
+// earlier version of this file worked around their absence by dropping the
+// grid entirely on single-column runs.
+//
+// Above the fold: the verdict, the counts, and the link. Everything else is a
+// click away, and the lists inside are capped — past a couple of dozen entries
+// a chat card is the wrong place to read them, and the run is one tap away.
 
 import { countOutcomes } from "./comparison-model.mjs";
 import { readFile } from "node:fs/promises";
@@ -69,62 +77,157 @@ export const buildComparisonGrid = (comparison) => {
   );
 };
 
+// Past this many, a chat card is the wrong place to read a list. The tail is
+// counted rather than printed, and the run link is where it belongs.
+const LIST_LIMIT = 20;
+
+const capped = (entries, render) => {
+  const shown = entries.slice(0, LIST_LIMIT).map(render);
+  const hidden = entries.length - shown.length;
+  return hidden > 0 ? [...shown, `…and ${hidden} more — see the run`] : shown;
+};
+
+const shortSha = (sha) => sha.slice(0, 10);
+
+// A run that dies before its cases start reports every case as missing on that
+// column. Saying so once is the whole content of that report; saying it 106
+// times is not 106 times as informative.
+const describeMissing = (comparison) => {
+  const { missing } = comparison.failures;
+  if (missing.length === 0) {
+    return [];
+  }
+  const perColumn = new Map();
+  for (const entry of missing) {
+    perColumn.set(entry.sha, (perColumn.get(entry.sha) ?? 0) + 1);
+  }
+  const total = comparison.rows.length;
+  const lines = [];
+  for (const [sha, count] of perColumn) {
+    if (count === total && total > 1) {
+      lines.push(
+        `❓ No results from \`${shortSha(sha)}\` — all ${total} cases. The run stopped before the cases did.`,
+      );
+    } else {
+      lines.push(
+        ...capped(
+          missing.filter((entry) => entry.sha === sha),
+          (entry) =>
+            `❓ Result missing ${entry.caseId} @ ${shortSha(entry.sha)}`,
+        ),
+      );
+    }
+  }
+  return lines;
+};
+
+// Kept to the fields the schema requires. The first attempt carried styling
+// alongside them and the webhook answered "parse card json err" without saying
+// which field it choked on, so the card asks for nothing it does not need.
+const collapsible = (title, content) => ({
+  tag: "collapsible_panel",
+  expanded: false,
+  header: { title: { tag: "markdown", content: title } },
+  elements: [{ tag: "markdown", content }],
+});
+
 export const buildFeishuCard = ({ comparison, runUrl }) => {
   const failed = !comparison.passed;
+  const { regressions, errors, missing } = comparison.failures;
+  const { unexpectedlyFixed } = comparison.notices;
 
-  // The grid alone carries the comparison: a row reading ❌ then ✅ already
-  // says "fixed between these two commits", so spelling the transition out
-  // again next to it only competed with the table for the reader's attention.
-  // A full run against one commit is a yes-or-no question, and a chat card
-  // cannot fold a grid away: 80 rows of ticks push the part that matters off
-  // the screen. The counts stand in for the grid, and the failures below are
-  // untouched - they are what someone would scroll for.
-  const singleColumn = comparison.commits.length === 1;
-  const lines = singleColumn
-    ? (() => {
-        const { total, passed, failed } = countOutcomes(comparison);
-        const [column] = comparison.commits;
-        return [
-          `**${total} case${total === 1 ? "" : "s"}** on \`${columnLabel(column)}\` — **${passed} passed**, **${failed} failed**.`,
-          "",
-        ];
-      })()
-    : ["```", ...buildComparisonGrid(comparison), "```", ""];
+  // The headline never grows: one line whatever the run did.
+  const caseCount = comparison.rows.length;
+  const columnCount = comparison.commits.length;
+  const headline =
+    columnCount === 1
+      ? (() => {
+          const {
+            total,
+            passed,
+            failed: failedCount,
+          } = countOutcomes(comparison);
+          const [column] = comparison.commits;
+          return `**${total} case${total === 1 ? "" : "s"}** on \`${columnLabel(column)}\` — **${passed} passed**, **${failedCount} failed**.`;
+        })()
+      : `**${caseCount} case${caseCount === 1 ? "" : "s"}** across **${columnCount} commits** — ${comparison.commits.map((commit) => `\`${columnLabel(commit)}\``).join(" → ")}.`;
 
-  const failureLines = [];
-  for (const failure of comparison.failures.regressions) {
-    failureLines.push(
-      `❌ **Regression** ${failure.caseId} @ ${failure.sha.slice(0, 10)}`,
-    );
-  }
-  for (const failure of comparison.failures.errors) {
-    failureLines.push(
-      `💥 Could not run ${failure.caseId} @ ${failure.sha.slice(0, 10)}`,
-    );
-  }
-  for (const failure of comparison.failures.missing) {
-    failureLines.push(
-      `❓ Result missing ${failure.caseId} @ ${failure.sha.slice(0, 10)}`,
-    );
-  }
+  const needsHuman = [
+    regressions.length > 0
+      ? `❌ ${regressions.length} regression${regressions.length === 1 ? "" : "s"}`
+      : null,
+    errors.length > 0 ? `💥 ${errors.length} could not run` : null,
+    missing.length > 0 ? `❓ ${missing.length} missing` : null,
+    unexpectedlyFixed.length > 0
+      ? `💡 ${unexpectedlyFixed.length} to confirm`
+      : null,
+  ].filter(Boolean);
+
+  const elements = [
+    {
+      tag: "markdown",
+      content: [
+        headline,
+        needsHuman.length > 0 ? needsHuman.join("  ·  ") : null,
+        `[Open the run and the full comparison table](${runUrl})`,
+      ]
+        .filter((line) => line !== null)
+        .join("\n"),
+    },
+  ];
+
+  const failureLines = [
+    ...capped(
+      regressions,
+      (failure) =>
+        `❌ **Regression** ${failure.caseId} @ ${shortSha(failure.sha)}`,
+    ),
+    ...capped(
+      errors,
+      (failure) =>
+        `💥 Could not run ${failure.caseId} @ ${shortSha(failure.sha)}`,
+    ),
+    ...describeMissing(comparison),
+  ];
   if (failureLines.length > 0) {
-    lines.push(...failureLines, "");
-  }
-  if (comparison.notices.unexpectedlyFixed.length > 0) {
-    lines.push(
-      "💡 **Declared open but did not reproduce — confirm the fix, then set status to fixed:**",
-      ...comparison.notices.unexpectedlyFixed.map(
-        (notice) => `- ${notice.caseId} (${notice.issue})`,
+    elements.push(
+      collapsible(
+        `**What needs a human** (${needsHuman.join(", ")})`,
+        failureLines.join("\n"),
       ),
-      "",
     );
   }
-  lines.push(`[Open the run and the full comparison table](${runUrl})`);
+
+  if (unexpectedlyFixed.length > 0) {
+    elements.push(
+      collapsible(
+        `**💡 Declared open but did not reproduce** (${unexpectedlyFixed.length})`,
+        [
+          "Confirm the fix, then set status to fixed:",
+          ...capped(
+            unexpectedlyFixed,
+            (notice) => `- ${notice.caseId} (${notice.issue})`,
+          ),
+        ].join("\n"),
+      ),
+    );
+  }
+
+  if (columnCount > 1) {
+    elements.push(
+      collapsible(
+        `**Bug × commit** (${caseCount} × ${columnCount})`,
+        ["```", ...buildComparisonGrid(comparison), "```"].join("\n"),
+      ),
+    );
+  }
 
   return {
     msg_type: "interactive",
     card: {
-      config: { wide_screen_mode: true },
+      // wide_screen_mode belongs to schema 1.0; carrying it into a 2.0 card is
+      // what the webhook rejected the first time this shipped.
+      schema: "2.0",
       header: {
         title: {
           tag: "plain_text",
@@ -134,7 +237,7 @@ export const buildFeishuCard = ({ comparison, runUrl }) => {
         },
         template: failed ? "red" : "green",
       },
-      elements: [{ tag: "markdown", content: lines.join("\n") }],
+      body: { elements },
     },
   };
 };

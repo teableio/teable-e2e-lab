@@ -153,10 +153,19 @@ test("the card carries the grid inside a fenced block and links the run", () => 
     runUrl: "https://example.test/run/1",
   });
 
-  const content = card.card.elements[0].content;
-  assert.match(content, /^```\n/);
-  assert.match(content, /https:\/\/example\.test\/run\/1/);
+  // Above the fold: the headline and the link, never the grid.
+  const [summary, ...panels] = card.card.body.elements;
+  assert.doesNotMatch(summary.content, /```/);
+  assert.match(summary.content, /https:\/\/example\.test\/run\/1/);
   assert.equal(card.card.header.template, "green");
+
+  // The grid is present, folded away.
+  const grid = panels.find((panel) =>
+    /Bug × commit/.test(panel.header.title.content),
+  );
+  assert.equal(grid.tag, "collapsible_panel");
+  assert.equal(grid.expanded, false);
+  assert.match(grid.elements[0].content, /^```\n/);
 });
 
 test("a single-commit run sends the counts instead of the grid", () => {
@@ -200,4 +209,83 @@ test("a single-commit run sends the counts instead of the grid", () => {
   // The grid is gone, the failure line is not.
   assert.doesNotMatch(text, /record\/x/);
   assert.match(text, /Regression\*\* record\/y/);
+});
+
+// The card this test describes is the one that arrived from a run that died in
+// the database step: every case reported missing, 106 identical lines, and the
+// run link below all of them.
+test("a run with no results at all says so once, not once per case", () => {
+  const sha = "e".repeat(40);
+  const caseIds = Array.from(
+    { length: 106 },
+    (_, index) => `pack/case-${index}`,
+  );
+  const card = buildFeishuCard({
+    comparison: {
+      commits: [{ ref: "develop", sha, short: sha.slice(0, 10) }],
+      rows: caseIds.map((caseId) => ({
+        caseId,
+        issue: "T1",
+        status: "fixed",
+        cells: [{ sha, short: sha.slice(0, 10), missing: true }],
+        transitions: [],
+      })),
+      failures: {
+        regressions: [],
+        errors: [],
+        missing: caseIds.map((caseId) => ({ caseId, sha })),
+        unplanned: [],
+        duplicates: [],
+        unknownVerdicts: [],
+      },
+      notices: { unexpectedlyFixed: [] },
+      passed: false,
+    },
+    runUrl: "https://example.invalid/run",
+  });
+
+  const [summary, ...panels] = card.card.body.elements;
+  // Nothing above the fold names a case.
+  assert.doesNotMatch(summary.content, /pack\/case-/);
+  assert.match(summary.content, /❓ 106 missing/);
+
+  const detail = panels[0].elements[0].content;
+  assert.equal(panels[0].expanded, false);
+  assert.equal(detail.split("\n").length, 1);
+  assert.match(detail, /No results from .* all 106 cases/);
+});
+
+test("a long failure list is capped rather than printed in full", () => {
+  const sha = "f".repeat(40);
+  const regressions = Array.from({ length: 50 }, (_, index) => ({
+    caseId: `pack/case-${index}`,
+    sha,
+  }));
+  const card = buildFeishuCard({
+    comparison: {
+      commits: [{ ref: "develop", sha, short: sha.slice(0, 10) }],
+      rows: regressions.map(({ caseId }) => ({
+        caseId,
+        issue: "T1",
+        status: "fixed",
+        cells: [{ sha, short: sha.slice(0, 10), verdict: "regression" }],
+        transitions: [],
+      })),
+      failures: {
+        regressions,
+        errors: [],
+        missing: [],
+        unplanned: [],
+        duplicates: [],
+        unknownVerdicts: [],
+      },
+      notices: { unexpectedlyFixed: [] },
+      passed: false,
+    },
+    runUrl: "https://example.invalid/run",
+  });
+
+  const detail = card.card.body.elements[1].elements[0].content.split("\n");
+  assert.equal(detail.length, 21);
+  assert.match(detail.at(-1), /…and 30 more/);
 });
