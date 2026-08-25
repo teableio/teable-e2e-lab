@@ -111,6 +111,7 @@ export interface BugCaseConfigByRunner {
   "longtext-markdown-convert": LongtextMarkdownConvertCaseConfig;
   "stale-view-column-meta": StaleViewColumnMetaCaseConfig;
   "nested-filter-conjunction": NestedFilterConjunctionCaseConfig;
+  "conditional-rollup-user-match": ConditionalRollupUserMatchCaseConfig;
   "tracked-modified-sort": TrackedModifiedSortCaseConfig;
   "lookup-of-link-contains": LookupOfLinkContainsCaseConfig;
   "delete-without-undo-capture": DeleteWithoutUndoCaptureCaseConfig;
@@ -1727,6 +1728,19 @@ export interface TrackedModifiedSortCaseConfig {
   // How long to wait between touching rows, so the stored times differ at the
   // second the column is formatted to.
   stepMs: number;
+}
+
+export interface ConditionalRollupUserMatchCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  staffedRowName: string;
+  emptyRowName: string;
+  // Hours on tasks the person owns, and on tasks nobody owns. Both lists have
+  // to hold something - see the runner.
+  ownedHours: number[];
+  unownedHours: number[];
+  settleAttempts: number;
+  settleIntervalMs: number;
 }
 
 export interface NestedFilterConjunctionCaseConfig {
