@@ -112,6 +112,7 @@ export interface BugCaseConfigByRunner {
   "stale-view-column-meta": StaleViewColumnMetaCaseConfig;
   "nested-filter-conjunction": NestedFilterConjunctionCaseConfig;
   "conditional-rollup-user-match": ConditionalRollupUserMatchCaseConfig;
+  "formula-over-system-columns": FormulaOverSystemColumnsCaseConfig;
   "tracked-modified-sort": TrackedModifiedSortCaseConfig;
   "lookup-of-link-contains": LookupOfLinkContainsCaseConfig;
   "delete-without-undo-capture": DeleteWithoutUndoCaptureCaseConfig;
@@ -1728,6 +1729,12 @@ export interface TrackedModifiedSortCaseConfig {
   // How long to wait between touching rows, so the stored times differ at the
   // second the column is formatted to.
   stepMs: number;
+}
+
+export interface FormulaOverSystemColumnsCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  rowTitle: string;
 }
 
 export interface ConditionalRollupUserMatchCaseConfig {
