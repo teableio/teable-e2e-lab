@@ -15,6 +15,7 @@ import lookupSelectChoicesKeptCase from "./cases/lookup/repoint-a-borrowed-choic
 import booleanFormulaFilterCase from "./cases/filter/filter-a-worked-out-yes-no-column.case";
 import duplicateBaseRecentListCase from "./cases/base-share/a-duplicated-base-in-the-recent-list.case";
 import localizedErrorMessageCase from "./cases/record/a-refusal-in-the-language-it-was-asked-in.case";
+import pasteLeadingEmptyRowsCase from "./cases/selection/paste-a-block-whose-first-line-is-blank.case";
 import trackedModifiedSortCase from "./cases/view/sort-by-a-narrowed-last-changed-column.case";
 import lookupOfLinkContainsCase from "./cases/filter/search-a-borrowed-link-column.case";
 import deleteWithoutUndoCaptureCase from "./cases/record/delete-a-row-whose-undo-bookkeeping-is-missing.case";
@@ -144,6 +145,7 @@ const cases = [
   booleanFormulaFilterCase,
   duplicateBaseRecentListCase,
   localizedErrorMessageCase,
+  pasteLeadingEmptyRowsCase,
   trackedModifiedSortCase,
   lookupOfLinkContainsCase,
   deleteWithoutUndoCaptureCase,

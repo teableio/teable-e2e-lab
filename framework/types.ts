@@ -109,6 +109,7 @@ export interface BugCaseConfigByRunner {
   "boolean-formula-filter": BooleanFormulaFilterCaseConfig;
   "duplicate-base-recent-list": DuplicateBaseRecentListCaseConfig;
   "localized-error-message": LocalizedErrorMessageCaseConfig;
+  "paste-leading-empty-rows": PasteLeadingEmptyRowsCaseConfig;
   "tracked-modified-sort": TrackedModifiedSortCaseConfig;
   "lookup-of-link-contains": LookupOfLinkContainsCaseConfig;
   "delete-without-undo-capture": DeleteWithoutUndoCaptureCaseConfig;
@@ -1725,6 +1726,17 @@ export interface TrackedModifiedSortCaseConfig {
   // How long to wait between touching rows, so the stored times differ at the
   // second the column is formatted to.
   stepMs: number;
+}
+
+export interface PasteLeadingEmptyRowsCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // The lines after the blank one. Two at least, all different - see the
+  // runner.
+  pastedValues: string[];
+  // What every row holds before the paste, so a row keeping its old value is
+  // recognisable.
+  existingPrefix: string;
 }
 
 export interface LocalizedErrorMessageCaseConfig {
