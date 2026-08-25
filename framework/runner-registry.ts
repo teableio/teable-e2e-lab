@@ -90,7 +90,6 @@ import { runEmptyWriteNormalizationCase } from "./runners/empty-write-normalizat
 import { runArchiveRecountCase } from "./runners/archive-recount.runner";
 import { runLinkPickerShareLookupCase } from "./runners/link-picker-share-lookup.runner";
 import { runManyoneTypecastShapeCase } from "./runners/manyone-typecast-shape.runner";
-import { runQuotedColumnNameFormulaCase } from "./runners/quoted-column-name-formula.runner";
 import { runRowCountSearchProjectionCase } from "./runners/row-count-search-projection.runner";
 import { runLookupMultiplicityVoCase } from "./runners/lookup-multiplicity-vo.runner";
 import { runProjectedGroupHeadersCase } from "./runners/projected-group-headers.runner";
@@ -214,7 +213,6 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "link-picker-share-lookup": runLinkPickerShareLookupCase,
   "manyone-typecast-shape": runManyoneTypecastShapeCase,
   "row-count-search-projection": runRowCountSearchProjectionCase,
-  "quoted-column-name-formula": runQuotedColumnNameFormulaCase,
   "tracked-modified-sort": runTrackedModifiedSortCase,
   "lookup-of-link-contains": runLookupOfLinkContainsCase,
   "delete-without-undo-capture": runDeleteWithoutUndoCaptureCase,

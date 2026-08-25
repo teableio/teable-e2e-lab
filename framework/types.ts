@@ -104,7 +104,6 @@ export interface BugCaseConfigByRunner {
   "link-picker-share-lookup": LinkPickerShareLookupCaseConfig;
   "manyone-typecast-shape": ManyoneTypecastShapeCaseConfig;
   "row-count-search-projection": RowCountSearchProjectionCaseConfig;
-  "quoted-column-name-formula": QuotedColumnNameFormulaCaseConfig;
   "tracked-modified-sort": TrackedModifiedSortCaseConfig;
   "lookup-of-link-contains": LookupOfLinkContainsCaseConfig;
   "delete-without-undo-capture": DeleteWithoutUndoCaptureCaseConfig;
@@ -1721,17 +1720,6 @@ export interface TrackedModifiedSortCaseConfig {
   // How long to wait between touching rows, so the stored times differ at the
   // second the column is formatted to.
   stepMs: number;
-}
-
-export interface QuotedColumnNameFormulaCaseConfig {
-  baseId: "seed-base";
-  tableNamePrefix: string;
-  // Has to contain a quotation mark - that is the whole case, and the runner
-  // refuses a name without one.
-  quotedColumnName: string;
-  value: string;
-  settleAttempts: number;
-  settleIntervalMs: number;
 }
 
 export interface RowCountSearchProjectionCaseConfig {
