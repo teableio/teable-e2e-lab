@@ -97,7 +97,6 @@ export interface BugCaseConfigByRunner {
   "lookup-of-rollup-create": LookupOfRollupCreateCaseConfig;
   "ai-config-only-change-plan": AiConfigOnlyChangePlanCaseConfig;
   "empty-write-normalization": EmptyWriteNormalizationCaseConfig;
-  "link-title-empty-primary": LinkTitleEmptyPrimaryCaseConfig;
   "delete-without-undo-capture": DeleteWithoutUndoCaptureCaseConfig;
   "single-field-pending-state": SingleFieldPendingStateCaseConfig;
 }
@@ -1688,15 +1687,6 @@ export interface DeleteWithoutUndoCaptureCaseConfig {
   // A row that is never deleted, so a delete that took the whole table and a
   // delete that took the right row are distinguishable.
   keptRowName: string;
-}
-
-export interface LinkTitleEmptyPrimaryCaseConfig {
-  baseId: "seed-base";
-  tableNamePrefix: string;
-  hostRowTitle: string;
-  // The other target row's name. It keeps "the name was dropped for the
-  // unnamed row" apart from "the name was dropped for every row".
-  namedRowTitle: string;
 }
 
 export interface EmptyWriteNormalizationCaseConfig {

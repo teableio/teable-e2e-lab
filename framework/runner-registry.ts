@@ -88,7 +88,6 @@ import { runSparseBatchUpdateCase } from "./runners/sparse-batch-update.runner";
 import { runAiConfigOnlyChangePlanCase } from "./runners/ai-config-only-change-plan.runner";
 import { runEmptyWriteNormalizationCase } from "./runners/empty-write-normalization.runner";
 import { runDeleteWithoutUndoCaptureCase } from "./runners/delete-without-undo-capture.runner";
-import { runLinkTitleEmptyPrimaryCase } from "./runners/link-title-empty-primary.runner";
 import { runSingleFieldPendingStateCase } from "./runners/single-field-pending-state.runner";
 import { runLookupOfRollupCreateCase } from "./runners/lookup-of-rollup-create.runner";
 import type {
@@ -198,7 +197,6 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "lookup-of-rollup-create": runLookupOfRollupCreateCase,
   "ai-config-only-change-plan": runAiConfigOnlyChangePlanCase,
   "empty-write-normalization": runEmptyWriteNormalizationCase,
-  "link-title-empty-primary": runLinkTitleEmptyPrimaryCase,
   "delete-without-undo-capture": runDeleteWithoutUndoCaptureCase,
   "single-field-pending-state": runSingleFieldPendingStateCase,
 };
