@@ -15,9 +15,16 @@ applyEngineRuntimeEnv();
 // teable-ee's own vitest e2e setup, so auth bootstrap, seed user, and Nest app
 // startup stay aligned with the harness the product already maintains.
 //
-// One app, every selected case in registry order, serially. No engine loop and
-// no seed/execute mode split — bug fixtures are built and torn down inside
-// each case, and the revision under test is whatever this checkout is.
+// One app, every selected case in registry order. No engine loop and no
+// seed/execute mode split — bug fixtures are built and torn down inside each
+// case, and the revision under test is whatever this checkout is.
+//
+// Cases overlap, a few at a time. They used to run strictly one after another
+// because they shared a base and could not be trusted not to disturb each
+// other; framework/case-base.ts removed the sharing, and most of what a case
+// spends its time on is waiting rather than working — six of 106 cases held
+// 68% of the wall clock, nearly all of it watching for something that must not
+// happen. The width lives in vitest-e2e-lab.config.ts.
 
 const specStarted = performance.now();
 
@@ -71,7 +78,7 @@ describe("e2e-lab bug regression runner (e2e)", () => {
   });
 
   for (const bugCase of bugCases) {
-    it(
+    it.concurrent(
       `observes ${bugCase.id} [${bugCase.bug.issue}]`,
       { timeout: bugCase.timeoutMs },
       async () => {

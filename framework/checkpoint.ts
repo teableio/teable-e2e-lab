@@ -1,3 +1,4 @@
+import { AsyncLocalStorage } from "node:async_hooks";
 import { BugPresentError } from "./types";
 import { normalizeBugError } from "./bug-error";
 
@@ -18,21 +19,25 @@ import { normalizeBugError } from "./bug-error";
  * did not exist yet.
  */
 // Set while a checkpoint is running, read by the fixture-DB seam so it can
-// refuse to hand out a database handle where the bug is being observed. Cases
-// run one at a time in one process, so a plain flag is enough; a counter would
-// only matter for nested checkpoints, which nothing builds.
-let insideCheckpoint = false;
+// refuse to hand out a database handle where the bug is being observed.
+//
+// Async-local rather than a module flag: cases overlap now, and a plain
+// boolean answers "is SOME case observing" when the question is "is THIS one".
+// The version that got this wrong failed 31 of 106 cases in a single run, all
+// of them setup calls refused because an unrelated case happened to be inside
+// its checkpoint at the time — and refused as an `error` verdict, which reads
+// as a broken case rather than as a harness that cannot count.
+const checkpointDepth = new AsyncLocalStorage<number>();
 
-export const isInsideCheckpoint = () => insideCheckpoint;
+export const isInsideCheckpoint = () => (checkpointDepth.getStore() ?? 0) > 0;
 
 export const bugCheckpoint = async <T>(
   checkpoint: string,
   observe: () => Promise<T> | T,
 ): Promise<T> => {
-  const outer = insideCheckpoint;
-  insideCheckpoint = true;
+  const depth = (checkpointDepth.getStore() ?? 0) + 1;
   try {
-    return await observe();
+    return await checkpointDepth.run(depth, async () => observe());
   } catch (error) {
     if (error instanceof BugPresentError) {
       throw error;
@@ -53,7 +58,5 @@ export const bugCheckpoint = async <T>(
         },
       },
     );
-  } finally {
-    insideCheckpoint = outer;
   }
 };

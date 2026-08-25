@@ -21,7 +21,7 @@ export default defineBugCase({
     replay: "undoDelete",
     rowTitle: "assigned row",
     notifyTimeoutMs: 20_000,
-    quietTimeoutMs: 25_000,
+    quietTimeoutMs: 5_000,
     replaySettleTimeoutMs: 60_000,
     pollIntervalMs: 500,
   },
