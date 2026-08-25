@@ -106,6 +106,7 @@ export interface BugCaseConfigByRunner {
   "row-count-search-projection": RowCountSearchProjectionCaseConfig;
   "share-copy-outside-panel": ShareCopyOutsidePanelCaseConfig;
   "lookup-select-choices-kept": LookupSelectChoicesKeptCaseConfig;
+  "formula-timezone-only-update": FormulaTimezoneOnlyUpdateCaseConfig;
   "tracked-modified-sort": TrackedModifiedSortCaseConfig;
   "lookup-of-link-contains": LookupOfLinkContainsCaseConfig;
   "delete-without-undo-capture": DeleteWithoutUndoCaptureCaseConfig;
@@ -1722,6 +1723,15 @@ export interface TrackedModifiedSortCaseConfig {
   // How long to wait between touching rows, so the stored times differ at the
   // second the column is formatted to.
   stepMs: number;
+}
+
+export interface FormulaTimezoneOnlyUpdateCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  startsAt: string;
+  // The new time zone has to differ from the old one - see the runner.
+  timeZone: string;
+  newTimeZone: string;
 }
 
 export interface LookupSelectChoicesKeptCaseConfig {
