@@ -18,16 +18,18 @@ open the column's settings again and read what is there now.
 ## What the checkpoint asserts
 
 After the time zone is changed, the rule the product reports for the column is
-the rule the person wrote — and the time zone really did change, so "the edit
-did not take" stays a different report.
+the rule the person wrote — and the column now shows the same instant read in
+the other time zone, so "the edit did not take" stays a different report.
 
 ## What the fixture has to hold
 
-The column carries the rule as written before the change. A rule that never
-landed would have the checkpoint comparing a wrong thing against a wrong thing.
+The column carries the rule as written before the change, and shows the date in
+the time zone it was made with. A rule that never landed would have the
+checkpoint comparing a wrong thing against a wrong thing.
 
-## Why the values are not the observation
+## Why the rule is read as well as the value
 
-What the replaced rule computes looks like a date on every row. Values that
-look right are exactly what makes this hard to see, so the case reads the rule
-instead.
+What the replaced rule computes looks like a date on every row — values that
+look right are exactly what makes this hard to see. So the case reads the rule
+the product reports, and then the value, which has to have moved by the
+difference between the two time zones.

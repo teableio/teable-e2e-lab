@@ -1,5 +1,13 @@
-import { DateFormattingPreset, FieldType, TimeFormatting } from "@teable/core";
-import { axios, UPDATE_FIELD, urlBuilder } from "@teable/openapi";
+import {
+  DateFormattingPreset,
+  FieldKeyType,
+  FieldType,
+  TimeFormatting,
+} from "@teable/core";
+import {
+  convertField as apiConvertField,
+  getRecords as apiGetRecords,
+} from "@teable/openapi";
 import {
   createField,
   createTable,
@@ -7,7 +15,6 @@ import {
   permanentDeleteTable,
 } from "../../../utils/init-app";
 import { bugCheckpoint } from "../checkpoint";
-import { pickRoutingHeaders } from "../engine";
 import type { BugCaseFor, BugProbeResult, BugRunContext } from "../types";
 import type { FormulaTimezoneOnlyUpdateCaseConfig } from "../types";
 
@@ -77,52 +84,55 @@ export const runFormulaTimezoneOnlyUpdateCase = async (
       throw new Error(`Table ${tableId} is not in place`);
     }
 
-    const expression = `{${dateFieldId}}`;
+    const expression = `DATETIME_FORMAT({${dateFieldId}}, 'YYYY-MM-DD HH:mm:ss')`;
     const computed = await createField(tableId, {
       name: COMPUTED_FIELD,
       type: FieldType.Formula,
-      options: {
-        expression,
-        formatting: {
-          date: DateFormattingPreset.ISO,
-          time: TimeFormatting.Hour24,
-          timeZone: config.timeZone,
-        },
-      },
+      options: { expression, timeZone: config.timeZone },
     });
 
+    const readComputed = async () => {
+      const read = await apiGetRecords(tableId, {
+        fieldKeyType: FieldKeyType.Id,
+        take: 5,
+      });
+      return read.data.records[0]?.fields[computed.id];
+    };
+
     // Fixture verification, outside the checkpoint: the column carries the
-    // rule as written. A rule that never landed would make the checkpoint
-    // compare a wrong thing against a wrong thing.
+    // rule as written and shows the date in the time zone it was made with. A
+    // rule that never landed would have the checkpoint comparing a wrong thing
+    // against a wrong thing.
     if (computed.options?.expression !== expression) {
       throw new Error(
         `the column was made with ${JSON.stringify(computed.options?.expression)}, expected ${JSON.stringify(expression)}`,
+      );
+    }
+    let shownBefore: unknown;
+    for (let attempt = 0; attempt < config.settleAttempts; attempt += 1) {
+      shownBefore = await readComputed();
+      if (shownBefore != null) {
+        break;
+      }
+      await new Promise((resolve) =>
+        setTimeout(resolve, config.settleIntervalMs),
+      );
+    }
+    if (shownBefore !== config.shownBefore) {
+      throw new Error(
+        `the column shows ${JSON.stringify(shownBefore)} before the change, expected ${JSON.stringify(config.shownBefore)}`,
       );
     }
 
     const probe = await bugCheckpoint(
       "changing-only-the-time-zone-keeps-the-rule",
       async () => {
-        // Only the display setting. Nothing else is sent, and nothing else
-        // should change - which is what a partial update means.
-        const response = await axios.patch(
-          urlBuilder(UPDATE_FIELD, { tableId, fieldId: computed.id }),
-          {
-            options: {
-              formatting: {
-                date: DateFormattingPreset.ISO,
-                time: TimeFormatting.Hour24,
-                timeZone: config.newTimeZone,
-              },
-            },
-          },
-          { validateStatus: () => true },
-        );
-        if (response.status < 200 || response.status >= 300) {
-          throw new Error(
-            `changing the time zone answered ${response.status}: ${JSON.stringify(response.data)?.slice(0, 300)}`,
-          );
-        }
+        // Only the time zone differs from what the column already carries -
+        // the same rule, shown somewhere else.
+        await apiConvertField(tableId, computed.id, {
+          type: FieldType.Formula,
+          options: { expression, timeZone: config.newTimeZone },
+        });
 
         const after = await getField(tableId, computed.id);
         if (after.options?.expression !== expression) {
@@ -132,16 +142,26 @@ export const runFormulaTimezoneOnlyUpdateCase = async (
               "and what it computes now looks like a date on every row",
           );
         }
-        if (after.options?.formatting?.timeZone !== config.newTimeZone) {
+
+        let shownAfter: unknown;
+        for (let attempt = 0; attempt < config.settleAttempts; attempt += 1) {
+          shownAfter = await readComputed();
+          if (shownAfter === config.shownAfter) {
+            break;
+          }
+          await new Promise((resolve) =>
+            setTimeout(resolve, config.settleIntervalMs),
+          );
+        }
+        if (shownAfter !== config.shownAfter) {
           throw new Error(
-            `the column is still shown in ${JSON.stringify(after.options?.formatting?.timeZone)}, expected ` +
-              `${JSON.stringify(config.newTimeZone)} - the change did not take`,
+            `the column shows ${JSON.stringify(shownAfter)} after the change, expected ${JSON.stringify(config.shownAfter)} - ` +
+              "the same instant read in the other time zone",
           );
         }
         return {
           expression: after.options?.expression,
-          timeZone: after.options?.formatting?.timeZone,
-          routing: pickRoutingHeaders(response.headers),
+          shownAfter,
         };
       },
     );
@@ -151,8 +171,7 @@ export const runFormulaTimezoneOnlyUpdateCase = async (
         tableId,
         fieldId: computed.id,
         expressionAfter: probe.expression,
-        timeZoneAfter: probe.timeZone,
-        routing: probe.routing,
+        shownAfter: probe.shownAfter,
       },
     };
   } finally {

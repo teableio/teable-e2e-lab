@@ -19,8 +19,12 @@ export default defineBugCase({
   config: {
     baseId: "seed-base",
     tableNamePrefix: "e2e-lab-formula-timezone",
-    startsAt: "2026-03-01T09:00:00.000Z",
+    startsAt: "2026-03-01T09:07:11.000Z",
     timeZone: "UTC",
     newTimeZone: "Asia/Shanghai",
+    shownBefore: "2026-03-01 09:07:11",
+    shownAfter: "2026-03-01 17:07:11",
+    settleAttempts: 60,
+    settleIntervalMs: 500,
   },
 });

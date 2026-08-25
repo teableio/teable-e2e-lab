@@ -1732,6 +1732,11 @@ export interface FormulaTimezoneOnlyUpdateCaseConfig {
   // The new time zone has to differ from the old one - see the runner.
   timeZone: string;
   newTimeZone: string;
+  // The same instant, written out in each of the two time zones.
+  shownBefore: string;
+  shownAfter: string;
+  settleAttempts: number;
+  settleIntervalMs: number;
 }
 
 export interface LookupSelectChoicesKeptCaseConfig {
