@@ -111,7 +111,6 @@ export interface BugCaseConfigByRunner {
   "longtext-markdown-convert": LongtextMarkdownConvertCaseConfig;
   "stale-view-column-meta": StaleViewColumnMetaCaseConfig;
   "nested-filter-conjunction": NestedFilterConjunctionCaseConfig;
-  "linked-row-outside-the-scope": LinkedRowOutsideTheScopeCaseConfig;
   "tracked-modified-sort": TrackedModifiedSortCaseConfig;
   "lookup-of-link-contains": LookupOfLinkContainsCaseConfig;
   "delete-without-undo-capture": DeleteWithoutUndoCaptureCaseConfig;
@@ -1728,16 +1727,6 @@ export interface TrackedModifiedSortCaseConfig {
   // How long to wait between touching rows, so the stored times differ at the
   // second the column is formatted to.
   stepMs: number;
-}
-
-export interface LinkedRowOutsideTheScopeCaseConfig {
-  baseId: "seed-base";
-  tableNamePrefix: string;
-  hostRowName: string;
-  // The row the view keeps and the row it drops. They have to differ - see the
-  // runner.
-  inViewName: string;
-  outOfViewName: string;
 }
 
 export interface NestedFilterConjunctionCaseConfig {
