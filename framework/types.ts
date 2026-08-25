@@ -97,6 +97,9 @@ export interface BugCaseConfigByRunner {
   "lookup-of-rollup-create": LookupOfRollupCreateCaseConfig;
   "ai-config-only-change-plan": AiConfigOnlyChangePlanCaseConfig;
   "empty-write-normalization": EmptyWriteNormalizationCaseConfig;
+  "table-delete-realtime": TableDeleteRealtimeCaseConfig;
+  "archive-recount": ArchiveRecountCaseConfig;
+  "tracked-modified-sort": TrackedModifiedSortCaseConfig;
   "lookup-of-link-contains": LookupOfLinkContainsCaseConfig;
   "delete-without-undo-capture": DeleteWithoutUndoCaptureCaseConfig;
   "single-field-pending-state": SingleFieldPendingStateCaseConfig;
@@ -1698,6 +1701,34 @@ export interface LookupOfLinkContainsCaseConfig {
   // the first and not of the second - the runner refuses anything else.
   targetNames: string[];
   searchTerm: string;
+}
+
+export interface TrackedModifiedSortCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Three rows at least - see the runner. They are touched oldest first.
+  rowNames: string[];
+  // How long to wait between touching rows, so the stored times differ at the
+  // second the column is formatted to.
+  stepMs: number;
+}
+
+export interface ArchiveRecountCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // One counted row per owner. Two owners at least - see the runner.
+  owners: string[];
+  settleAttempts: number;
+  settleIntervalMs: number;
+}
+
+export interface TableDeleteRealtimeCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // How long the watched list may take to carry both fixture tables, and how
+  // long the delete may take to reach the page.
+  settleTimeoutMs: number;
+  announceTimeoutMs: number;
 }
 
 export interface EmptyWriteNormalizationCaseConfig {

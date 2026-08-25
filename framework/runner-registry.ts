@@ -87,6 +87,9 @@ import { runIsWithinTodayFilterCase } from "./runners/is-within-today-filter.run
 import { runSparseBatchUpdateCase } from "./runners/sparse-batch-update.runner";
 import { runAiConfigOnlyChangePlanCase } from "./runners/ai-config-only-change-plan.runner";
 import { runEmptyWriteNormalizationCase } from "./runners/empty-write-normalization.runner";
+import { runArchiveRecountCase } from "./runners/archive-recount.runner";
+import { runTableDeleteRealtimeCase } from "./runners/table-delete-realtime.runner";
+import { runTrackedModifiedSortCase } from "./runners/tracked-modified-sort.runner";
 import { runLookupOfLinkContainsCase } from "./runners/lookup-of-link-contains.runner";
 import { runDeleteWithoutUndoCaptureCase } from "./runners/delete-without-undo-capture.runner";
 import { runSingleFieldPendingStateCase } from "./runners/single-field-pending-state.runner";
@@ -198,6 +201,9 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "lookup-of-rollup-create": runLookupOfRollupCreateCase,
   "ai-config-only-change-plan": runAiConfigOnlyChangePlanCase,
   "empty-write-normalization": runEmptyWriteNormalizationCase,
+  "table-delete-realtime": runTableDeleteRealtimeCase,
+  "archive-recount": runArchiveRecountCase,
+  "tracked-modified-sort": runTrackedModifiedSortCase,
   "lookup-of-link-contains": runLookupOfLinkContainsCase,
   "delete-without-undo-capture": runDeleteWithoutUndoCaptureCase,
   "single-field-pending-state": runSingleFieldPendingStateCase,
