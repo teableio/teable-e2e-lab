@@ -1,10 +1,5 @@
-import {
-  FieldKeyType,
-  FieldType,
-  GroupPointType,
-  SortFunc,
-} from "@teable/core";
-import { getRecords as apiGetRecords } from "@teable/openapi";
+import { FieldKeyType, FieldType, SortFunc } from "@teable/core";
+import { getRecords as apiGetRecords, GroupPointType } from "@teable/openapi";
 import { createTable, permanentDeleteTable } from "../../../utils/init-app";
 import { bugCheckpoint } from "../checkpoint";
 import { assertServedByV2 } from "../engine";
