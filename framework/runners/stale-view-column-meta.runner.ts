@@ -1,9 +1,8 @@
-import { FieldType } from "@teable/core";
+import { FieldType, ViewType } from "@teable/core";
 import {
   createView as apiCreateView,
   deleteField as apiDeleteField,
   getViewList as apiGetViewList,
-  ViewType,
 } from "@teable/openapi";
 import {
   createField,
