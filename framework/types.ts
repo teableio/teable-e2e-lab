@@ -109,6 +109,7 @@ export interface BugCaseConfigByRunner {
   "boolean-formula-filter": BooleanFormulaFilterCaseConfig;
   "duplicate-base-recent-list": DuplicateBaseRecentListCaseConfig;
   "longtext-markdown-convert": LongtextMarkdownConvertCaseConfig;
+  "number-to-text-formula": NumberToTextFormulaCaseConfig;
   "tracked-modified-sort": TrackedModifiedSortCaseConfig;
   "lookup-of-link-contains": LookupOfLinkContainsCaseConfig;
   "delete-without-undo-capture": DeleteWithoutUndoCaptureCaseConfig;
@@ -1725,6 +1726,19 @@ export interface TrackedModifiedSortCaseConfig {
   // How long to wait between touching rows, so the stored times differ at the
   // second the column is formatted to.
   stepMs: number;
+}
+
+export interface NumberToTextFormulaCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Two rows at least - see the runner.
+  numbers: number[];
+  // The rule the column becomes, and the shape every row's answer has to
+  // match. The rule may not refer to the column it replaces.
+  expression: string;
+  expectedPattern: string;
+  settleAttempts: number;
+  settleIntervalMs: number;
 }
 
 export interface LongtextMarkdownConvertCaseConfig {
