@@ -113,6 +113,7 @@ export interface BugCaseConfigByRunner {
   "nested-filter-conjunction": NestedFilterConjunctionCaseConfig;
   "conditional-rollup-user-match": ConditionalRollupUserMatchCaseConfig;
   "weekday-start-day": WeekdayStartDayCaseConfig;
+  "fromnow-unit": FromnowUnitCaseConfig;
   "formula-over-system-columns": FormulaOverSystemColumnsCaseConfig;
   "tracked-modified-sort": TrackedModifiedSortCaseConfig;
   "lookup-of-link-contains": LookupOfLinkContainsCaseConfig;
@@ -1736,6 +1737,19 @@ export interface FormulaOverSystemColumnsCaseConfig {
   baseId: "seed-base";
   tableNamePrefix: string;
   rowTitle: string;
+}
+
+export interface FromnowUnitCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // A date well in the past: too close to today and days cannot be told from
+  // hours.
+  date: string;
+  minimumDaysAgo: number;
+  dayTolerance: number;
+  hourTolerance: number;
+  settleAttempts: number;
+  settleIntervalMs: number;
 }
 
 export interface WeekdayStartDayCaseConfig {
