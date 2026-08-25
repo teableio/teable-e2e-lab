@@ -739,6 +739,10 @@ export interface UserFieldNotifyBulkActionCaseConfig {
   // which is why they share a runner rather than duplicating the control
   // measurement and the quiet loop.
   action: "import" | "tableDuplicate" | "recordDuplicate";
+  // Only the one-row copy reads this: how long to wait after the assignment
+  // before copying, so the copy's notification cannot be folded into the
+  // assignment's. Ignored by the other actions.
+  coalescingWindowMs?: number;
   // The control row, created on a throwaway table with a plain record create.
   // Its notification is the proof that notifications work here at all.
   controlRowTitle: string;

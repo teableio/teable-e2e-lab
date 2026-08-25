@@ -20,6 +20,10 @@ export default defineBugCase({
     baseId: "seed-base",
     tableNamePrefix: "e2e-lab-notify-record-copy",
     action: "recordDuplicate",
+    // Longer than the window assignments to the same person are folded
+    // together in, so the copy's notification cannot merge into the
+    // assignment's and vanish.
+    coalescingWindowMs: 15_000,
     controlRowTitle: "control-row",
     actionRowTitle: "copied-row",
     notifyTimeoutMs: 20_000,

@@ -330,6 +330,19 @@ export const runUserFieldNotifyBulkActionCase = async (
         await sleep(config.pollIntervalMs);
       }
 
+      // Assignments to the same person are folded together for a short while,
+      // so a copy made immediately after the assignment would have its
+      // notification merged into the one just banked and disappear without
+      // ever having been suppressed. Waiting out that window is what makes the
+      // silence afterwards mean something. Copying immediately is green on
+      // both columns, run 32855242590.
+      if (config.coalescingWindowMs === undefined) {
+        throw new Error(
+          "the one-row copy needs a coalescingWindowMs: without waiting out the folding window, silence proves nothing",
+        );
+      }
+      await sleep(config.coalescingWindowMs);
+
       const duplicated = await apiDuplicateRecord(
         subject.tableId,
         sourceRow.id,
