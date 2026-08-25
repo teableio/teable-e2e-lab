@@ -111,6 +111,7 @@ export interface BugCaseConfigByRunner {
   "longtext-markdown-convert": LongtextMarkdownConvertCaseConfig;
   "stale-view-column-meta": StaleViewColumnMetaCaseConfig;
   "nested-filter-conjunction": NestedFilterConjunctionCaseConfig;
+  "delete-with-inconsistent-junction": DeleteWithInconsistentJunctionCaseConfig;
   "tracked-modified-sort": TrackedModifiedSortCaseConfig;
   "lookup-of-link-contains": LookupOfLinkContainsCaseConfig;
   "delete-without-undo-capture": DeleteWithoutUndoCaptureCaseConfig;
@@ -1727,6 +1728,16 @@ export interface TrackedModifiedSortCaseConfig {
   // How long to wait between touching rows, so the stored times differ at the
   // second the column is formatted to.
   stepMs: number;
+}
+
+export interface DeleteWithInconsistentJunctionCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  hostRowName: string;
+  deletedRowName: string;
+  // A row nobody touches, so a delete that took the whole table and one that
+  // took the right row stay distinguishable.
+  keptRowName: string;
 }
 
 export interface NestedFilterConjunctionCaseConfig {
