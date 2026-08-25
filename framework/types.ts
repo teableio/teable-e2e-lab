@@ -104,6 +104,7 @@ export interface BugCaseConfigByRunner {
   "link-picker-share-lookup": LinkPickerShareLookupCaseConfig;
   "manyone-typecast-shape": ManyoneTypecastShapeCaseConfig;
   "row-count-search-projection": RowCountSearchProjectionCaseConfig;
+  "base-import-ghost-column": BaseImportGhostColumnCaseConfig;
   "tracked-modified-sort": TrackedModifiedSortCaseConfig;
   "lookup-of-link-contains": LookupOfLinkContainsCaseConfig;
   "delete-without-undo-capture": DeleteWithoutUndoCaptureCaseConfig;
@@ -1720,6 +1721,18 @@ export interface TrackedModifiedSortCaseConfig {
   // How long to wait between touching rows, so the stored times differ at the
   // second the column is formatted to.
   stepMs: number;
+}
+
+export interface BaseImportGhostColumnCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Two rows at least - see the runner.
+  rowNames: string[];
+  // The storage a removed column leaves behind: a column in the table that no
+  // column in the interface points at.
+  ghostColumnName: string;
+  settleAttempts: number;
+  settleIntervalMs: number;
 }
 
 export interface RowCountSearchProjectionCaseConfig {
