@@ -105,8 +105,6 @@ export interface BugCaseConfigByRunner {
   "manyone-typecast-shape": ManyoneTypecastShapeCaseConfig;
   "row-count-search-projection": RowCountSearchProjectionCaseConfig;
   "share-copy-outside-panel": ShareCopyOutsidePanelCaseConfig;
-  "blank-number-formula": BlankNumberFormulaCaseConfig;
-  "paste-noop-stamp": PasteNoopStampCaseConfig;
   "tracked-modified-sort": TrackedModifiedSortCaseConfig;
   "lookup-of-link-contains": LookupOfLinkContainsCaseConfig;
   "delete-without-undo-capture": DeleteWithoutUndoCaptureCaseConfig;
@@ -1723,32 +1721,6 @@ export interface TrackedModifiedSortCaseConfig {
   // How long to wait between touching rows, so the stored times differ at the
   // second the column is formatted to.
   stepMs: number;
-}
-
-export interface PasteNoopStampCaseConfig {
-  baseId: "seed-base";
-  tableNamePrefix: string;
-  controlNote: string;
-  editedNote: string;
-  // The value the untouched row already holds, and the one pasted back over
-  // it - they are the same on purpose.
-  keptNote: string;
-  // How long to wait between steps, so a stamp that moved differs from one
-  // that did not at the second the column is formatted to.
-  stepMs: number;
-}
-
-export interface BlankNumberFormulaCaseConfig {
-  baseId: "seed-base";
-  tableNamePrefix: string;
-  // Amounts on both sides of the threshold - see the runner.
-  amounts: number[];
-  threshold: number;
-  // How the rule says "nothing": the blank the formula language offers, or
-  // the empty piece of text most people write first.
-  blankAs: "blank" | "emptyText";
-  settleAttempts: number;
-  settleIntervalMs: number;
 }
 
 export interface ShareCopyOutsidePanelCaseConfig {
