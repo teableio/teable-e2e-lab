@@ -1721,6 +1721,11 @@ export interface DateLookupBackfillCaseConfig {
   tableNamePrefix: string;
   hostRowName: string;
   closeDate: string;
+  // Which way the borrowing column comes about: added next to a link that
+  // already exists, or an existing date column of the host's own turned into
+  // a borrowed one. `ownDate` is only read by the second.
+  shape: "createAfterLink" | "convertExisting";
+  ownDate: string;
   // Filling a new column in happens after the request answers, so the case
   // waits rather than reading once - see the runner.
   settleAttempts: number;

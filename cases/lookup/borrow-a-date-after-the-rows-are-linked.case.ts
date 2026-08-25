@@ -20,6 +20,11 @@ export default defineBugCase({
     tableNamePrefix: "e2e-lab-date-lookup-backfill",
     hostRowName: "the-submission",
     closeDate: "2026-01-15T00:00:00.000Z",
+    // Adding the column next to an existing link is green on both columns,
+    // run 32836154719; this is the shape where the host had its own date
+    // column first.
+    shape: "convertExisting" as const,
+    ownDate: "2025-11-02T00:00:00.000Z",
     settleAttempts: 60,
     settleIntervalMs: 500,
   },

@@ -6,6 +6,7 @@ import {
   TimeFormatting,
 } from "@teable/core";
 import {
+  convertField as apiConvertField,
   getRecords as apiGetRecords,
   updateRecord as apiUpdateRecord,
 } from "@teable/openapi";
@@ -83,12 +84,37 @@ export const runDateLookupBackfillCase = async (
       throw new Error("the opportunities table is not in place");
     }
 
+    // In the convert shape the host already carries a date column of its own,
+    // filled in by hand, which is the column that gets turned into a borrowed
+    // one. That is what a person does when the same date starts being kept in
+    // two places and they decide the other table owns it.
+    const dateColumn = {
+      name: BORROWED_FIELD,
+      type: FieldType.Date,
+      options: {
+        formatting: {
+          date: DateFormattingPreset.ISO,
+          time: TimeFormatting.None,
+          timeZone: "UTC",
+        },
+      },
+    };
     const host = await createTable(baseId, {
       name: `${suffix}-submissions`,
       fields: [
         { name: NAME_FIELD, type: FieldType.SingleLineText, isPrimary: true },
+        ...(config.shape === "convertExisting" ? [dateColumn] : []),
       ],
-      records: [{ fields: { [NAME_FIELD]: config.hostRowName } }],
+      records: [
+        {
+          fields: {
+            [NAME_FIELD]: config.hostRowName,
+            ...(config.shape === "convertExisting"
+              ? { [BORROWED_FIELD]: config.ownDate }
+              : {}),
+          },
+        },
+      ],
     });
     createdTableIds.unshift(host.id);
     const hostRowId = host.records?.[0]?.id;
@@ -129,7 +155,7 @@ export const runDateLookupBackfillCase = async (
     const probe = await bugCheckpoint(
       "a-date-borrowed-after-the-link-exists-arrives",
       async () => {
-        const borrowed = await createField(host.id, {
+        const borrowedShape = {
           name: BORROWED_FIELD,
           type: FieldType.Date,
           isLookup: true,
@@ -138,7 +164,20 @@ export const runDateLookupBackfillCase = async (
             linkFieldId: link.id,
             lookupFieldId: dateFieldId,
           },
-        });
+        };
+        const existingDateId = host.fields.find(
+          (field: { name: string }) => field.name === BORROWED_FIELD,
+        )?.id;
+        const borrowed =
+          config.shape === "convertExisting"
+            ? (
+                await apiConvertField(
+                  host.id,
+                  existingDateId as string,
+                  borrowedShape,
+                )
+              ).data
+            : await createField(host.id, borrowedShape);
 
         let value: unknown;
         for (let attempt = 0; attempt < config.settleAttempts; attempt += 1) {
