@@ -97,6 +97,7 @@ export interface BugCaseConfigByRunner {
   "lookup-of-rollup-create": LookupOfRollupCreateCaseConfig;
   "ai-config-only-change-plan": AiConfigOnlyChangePlanCaseConfig;
   "empty-write-normalization": EmptyWriteNormalizationCaseConfig;
+  "link-title-empty-primary": LinkTitleEmptyPrimaryCaseConfig;
   "single-field-pending-state": SingleFieldPendingStateCaseConfig;
 }
 
@@ -1677,6 +1678,15 @@ export interface SingleFieldPendingStateCaseConfig {
   // have, "still busy" is the correct answer - see the runner.
   settleAttempts: number;
   settleIntervalMs: number;
+}
+
+export interface LinkTitleEmptyPrimaryCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  hostRowTitle: string;
+  // The other target row's name. It keeps "the name was dropped for the
+  // unnamed row" apart from "the name was dropped for every row".
+  namedRowTitle: string;
 }
 
 export interface EmptyWriteNormalizationCaseConfig {
