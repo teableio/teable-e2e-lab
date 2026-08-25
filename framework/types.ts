@@ -8,6 +8,7 @@ import type { DayBucket } from "./runners/group-buckets";
 // config shape fails `pnpm check:types` at the case file itself.
 export interface BugCaseConfigByRunner {
   "http-check": HttpCheckCaseConfig;
+  "oauth-device-grant": OAuthDeviceGrantCaseConfig;
   "record-flow": RecordFlowCaseConfig;
   "group-collapse": GroupCollapseCaseConfig;
   "share-save": ShareSaveCaseConfig;
@@ -223,6 +224,14 @@ export interface HttpCheckCaseConfig {
     status: number;
     seedUser?: boolean;
   };
+}
+
+// Prove the approver session and anonymous control -> request a device code ->
+// approve it -> checkpoint: exchange it and use the bearer token as that user.
+export interface OAuthDeviceGrantCaseConfig {
+  clientId: string;
+  expectedAppName: string;
+  verificationPath: string;
 }
 
 export interface RecordFlowFieldSpec {

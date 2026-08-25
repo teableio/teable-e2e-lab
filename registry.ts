@@ -1,4 +1,5 @@
 import smokeAuthUserCase from "./cases/smoke/auth-user.case";
+import oauthY309DeviceCodeLoginCompletesCase from "./cases/oauth/y309-device-code-login-completes.case";
 import recordBulkUpdate100MixedLandsCase from "./cases/record/bulk-update-100-mixed-lands.case";
 import lookupOfRollupCreateCase from "./cases/record/a-row-when-a-looked-up-total-lost-its-rule.case";
 import aiConfigOnlyChangePlanCase from "./cases/field/change-only-the-instruction-behind-a-column.case";
@@ -111,6 +112,7 @@ import type { BugCase } from "./framework/types";
 // checks can enumerate cases without resolving @teable/* packages.
 const cases = [
   smokeAuthUserCase,
+  oauthY309DeviceCodeLoginCompletesCase,
   recordBulkUpdate100MixedLandsCase,
   lookupOfRollupCreateCase,
   aiConfigOnlyChangePlanCase,
