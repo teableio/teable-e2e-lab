@@ -107,6 +107,7 @@ export interface BugCaseConfigByRunner {
   "share-copy-outside-panel": ShareCopyOutsidePanelCaseConfig;
   "lookup-select-choices-kept": LookupSelectChoicesKeptCaseConfig;
   "boolean-formula-filter": BooleanFormulaFilterCaseConfig;
+  "duplicate-base-recent-list": DuplicateBaseRecentListCaseConfig;
   "tracked-modified-sort": TrackedModifiedSortCaseConfig;
   "lookup-of-link-contains": LookupOfLinkContainsCaseConfig;
   "delete-without-undo-capture": DeleteWithoutUndoCaptureCaseConfig;
@@ -1723,6 +1724,10 @@ export interface TrackedModifiedSortCaseConfig {
   // How long to wait between touching rows, so the stored times differ at the
   // second the column is formatted to.
   stepMs: number;
+}
+
+export interface DuplicateBaseRecentListCaseConfig {
+  baseNamePrefix: string;
 }
 
 export interface BooleanFormulaFilterCaseConfig {
