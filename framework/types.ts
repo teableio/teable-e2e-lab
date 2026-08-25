@@ -101,6 +101,9 @@ export interface BugCaseConfigByRunner {
   "archive-recount": ArchiveRecountCaseConfig;
   "projected-group-headers": ProjectedGroupHeadersCaseConfig;
   "lookup-multiplicity-vo": LookupMultiplicityVoCaseConfig;
+  "link-picker-share-lookup": LinkPickerShareLookupCaseConfig;
+  "manyone-typecast-shape": ManyoneTypecastShapeCaseConfig;
+  "row-count-search-projection": RowCountSearchProjectionCaseConfig;
   "tracked-modified-sort": TrackedModifiedSortCaseConfig;
   "lookup-of-link-contains": LookupOfLinkContainsCaseConfig;
   "delete-without-undo-capture": DeleteWithoutUndoCaptureCaseConfig;
@@ -736,7 +739,11 @@ export interface UserFieldNotifyBulkActionCaseConfig {
   // was already populated; they differ only in how the runner produces it,
   // which is why they share a runner rather than duplicating the control
   // measurement and the quiet loop.
-  action: "import" | "tableDuplicate";
+  action: "import" | "tableDuplicate" | "recordDuplicate";
+  // Only the one-row copy reads this: how long to wait after the assignment
+  // before copying, so the copy's notification cannot be folded into the
+  // assignment's. Ignored by the other actions.
+  coalescingWindowMs?: number;
   // The control row, created on a throwaway table with a plain record create.
   // Its notification is the proof that notifications work here at all.
   controlRowTitle: string;
@@ -1713,6 +1720,30 @@ export interface TrackedModifiedSortCaseConfig {
   // How long to wait between touching rows, so the stored times differ at the
   // second the column is formatted to.
   stepMs: number;
+}
+
+export interface RowCountSearchProjectionCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // The term has to match in the visible column on at least one row, and in
+  // the hidden column on at least one row it does not match visibly - the
+  // runner refuses anything else.
+  rows: { title: string; note: string }[];
+  searchTerm: string;
+}
+
+export interface ManyoneTypecastShapeCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  targetName: string;
+  pickedRowName: string;
+  typedRowName: string;
+}
+
+export interface LinkPickerShareLookupCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  targetRowName: string;
 }
 
 export interface LookupMultiplicityVoCaseConfig {

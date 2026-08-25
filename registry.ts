@@ -7,6 +7,9 @@ import tableDeleteRealtimeCase from "./cases/realtime/deleting-a-table-reaches-t
 import archiveRecountCase from "./cases/record/archive-the-rows-a-count-was-counting.case";
 import projectedGroupHeadersCase from "./cases/view/a-grouped-view-asked-for-one-column.case";
 import lookupMultiplicityVoCase from "./cases/lookup/a-borrowed-people-column-over-many-rows.case";
+import linkPickerShareLookupCase from "./cases/link/the-picker-behind-a-borrowed-link.case";
+import manyoneTypecastShapeCase from "./cases/link/fill-a-one-row-link-in-by-name.case";
+import rowCountSearchProjectionCase from "./cases/search/how-many-results-with-a-column-hidden.case";
 import trackedModifiedSortCase from "./cases/view/sort-by-a-narrowed-last-changed-column.case";
 import lookupOfLinkContainsCase from "./cases/filter/search-a-borrowed-link-column.case";
 import deleteWithoutUndoCaptureCase from "./cases/record/delete-a-row-whose-undo-bookkeeping-is-missing.case";
@@ -109,6 +112,7 @@ import selectionPasteByIdAcrossPendingFieldCase from "./cases/selection/paste-by
 import tableTrashDegradesInboundLinkWithoutDisplayColumnCase from "./cases/table/trash-degrades-inbound-link-without-display-column.case";
 import userFieldImportDoesNotNotifyAssigneeCase from "./cases/user-field/import-does-not-notify-assignee.case";
 import userFieldTableDuplicateDoesNotNotifyAssigneeCase from "./cases/user-field/table-duplicate-does-not-notify-assignee.case";
+import recordDuplicateNotifyCase from "./cases/user-field/record-duplicate-does-not-notify-assignee.case";
 import userFieldUndoOfDeleteDoesNotRenotifyAssigneeCase from "./cases/user-field/undo-of-delete-does-not-renotify-assignee.case";
 import userFieldUndoOfClearDoesNotRenotifyAssigneeCase from "./cases/user-field/undo-of-clear-does-not-renotify-assignee.case";
 import userFieldAssignmentBurstArrivesCoalescedCase from "./cases/user-field/assignment-burst-arrives-coalesced.case";
@@ -127,6 +131,9 @@ const cases = [
   archiveRecountCase,
   projectedGroupHeadersCase,
   lookupMultiplicityVoCase,
+  linkPickerShareLookupCase,
+  manyoneTypecastShapeCase,
+  rowCountSearchProjectionCase,
   trackedModifiedSortCase,
   lookupOfLinkContainsCase,
   deleteWithoutUndoCaptureCase,
@@ -229,6 +236,7 @@ const cases = [
   tableTrashDegradesInboundLinkWithoutDisplayColumnCase,
   userFieldImportDoesNotNotifyAssigneeCase,
   userFieldTableDuplicateDoesNotNotifyAssigneeCase,
+  recordDuplicateNotifyCase,
   userFieldUndoOfDeleteDoesNotRenotifyAssigneeCase,
   userFieldUndoOfClearDoesNotRenotifyAssigneeCase,
   userFieldAssignmentBurstArrivesCoalescedCase,

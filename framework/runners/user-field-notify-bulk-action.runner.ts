@@ -13,6 +13,7 @@ import {
 import type { INotificationVo, IUserMeVo } from "@teable/openapi";
 import {
   analyzeFile as apiAnalyzeFile,
+  duplicateRecord as apiDuplicateRecord,
   duplicateTable as apiDuplicateTable,
   emailBaseInvitation,
   getRecords as apiGetRecords,
@@ -38,9 +39,10 @@ import { assertServedByV2 } from "../engine";
 import type { BugCaseFor, BugProbeResult, BugRunContext } from "../types";
 import type { UserFieldNotifyBulkActionCaseConfig } from "../types";
 
-// A second person assigned in a user field -> move that assignment in bulk
-// (CSV import into an existing table, or duplicating the whole table) ->
-// checkpoint: nothing lands in that person's notification list.
+// A second person assigned in a user field -> move that assignment without
+// making it again (a CSV import into an existing table, duplicating the whole
+// table, or copying one row) -> checkpoint: nothing lands in that person's
+// notification list.
 //
 // A user-field notification means "someone just put you on this". v1 only
 // ever sent it for that. v2 sent it for any record whose user cell arrived
@@ -63,8 +65,11 @@ import type { UserFieldNotifyBulkActionCaseConfig } from "../types";
 // here. If the quiet budget is not comfortably longer than the control took,
 // the case refuses to run rather than report a green it has not earned.
 //
-// The two variants share everything but the bulk operation itself, so they
-// share a runner. Which one runs is `action`.
+// The variants share everything but the operation itself, so they share a
+// runner. Which one runs is `action`. Copying a single row is the smallest of
+// them and arrived last (T6905): the earlier fix covered the bulk paths and
+// left the one-row copy sending, which is the version a person meets by
+// hand rather than through an import.
 
 const TITLE_FIELD = "Title";
 const USER_FIELD = "Assignee";
@@ -94,6 +99,11 @@ export const runUserFieldNotifyBulkActionCase = async (
   const csvPath = join(tmpdir(), `e2e-lab-notify-${context.runId}.csv`);
   const createdTableIds: string[] = [];
   let foreignTableId = "";
+  // Notifications the assignee already had on the observed table before the
+  // action ran. Only the one-row copy needs this: it observes the same table
+  // the assignment was made on, so the legitimate "you were assigned" arrives
+  // there too and would otherwise be counted as the copy's doing.
+  const alreadyDelivered = new Set<string>();
 
   try {
     // A real signup rather than a row written into `users`: the assignee has
@@ -130,7 +140,9 @@ export const runUserFieldNotifyBulkActionCase = async (
         { params: { notifyStates: NotificationStatesEnum.Unread } },
       );
       return (response.data.notifications ?? []).filter(
-        (notification: INotification) => notification.url.includes(tableId),
+        (notification: INotification) =>
+          notification.url.includes(tableId) &&
+          !alreadyDelivered.has(notification.id),
       );
     };
 
@@ -279,6 +291,71 @@ export const runUserFieldNotifyBulkActionCase = async (
         operation: "PATCH /import/{baseId}/{tableId}",
         feature: "importRecords",
       });
+    } else if (config.action === "recordDuplicate") {
+      // The row is assigned first, then copied. Copying one row is the
+      // smallest version of the same move: the copy carries a user cell that
+      // was already populated, and nobody is being assigned anything new.
+      await assignOnCreate(subject, config.actionRowTitle);
+      const sourceRows = await apiGetRecords(subject.tableId, {
+        fieldKeyType: FieldKeyType.Id,
+        take: 100,
+      });
+      const sourceRow = sourceRows.data.records.find((record) =>
+        userIds(record.fields[subject.userFieldId]).includes(assignee.id),
+      );
+      if (!sourceRow) {
+        throw new Error(
+          `no row on ${subject.tableId} carries ${assignee.email} before the copy - there would be nothing to copy`,
+        );
+      }
+      // The assignment just made is a real one and does notify. It lands on
+      // this same table, so it is waited for and banked before the copy -
+      // otherwise the copy would be blamed for it. Waiting also proves the
+      // notification path reaches this table, not only the control one.
+      const assignedDeadline = Date.now() + config.notifyTimeoutMs;
+      for (;;) {
+        const delivered = await listNotifications(subject.tableId);
+        if (delivered.length > 0) {
+          for (const notification of delivered) {
+            alreadyDelivered.add(notification.id);
+          }
+          break;
+        }
+        if (Date.now() >= assignedDeadline) {
+          throw new Error(
+            `assigning ${assignee.email} on ${subject.tableId} produced no notification within ${config.notifyTimeoutMs}ms - ` +
+              "the case could not tell the copy's silence from a table nothing reaches",
+          );
+        }
+        await sleep(config.pollIntervalMs);
+      }
+
+      // Assignments to the same person are folded together for a short while,
+      // so a copy made immediately after the assignment would have its
+      // notification merged into the one just banked and disappear without
+      // ever having been suppressed. Waiting out that window is what makes the
+      // silence afterwards mean something. Copying immediately is green on
+      // both columns, run 32855242590.
+      if (config.coalescingWindowMs === undefined) {
+        throw new Error(
+          "the one-row copy needs a coalescingWindowMs: without waiting out the folding window, silence proves nothing",
+        );
+      }
+      await sleep(config.coalescingWindowMs);
+
+      const duplicated = await apiDuplicateRecord(
+        subject.tableId,
+        sourceRow.id,
+      );
+      actionRouting = assertServedByV2(duplicated.headers, {
+        operation: "POST /table/{tableId}/record/{recordId}/duplicate",
+        feature: "duplicateRecord",
+      });
+      if (!duplicated.data?.id) {
+        throw new Error(
+          `duplicating ${sourceRow.id} returned no row: ${JSON.stringify(duplicated.data)}`,
+        );
+      }
     } else {
       // A two-way oneMany link hosts its foreign key on the other table, which
       // the duplicate's physical row-copy plan cannot map. Without it the copy
