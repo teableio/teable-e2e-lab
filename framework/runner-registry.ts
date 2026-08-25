@@ -93,6 +93,7 @@ import { runManyoneTypecastShapeCase } from "./runners/manyone-typecast-shape.ru
 import { runRowCountSearchProjectionCase } from "./runners/row-count-search-projection.runner";
 import { runBooleanFormulaFilterCase } from "./runners/boolean-formula-filter.runner";
 import { runDuplicateBaseRecentListCase } from "./runners/duplicate-base-recent-list.runner";
+import { runLongtextMarkdownConvertCase } from "./runners/longtext-markdown-convert.runner";
 import { runLookupSelectChoicesKeptCase } from "./runners/lookup-select-choices-kept.runner";
 import { runShareCopyOutsidePanelCase } from "./runners/share-copy-outside-panel.runner";
 import { runLookupMultiplicityVoCase } from "./runners/lookup-multiplicity-vo.runner";
@@ -221,6 +222,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "lookup-select-choices-kept": runLookupSelectChoicesKeptCase,
   "boolean-formula-filter": runBooleanFormulaFilterCase,
   "duplicate-base-recent-list": runDuplicateBaseRecentListCase,
+  "longtext-markdown-convert": runLongtextMarkdownConvertCase,
   "tracked-modified-sort": runTrackedModifiedSortCase,
   "lookup-of-link-contains": runLookupOfLinkContainsCase,
   "delete-without-undo-capture": runDeleteWithoutUndoCaptureCase,
