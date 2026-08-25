@@ -11,6 +11,7 @@ import { runLookupFilterViewCase } from "./runners/lookup-filter-view.runner";
 import { runLookupUserSnapshotSortCase } from "./runners/lookup-user-snapshot-sort.runner";
 import { runUserGroupIdentityCase } from "./runners/user-group-identity.runner";
 import { runHttpCheckCase } from "./runners/http-check.runner";
+import { runOAuthDeviceGrantCase } from "./runners/oauth-device-grant.runner";
 import { runNullMultiplicityLookupCase } from "./runners/null-multiplicity-lookup.runner";
 import { runPasteByIdAlignmentCase } from "./runners/paste-by-id-alignment.runner";
 import { runPasteNonCollaboratorUserCase } from "./runners/paste-non-collaborator-user.runner";
@@ -106,6 +107,7 @@ type RunnerFn<K extends BugRunnerKind> = (
 // and the implementation here — miss one and `pnpm check:types` fails.
 const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "http-check": runHttpCheckCase,
+  "oauth-device-grant": runOAuthDeviceGrantCase,
   "record-flow": runRecordFlowCase,
   "group-collapse": runGroupCollapseCase,
   "share-save": runShareSaveCase,
