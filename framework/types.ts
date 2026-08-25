@@ -105,6 +105,7 @@ export interface BugCaseConfigByRunner {
   "manyone-typecast-shape": ManyoneTypecastShapeCaseConfig;
   "row-count-search-projection": RowCountSearchProjectionCaseConfig;
   "share-copy-outside-panel": ShareCopyOutsidePanelCaseConfig;
+  "lookup-select-choices-kept": LookupSelectChoicesKeptCaseConfig;
   "tracked-modified-sort": TrackedModifiedSortCaseConfig;
   "lookup-of-link-contains": LookupOfLinkContainsCaseConfig;
   "delete-without-undo-capture": DeleteWithoutUndoCaptureCaseConfig;
@@ -1721,6 +1722,13 @@ export interface TrackedModifiedSortCaseConfig {
   // How long to wait between touching rows, so the stored times differ at the
   // second the column is formatted to.
   stepMs: number;
+}
+
+export interface LookupSelectChoicesKeptCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Two choices at least - see the runner.
+  choices: string[];
 }
 
 export interface ShareCopyOutsidePanelCaseConfig {

@@ -91,6 +91,7 @@ import { runArchiveRecountCase } from "./runners/archive-recount.runner";
 import { runLinkPickerShareLookupCase } from "./runners/link-picker-share-lookup.runner";
 import { runManyoneTypecastShapeCase } from "./runners/manyone-typecast-shape.runner";
 import { runRowCountSearchProjectionCase } from "./runners/row-count-search-projection.runner";
+import { runLookupSelectChoicesKeptCase } from "./runners/lookup-select-choices-kept.runner";
 import { runShareCopyOutsidePanelCase } from "./runners/share-copy-outside-panel.runner";
 import { runLookupMultiplicityVoCase } from "./runners/lookup-multiplicity-vo.runner";
 import { runProjectedGroupHeadersCase } from "./runners/projected-group-headers.runner";
@@ -215,6 +216,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "manyone-typecast-shape": runManyoneTypecastShapeCase,
   "row-count-search-projection": runRowCountSearchProjectionCase,
   "share-copy-outside-panel": runShareCopyOutsidePanelCase,
+  "lookup-select-choices-kept": runLookupSelectChoicesKeptCase,
   "tracked-modified-sort": runTrackedModifiedSortCase,
   "lookup-of-link-contains": runLookupOfLinkContainsCase,
   "delete-without-undo-capture": runDeleteWithoutUndoCaptureCase,
