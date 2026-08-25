@@ -97,6 +97,7 @@ export interface BugCaseConfigByRunner {
   "lookup-of-rollup-create": LookupOfRollupCreateCaseConfig;
   "ai-config-only-change-plan": AiConfigOnlyChangePlanCaseConfig;
   "empty-write-normalization": EmptyWriteNormalizationCaseConfig;
+  "table-delete-realtime": TableDeleteRealtimeCaseConfig;
   "lookup-of-link-contains": LookupOfLinkContainsCaseConfig;
   "delete-without-undo-capture": DeleteWithoutUndoCaptureCaseConfig;
   "single-field-pending-state": SingleFieldPendingStateCaseConfig;
@@ -1698,6 +1699,15 @@ export interface LookupOfLinkContainsCaseConfig {
   // the first and not of the second - the runner refuses anything else.
   targetNames: string[];
   searchTerm: string;
+}
+
+export interface TableDeleteRealtimeCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // How long the watched list may take to carry both fixture tables, and how
+  // long the delete may take to reach the page.
+  settleTimeoutMs: number;
+  announceTimeoutMs: number;
 }
 
 export interface EmptyWriteNormalizationCaseConfig {

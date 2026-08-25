@@ -3,6 +3,7 @@ import recordBulkUpdate100MixedLandsCase from "./cases/record/bulk-update-100-mi
 import lookupOfRollupCreateCase from "./cases/record/a-row-when-a-looked-up-total-lost-its-rule.case";
 import aiConfigOnlyChangePlanCase from "./cases/field/change-only-the-instruction-behind-a-column.case";
 import emptyWriteNormalizationCase from "./cases/record/clear-a-cell-and-have-it-count-as-empty.case";
+import tableDeleteRealtimeCase from "./cases/realtime/deleting-a-table-reaches-the-open-page.case";
 import lookupOfLinkContainsCase from "./cases/filter/search-a-borrowed-link-column.case";
 import deleteWithoutUndoCaptureCase from "./cases/record/delete-a-row-whose-undo-bookkeeping-is-missing.case";
 import singleFieldPendingStateCase from "./cases/field/a-settled-column-read-on-its-own.case";
@@ -118,6 +119,7 @@ const cases = [
   lookupOfRollupCreateCase,
   aiConfigOnlyChangePlanCase,
   emptyWriteNormalizationCase,
+  tableDeleteRealtimeCase,
   lookupOfLinkContainsCase,
   deleteWithoutUndoCaptureCase,
   singleFieldPendingStateCase,
