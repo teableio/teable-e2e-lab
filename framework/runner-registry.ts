@@ -95,7 +95,6 @@ import { runBooleanFormulaFilterCase } from "./runners/boolean-formula-filter.ru
 import { runDuplicateBaseRecentListCase } from "./runners/duplicate-base-recent-list.runner";
 import { runLongtextMarkdownConvertCase } from "./runners/longtext-markdown-convert.runner";
 import { runNestedFilterConjunctionCase } from "./runners/nested-filter-conjunction.runner";
-import { runShareViewLinkedRowCase } from "./runners/share-view-linked-row.runner";
 import { runStaleViewColumnMetaCase } from "./runners/stale-view-column-meta.runner";
 import { runLookupSelectChoicesKeptCase } from "./runners/lookup-select-choices-kept.runner";
 import { runShareCopyOutsidePanelCase } from "./runners/share-copy-outside-panel.runner";
@@ -228,7 +227,6 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "longtext-markdown-convert": runLongtextMarkdownConvertCase,
   "stale-view-column-meta": runStaleViewColumnMetaCase,
   "nested-filter-conjunction": runNestedFilterConjunctionCase,
-  "share-view-linked-row": runShareViewLinkedRowCase,
   "tracked-modified-sort": runTrackedModifiedSortCase,
   "lookup-of-link-contains": runLookupOfLinkContainsCase,
   "delete-without-undo-capture": runDeleteWithoutUndoCaptureCase,
