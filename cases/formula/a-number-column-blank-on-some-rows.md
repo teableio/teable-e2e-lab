@@ -26,6 +26,12 @@ come back empty.
 Both halves, because a column that came back entirely empty satisfies one of
 them and is exactly what a broken column looks like.
 
+## How the rule says "nothing"
+
+With the blank the formula language offers, this is green on both columns —
+measured, run 32868816376. The shape the column could not swallow is the empty
+piece of text, which is what most people write first.
+
 ## What the fixture has to hold
 
 Amounts on both sides of the threshold. With all of them on one side, a column

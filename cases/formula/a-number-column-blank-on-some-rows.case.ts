@@ -21,6 +21,7 @@ export default defineBugCase({
     tableNamePrefix: "e2e-lab-blank-number-formula",
     amounts: [20, 5, 40],
     threshold: 10,
+    blankAs: "emptyText" as const,
     settleAttempts: 60,
     settleIntervalMs: 500,
   },

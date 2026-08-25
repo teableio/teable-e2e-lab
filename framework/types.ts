@@ -1730,6 +1730,9 @@ export interface BlankNumberFormulaCaseConfig {
   // Amounts on both sides of the threshold - see the runner.
   amounts: number[];
   threshold: number;
+  // How the rule says "nothing": the blank the formula language offers, or
+  // the empty piece of text most people write first.
+  blankAs: "blank" | "emptyText";
   settleAttempts: number;
   settleIntervalMs: number;
 }

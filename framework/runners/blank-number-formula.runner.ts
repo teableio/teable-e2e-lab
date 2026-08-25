@@ -98,7 +98,15 @@ export const runBlankNumberFormulaCase = async (
           name: SHOWN_FIELD,
           type: FieldType.Formula,
           options: {
-            expression: `IF({${amountFieldId}} > ${config.threshold}, {${amountFieldId}}, BLANK())`,
+            // What the person writes for "nothing" decides what is stored:
+            // the blank the formula language offers, or the empty piece of
+            // text most people reach for first. Only the second is what the
+            // column could not swallow - BLANK() is green on both columns,
+            // run 32868816376.
+            expression:
+              config.blankAs === "emptyText"
+                ? `IF({${amountFieldId}} > ${config.threshold}, {${amountFieldId}}, "")`
+                : `IF({${amountFieldId}} > ${config.threshold}, {${amountFieldId}}, BLANK())`,
           },
         });
 
