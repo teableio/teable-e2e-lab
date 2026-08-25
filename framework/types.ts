@@ -97,6 +97,7 @@ export interface BugCaseConfigByRunner {
   "lookup-of-rollup-create": LookupOfRollupCreateCaseConfig;
   "ai-config-only-change-plan": AiConfigOnlyChangePlanCaseConfig;
   "empty-write-normalization": EmptyWriteNormalizationCaseConfig;
+  "lookup-of-link-contains": LookupOfLinkContainsCaseConfig;
   "delete-without-undo-capture": DeleteWithoutUndoCaptureCaseConfig;
   "single-field-pending-state": SingleFieldPendingStateCaseConfig;
 }
@@ -1687,6 +1688,16 @@ export interface DeleteWithoutUndoCaptureCaseConfig {
   // A row that is never deleted, so a delete that took the whole table and a
   // delete that took the right row are distinguishable.
   keptRowName: string;
+}
+
+export interface LookupOfLinkContainsCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Two names sharing no letters, so a filter that matched everything and one
+  // that matched the right row cannot be confused. The search term is part of
+  // the first and not of the second - the runner refuses anything else.
+  targetNames: string[];
+  searchTerm: string;
 }
 
 export interface EmptyWriteNormalizationCaseConfig {
