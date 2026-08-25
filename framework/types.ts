@@ -98,6 +98,7 @@ export interface BugCaseConfigByRunner {
   "ai-config-only-change-plan": AiConfigOnlyChangePlanCaseConfig;
   "empty-write-normalization": EmptyWriteNormalizationCaseConfig;
   "link-title-empty-primary": LinkTitleEmptyPrimaryCaseConfig;
+  "delete-without-undo-capture": DeleteWithoutUndoCaptureCaseConfig;
   "single-field-pending-state": SingleFieldPendingStateCaseConfig;
 }
 
@@ -1678,6 +1679,15 @@ export interface SingleFieldPendingStateCaseConfig {
   // have, "still busy" is the correct answer - see the runner.
   settleAttempts: number;
   settleIntervalMs: number;
+}
+
+export interface DeleteWithoutUndoCaptureCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  deletedRowName: string;
+  // A row that is never deleted, so a delete that took the whole table and a
+  // delete that took the right row are distinguishable.
+  keptRowName: string;
 }
 
 export interface LinkTitleEmptyPrimaryCaseConfig {

@@ -54,8 +54,10 @@ export const runLinkTitleEmptyPrimaryCase = async (
       fields: [
         { name: NAME_FIELD, type: FieldType.SingleLineText, isPrimary: true },
       ],
+      // The unnamed row is written as explicitly having no name rather than
+      // left out, which is what clearing the name column sends.
       records: [
-        { fields: {} },
+        { fields: { [NAME_FIELD]: null } },
         { fields: { [NAME_FIELD]: config.namedRowTitle } },
       ],
     });
@@ -76,6 +78,10 @@ export const runLinkTitleEmptyPrimaryCase = async (
           options: {
             relationship: Relationship.ManyMany,
             foreignTableId: foreign.id,
+            // Which column on the other table the cell shows. Naming it is
+            // what the field dialog does; leaving it out is green on both
+            // columns, run 32825087075.
+            lookupFieldId: foreign.fields[0].id,
             isOneWay: true,
           },
         },
