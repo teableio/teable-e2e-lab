@@ -2,7 +2,7 @@ import { FieldType } from "@teable/core";
 import { getRowCount as apiGetRowCount } from "@teable/openapi";
 import { createTable, permanentDeleteTable } from "../../../utils/init-app";
 import { bugCheckpoint } from "../checkpoint";
-import { assertServedByV2 } from "../engine";
+import { pickRoutingHeaders } from "../engine";
 import type { BugCaseFor, BugProbeResult, BugRunContext } from "../types";
 import type { RowCountSearchProjectionCaseConfig } from "../types";
 
@@ -93,10 +93,11 @@ export const runRowCountSearchProjectionCase = async (
           search,
           projection: [titleFieldId],
         });
-        const routing = assertServedByV2(narrowed.headers, {
-          operation: "GET /table/{tableId}/aggregation/row-count",
-          feature: "getRowCount",
-        });
+        // Which engine answered is recorded rather than asserted. This fix
+        // also moved row-count onto v2, so requiring v2 here would turn the
+        // pre-fix column from "the bug reproduced" into "the lab could not
+        // run" - which is what it did, run 32857293898.
+        const routing = pickRoutingHeaders(narrowed.headers);
         if (narrowed.data.rowCount !== matchesVisible) {
           throw new Error(
             `with the other column hidden, the search counts ${narrowed.data.rowCount} rows and shows ${matchesVisible} - ` +
