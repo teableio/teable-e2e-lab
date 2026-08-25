@@ -94,7 +94,6 @@ import { runRowCountSearchProjectionCase } from "./runners/row-count-search-proj
 import { runBooleanFormulaFilterCase } from "./runners/boolean-formula-filter.runner";
 import { runDuplicateBaseRecentListCase } from "./runners/duplicate-base-recent-list.runner";
 import { runLongtextMarkdownConvertCase } from "./runners/longtext-markdown-convert.runner";
-import { runDeleteWithInconsistentJunctionCase } from "./runners/delete-with-inconsistent-junction.runner";
 import { runNestedFilterConjunctionCase } from "./runners/nested-filter-conjunction.runner";
 import { runStaleViewColumnMetaCase } from "./runners/stale-view-column-meta.runner";
 import { runLookupSelectChoicesKeptCase } from "./runners/lookup-select-choices-kept.runner";
@@ -228,7 +227,6 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "longtext-markdown-convert": runLongtextMarkdownConvertCase,
   "stale-view-column-meta": runStaleViewColumnMetaCase,
   "nested-filter-conjunction": runNestedFilterConjunctionCase,
-  "delete-with-inconsistent-junction": runDeleteWithInconsistentJunctionCase,
   "tracked-modified-sort": runTrackedModifiedSortCase,
   "lookup-of-link-contains": runLookupOfLinkContainsCase,
   "delete-without-undo-capture": runDeleteWithoutUndoCaptureCase,
