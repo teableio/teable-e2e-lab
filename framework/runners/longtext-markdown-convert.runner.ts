@@ -62,14 +62,17 @@ export const runLongtextMarkdownConvertCase = async (
       options: { showAs: { type: "markdown" } },
     });
 
-    // Fixture verification, outside the checkpoint: the column was made
-    // rendering as Markdown. A column that never carried the setting could not
-    // lose it.
     const showAsOf = (field: { options?: { showAs?: { type?: string } } }) =>
       field.options?.showAs?.type;
-    if (showAsOf(notes) !== "markdown") {
+
+    // Fixture verification, outside the checkpoint: the request was accepted
+    // and made a long-text column. What the product *says* about that column
+    // is not checked here on purpose - leaving the setting out of its own
+    // description is the first half of the failure, so it belongs inside the
+    // checkpoint rather than in the fixture.
+    if (notes.type !== FieldType.LongText) {
       throw new Error(
-        `the column was made showing ${JSON.stringify(showAsOf(notes))}, expected markdown - the fixture is not in place`,
+        `the column is a ${notes.type}, expected a long-text column - the fixture is not in place`,
       );
     }
 
@@ -79,6 +82,12 @@ export const runLongtextMarkdownConvertCase = async (
         // What the editor does: read the column, then send back what it read
         // with the one thing the person changed.
         const asReported = await getField(tableId, notes.id);
+        if (showAsOf(asReported) !== "markdown") {
+          throw new Error(
+            `asked about the column it just made, the product says it shows ${JSON.stringify(showAsOf(asReported))}, expected markdown - ` +
+              "the editor draws what it is told, so the setting is already absent from the screen before anyone saves anything",
+          );
+        }
         await apiConvertField(tableId, notes.id, {
           name: config.renamedTo,
           type: FieldType.LongText,

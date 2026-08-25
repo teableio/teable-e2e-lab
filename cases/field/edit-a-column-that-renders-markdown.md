@@ -18,8 +18,15 @@ Markdown, so what it sent back did not either, and the setting was gone.
 
 ## What the checkpoint asserts
 
-After the edit the column still renders as Markdown, and the edit itself took —
-so "nothing was saved" stays a different report.
+1. Asked about the column it just made, the product says it renders as
+   Markdown.
+2. After the edit it still does, and the edit itself took — so "nothing was
+   saved" stays a different report.
+
+The first is inside the checkpoint on purpose. Leaving the setting out of the
+column's own description is the first half of the failure: the editor draws
+what it is told, so the setting is already absent from the screen before anyone
+saves anything. Checking it as a fixture would report the bug as a broken case.
 
 ## Why the case sends back what it was given
 
@@ -29,5 +36,5 @@ that leaves something out becomes an edit that removes it.
 
 ## What the fixture has to hold
 
-The column was made rendering as Markdown. A column that never carried the
-setting could not lose it.
+The request to make the column was accepted and produced a long-text column.
+What the product _says_ about that column is not checked here — see above.
