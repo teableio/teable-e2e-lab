@@ -65,8 +65,27 @@ runs:
       uses: actions/setup-node@v5
       with:
         node-version: 22.18.0
-        cache: pnpm
-        cache-dependency-path: ${{ inputs.teable-ee-path }}/pnpm-lock.yaml
+
+    # setup-node's own `cache: pnpm` keys the store on the lockfile alone, so
+    # this job restored a 749MB store built by whoever installed the whole
+    # workspace — 33s to download and unpack a tree four fifths of which the
+    # install below never asks for. Keying it here instead, with the filter in
+    # the key, means the store that gets saved is the one this job actually
+    # uses. The first run on a new key pays a full fetch from the registry.
+    - name: Resolve the pnpm store path
+      if: inputs.operation == 'bootstrap'
+      id: pnpm-store
+      shell: bash
+      run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+
+    - name: Restore the pnpm store
+      if: inputs.operation == 'bootstrap'
+      uses: actions/cache@v4
+      with:
+        path: ${{ steps.pnpm-store.outputs.path }}
+        key: e2e-lab-pnpm-backend-ee-${{ runner.os }}-${{ hashFiles(format('{0}/pnpm-lock.yaml', inputs.teable-ee-path)) }}
+        restore-keys: |
+          e2e-lab-pnpm-backend-ee-${{ runner.os }}-
 
     # Only what the run reaches. This job starts one nest app and drives it
     # through backend-ee's vitest; the workspace's frontends and their trees
