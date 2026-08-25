@@ -3,6 +3,8 @@ import recordBulkUpdate100MixedLandsCase from "./cases/record/bulk-update-100-mi
 import lookupOfRollupCreateCase from "./cases/record/a-row-when-a-looked-up-total-lost-its-rule.case";
 import aiConfigOnlyChangePlanCase from "./cases/field/change-only-the-instruction-behind-a-column.case";
 import singleFieldPendingStateCase from "./cases/field/a-settled-column-read-on-its-own.case";
+import filterY279LinkContainsShowsTitleCase from "./cases/filter/y279-link-contains-shows-title.case";
+import tableY248CollaboratorLeavesDeletedTableCase from "./cases/table/y248-collaborator-leaves-deleted-table.case";
 import sparseBatchUpdateCase from "./cases/record/a-batch-write-leaves-what-it-did-not-mention.case";
 import generatedFormulaColumnCase from "./cases/record/edit-a-cell-behind-a-generated-formula.case";
 import legacyGeneratedAuditColumnCase from "./cases/record/add-a-row-to-a-legacy-table.case";
@@ -115,6 +117,8 @@ const cases = [
   lookupOfRollupCreateCase,
   aiConfigOnlyChangePlanCase,
   singleFieldPendingStateCase,
+  filterY279LinkContainsShowsTitleCase,
+  tableY248CollaboratorLeavesDeletedTableCase,
   sparseBatchUpdateCase,
   generatedFormulaColumnCase,
   legacyGeneratedAuditColumnCase,

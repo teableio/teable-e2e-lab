@@ -87,6 +87,8 @@ import { runIsWithinTodayFilterCase } from "./runners/is-within-today-filter.run
 import { runSparseBatchUpdateCase } from "./runners/sparse-batch-update.runner";
 import { runAiConfigOnlyChangePlanCase } from "./runners/ai-config-only-change-plan.runner";
 import { runSingleFieldPendingStateCase } from "./runners/single-field-pending-state.runner";
+import { runLinkFilterOperatorResetCase } from "./runners/link-filter-operator-reset.runner";
+import { runDeletedTableCollaboratorRecoveryCase } from "./runners/deleted-table-collaborator-recovery.runner";
 import { runLookupOfRollupCreateCase } from "./runners/lookup-of-rollup-create.runner";
 import type {
   BugCase,
@@ -195,6 +197,9 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "lookup-of-rollup-create": runLookupOfRollupCreateCase,
   "ai-config-only-change-plan": runAiConfigOnlyChangePlanCase,
   "single-field-pending-state": runSingleFieldPendingStateCase,
+  "link-filter-operator-reset": runLinkFilterOperatorResetCase,
+  "deleted-table-collaborator-recovery":
+    runDeletedTableCollaboratorRecoveryCase,
 };
 
 export const executeRegisteredRunner = (

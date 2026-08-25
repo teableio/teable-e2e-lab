@@ -97,6 +97,8 @@ export interface BugCaseConfigByRunner {
   "lookup-of-rollup-create": LookupOfRollupCreateCaseConfig;
   "ai-config-only-change-plan": AiConfigOnlyChangePlanCaseConfig;
   "single-field-pending-state": SingleFieldPendingStateCaseConfig;
+  "link-filter-operator-reset": LinkFilterOperatorResetCaseConfig;
+  "deleted-table-collaborator-recovery": DeletedTableCollaboratorRecoveryCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -258,6 +260,27 @@ export interface RecordFlowCaseConfig {
     kind: "bulk-update-all-fields";
   };
   fullScanPageSize?: number;
+}
+
+// Seed a saved link filter whose `is` value is a record id, then use the real
+// filter panel to switch to `contains`. The two operators deliberately use
+// different public value shapes: record id versus visible title string.
+export interface LinkFilterOperatorResetCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  matchingTitle: string;
+  otherTitle: string;
+  settleTimeoutMs: number;
+}
+
+// Leave a browser window on a target table, delete that table through the API
+// as another collaborator would, then require the open page to recover to a
+// surviving table and stop issuing work against the deleted anchor.
+export interface DeletedTableCollaboratorRecoveryCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  settleTimeoutMs: number;
+  quietPeriodMs: number;
 }
 
 // Seed a date field grouped into consecutive local-day buckets -> collapse each

@@ -4,6 +4,7 @@ import { initApp } from "../utils/init-app";
 import { getBugCase, resolveBugCaseIds } from "./registry";
 import { applyEngineRuntimeEnv, LAB_ENGINE } from "./framework/engine";
 import { runBugCase } from "./framework/run-bug-case";
+import { closeBrowserRuntime } from "./framework/browser-runtime";
 
 // Before the app boots: pin the engine every case here guards. teable-ee is
 // migrating to v2 and v1 bugs are not being fixed, so there is one engine, not
@@ -71,6 +72,7 @@ describe("e2e-lab bug regression runner (e2e)", () => {
 
   afterAll(async () => {
     const closeStarted = performance.now();
+    await closeBrowserRuntime();
     await app?.close();
     logPhase("app-closed", {
       closeMs: Math.round(performance.now() - closeStarted),
