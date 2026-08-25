@@ -99,6 +99,7 @@ export interface BugCaseConfigByRunner {
   "empty-write-normalization": EmptyWriteNormalizationCaseConfig;
   "table-delete-realtime": TableDeleteRealtimeCaseConfig;
   "archive-recount": ArchiveRecountCaseConfig;
+  "tracked-modified-sort": TrackedModifiedSortCaseConfig;
   "lookup-of-link-contains": LookupOfLinkContainsCaseConfig;
   "delete-without-undo-capture": DeleteWithoutUndoCaptureCaseConfig;
   "single-field-pending-state": SingleFieldPendingStateCaseConfig;
@@ -1700,6 +1701,16 @@ export interface LookupOfLinkContainsCaseConfig {
   // the first and not of the second - the runner refuses anything else.
   targetNames: string[];
   searchTerm: string;
+}
+
+export interface TrackedModifiedSortCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Three rows at least - see the runner. They are touched oldest first.
+  rowNames: string[];
+  // How long to wait between touching rows, so the stored times differ at the
+  // second the column is formatted to.
+  stepMs: number;
 }
 
 export interface ArchiveRecountCaseConfig {
