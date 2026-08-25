@@ -108,6 +108,7 @@ export interface BugCaseConfigByRunner {
   "lookup-select-choices-kept": LookupSelectChoicesKeptCaseConfig;
   "boolean-formula-filter": BooleanFormulaFilterCaseConfig;
   "duplicate-base-recent-list": DuplicateBaseRecentListCaseConfig;
+  "localized-error-message": LocalizedErrorMessageCaseConfig;
   "tracked-modified-sort": TrackedModifiedSortCaseConfig;
   "lookup-of-link-contains": LookupOfLinkContainsCaseConfig;
   "delete-without-undo-capture": DeleteWithoutUndoCaptureCaseConfig;
@@ -1724,6 +1725,17 @@ export interface TrackedModifiedSortCaseConfig {
   // How long to wait between touching rows, so the stored times differ at the
   // second the column is formatted to.
   stepMs: number;
+}
+
+export interface LocalizedErrorMessageCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // The value a second row tries to reuse, which is what gets refused.
+  code: string;
+  // Two different languages - the case compares the two answers rather than
+  // containing a translated string of its own.
+  baseLanguage: string;
+  otherLanguage: string;
 }
 
 export interface DuplicateBaseRecentListCaseConfig {

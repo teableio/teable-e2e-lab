@@ -14,6 +14,7 @@ import shareCopyOutsidePanelCase from "./cases/base-share/copy-a-share-past-a-pa
 import lookupSelectChoicesKeptCase from "./cases/lookup/repoint-a-borrowed-choice-column.case";
 import booleanFormulaFilterCase from "./cases/filter/filter-a-worked-out-yes-no-column.case";
 import duplicateBaseRecentListCase from "./cases/base-share/a-duplicated-base-in-the-recent-list.case";
+import localizedErrorMessageCase from "./cases/record/a-refusal-in-the-language-it-was-asked-in.case";
 import trackedModifiedSortCase from "./cases/view/sort-by-a-narrowed-last-changed-column.case";
 import lookupOfLinkContainsCase from "./cases/filter/search-a-borrowed-link-column.case";
 import deleteWithoutUndoCaptureCase from "./cases/record/delete-a-row-whose-undo-bookkeeping-is-missing.case";
@@ -142,6 +143,7 @@ const cases = [
   lookupSelectChoicesKeptCase,
   booleanFormulaFilterCase,
   duplicateBaseRecentListCase,
+  localizedErrorMessageCase,
   trackedModifiedSortCase,
   lookupOfLinkContainsCase,
   deleteWithoutUndoCaptureCase,
