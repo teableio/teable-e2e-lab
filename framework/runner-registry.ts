@@ -88,7 +88,6 @@ import { runSparseBatchUpdateCase } from "./runners/sparse-batch-update.runner";
 import { runAiConfigOnlyChangePlanCase } from "./runners/ai-config-only-change-plan.runner";
 import { runEmptyWriteNormalizationCase } from "./runners/empty-write-normalization.runner";
 import { runArchiveRecountCase } from "./runners/archive-recount.runner";
-import { runDateLookupBackfillCase } from "./runners/date-lookup-backfill.runner";
 import { runLookupMultiplicityVoCase } from "./runners/lookup-multiplicity-vo.runner";
 import { runProjectedGroupHeadersCase } from "./runners/projected-group-headers.runner";
 import { runTableDeleteRealtimeCase } from "./runners/table-delete-realtime.runner";
@@ -208,7 +207,6 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "archive-recount": runArchiveRecountCase,
   "projected-group-headers": runProjectedGroupHeadersCase,
   "lookup-multiplicity-vo": runLookupMultiplicityVoCase,
-  "date-lookup-backfill": runDateLookupBackfillCase,
   "tracked-modified-sort": runTrackedModifiedSortCase,
   "lookup-of-link-contains": runLookupOfLinkContainsCase,
   "delete-without-undo-capture": runDeleteWithoutUndoCaptureCase,
