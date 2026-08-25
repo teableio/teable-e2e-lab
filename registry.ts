@@ -18,6 +18,7 @@ import longtextMarkdownConvertCase from "./cases/field/edit-a-column-that-render
 import staleViewColumnMetaCase from "./cases/view/a-view-that-still-describes-a-deleted-column.case";
 import nestedFilterConjunctionCase from "./cases/filter/a-group-inside-a-group.case";
 import conditionalRollupUserMatchCase from "./cases/lookup/hours-owned-by-anyone-on-this-row.case";
+import weekdayStartDayCase from "./cases/formula/a-day-number-when-weeks-start-on-monday.case";
 import formulaOverSystemColumnsCase from "./cases/formula/columns-worked-out-from-a-new-row.case";
 import trackedModifiedSortCase from "./cases/view/sort-by-a-narrowed-last-changed-column.case";
 import lookupOfLinkContainsCase from "./cases/filter/search-a-borrowed-link-column.case";
@@ -151,6 +152,7 @@ const cases = [
   staleViewColumnMetaCase,
   nestedFilterConjunctionCase,
   conditionalRollupUserMatchCase,
+  weekdayStartDayCase,
   formulaOverSystemColumnsCase,
   trackedModifiedSortCase,
   lookupOfLinkContainsCase,

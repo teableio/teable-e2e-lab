@@ -112,6 +112,7 @@ export interface BugCaseConfigByRunner {
   "stale-view-column-meta": StaleViewColumnMetaCaseConfig;
   "nested-filter-conjunction": NestedFilterConjunctionCaseConfig;
   "conditional-rollup-user-match": ConditionalRollupUserMatchCaseConfig;
+  "weekday-start-day": WeekdayStartDayCaseConfig;
   "formula-over-system-columns": FormulaOverSystemColumnsCaseConfig;
   "tracked-modified-sort": TrackedModifiedSortCaseConfig;
   "lookup-of-link-contains": LookupOfLinkContainsCaseConfig;
@@ -1735,6 +1736,18 @@ export interface FormulaOverSystemColumnsCaseConfig {
   baseId: "seed-base";
   tableNamePrefix: string;
   rowTitle: string;
+}
+
+export interface WeekdayStartDayCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  date: string;
+  // What the day number is when weeks start on each day. They have to differ,
+  // or ignoring the instruction would give the right number anyway.
+  fromMonday: number;
+  fromSunday: number;
+  settleAttempts: number;
+  settleIntervalMs: number;
 }
 
 export interface ConditionalRollupUserMatchCaseConfig {
