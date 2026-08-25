@@ -106,6 +106,7 @@ export interface BugCaseConfigByRunner {
   "row-count-search-projection": RowCountSearchProjectionCaseConfig;
   "share-copy-outside-panel": ShareCopyOutsidePanelCaseConfig;
   "lookup-select-choices-kept": LookupSelectChoicesKeptCaseConfig;
+  "boolean-formula-filter": BooleanFormulaFilterCaseConfig;
   "tracked-modified-sort": TrackedModifiedSortCaseConfig;
   "lookup-of-link-contains": LookupOfLinkContainsCaseConfig;
   "delete-without-undo-capture": DeleteWithoutUndoCaptureCaseConfig;
@@ -1722,6 +1723,17 @@ export interface TrackedModifiedSortCaseConfig {
   // How long to wait between touching rows, so the stored times differ at the
   // second the column is formatted to.
   stepMs: number;
+}
+
+export interface BooleanFormulaFilterCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Rows on both sides of the line, and one with no amount at all - the
+  // runner refuses anything else.
+  rows: { name: string; amount: number | null }[];
+  threshold: number;
+  settleAttempts: number;
+  settleIntervalMs: number;
 }
 
 export interface LookupSelectChoicesKeptCaseConfig {
