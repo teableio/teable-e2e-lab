@@ -12,6 +12,7 @@ import manyoneTypecastShapeCase from "./cases/link/fill-a-one-row-link-in-by-nam
 import rowCountSearchProjectionCase from "./cases/search/how-many-results-with-a-column-hidden.case";
 import shareCopyOutsidePanelCase from "./cases/base-share/copy-a-share-past-a-panel-outside-it.case";
 import blankNumberFormulaCase from "./cases/formula/a-number-column-blank-on-some-rows.case";
+import pasteNoopStampCase from "./cases/selection/paste-what-a-row-already-holds.case";
 import trackedModifiedSortCase from "./cases/view/sort-by-a-narrowed-last-changed-column.case";
 import lookupOfLinkContainsCase from "./cases/filter/search-a-borrowed-link-column.case";
 import deleteWithoutUndoCaptureCase from "./cases/record/delete-a-row-whose-undo-bookkeeping-is-missing.case";
@@ -138,6 +139,7 @@ const cases = [
   rowCountSearchProjectionCase,
   shareCopyOutsidePanelCase,
   blankNumberFormulaCase,
+  pasteNoopStampCase,
   trackedModifiedSortCase,
   lookupOfLinkContainsCase,
   deleteWithoutUndoCaptureCase,
