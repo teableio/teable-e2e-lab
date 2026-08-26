@@ -111,6 +111,10 @@ import { runLookupOfLinkContainsCase } from "./runners/lookup-of-link-contains.r
 import { runDeleteWithoutUndoCaptureCase } from "./runners/delete-without-undo-capture.runner";
 import { runSingleFieldPendingStateCase } from "./runners/single-field-pending-state.runner";
 import { runLookupOfRollupCreateCase } from "./runners/lookup-of-rollup-create.runner";
+import { runConditionalLookupAllMatchesCase } from "./runners/conditional-lookup-all-matches.runner";
+import { runAuthorityUnreadableGroupCase } from "./runners/authority-unreadable-group.runner";
+import { runLookupUserFilterContractCase } from "./runners/lookup-user-filter-contract.runner";
+import { runLookupUserRecomputeRereadCase } from "./runners/lookup-user-recompute-reread.runner";
 import type {
   BugCase,
   BugCaseFor,
@@ -241,6 +245,10 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "lookup-of-link-contains": runLookupOfLinkContainsCase,
   "delete-without-undo-capture": runDeleteWithoutUndoCaptureCase,
   "single-field-pending-state": runSingleFieldPendingStateCase,
+  "conditional-lookup-all-matches": runConditionalLookupAllMatchesCase,
+  "authority-unreadable-group": runAuthorityUnreadableGroupCase,
+  "lookup-user-filter-contract": runLookupUserFilterContractCase,
+  "lookup-user-recompute-reread": runLookupUserRecomputeRereadCase,
 };
 
 export const executeRegisteredRunner = (

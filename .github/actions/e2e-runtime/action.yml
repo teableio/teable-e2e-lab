@@ -63,21 +63,18 @@ runs:
       uses: actions/cache@v4
       with:
         path: ${{ steps.pnpm-store.outputs.path }}
-        key: e2e-lab-pnpm-backend-ee-${{ runner.os }}-${{ hashFiles(format('{0}/pnpm-lock.yaml', inputs.teable-ee-path)) }}
+        key: e2e-lab-pnpm-backend-app-ee-${{ runner.os }}-${{ hashFiles(format('{0}/pnpm-lock.yaml', inputs.teable-ee-path)) }}
         restore-keys: |
-          e2e-lab-pnpm-backend-ee-${{ runner.os }}-
+          e2e-lab-pnpm-backend-app-ee-${{ runner.os }}-
 
-    # Only what the run reaches. This job starts one nest app and drives it
-    # through backend-ee's vitest; the workspace's frontends and their trees
-    # are installed for nothing, and installing them is not free even on a warm
-    # store — every package still has to be linked into place. The filter
-    # covers 43 of the 64 workspace packages, both prisma packages among them,
-    # and was checked by running the whole suite against it.
+    # The backend hosts Vitest and app-ee serves browser-driven cases, so both
+    # dependency closures are required. The filters retain both Prisma packages
+    # without linking unrelated workspace applications.
     - name: Install teable-ee dependencies
       if: inputs.operation == 'bootstrap'
       shell: bash
       working-directory: ${{ inputs.teable-ee-path }}
-      run: pnpm install --frozen-lockfile --filter @teable/backend-ee...
+      run: pnpm install --frozen-lockfile --filter @teable/backend-ee... --filter @teable/app-ee...
 
     - name: Generate Prisma clients
       if: inputs.operation == 'bootstrap'
