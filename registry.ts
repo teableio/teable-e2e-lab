@@ -26,6 +26,10 @@ import trackedModifiedSortCase from "./cases/view/sort-by-a-narrowed-last-change
 import lookupOfLinkContainsCase from "./cases/filter/y173-search-a-borrowed-link-column.case";
 import deleteWithoutUndoCaptureCase from "./cases/record/delete-a-row-whose-undo-bookkeeping-is-missing.case";
 import singleFieldPendingStateCase from "./cases/field/y337-a-settled-column-read-on-its-own.case";
+import y249ConditionalLookupKeepsAllMatchesCase from "./cases/lookup/y249-conditional-lookup-keeps-all-matches.case";
+import y338UnreadableGroupStillLoadsCase from "./cases/authority/y338-unreadable-group-still-loads.case";
+import y339MultiUserLookupFilterContractCase from "./cases/filter/y339-multi-user-lookup-filter-contract.case";
+import y340UserLookupSurvivesRereadCase from "./cases/lookup/y340-user-lookup-survives-reread.case";
 import sparseBatchUpdateCase from "./cases/record/y331-a-batch-write-leaves-what-it-did-not-mention.case";
 import generatedFormulaColumnCase from "./cases/record/y244-edit-a-cell-behind-a-generated-formula.case";
 import legacyGeneratedAuditColumnCase from "./cases/record/y241-add-a-row-to-a-legacy-table.case";
@@ -134,6 +138,10 @@ import type { BugCase } from "./framework/types";
 // this file statically (imports + the array below), so the planner and the
 // checks can enumerate cases without resolving @teable/* packages.
 const cases = [
+  y249ConditionalLookupKeepsAllMatchesCase,
+  y338UnreadableGroupStillLoadsCase,
+  y339MultiUserLookupFilterContractCase,
+  y340UserLookupSurvivesRereadCase,
   smokeAuthUserCase,
   recordBulkUpdate100MixedLandsCase,
   lookupOfRollupCreateCase,

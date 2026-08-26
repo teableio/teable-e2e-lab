@@ -120,6 +120,10 @@ export interface BugCaseConfigByRunner {
   "lookup-of-link-contains": LookupOfLinkContainsCaseConfig;
   "delete-without-undo-capture": DeleteWithoutUndoCaptureCaseConfig;
   "single-field-pending-state": SingleFieldPendingStateCaseConfig;
+  "conditional-lookup-all-matches": ConditionalLookupAllMatchesCaseConfig;
+  "authority-unreadable-group": AuthorityUnreadableGroupCaseConfig;
+  "lookup-user-filter-contract": LookupUserFilterContractCaseConfig;
+  "lookup-user-recompute-reread": LookupUserRecomputeRereadCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1870,6 +1874,39 @@ export interface LookupMultiplicityVoCaseConfig {
   hostRowName: string;
   // Two linked rows at least - see the runner.
   linkedRowNames: string[];
+}
+
+export interface ConditionalLookupAllMatchesCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  matchKey: number;
+  sourceValues: string[];
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
+}
+
+export interface AuthorityUnreadableGroupCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  rows: { title: string; group: string; status: string }[];
+  subscribeTimeoutMs: number;
+  settleTimeoutMs: number;
+}
+
+export interface LookupUserFilterContractCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  matchedTitle: string;
+  unmatchedTitle: string;
+}
+
+export interface LookupUserRecomputeRereadCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  sourceTitle: string;
+  hostTitle: string;
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
 }
 
 export interface ProjectedGroupHeadersCaseConfig {

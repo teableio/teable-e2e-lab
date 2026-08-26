@@ -2,6 +2,7 @@ import type { INestApplication } from "@nestjs/common";
 import { performance } from "node:perf_hooks";
 import { initApp } from "../utils/init-app";
 import { getBugCase, resolveBugCaseIds } from "./registry";
+import { closeBrowserRuntime } from "./framework/browser-runtime";
 import { applyEngineRuntimeEnv, LAB_ENGINE } from "./framework/engine";
 import { runBugCase } from "./framework/run-bug-case";
 
@@ -71,6 +72,7 @@ describe("e2e-lab bug regression runner (e2e)", () => {
 
   afterAll(async () => {
     const closeStarted = performance.now();
+    await closeBrowserRuntime();
     await app?.close();
     logPhase("app-closed", {
       closeMs: Math.round(performance.now() - closeStarted),
