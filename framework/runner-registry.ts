@@ -95,7 +95,6 @@ import { runBooleanFormulaFilterCase } from "./runners/boolean-formula-filter.ru
 import { runDuplicateBaseRecentListCase } from "./runners/duplicate-base-recent-list.runner";
 import { runLongtextMarkdownConvertCase } from "./runners/longtext-markdown-convert.runner";
 import { runConditionalRollupUserMatchCase } from "./runners/conditional-rollup-user-match.runner";
-import { runDeletedRowInTheTrashCase } from "./runners/deleted-row-in-the-trash.runner";
 import { runFromnowUnitCase } from "./runners/fromnow-unit.runner";
 import { runWeekdayStartDayCase } from "./runners/weekday-start-day.runner";
 import { runFormulaOverSystemColumnsCase } from "./runners/formula-over-system-columns.runner";
@@ -235,7 +234,6 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "conditional-rollup-user-match": runConditionalRollupUserMatchCase,
   "weekday-start-day": runWeekdayStartDayCase,
   "fromnow-unit": runFromnowUnitCase,
-  "deleted-row-in-the-trash": runDeletedRowInTheTrashCase,
   "formula-over-system-columns": runFormulaOverSystemColumnsCase,
   "tracked-modified-sort": runTrackedModifiedSortCase,
   "lookup-of-link-contains": runLookupOfLinkContainsCase,

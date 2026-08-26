@@ -114,7 +114,6 @@ export interface BugCaseConfigByRunner {
   "conditional-rollup-user-match": ConditionalRollupUserMatchCaseConfig;
   "weekday-start-day": WeekdayStartDayCaseConfig;
   "fromnow-unit": FromnowUnitCaseConfig;
-  "deleted-row-in-the-trash": DeletedRowInTheTrashCaseConfig;
   "formula-over-system-columns": FormulaOverSystemColumnsCaseConfig;
   "tracked-modified-sort": TrackedModifiedSortCaseConfig;
   "lookup-of-link-contains": LookupOfLinkContainsCaseConfig;
@@ -1738,17 +1737,6 @@ export interface FormulaOverSystemColumnsCaseConfig {
   baseId: "seed-base";
   tableNamePrefix: string;
   rowTitle: string;
-}
-
-export interface DeletedRowInTheTrashCaseConfig {
-  baseId: "seed-base";
-  tableNamePrefix: string;
-  deletedRowName: string;
-  // A row nobody deletes, so a delete that took the whole table and one that
-  // took the right row stay distinguishable.
-  keptRowName: string;
-  settleAttempts: number;
-  settleIntervalMs: number;
 }
 
 export interface FromnowUnitCaseConfig {
