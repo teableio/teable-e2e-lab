@@ -93,7 +93,8 @@ import { runManyoneTypecastShapeCase } from "./runners/manyone-typecast-shape.ru
 import { runRowCountSearchProjectionCase } from "./runners/row-count-search-projection.runner";
 import { runBooleanFormulaFilterCase } from "./runners/boolean-formula-filter.runner";
 import { runDuplicateBaseRecentListCase } from "./runners/duplicate-base-recent-list.runner";
-import { runLongtextMarkdownConvertCase } from "./runners/longtext-markdown-convert.runner";
+import { runFieldOptionPreservationCase } from "./runners/field-option-preservation.runner";
+import { runDepartmentShareUserPickerCase } from "./runners/department-share-user-picker.runner";
 import { runConditionalRollupUserMatchCase } from "./runners/conditional-rollup-user-match.runner";
 import { runFromnowUnitCase } from "./runners/fromnow-unit.runner";
 import { runWeekdayStartDayCase } from "./runners/weekday-start-day.runner";
@@ -228,7 +229,8 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "lookup-select-choices-kept": runLookupSelectChoicesKeptCase,
   "boolean-formula-filter": runBooleanFormulaFilterCase,
   "duplicate-base-recent-list": runDuplicateBaseRecentListCase,
-  "longtext-markdown-convert": runLongtextMarkdownConvertCase,
+  "field-option-preservation": runFieldOptionPreservationCase,
+  "department-share-user-picker": runDepartmentShareUserPickerCase,
   "stale-view-column-meta": runStaleViewColumnMetaCase,
   "nested-filter-conjunction": runNestedFilterConjunctionCase,
   "conditional-rollup-user-match": runConditionalRollupUserMatchCase,

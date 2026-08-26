@@ -14,7 +14,8 @@ import shareCopyOutsidePanelCase from "./cases/base-share/copy-a-share-past-a-pa
 import lookupSelectChoicesKeptCase from "./cases/lookup/repoint-a-borrowed-choice-column.case";
 import booleanFormulaFilterCase from "./cases/filter/filter-a-worked-out-yes-no-column.case";
 import duplicateBaseRecentListCase from "./cases/base-share/a-duplicated-base-in-the-recent-list.case";
-import longtextMarkdownConvertCase from "./cases/field/edit-a-column-that-renders-markdown.case";
+import fieldOptionPreservationCase from "./cases/field/y422-y428-field-options-survive-edits.case";
+import departmentShareUserPickerCase from "./cases/base-share/y429-department-member-appears-in-share-picker.case";
 import staleViewColumnMetaCase from "./cases/view/a-view-that-still-describes-a-deleted-column.case";
 import nestedFilterConjunctionCase from "./cases/filter/a-group-inside-a-group.case";
 import conditionalRollupUserMatchCase from "./cases/lookup/hours-owned-by-anyone-on-this-row.case";
@@ -149,7 +150,8 @@ const cases = [
   lookupSelectChoicesKeptCase,
   booleanFormulaFilterCase,
   duplicateBaseRecentListCase,
-  longtextMarkdownConvertCase,
+  fieldOptionPreservationCase,
+  departmentShareUserPickerCase,
   staleViewColumnMetaCase,
   nestedFilterConjunctionCase,
   conditionalRollupUserMatchCase,
