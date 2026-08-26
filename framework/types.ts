@@ -108,7 +108,8 @@ export interface BugCaseConfigByRunner {
   "lookup-select-choices-kept": LookupSelectChoicesKeptCaseConfig;
   "boolean-formula-filter": BooleanFormulaFilterCaseConfig;
   "duplicate-base-recent-list": DuplicateBaseRecentListCaseConfig;
-  "longtext-markdown-convert": LongtextMarkdownConvertCaseConfig;
+  "field-option-preservation": FieldOptionPreservationCaseConfig;
+  "department-share-user-picker": DepartmentShareUserPickerCaseConfig;
   "stale-view-column-meta": StaleViewColumnMetaCaseConfig;
   "nested-filter-conjunction": NestedFilterConjunctionCaseConfig;
   "conditional-rollup-user-match": ConditionalRollupUserMatchCaseConfig;
@@ -1794,12 +1795,18 @@ export interface StaleViewColumnMetaCaseConfig {
   deletedColumnName: string;
 }
 
-export interface LongtextMarkdownConvertCaseConfig {
+export interface FieldOptionPreservationCaseConfig {
   baseId: "seed-base";
   tableNamePrefix: string;
-  // The one thing the edit actually changes. It has to differ from the
-  // column's name - see the runner.
-  renamedTo: string;
+  coveredCaseIds: ["Y422", "Y423", "Y424", "Y425", "Y426", "Y427", "Y428"];
+}
+
+export interface DepartmentShareUserPickerCaseConfig {
+  spaceNamePrefix: string;
+  baseNamePrefix: string;
+  tableNamePrefix: string;
+  departmentNamePrefix: string;
+  memberNamePrefix: string;
 }
 
 export interface DuplicateBaseRecentListCaseConfig {
