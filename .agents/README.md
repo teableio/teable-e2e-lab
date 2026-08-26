@@ -23,7 +23,7 @@ do not restate it elsewhere.
   the fixture seam: it only reads, it is what a browser sees, and it belongs
   INSIDE the checkpoint. It speaks the same SockJS transport a browser does,
   because the serialization boundary is often exactly where the damage is —
-  `realtime/view-filter-update-reaches-subscribers` reproduces an op that was
+  `realtime/y183-view-filter-update-reaches-subscribers` reproduces an op that was
   well-formed in memory and instruction-less on the wire.
 
 - **Which engine is the bug on?** teable-ee has two record engines, and v1 bugs

@@ -5,7 +5,7 @@ const sha = (seed) => seed.repeat(40).slice(0, 40);
 
 // A representative payload, shaped exactly like framework/artifacts.ts writes.
 const payload = {
-  caseId: "record/bulk-update-100-mixed-lands",
+  caseId: "record/y154-bulk-update-100-mixed-lands",
   title: "Bulk-updating 100 rows lands on every single cell",
   bug: { issue: "sentinel/record-bulk-update-lands", status: "fixed" },
   runId: "123-1",
@@ -46,7 +46,7 @@ const planEntry = {
   const fields = record.fields;
   assert.equal(
     fields["Run Key"],
-    `123-1-record/bulk-update-100-mixed-lands-${sha("a").slice(0, 10)}`,
+    `123-1-record/y154-bulk-update-100-mixed-lands-${sha("a").slice(0, 10)}`,
   );
   assert.equal(fields.Verdict, "regression");
   assert.equal(fields.Observed, "present");
@@ -91,8 +91,8 @@ const planEntry = {
 {
   const record = buildCaseRecord({
     entry: {
-      id: "smoke/auth-user",
-      path: "cases/smoke/auth-user.case.ts",
+      id: "smoke/y153-auth-user",
+      path: "cases/smoke/y153-auth-user.case.ts",
       issue: "sentinel/harness-health",
       status: "fixed",
       title: "Seeded user can read their own profile",
@@ -104,10 +104,16 @@ const planEntry = {
     syncedAt: "2026-08-19T10:00:00.000Z",
   });
   const fields = record.fields;
-  assert.equal(fields["Case ID"], "smoke/auth-user");
-  assert.equal(fields["Doc Path"], "cases/smoke/auth-user.md");
-  assert.match(fields["Doc URL"], /blob\/main\/cases\/smoke\/auth-user\.md$/);
-  assert.match(fields["CI Reproduce Command"], /case_filter=smoke\/auth-user/);
+  assert.equal(fields["Case ID"], "smoke/y153-auth-user");
+  assert.equal(fields["Doc Path"], "cases/smoke/y153-auth-user.md");
+  assert.match(
+    fields["Doc URL"],
+    /blob\/main\/cases\/smoke\/y153-auth-user\.md$/,
+  );
+  assert.match(
+    fields["CI Reproduce Command"],
+    /case_filter=smoke\/y153-auth-user/,
+  );
   assert.equal(fields["Timeout Ms"], 60000);
   assert.equal(fields["Declared Status"], "fixed");
 }
