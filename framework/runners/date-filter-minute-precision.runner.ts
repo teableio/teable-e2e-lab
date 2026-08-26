@@ -106,6 +106,39 @@ export const runDateFilterMinutePrecisionCase = async (
       );
     }
 
+    // Control, still outside the checkpoint: the same filter written the same
+    // way, with a cutoff before every row, has to return every row. Without it
+    // an empty answer below could be this case asking the question wrongly
+    // rather than the product answering it wrongly.
+    const controlAfter = new Date(
+      Math.min(...config.rows.map((row) => Date.parse(row.at))) - 60_000,
+    ).toISOString();
+    const control = await apiGetRecords(tableId, {
+      fieldKeyType: FieldKeyType.Name,
+      viewId,
+      take: config.rows.length,
+      filter: {
+        conjunction: and.value,
+        filterSet: [
+          {
+            fieldId: whenFieldId,
+            operator: isAfter.value,
+            value: {
+              mode: exactFormatDate.value,
+              exactDate: controlAfter,
+              timeZone: config.timeZone,
+            },
+          },
+        ],
+      },
+    });
+    if (control.data.records.length !== config.rows.length) {
+      throw new Error(
+        `asked for the rows after ${controlAfter}, which is before all of them, the filter returned ` +
+          `${control.data.records.length} of ${config.rows.length} - this case is not asking the question the way the product expects it`,
+      );
+    }
+
     const probe = await bugCheckpoint(
       "a-time-of-day-filter-compares-the-minute",
       async () => {
