@@ -114,6 +114,7 @@ export interface BugCaseConfigByRunner {
   "conditional-rollup-user-match": ConditionalRollupUserMatchCaseConfig;
   "weekday-start-day": WeekdayStartDayCaseConfig;
   "fromnow-unit": FromnowUnitCaseConfig;
+  "date-filter-minute-precision": DateFilterMinutePrecisionCaseConfig;
   "formula-over-system-columns": FormulaOverSystemColumnsCaseConfig;
   "tracked-modified-sort": TrackedModifiedSortCaseConfig;
   "lookup-of-link-contains": LookupOfLinkContainsCaseConfig;
@@ -1737,6 +1738,16 @@ export interface FormulaOverSystemColumnsCaseConfig {
   baseId: "seed-base";
   tableNamePrefix: string;
   rowTitle: string;
+}
+
+export interface DateFilterMinutePrecisionCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Rows minutes apart on one day, with at least one on each side of the
+  // cutoff - the runner refuses anything else.
+  rows: { name: string; at: string }[];
+  after: string;
+  timeZone: string;
 }
 
 export interface FromnowUnitCaseConfig {
