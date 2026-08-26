@@ -7,7 +7,10 @@ import {
   isAfter,
   TimeFormatting,
 } from "@teable/core";
-import { getRecords as apiGetRecords } from "@teable/openapi";
+import {
+  getRecords as apiGetRecords,
+  updateViewFilter as apiUpdateViewFilter,
+} from "@teable/openapi";
 import { createTable, permanentDeleteTable } from "../../../utils/init-app";
 import { bugCheckpoint } from "../checkpoint";
 import type { BugCaseFor, BugProbeResult, BugRunContext } from "../types";
@@ -106,66 +109,60 @@ export const runDateFilterMinutePrecisionCase = async (
       );
     }
 
-    // Control, still outside the checkpoint: the same filter written the same
-    // way, with a cutoff before every row, has to return every row. Without it
-    // an empty answer below could be this case asking the question wrongly
-    // rather than the product answering it wrongly.
+    // The filter is saved on the view and the view is then read, which is how
+    // a person uses one: they set it in the toolbar and look at the table.
+    // Passing it alongside the read instead is answered with nothing at all on
+    // develop and with everything on the fix's parent - neither of which is
+    // the product filtering - see run 32916759955.
+    const filterFor = (exactDate: string) => ({
+      conjunction: and.value,
+      filterSet: [
+        {
+          fieldId: whenFieldId,
+          operator: isAfter.value,
+          value: {
+            mode: exactFormatDate.value,
+            exactDate,
+            timeZone: config.timeZone,
+          },
+        },
+      ],
+    });
+    const namesAfter = async (exactDate: string) => {
+      await apiUpdateViewFilter(tableId, viewId, {
+        filter: filterFor(exactDate),
+      });
+      const read = await apiGetRecords(tableId, {
+        fieldKeyType: FieldKeyType.Name,
+        viewId,
+        take: config.rows.length,
+      });
+      return read.data.records
+        .map((record: { fields: Record<string, unknown> }) =>
+          String(record.fields[NAME_FIELD]),
+        )
+        .sort();
+    };
+
+    // Control, still outside the checkpoint: the same filter with a cutoff
+    // before every row has to keep every row. Without it an empty answer below
+    // could be this case asking the question wrongly rather than the product
+    // answering it wrongly.
     const controlAfter = new Date(
       Math.min(...config.rows.map((row) => Date.parse(row.at))) - 60_000,
     ).toISOString();
-    const control = await apiGetRecords(tableId, {
-      fieldKeyType: FieldKeyType.Name,
-      viewId,
-      take: config.rows.length,
-      filter: {
-        conjunction: and.value,
-        filterSet: [
-          {
-            fieldId: whenFieldId,
-            operator: isAfter.value,
-            value: {
-              mode: exactFormatDate.value,
-              exactDate: controlAfter,
-              timeZone: config.timeZone,
-            },
-          },
-        ],
-      },
-    });
-    if (control.data.records.length !== config.rows.length) {
+    const control = await namesAfter(controlAfter);
+    if (control.length !== config.rows.length) {
       throw new Error(
-        `asked for the rows after ${controlAfter}, which is before all of them, the filter returned ` +
-          `${control.data.records.length} of ${config.rows.length} - this case is not asking the question the way the product expects it`,
+        `asked for the rows after ${controlAfter}, which is before all of them, the view shows ` +
+          `${control.length} of ${config.rows.length} - this case is not asking the question the way the product expects it`,
       );
     }
 
     const probe = await bugCheckpoint(
       "a-time-of-day-filter-compares-the-minute",
       async () => {
-        const filtered = await apiGetRecords(tableId, {
-          fieldKeyType: FieldKeyType.Name,
-          viewId,
-          take: config.rows.length,
-          filter: {
-            conjunction: and.value,
-            filterSet: [
-              {
-                fieldId: whenFieldId,
-                operator: isAfter.value,
-                value: {
-                  mode: exactFormatDate.value,
-                  exactDate: config.after,
-                  timeZone: config.timeZone,
-                },
-              },
-            ],
-          },
-        });
-        const found = filtered.data.records
-          .map((record: { fields: Record<string, unknown> }) =>
-            String(record.fields[NAME_FIELD]),
-          )
-          .sort();
+        const found = await namesAfter(config.after);
         if (found.join(" ") !== expectedNames.join(" ")) {
           throw new Error(
             `filtering to the rows after ${config.after} returned [${found.join(", ")}], expected [${expectedNames.join(", ")}] - ` +

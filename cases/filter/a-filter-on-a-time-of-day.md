@@ -24,11 +24,15 @@ Filtering to the rows after a particular minute returns exactly those rows.
 Unfiltered, every row is there — a table short of rows would make the filtered
 answer unreadable.
 
-A control first: the same filter written the same way, with a cutoff before
-every row, returns every row. Without it an empty answer could be this case
-asking the question wrongly rather than the product answering it wrongly — and
-develop did answer with nothing before the control was added (run
-32915607313).
+A control first: the same filter with a cutoff before every row keeps every
+row. Without it an empty answer could be this case asking the question wrongly
+rather than the product answering it wrongly.
+
+That control is what settled how to ask. Passing the filter alongside the read
+is answered with nothing at all on develop and with everything on the fix's
+parent — neither of which is the product filtering — so the case saves the
+filter on the view and then reads the view, which is what a person does:
+set it in the toolbar and look at the table. Measured over runs 32915607313 and 32916759955.
 
 All the rows fall on one day and are minutes apart, with at least one on each
 side of the cutoff. A filter comparing only the day cannot tell them apart, and
