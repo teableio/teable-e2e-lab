@@ -20,6 +20,7 @@ import nestedFilterConjunctionCase from "./cases/filter/a-group-inside-a-group.c
 import conditionalRollupUserMatchCase from "./cases/lookup/hours-owned-by-anyone-on-this-row.case";
 import weekdayStartDayCase from "./cases/formula/a-day-number-when-weeks-start-on-monday.case";
 import fromnowUnitCase from "./cases/formula/how-long-ago-in-days.case";
+import deletedRowInTheTrashCase from "./cases/record/a-deleted-row-in-the-trash.case";
 import formulaOverSystemColumnsCase from "./cases/formula/columns-worked-out-from-a-new-row.case";
 import trackedModifiedSortCase from "./cases/view/sort-by-a-narrowed-last-changed-column.case";
 import lookupOfLinkContainsCase from "./cases/filter/search-a-borrowed-link-column.case";
@@ -155,6 +156,7 @@ const cases = [
   conditionalRollupUserMatchCase,
   weekdayStartDayCase,
   fromnowUnitCase,
+  deletedRowInTheTrashCase,
   formulaOverSystemColumnsCase,
   trackedModifiedSortCase,
   lookupOfLinkContainsCase,
