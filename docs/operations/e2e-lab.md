@@ -102,7 +102,7 @@ gh workflow run e2e-lab.yml \
   --repo teableio/teable-e2e-lab \
   --ref main \
   -f teable_ee_commits=develop \
-  -f case_filter=record/bulk-update-100-mixed-lands
+  -f case_filter=record/y154-bulk-update-100-mixed-lands
 ```
 
 Because `teableio/teable-ee` is private, the repository needs a read-only

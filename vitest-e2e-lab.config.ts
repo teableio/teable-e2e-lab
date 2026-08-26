@@ -24,7 +24,7 @@ const e2eLabSpec =
 // Two, not four. Most of what overlapping buys back is idle waiting — a case
 // watching for a notification that must not arrive — so the width does not
 // have to be large to collect it. Four was: it ran the suite in 81s against
-// 150s serial, and then timed out base-share/import-keeps-field-descriptions
+// 150s serial, and then timed out base-share/y230-import-keeps-field-descriptions
 // twice, a case that finishes in under a second on its own. Those cases move
 // a whole base through export and import, and four of them against one app
 // process is more than the machine has to give.

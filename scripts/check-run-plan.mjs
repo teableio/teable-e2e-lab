@@ -2,7 +2,10 @@ import assert from "node:assert/strict";
 import { MAX_COMMITS, resolveRunPlan, shortSha } from "./run-plan-model.mjs";
 
 const sha = (seed) => seed.repeat(40).slice(0, 40);
-const ALL_CASES = ["smoke/auth-user", "record/bulk-update-100-mixed-lands"];
+const ALL_CASES = [
+  "smoke/y153-auth-user",
+  "record/y154-bulk-update-100-mixed-lands",
+];
 
 // Happy path: two commits, all cases.
 {
@@ -33,14 +36,14 @@ const ALL_CASES = ["smoke/auth-user", "record/bulk-update-100-mixed-lands"];
       { ref: "newer", sha: sha("b") },
       { ref: "older", sha: sha("a") },
     ],
-    caseFilter: "smoke/auth-user",
+    caseFilter: "smoke/y153-auth-user",
     allCaseIds: ALL_CASES,
   });
   assert.deepEqual(
     plan.executePlan.map(({ ref }) => ref),
     ["newer", "older"],
   );
-  assert.deepEqual(plan.caseIds, ["smoke/auth-user"]);
+  assert.deepEqual(plan.caseIds, ["smoke/y153-auth-user"]);
 }
 
 // Refusals, each with the reason a dispatcher will actually hit.
