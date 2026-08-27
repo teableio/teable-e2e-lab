@@ -78,18 +78,22 @@ describe("e2e-lab bug regression runner (e2e)", () => {
   });
 
   for (const bugCase of bugCases) {
-    it.concurrent(
-      `observes ${bugCase.id} [${bugCase.bug.issue}]`,
-      { timeout: bugCase.timeoutMs },
-      async () => {
-        logPhase("case:start", { caseId: bugCase.id });
-        const caseStarted = performance.now();
-        await runBugCase(bugCase, { app, appUrl, cookie });
-        logPhase("case:done", {
-          caseId: bugCase.id,
-          caseMs: Math.round(performance.now() - caseStarted),
-        });
-      },
-    );
+    const name = `observes ${bugCase.id} [${bugCase.bug.issue}]`;
+    const options = { timeout: bugCase.timeoutMs };
+    const run = async () => {
+      logPhase("case:start", { caseId: bugCase.id });
+      const caseStarted = performance.now();
+      await runBugCase(bugCase, { app, appUrl, cookie });
+      logPhase("case:done", {
+        caseId: bugCase.id,
+        caseMs: Math.round(performance.now() - caseStarted),
+      });
+    };
+
+    if (bugCase.serial) {
+      it(name, options, run);
+    } else {
+      it.concurrent(name, options, run);
+    }
   }
 });

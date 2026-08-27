@@ -169,6 +169,12 @@ interface BugCaseBase {
   id: string;
   title: string;
   bug: BugRef;
+  /**
+   * Run without overlapping any concurrent case. Use only when the checkpoint
+   * intentionally observes user-global state that per-case bases cannot
+   * isolate (for example, the current user's recent-base ordering).
+   */
+  serial?: boolean;
   timeoutMs: number;
 }
 
