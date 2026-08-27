@@ -21,7 +21,10 @@ export default defineBugCase({
   computedUpdateMode: "hybrid",
   bug: {
     issue: "T7002",
-    status: "open",
+    // EVIDENCE BRANCH ONLY (never merged): declared "fixed" so the gating
+    // column turns this reproduction into a red regression, demonstrating
+    // the CI catching the silent loss. main carries the honest "open".
+    status: "fixed",
     link: "https://github.com/teableio/teable-ee/pull/3207",
     // The #3207 fix commit: this case settles it by reproducing on it — the
     // inline bounding it added does not cover the dispatched-task loss path.
