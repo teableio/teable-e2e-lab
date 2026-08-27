@@ -111,6 +111,7 @@ import { runLookupOfLinkContainsCase } from "./runners/lookup-of-link-contains.r
 import { runDeleteWithoutUndoCaptureCase } from "./runners/delete-without-undo-capture.runner";
 import { runSingleFieldPendingStateCase } from "./runners/single-field-pending-state.runner";
 import { runLookupOfRollupCreateCase } from "./runners/lookup-of-rollup-create.runner";
+import { runCircularAppendBurstCase } from "./runners/circular-append-burst.runner";
 import type {
   BugCase,
   BugCaseFor,
@@ -241,6 +242,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "lookup-of-link-contains": runLookupOfLinkContainsCase,
   "delete-without-undo-capture": runDeleteWithoutUndoCaptureCase,
   "single-field-pending-state": runSingleFieldPendingStateCase,
+  "circular-append-burst": runCircularAppendBurstCase,
 };
 
 export const executeRegisteredRunner = (

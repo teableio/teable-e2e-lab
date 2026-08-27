@@ -47,10 +47,64 @@ export interface EngineRouting {
   reason: string;
 }
 
+/**
+ * The v2 computed-update strategy this invocation runs.
+ *
+ * teable-ee's e2e setup pins `V2_COMPUTED_UPDATE_MODE=sync` so the broad
+ * suite is deterministic — every computed value has landed by the time a
+ * write answers. That pin makes one whole class of production bug
+ * unobservable here: the DEFAULT production strategy is hybrid (bounded
+ * inline work, remainder dispatched through the computed-update outbox), and
+ * bugs that live in the dispatch/lock seam simply do not exist under sync.
+ *
+ * So the mode is an invocation-level choice, not a per-case one: the strategy
+ * is read once, when the app process builds its v2 container, and every base
+ * in the e2e database shares that container. A case cannot flip it after
+ * boot. Cases that need hybrid declare `computedUpdateMode: "hybrid"` and the
+ * workflow runs them in a separate vitest invocation whose app boots with the
+ * variable UNSET — the env schema accepts only "sync"; hybrid IS the unset
+ * default, and exporting the literal "hybrid" fails validation at boot.
+ */
+export type LabComputedUpdateMode = "sync" | "hybrid";
+
+export const labComputedUpdateMode = (): LabComputedUpdateMode =>
+  process.env.E2E_LAB_COMPUTED_UPDATE_MODE === "hybrid" ? "hybrid" : "sync";
+
 // Called before the app boots. FORCE_V2_ALL is read live per request, but some
 // paths also read it at startup, so it is set once for the process.
 export const applyEngineRuntimeEnv = () => {
   process.env.FORCE_V2_ALL = "true";
+  if (labComputedUpdateMode() === "hybrid") {
+    // The setup file has already pinned sync by the time the spec module
+    // loads; unpin it before initApp() builds the v2 container. See
+    // labComputedUpdateMode above for why unset means hybrid.
+    delete process.env.V2_COMPUTED_UPDATE_MODE;
+  }
+};
+
+/**
+ * Prove, from a runner's SETUP phase, that this invocation really runs the
+ * hybrid strategy. The failure mode this guards is the same shape as a silent
+ * v1 answer: a hybrid case running against a sync app observes nothing, its
+ * bug cannot exist there, and "absent" would read as good news. Failing in
+ * setup makes that an error verdict instead.
+ */
+export const assertHybridComputedRuntime = (caseId: string) => {
+  if (labComputedUpdateMode() !== "hybrid") {
+    throw new Error(
+      `${caseId} declares computedUpdateMode "hybrid" but this invocation runs "${labComputedUpdateMode()}". ` +
+        "Its bug lives in the outbox dispatch seam, which sync mode does not have — " +
+        "run it with E2E_LAB_COMPUTED_UPDATE_MODE=hybrid (the workflow's hybrid step does).",
+    );
+  }
+  if (process.env.V2_COMPUTED_UPDATE_MODE !== undefined) {
+    throw new Error(
+      `${caseId} needs the app booted WITHOUT V2_COMPUTED_UPDATE_MODE (hybrid is the unset default), ` +
+        `but the variable reads "${process.env.V2_COMPUTED_UPDATE_MODE}". The engine env was applied ` +
+        "after the setup file re-pinned it, or something re-set it since — either way the container " +
+        "may have been built sync, and observing nothing would be meaningless.",
+    );
+  }
 };
 
 // Genuinely case-insensitive, not just "try the lowercase spelling too": HTTP

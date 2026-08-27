@@ -12,6 +12,16 @@ The executable path is deliberately the one teable-perf-lab proved out:
    the lab into `community/apps/nestjs-backend/test/e2e-lab/`, build the
    database from that commit's own migrations plus the standard e2e seed, and
    run every selected case serially through `@teable/backend-ee`'s vitest.
+   The job runs up to TWO vitest invocations against the same database: the
+   main one (teable-ee's e2e setup pins the deterministic sync computed-update
+   strategy), and — when the selection includes cases declaring
+   `computedUpdateMode: "hybrid"` — a second one whose app boots with
+   `V2_COMPUTED_UPDATE_MODE` unset, i.e. the production-default hybrid
+   strategy. The strategy is read once when the app process builds its v2
+   container, which is why this is an invocation split and not a per-case
+   switch; the planner emits one case filter per invocation and both write
+   into the same artifact directory, so acceptance counts them as one run.
+   See `framework/engine.ts`.
 4. `report` collects every payload, renders the bug × commit table, and
    enforces acceptance fail-closed.
 
