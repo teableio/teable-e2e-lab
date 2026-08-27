@@ -11,6 +11,10 @@ export default defineBugCase({
   title: "A freshly duplicated base is in the recent list",
   runner: "duplicate-base-recent-list",
   timeoutMs: 240_000,
+  // Recent bases are user-global state. Another concurrent case may visit its
+  // own base after this copy and correctly move ahead of it, invalidating this
+  // checkpoint without reproducing T2571.
+  serial: true,
   bug: {
     issue: "T2571",
     status: "fixed",
