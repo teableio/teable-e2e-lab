@@ -138,6 +138,9 @@ export const loadCaseCatalog = async (repoRoot) => {
       runner: literalField(source, "runner", path),
       timeoutMs: numericField(source, "timeoutMs"),
       link: optionalLiteralField(source, "link"),
+      // Present = this case is never asked of v1, and the string says why.
+      // See framework/types.ts for the two things that legitimately land here.
+      skipV1: optionalLiteralField(source, "skipV1"),
       appliesSince: optionalLiteralField(source, "appliesSince"),
       sourceCommits: literalArrayField(source, "sourceCommits"),
     });

@@ -206,6 +206,12 @@ jobs:
           export E2E_LAB_CASE_FILTER="${{ inputs.case_filter }}"
           export E2E_LAB_COMMIT_SHA="${{ matrix.plan.sha }}"
           export E2E_LAB_GATING="${{ matrix.plan.gating }}"
+          # Both engines, in one job. perf-lab gives each engine its own job
+          # because overlapping measurements pollute each other; bug
+          # observations do not, and a second job would re-pay the whole ~50s
+          # bootstrap to save one app boot. v2 is what this run is judged on;
+          # v1 rides along as the reference column.
+          export E2E_LAB_ENGINE_LIST="v1,v2"
 
           pnpm -F @teable/backend-ee exec vitest run \
             --config ./vitest-e2e-lab.config.ts \
@@ -273,6 +279,7 @@ jobs:
           E2E_LAB_ARTIFACT_DIR: ${{ github.workspace }}/e2e-lab-artifacts
           E2E_LAB_EXECUTE_PLAN: ${{ needs.resolve_inputs.outputs.execute_plan }}
           E2E_LAB_CASE_FILTER: ${{ inputs.case_filter }}
+          E2E_LAB_ENGINES: '["v1","v2"]'
           E2E_LAB_COMPARISON_PATH: ${{ github.workspace }}/e2e-lab-report/comparison.json
         run: node e2e-lab/scripts/build-comparison.mjs
 

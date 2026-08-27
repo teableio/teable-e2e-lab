@@ -10,6 +10,13 @@
 // A missing cell is a failure, never an empty cell a reader might take for
 // green; a duplicate is a failure, because two observations for one cell means
 // the run's identity is confused.
+//
+// That contract covers the V2 table only. v1 is a reference column: it is
+// rendered beside the guarded one and recorded in the artifact, and its
+// problems land in `referenceIssues`, which is printed and never fails the
+// run. Making v1 fail-closed too would put the noise this column was cleaned
+// of straight back — 11 of 129 cases cannot be asked of v1 at all, and a
+// reference nobody can afford to leave red is a reference nobody keeps.
 
 // Keep in sync with the BugVerdict union in framework/verdict.ts. A payload
 // carrying a verdict outside this map fails the run as `unknown-verdict`
@@ -22,11 +29,20 @@ export const VERDICT_CELLS = {
   error: "💥",
 };
 export const MISSING_CELL = "❓";
+// Declared on the case, not discovered by the run: v1 was never asked.
+export const SKIPPED_CELL = "⊘";
 
-export const buildComparison = ({ caseCatalog, executePlan, payloads }) => {
+export const buildComparison = ({
+  caseCatalog,
+  executePlan,
+  payloads,
+  engines = ["v2"],
+}) => {
   const commits = executePlan;
   const commitShas = new Set(commits.map(({ sha }) => sha));
   const plannedCaseIds = new Set(caseCatalog.map(({ id }) => id));
+  const skipsV1 = new Map(caseCatalog.map((entry) => [entry.id, entry.skipV1]));
+  const runsV1 = engines.includes("v1");
 
   const failures = {
     missing: [],
@@ -37,33 +53,50 @@ export const buildComparison = ({ caseCatalog, executePlan, payloads }) => {
     errors: [],
   };
   const notices = { unexpectedlyFixed: [] };
+  // Everything the v1 column noticed that a person should see and no gate
+  // should act on.
+  const referenceIssues = [];
 
-  const bySha = new Map(commits.map(({ sha }) => [sha, new Map()]));
+  const emptyBySha = () => new Map(commits.map(({ sha }) => [sha, new Map()]));
+  const guarded = emptyBySha();
+  const reference = emptyBySha();
+
   for (const payload of payloads) {
+    // A payload with no engine is a pre-engine artifact; read it as v2, the
+    // engine that was the only one when it was written.
+    const engine = payload.engine === "v1" ? "v1" : "v2";
+    const sink = engine === "v1" ? referenceIssues : null;
+    const note = (kind, extra = {}) => {
+      const entry = {
+        caseId: payload.caseId,
+        sha: payload.commitSha,
+        ...extra,
+      };
+      if (sink) {
+        sink.push({ kind, ...entry });
+      } else {
+        failures[kind].push(entry);
+      }
+    };
+
+    const declaredSkip = skipsV1.get(payload.caseId);
     if (
       !commitShas.has(payload.commitSha) ||
-      !plannedCaseIds.has(payload.caseId)
+      !plannedCaseIds.has(payload.caseId) ||
+      (engine === "v1" && (!runsV1 || declaredSkip))
     ) {
-      failures.unplanned.push({
-        caseId: payload.caseId,
-        sha: payload.commitSha,
-      });
+      note("unplanned");
       continue;
     }
-    const perCase = bySha.get(payload.commitSha);
+    const perCase = (engine === "v1" ? reference : guarded).get(
+      payload.commitSha,
+    );
     if (perCase.has(payload.caseId)) {
-      failures.duplicates.push({
-        caseId: payload.caseId,
-        sha: payload.commitSha,
-      });
+      note("duplicates");
       continue;
     }
     if (!(payload.verdict in VERDICT_CELLS)) {
-      failures.unknownVerdicts.push({
-        caseId: payload.caseId,
-        sha: payload.commitSha,
-        verdict: payload.verdict,
-      });
+      note("unknownVerdicts", { verdict: payload.verdict });
       continue;
     }
     perCase.set(payload.caseId, payload);
@@ -71,7 +104,7 @@ export const buildComparison = ({ caseCatalog, executePlan, payloads }) => {
 
   const rows = caseCatalog.map((entry) => {
     const cells = commits.map((commit) => {
-      const payload = bySha.get(commit.sha).get(entry.id);
+      const payload = guarded.get(commit.sha).get(entry.id);
       if (!payload) {
         failures.missing.push({ caseId: entry.id, sha: commit.sha });
         return { sha: commit.sha, short: commit.short, missing: true };
@@ -131,12 +164,39 @@ export const buildComparison = ({ caseCatalog, executePlan, payloads }) => {
       }
     }
 
+    // The reference column. Judged by nothing: a cell is what v1 answered, a
+    // skip is what the case declared, and a hole is a hole.
+    const referenceCells = runsV1
+      ? commits.map((commit) => {
+          if (entry.skipV1) {
+            return { sha: commit.sha, short: commit.short, skipped: true };
+          }
+          const payload = reference.get(commit.sha).get(entry.id);
+          if (!payload) {
+            referenceIssues.push({
+              kind: "missing",
+              caseId: entry.id,
+              sha: commit.sha,
+            });
+            return { sha: commit.sha, short: commit.short, missing: true };
+          }
+          return {
+            sha: commit.sha,
+            short: commit.short,
+            verdict: payload.verdict,
+            observed: payload.observed,
+          };
+        })
+      : [];
+
     return {
       caseId: entry.id,
       issue: entry.issue,
       status: entry.status,
       cells,
       transitions,
+      skipV1: entry.skipV1,
+      referenceCells,
     };
   });
 
@@ -147,15 +207,78 @@ export const buildComparison = ({ caseCatalog, executePlan, payloads }) => {
 
   return {
     commits: commits.map(({ ref, sha, short }) => ({ ref, sha, short })),
+    engines,
     rows,
     failures,
     notices,
+    referenceIssues,
     passed: failureCount === 0,
   };
 };
 
 const renderCell = (cell) =>
   cell.missing ? MISSING_CELL : VERDICT_CELLS[cell.verdict];
+
+const renderReferenceCell = (cell) =>
+  cell.skipped ? SKIPPED_CELL : renderCell(cell);
+
+// The v1 table, printed under the guarded one and judged by nobody.
+//
+// A separate table rather than extra columns in the first: interleaving them
+// doubles the width of the thing people actually read, and puts cells that
+// fail the run next to cells that cannot, which is precisely the confusion
+// this column has to avoid to stay welcome.
+export const renderReferenceMarkdown = (comparison) => {
+  if (!comparison.engines?.includes("v1")) {
+    return "";
+  }
+  const skipped = comparison.rows.filter((row) => row.skipV1);
+  const lines = [
+    "",
+    "## v1 reference",
+    "",
+    "What the legacy engine answered for the same cases. Nothing here fails the run.",
+    "",
+    `| case | issue | ${comparison.commits.map(({ short }) => `\`${short}\``).join(" | ")} |`,
+    `|---|---|${comparison.commits.map(() => "---").join("|")}|`,
+    ...comparison.rows.map(
+      (row) =>
+        `| ${row.caseId} | ${row.issue} | ${row.referenceCells
+          .map(renderReferenceCell)
+          .join(" | ")} |`,
+    ),
+    "",
+    `Legend: ${SKIPPED_CELL} not asked of v1 (declared on the case) · ❌ the bug is present on v1 · ✅ absent · 💥 the case could not run on v1 · ❓ result missing`,
+    "",
+    "v1 is reached by unstamping each case's base, which makes a base no real " +
+      "customer has: theirs predate v2. Read this column as evidence to follow " +
+      "up, never as a verdict.",
+  ];
+  if (skipped.length > 0) {
+    lines.push(
+      "",
+      `<details><summary>${skipped.length} case(s) not asked of v1</summary>`,
+      "",
+      ...skipped.map((row) => `- \`${row.caseId}\` — ${row.skipV1}`),
+      "",
+      "</details>",
+    );
+  }
+  if (comparison.referenceIssues.length > 0) {
+    lines.push(
+      "",
+      `<details><summary>${comparison.referenceIssues.length} v1 bookkeeping issue(s) — not failing the run</summary>`,
+      "",
+      ...comparison.referenceIssues.map(
+        (issue) =>
+          `- ${issue.kind}: \`${issue.caseId}\` @ \`${(issue.sha ?? "?").slice(0, 10)}\``,
+      ),
+      "",
+      "</details>",
+    );
+  }
+  return lines.join("\n");
+};
 
 const describeTransition = (transition) =>
   transition.kind === "fixed-between"

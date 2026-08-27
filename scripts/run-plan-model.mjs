@@ -14,7 +14,16 @@ const SHA_PATTERN = /^[0-9a-f]{40}$/;
 
 export const shortSha = (sha) => sha.slice(0, 10);
 
-export const resolveRunPlan = ({ resolvedCommits, caseFilter, allCaseIds }) => {
+export const resolveRunPlan = ({
+  resolvedCommits,
+  caseFilter,
+  allCaseIds,
+  // Cases that declare skipV1, so the coverage contract does not expect a v1
+  // payload for them. The engine list is not a dispatch input: both engines
+  // always run, and which cases v1 can be asked is a property of the cases.
+  skipV1CaseIds = [],
+  engines = ["v1", "v2"],
+}) => {
   if (!Array.isArray(resolvedCommits) || resolvedCommits.length === 0) {
     throw new Error("At least one teable-ee commit is required.");
   }
@@ -68,13 +77,25 @@ export const resolveRunPlan = ({ resolvedCommits, caseFilter, allCaseIds }) => {
     gating: index === resolvedCommits.length - 1,
   }));
 
+  const skipped = new Set(skipV1CaseIds);
+  const v1CaseCount = engines.includes("v1")
+    ? caseIds.filter((id) => !skipped.has(id)).length
+    : 0;
+  const v2CaseCount = engines.includes("v2") ? caseIds.length : 0;
+
   return {
     executePlan,
     caseIds,
+    engines,
     planSummary: {
       commitCount: executePlan.length,
       caseCount: caseIds.length,
-      expectedPayloads: executePlan.length * caseIds.length,
+      engines,
+      v1CaseCount,
+      // Only the v2 half is a contract the acceptance gate enforces; the v1
+      // half is counted so a reader can see the run got what it paid for.
+      expectedPayloads: executePlan.length * (v1CaseCount + v2CaseCount),
+      expectedGuardedPayloads: executePlan.length * v2CaseCount,
       commits: executePlan.map(({ ref, short, gating }) => ({
         ref,
         short,
@@ -94,7 +115,8 @@ export const renderPlanSummaryMarkdown = (planSummary) =>
           `${ref}@${short}${gating ? " ←gating" : ""}`,
       )
       .join(", ")})`,
-    `- Cases: ${planSummary.caseCount}`,
-    `- Expected payloads: ${planSummary.expectedPayloads}`,
+    `- Cases: ${planSummary.caseCount} (v2), ${planSummary.v1CaseCount} of them also asked of v1`,
+    `- Engines: ${(planSummary.engines ?? ["v2"]).join(", ")}`,
+    `- Expected payloads: ${planSummary.expectedPayloads} (${planSummary.expectedGuardedPayloads} guarded)`,
     "",
   ].join("\n");

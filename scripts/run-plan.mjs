@@ -23,6 +23,7 @@ const main = async () => {
     resolvedCommits: JSON.parse(process.env.E2E_LAB_RESOLVED_COMMITS ?? "[]"),
     caseFilter: process.env.E2E_LAB_CASE_FILTER ?? "all",
     allCaseIds: catalog.map(({ id }) => id),
+    skipV1CaseIds: catalog.filter(({ skipV1 }) => skipV1).map(({ id }) => id),
   });
 
   if (process.env.GITHUB_OUTPUT) {

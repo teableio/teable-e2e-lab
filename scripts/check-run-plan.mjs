@@ -23,7 +23,37 @@ const ALL_CASES = ["smoke/auth-user", "record/bulk-update-100-mixed-lands"];
     [false, true],
   );
   assert.deepEqual(plan.caseIds, ALL_CASES);
-  assert.equal(plan.planSummary.expectedPayloads, 4);
+  // Both engines run: 2 commits x 2 cases x 2 engines.
+  assert.equal(plan.planSummary.expectedPayloads, 8);
+  // Only the v2 half is the contract the acceptance gate enforces.
+  assert.equal(plan.planSummary.expectedGuardedPayloads, 4);
+  assert.deepEqual(plan.planSummary.engines, ["v1", "v2"]);
+}
+
+// A case declaring skipV1 is not expected to produce a v1 payload, so the
+// coverage contract must not go looking for one.
+{
+  const plan = resolveRunPlan({
+    resolvedCommits: [{ ref: "develop", sha: sha("a") }],
+    caseFilter: "all",
+    allCaseIds: ALL_CASES,
+    skipV1CaseIds: ["smoke/auth-user"],
+  });
+  assert.equal(plan.planSummary.v1CaseCount, 1);
+  assert.equal(plan.planSummary.expectedPayloads, 3);
+  assert.equal(plan.planSummary.expectedGuardedPayloads, 2);
+}
+
+// A v2-only run still counts only the guarded half, and expects no v1 cell.
+{
+  const plan = resolveRunPlan({
+    resolvedCommits: [{ ref: "develop", sha: sha("a") }],
+    caseFilter: "all",
+    allCaseIds: ALL_CASES,
+    engines: ["v2"],
+  });
+  assert.equal(plan.planSummary.v1CaseCount, 0);
+  assert.equal(plan.planSummary.expectedPayloads, 2);
 }
 
 // Column order is dispatch order, verbatim.

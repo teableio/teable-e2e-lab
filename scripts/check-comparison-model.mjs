@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import {
   buildComparison,
   renderComparisonMarkdown,
+  renderReferenceMarkdown,
+  SKIPPED_CELL,
   VERDICT_CELLS,
 } from "./comparison-model.mjs";
 
@@ -263,4 +265,136 @@ console.log("comparison model ok");
     renderComparisonMarkdown(comparison),
     /\*\*1 case\*\* ran on .* \*\*1 passed\*\*, \*\*0 failed\*\*/,
   );
+}
+
+// The v1 reference column. Everything below is the same run seen twice: the
+// guarded table must read exactly as it did before v1 existed, and the v1
+// table must never be able to reach into it.
+{
+  const develop = [
+    {
+      name: "c1",
+      position: 1,
+      ref: "develop",
+      sha: sha("f"),
+      short: short("f"),
+      gating: true,
+    },
+  ];
+  const catalog = [
+    { id: "record/x", issue: "T1", status: "fixed" },
+    {
+      id: "record/skipped",
+      issue: "T2",
+      status: "fixed",
+      skipV1: "v1 has no such column",
+    },
+  ];
+  const v1 = (caseId, observed, verdict) => ({
+    ...payload(caseId, sha("f"), observed, verdict),
+    engine: "v1",
+  });
+  const v2 = (caseId, observed, verdict) => ({
+    ...payload(caseId, sha("f"), observed, verdict),
+    engine: "v2",
+  });
+
+  const comparison = buildComparison({
+    caseCatalog: catalog,
+    executePlan: develop,
+    engines: ["v1", "v2"],
+    payloads: [
+      v2("record/x", "absent", "pass"),
+      v2("record/skipped", "absent", "pass"),
+      // The two verdicts that turn the guarded column red, on the reference
+      // engine. Neither may be allowed anywhere near `passed`.
+      v1("record/x", "present", "regression"),
+    ],
+  });
+
+  assert.equal(comparison.passed, true);
+  assert.deepEqual(comparison.failures.regressions, []);
+  assert.deepEqual(comparison.failures.errors, []);
+  assert.deepEqual(comparison.failures.missing, []);
+
+  const [row, skippedRow] = comparison.rows;
+  assert.equal(row.cells[0].verdict, "pass");
+  assert.equal(row.referenceCells[0].verdict, "regression");
+  // A declared skip is not a hole: it never asks for a payload and never
+  // reports one missing.
+  assert.equal(skippedRow.referenceCells[0].skipped, true);
+  assert.equal(
+    comparison.referenceIssues.filter(
+      (issue) => issue.caseId === "record/skipped",
+    ).length,
+    0,
+  );
+
+  const reference = renderReferenceMarkdown(comparison);
+  assert.match(reference, /## v1 reference/);
+  assert.ok(reference.includes(SKIPPED_CELL));
+  assert.match(reference, /v1 has no such column/);
+  // The guarded table says nothing about v1.
+  assert.doesNotMatch(renderComparisonMarkdown(comparison), /v1 reference/);
+}
+
+// A v1 payload for a case that declared skipV1 is unplanned — but on the
+// reference side, so it is reported and still does not fail the run.
+{
+  const develop = [
+    {
+      name: "c1",
+      position: 1,
+      ref: "develop",
+      sha: sha("f"),
+      short: short("f"),
+      gating: true,
+    },
+  ];
+  const comparison = buildComparison({
+    caseCatalog: [
+      { id: "record/skipped", issue: "T2", status: "fixed", skipV1: "no" },
+    ],
+    executePlan: develop,
+    engines: ["v1", "v2"],
+    payloads: [
+      {
+        ...payload("record/skipped", sha("f"), "absent", "pass"),
+        engine: "v2",
+      },
+      {
+        ...payload("record/skipped", sha("f"), "absent", "pass"),
+        engine: "v1",
+      },
+    ],
+  });
+  assert.equal(comparison.passed, true);
+  assert.deepEqual(comparison.failures.unplanned, []);
+  assert.equal(
+    comparison.referenceIssues.some((issue) => issue.kind === "unplanned"),
+    true,
+  );
+}
+
+// A payload written before the engine existed reads as v2, so an older
+// artifact still lands in the guarded table rather than vanishing.
+{
+  const develop = [
+    {
+      name: "c1",
+      position: 1,
+      ref: "develop",
+      sha: sha("f"),
+      short: short("f"),
+      gating: true,
+    },
+  ];
+  const comparison = buildComparison({
+    caseCatalog: [{ id: "record/x", issue: "T1", status: "fixed" }],
+    executePlan: develop,
+    engines: ["v2"],
+    payloads: [payload("record/x", sha("f"), "absent", "pass")],
+  });
+  assert.equal(comparison.rows[0].cells[0].verdict, "pass");
+  assert.equal(renderReferenceMarkdown(comparison), "");
 }
