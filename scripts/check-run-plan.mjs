@@ -27,6 +27,38 @@ const ALL_CASES = [
   );
   assert.deepEqual(plan.caseIds, ALL_CASES);
   assert.equal(plan.planSummary.expectedPayloads, 4);
+  // Without hybrid declarations everything runs in the sync invocation.
+  assert.deepEqual(plan.syncCaseIds, ALL_CASES);
+  assert.deepEqual(plan.hybridCaseIds, []);
+}
+
+// Hybrid cases split into their own invocation filter; every selected case
+// lands in exactly one list and the coverage contract is unchanged.
+{
+  const plan = resolveRunPlan({
+    resolvedCommits: [{ ref: "develop", sha: sha("a") }],
+    caseFilter: "all",
+    allCaseIds: [...ALL_CASES, "lookup/hybrid-only"],
+    hybridCaseIds: ["lookup/hybrid-only"],
+  });
+  assert.deepEqual(plan.syncCaseIds, ALL_CASES);
+  assert.deepEqual(plan.hybridCaseIds, ["lookup/hybrid-only"]);
+  assert.equal(
+    plan.syncCaseIds.length + plan.hybridCaseIds.length,
+    plan.caseIds.length,
+  );
+  assert.equal(plan.planSummary.hybridCaseCount, 1);
+  assert.equal(plan.planSummary.expectedPayloads, 3);
+
+  // A filter selecting only the hybrid case empties the sync invocation.
+  const hybridOnly = resolveRunPlan({
+    resolvedCommits: [{ ref: "develop", sha: sha("a") }],
+    caseFilter: "lookup/hybrid-only",
+    allCaseIds: [...ALL_CASES, "lookup/hybrid-only"],
+    hybridCaseIds: ["lookup/hybrid-only"],
+  });
+  assert.deepEqual(hybridOnly.syncCaseIds, []);
+  assert.deepEqual(hybridOnly.hybridCaseIds, ["lookup/hybrid-only"]);
 }
 
 // Column order is dispatch order, verbatim.

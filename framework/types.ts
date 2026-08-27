@@ -120,6 +120,7 @@ export interface BugCaseConfigByRunner {
   "lookup-of-link-contains": LookupOfLinkContainsCaseConfig;
   "delete-without-undo-capture": DeleteWithoutUndoCaptureCaseConfig;
   "single-field-pending-state": SingleFieldPendingStateCaseConfig;
+  "circular-append-burst": CircularAppendBurstCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -170,6 +171,14 @@ interface BugCaseBase {
   title: string;
   bug: BugRef;
   timeoutMs: number;
+  // Which v2 computed-update strategy the case's bug lives under. Absent
+  // means the harness default (sync — deterministic, pinned by teable-ee's
+  // e2e setup). "hybrid" opts into the production default strategy (bounded
+  // inline + outbox dispatch); the strategy is fixed when the app process
+  // boots, so the workflow runs hybrid cases in a separate vitest invocation
+  // and the spec filters each invocation to its own mode. Must be a string
+  // literal — the planner reads it by static parsing. See framework/engine.ts.
+  computedUpdateMode?: "hybrid";
 }
 
 // A runner-specific view of a bug case, keeping the runner literal and its
@@ -1924,4 +1933,50 @@ export interface LookupOfRollupCreateCaseConfig {
   usageRowTitle: string;
   firstAmount: number;
   secondAmount: number;
+}
+
+// The 2026-08-27 CN incident fixture: four tables whose SubOrders and
+// Purification link to each other in both directions and look each other up,
+// with a duplicate one-many link pair doubling the dependency edges. The
+// operation under test appends `appendRowCount` Purification rows in
+// sequential bulk batches of `appendBatchSize`, every row wiring all four
+// link cells. Scale and permutations are the model's input — see
+// framework/runners/circular-append-burst-workload.ts. Requires
+// `computedUpdateMode: "hybrid"` on the case: the bug lives in the outbox
+// dispatch seam, which sync mode does not have.
+export interface CircularAppendBurstCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  orderRowCount: number;
+  subOrderRowCount: number;
+  purificationRowCount: number;
+  plasmidRowCount: number;
+  // Row mappings; multipliers must be coprime with their target row counts,
+  // and purificationRowCount + appendRowCount <= subOrderRowCount so every
+  // appended row lands on its own previously purification-free host (the
+  // runner proves injectivity before building anything).
+  orderPermutation: { multiplier: number; offset: number };
+  purificationSubOrderPermutation: { multiplier: number; offset: number };
+  purificationOrderPermutation: { multiplier: number; offset: number };
+  // Seeding writes in batches too, but PACED: each batch waits for a probe
+  // row to settle before the next is sent, so the only back-to-back burst is
+  // the one inside the checkpoint.
+  seedBatchSize: number;
+  purificationSeedBatchSize: number;
+  // Per-batch settle bound during seeding. Exceeding it is an error verdict
+  // (the fixture never stood up), not the bug.
+  seedSettleTimeoutMs: number;
+  // The burst: appendRowCount rows in back-to-back batches of
+  // appendBatchSize — the write shape that races the previous batch's
+  // dispatched outbox task on the per-table computed advisory lock.
+  appendRowCount: number;
+  appendBatchSize: number;
+  // The bounded window in which every host sub-order and every appended row
+  // must converge. Generous on purpose: a healthy run of this operation
+  // converges more than an order of magnitude faster, and dropped
+  // propagation never converges at all — the timeout IS the assertion.
+  convergenceTimeoutMs: number;
+  pollIntervalMs: number;
+  // How many stale rows the failure message names (expected vs actual).
+  staleRowEvidenceLimit: number;
 }

@@ -14,7 +14,17 @@ const SHA_PATTERN = /^[0-9a-f]{40}$/;
 
 export const shortSha = (sha) => sha.slice(0, 10);
 
-export const resolveRunPlan = ({ resolvedCommits, caseFilter, allCaseIds }) => {
+export const resolveRunPlan = ({
+  resolvedCommits,
+  caseFilter,
+  allCaseIds,
+  // Ids of registered cases declaring computedUpdateMode "hybrid". The
+  // strategy is fixed at app boot, so the execute job runs two vitest
+  // invocations — sync-mode cases and hybrid-mode cases — and each needs its
+  // own filter. Every selected case lands in exactly one of the two lists, so
+  // the coverage contract (expectedPayloads) is unchanged.
+  hybridCaseIds = [],
+}) => {
   if (!Array.isArray(resolvedCommits) || resolvedCommits.length === 0) {
     throw new Error("At least one teable-ee commit is required.");
   }
@@ -68,12 +78,19 @@ export const resolveRunPlan = ({ resolvedCommits, caseFilter, allCaseIds }) => {
     gating: index === resolvedCommits.length - 1,
   }));
 
+  const hybrid = new Set(hybridCaseIds);
+  const syncCaseIds = caseIds.filter((caseId) => !hybrid.has(caseId));
+  const hybridSelectedCaseIds = caseIds.filter((caseId) => hybrid.has(caseId));
+
   return {
     executePlan,
     caseIds,
+    syncCaseIds,
+    hybridCaseIds: hybridSelectedCaseIds,
     planSummary: {
       commitCount: executePlan.length,
       caseCount: caseIds.length,
+      hybridCaseCount: hybridSelectedCaseIds.length,
       expectedPayloads: executePlan.length * caseIds.length,
       commits: executePlan.map(({ ref, short, gating }) => ({
         ref,
@@ -94,7 +111,11 @@ export const renderPlanSummaryMarkdown = (planSummary) =>
           `${ref}@${short}${gating ? " ←gating" : ""}`,
       )
       .join(", ")})`,
-    `- Cases: ${planSummary.caseCount}`,
+    `- Cases: ${planSummary.caseCount}${
+      planSummary.hybridCaseCount
+        ? ` (${planSummary.hybridCaseCount} in the hybrid computed-update invocation)`
+        : ""
+    }`,
     `- Expected payloads: ${planSummary.expectedPayloads}`,
     "",
   ].join("\n");

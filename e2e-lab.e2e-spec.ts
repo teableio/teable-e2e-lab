@@ -2,7 +2,11 @@ import type { INestApplication } from "@nestjs/common";
 import { performance } from "node:perf_hooks";
 import { initApp } from "../utils/init-app";
 import { getBugCase, resolveBugCaseIds } from "./registry";
-import { applyEngineRuntimeEnv, LAB_ENGINE } from "./framework/engine";
+import {
+  applyEngineRuntimeEnv,
+  LAB_ENGINE,
+  labComputedUpdateMode,
+} from "./framework/engine";
 import { runBugCase } from "./framework/run-bug-case";
 
 // Before the app boots: pin the engine every case here guards. teable-ee is
@@ -45,10 +49,36 @@ const logPhase = (
 
 describe("e2e-lab bug regression runner (e2e)", () => {
   const caseIds = resolveBugCaseIds(process.env.E2E_LAB_CASE_FILTER ?? "all");
-  const bugCases = caseIds.map(getBugCase);
+  // The computed-update strategy is fixed when this process's app boots
+  // (framework/engine.ts), so an invocation can only honestly run the cases
+  // that declared its mode. The others are excluded loudly rather than run
+  // wrong: a hybrid case observed under sync would report "absent" about a
+  // seam that does not exist there.
+  const mode = labComputedUpdateMode();
+  const allSelected = caseIds.map(getBugCase);
+  const bugCases = allSelected.filter(
+    (bugCase) => (bugCase.computedUpdateMode ?? "sync") === mode,
+  );
+  const excluded = allSelected.filter(
+    (bugCase) => (bugCase.computedUpdateMode ?? "sync") !== mode,
+  );
+  if (excluded.length > 0) {
+    logPhase("mode-excluded", {
+      mode,
+      cases: excluded.map((bugCase) => bugCase.id).join(","),
+    });
+  }
+  if (bugCases.length === 0) {
+    throw new Error(
+      `No selected case runs under computed-update mode "${mode}". ` +
+        "The workflow gates each invocation on its own case list; locally, " +
+        "match E2E_LAB_COMPUTED_UPDATE_MODE to the cases in the filter.",
+    );
+  }
 
   logPhase("module-loaded", {
-    cases: caseIds.join(","),
+    cases: bugCases.map((bugCase) => bugCase.id).join(","),
+    computedUpdateMode: mode,
     commitSha: process.env.E2E_LAB_COMMIT_SHA ?? "(local)",
     engine: LAB_ENGINE,
   });

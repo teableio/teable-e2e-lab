@@ -23,6 +23,9 @@ const main = async () => {
     resolvedCommits: JSON.parse(process.env.E2E_LAB_RESOLVED_COMMITS ?? "[]"),
     caseFilter: process.env.E2E_LAB_CASE_FILTER ?? "all",
     allCaseIds: catalog.map(({ id }) => id),
+    hybridCaseIds: catalog
+      .filter(({ computedUpdateMode }) => computedUpdateMode === "hybrid")
+      .map(({ id }) => id),
   });
 
   if (process.env.GITHUB_OUTPUT) {
@@ -31,6 +34,10 @@ const main = async () => {
       [
         `execute_plan=${JSON.stringify(plan.executePlan)}`,
         `case_ids=${JSON.stringify(plan.caseIds)}`,
+        // Per-invocation case filters for the execute job's two vitest steps.
+        // Empty means "skip that step" — the step conditions read these.
+        `sync_case_filter=${plan.syncCaseIds.join(",")}`,
+        `hybrid_case_filter=${plan.hybridCaseIds.join(",")}`,
         `plan_summary=${JSON.stringify(plan.planSummary)}`,
         "",
       ].join("\n"),
