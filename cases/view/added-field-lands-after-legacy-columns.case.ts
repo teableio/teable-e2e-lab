@@ -11,6 +11,8 @@ export default defineBugCase({
   title: "A field added to a view with sparse column metadata lands last",
   runner: "sparse-view-field-order",
   timeoutMs: 180_000,
+  skipV1:
+    "v1 writes complete view column metadata, so the sparse state this case installs is not one v1 produces",
   bug: {
     issue: "T6595",
     status: "fixed",

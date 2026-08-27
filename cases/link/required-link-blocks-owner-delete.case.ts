@@ -12,6 +12,8 @@ export default defineBugCase({
   title: "Deleting the row a required link points at is refused",
   runner: "required-link-blocks-delete",
   timeoutMs: 180_000,
+  skipV1:
+    "v1 link fields carry no required flag - creating one answers 400, so the bug has nothing to happen to",
   bug: {
     issue: "T6705",
     status: "fixed",

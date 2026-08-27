@@ -12,6 +12,8 @@ export default defineBugCase({
   title: "Deleting a row empties the cells that pointed at it",
   runner: "incoming-link-cleanup",
   timeoutMs: 180_000,
+  skipV1:
+    "the legacy link shape is not one v1 writes - measured: plain deletes clear their inbound cells on v1",
   bug: {
     issue: "T5381",
     status: "fixed",

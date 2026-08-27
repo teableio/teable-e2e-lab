@@ -12,6 +12,8 @@ export default defineBugCase({
     "Deleting one side of a two-way oneOne link leaves both tables readable",
   runner: "link-delete-readable",
   timeoutMs: 180_000,
+  skipV1:
+    "v1 hosts the oneOne foreign key on the other table, so the case would be watching a column that is not there",
   bug: {
     issue: "T6807",
     status: "fixed",

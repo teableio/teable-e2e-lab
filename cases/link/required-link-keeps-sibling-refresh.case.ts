@@ -12,6 +12,8 @@ export default defineBugCase({
     "A required link with no foreign key does not block its sibling's refresh",
   runner: "required-link-refresh",
   timeoutMs: 180_000,
+  skipV1:
+    "v1 link fields carry no required flag - creating one answers 400, so the bug has nothing to happen to",
   bug: {
     issue: "T6861",
     status: "fixed",

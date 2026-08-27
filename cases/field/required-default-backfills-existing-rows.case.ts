@@ -9,6 +9,8 @@ export default defineBugCase({
   title: "A required column with a default can be added to a table with rows",
   runner: "required-default",
   timeoutMs: 180_000,
+  skipV1:
+    "v1 has no field validation at all - an EMPTY table refuses the same column, so this is not the ordering bug",
   bug: {
     issue: "T5685",
     status: "fixed",

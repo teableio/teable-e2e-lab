@@ -12,6 +12,8 @@ export default defineBugCase({
   title: "A row can be added when a looked-up total lost its rule",
   runner: "lookup-of-rollup-create",
   timeoutMs: 240_000,
+  skipV1:
+    "v1 refuses the lookup-over-rollup field this case needs before the fixture is in place",
   bug: {
     issue: "T6911",
     status: "fixed",

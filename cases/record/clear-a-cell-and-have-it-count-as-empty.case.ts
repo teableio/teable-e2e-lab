@@ -10,6 +10,8 @@ export default defineBugCase({
   title: "Clearing a cell leaves it empty to a filter too",
   runner: "empty-write-normalization",
   timeoutMs: 180_000,
+  skipV1:
+    "v1 clears a multi-select cell without complaint - the case's own seed is what v1's typecast refuses",
   bug: {
     issue: "T6520",
     status: "fixed",

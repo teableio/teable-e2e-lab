@@ -13,6 +13,8 @@ export default defineBugCase({
   title: "A unique violation on a v1-era index still names the field",
   runner: "legacy-unique-error",
   timeoutMs: 180_000,
+  skipV1:
+    "v1 names the field on an ordinary unique violation - only the legacy index this case creates loses it",
   bug: {
     issue: "T6758",
     status: "fixed",

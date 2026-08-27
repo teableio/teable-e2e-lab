@@ -12,6 +12,8 @@ export default defineBugCase({
     "A user cell holding a bare user id groups as that person, not as empty",
   runner: "user-group-identity",
   timeoutMs: 180_000,
+  skipV1:
+    "v1's own API normalizes a bare user id into a full object, so v1 cannot hold the cell this case reads",
   bug: {
     issue: "T6626",
     status: "fixed",

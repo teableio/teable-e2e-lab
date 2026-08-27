@@ -11,6 +11,8 @@ export default defineBugCase({
   title: "A row is deleted when its undo bookkeeping is not in place",
   runner: "delete-without-undo-capture",
   timeoutMs: 180_000,
+  skipV1:
+    "v1 tables carry no undo capture column, so there is no bookkeeping to be missing",
   bug: {
     issue: "T6928",
     status: "fixed",
