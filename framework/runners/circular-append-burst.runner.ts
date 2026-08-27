@@ -5,6 +5,7 @@ import {
   createTable,
   getFields,
   getRecord,
+  getRecords,
   permanentDeleteTable,
 } from "../../../utils/init-app";
 import { bugCheckpoint } from "../checkpoint";
@@ -311,6 +312,14 @@ export const runCircularAppendBurstCase = async (
   // every appended row must land on its own previously purification-free
   // host, or "the lookup is empty" and "the lookup never arrived" collapse.
   purificationRowBySubOrderRow(config, "appended");
+  // The race needs a batch to arrive while the previous batch's dispatch is
+  // in flight — a single batch has nothing to race and would pass vacuously.
+  if (config.appendRowCount <= config.appendBatchSize) {
+    throw new Error(
+      `appendRowCount (${config.appendRowCount}) must exceed appendBatchSize ` +
+        `(${config.appendBatchSize}) so the burst has at least two batches`,
+    );
+  }
   const appendedRows = appendedPurificationRows(config);
   const hostRows = appendedHostSubOrderRows(config);
 
@@ -880,7 +889,7 @@ export const runCircularAppendBurstCase = async (
     // --- Seed Purification, paced on both ends of the cascade: the row's own
     // computed state AND its host sub-order's, so no batch is in flight when
     // the next one is sent ---
-    const { headers: purificationSeedHeaders } = await seedInBatches(
+    await seedInBatches(
       purification.id,
       range(config.purificationRowCount).map((p) =>
         purificationRecordFields(p),
@@ -907,73 +916,138 @@ export const runCircularAppendBurstCase = async (
       },
     );
 
-    // Fixture verification, outside the checkpoint. Routing is asserted on
-    // the response of the LAST purification seed batch — the same POST
-    // /table/{tableId}/record the burst performs, so "the lab asked the wrong
-    // engine" can never read as "the bug is gone".
-    const routing = assertServedByV2(purificationSeedHeaders, {
-      operation: "POST /table/{tableId}/record",
-      feature: "createRecord",
-    });
-    // The appended rows' future hosts must start purification-free, or
-    // "the lookup arrived" could be a leftover instead of the propagation
-    // under test.
-    const hostProbes = [
-      hostRows[0]!,
-      hostRows[Math.floor(hostRows.length / 2)]!,
-      hostRows[hostRows.length - 1]!,
-    ];
-    for (const host of hostProbes) {
-      const record = await getRecord(
-        subOrders.id,
-        subOrderRecordIds[host - 1]!,
+    // Fixture verification, outside the checkpoint: the ENTIRE seed settled.
+    // The per-batch pacing above probes one row per batch, which paces but
+    // does not prove the whole batch's propagation landed — and a seed
+    // corrupted by the very race this case observes must be judged an error,
+    // not the bug. Full paged scans of both cascade tables, retried until
+    // every row matches its expected state, close that gap; they also prove
+    // every future host starts purification-free, so "the lookup arrived"
+    // in the checkpoint cannot be a leftover.
+    const seedMap = purificationRowBySubOrderRow(config, "seed");
+    const scanSeedOnce = async (): Promise<CellMismatch | undefined> => {
+      const scanTable = async (
+        tableId: string,
+        totalRows: number,
+        titleFieldId: string,
+        titlePrefix: string,
+        expectedFor: (row: number) => Record<string, ExpectedCell>,
+        fieldIds: TableFieldIds,
+      ): Promise<CellMismatch | undefined> => {
+        let scanned = 0;
+        for (let skip = 0; skip < totalRows; skip += 1000) {
+          const page = await getRecords(tableId, {
+            fieldKeyType: FieldKeyType.Id,
+            skip,
+            take: 1000,
+          });
+          for (const record of page.records) {
+            const title = String(record.fields?.[titleFieldId] ?? "");
+            if (!title.startsWith(titlePrefix)) {
+              throw new Error(
+                `Unexpected row "${title}" while scanning ${titlePrefix.trim()} seed`,
+              );
+            }
+            const row = Number(title.slice(titlePrefix.length));
+            const mismatch = firstMismatch(
+              record.fields ?? {},
+              fieldIds,
+              expectedFor(row),
+            );
+            if (mismatch) {
+              return {
+                ...mismatch,
+                field: `${titlePrefix}${row} ${mismatch.field}`,
+              };
+            }
+            scanned += 1;
+          }
+        }
+        if (scanned !== totalRows) {
+          throw new Error(
+            `${titlePrefix.trim()} seed scan found ${scanned} rows, expected ${totalRows}`,
+          );
+        }
+        return undefined;
+      };
+      return (
+        (await scanTable(
+          purification.id,
+          config.purificationRowCount,
+          purificationFields[TITLE_FIELD]!,
+          "Purification ",
+          (p) => expectedPurificationComputed(p, config),
+          purificationFields,
+        )) ??
+        (await scanTable(
+          subOrders.id,
+          config.subOrderRowCount,
+          subOrderFields[TITLE_FIELD]!,
+          "SubOrder ",
+          (s) => expectedSubOrderComputed(s, config, seedMap.get(s)),
+          subOrderFields,
+        ))
       );
-      const mismatch = firstMismatch(
-        record.fields ?? {},
-        subOrderFields,
-        expectedSubOrderComputed(host, config, undefined),
-      );
-      if (mismatch) {
+    };
+    {
+      const deadline = Date.now() + config.seedSettleTimeoutMs;
+      for (;;) {
+        const mismatch = await scanSeedOnce();
+        if (!mismatch) {
+          break;
+        }
+        if (Date.now() >= deadline) {
+          throw new Error(
+            `Seed never fully settled within ${config.seedSettleTimeoutMs}ms — the fixture is not in place: ` +
+              `${mismatch.field} expected ${mismatch.expected}, actual ${mismatch.actual}`,
+          );
+        }
+        await sleep(config.pollIntervalMs);
+      }
+    }
+
+    // The burst: sequential bulk INSERT batches, back-to-back — the write
+    // shape the incident base produced. Each batch's inline run takes the
+    // per-table computed lock while the previous batch's dispatched outbox
+    // task is trying to acquire it. The writes stay OUTSIDE the checkpoint:
+    // in the incident every write succeeded, so a refused write here is a
+    // different bug and must read as an error, not this reproduction. That
+    // also lets every append response carry the v2 routing assertion — the
+    // exact requests the case depends on, not a seed-phase stand-in.
+    const appendedRecordIdByRow = new Map<number, string>();
+    let routing = undefined as ReturnType<typeof assertServedByV2> | undefined;
+    for (const batch of chunk(appendedRows, config.appendBatchSize)) {
+      const response = await apiCreateRecords(purification.id, {
+        fieldKeyType: FieldKeyType.Id,
+        typecast: true,
+        records: batch.map((p) => ({
+          fields: purificationRecordFields(p),
+        })),
+      });
+      if (response.status !== 201) {
         throw new Error(
-          `Fixture is not in place: ${describeMismatch(`SubOrder ${host}`, mismatch)}`,
+          `Append batch answered ${response.status} for ${batch.length} records`,
         );
       }
+      // Header inspection only — adds no delay between batches.
+      routing = assertServedByV2(response.headers as Record<string, unknown>, {
+        operation: "POST /table/{tableId}/record",
+        feature: "createRecord",
+      });
+      const created = response.data.records ?? [];
+      if (created.length !== batch.length) {
+        throw new Error(
+          `Append batch created ${created.length} of ${batch.length} records`,
+        );
+      }
+      created.forEach((record, index) => {
+        appendedRecordIdByRow.set(batch[index]!, record.id);
+      });
     }
 
     const probe = await bugCheckpoint(
       "every-appended-rows-host-converges",
       async () => {
-        // The burst: sequential bulk INSERT batches, back-to-back — the
-        // write shape the incident base produced. Each batch's inline run
-        // takes the per-table computed lock while the previous batch's
-        // dispatched outbox task is trying to acquire it.
-        const appendedRecordIdByRow = new Map<number, string>();
-        let appendHeaders: Record<string, unknown> = {};
-        for (const batch of chunk(appendedRows, config.appendBatchSize)) {
-          const response = await apiCreateRecords(purification.id, {
-            fieldKeyType: FieldKeyType.Id,
-            typecast: true,
-            records: batch.map((p) => ({
-              fields: purificationRecordFields(p),
-            })),
-          });
-          if (response.status !== 201) {
-            throw new Error(
-              `Append batch answered ${response.status} for ${batch.length} records`,
-            );
-          }
-          const created = response.data.records ?? [];
-          if (created.length !== batch.length) {
-            throw new Error(
-              `Append batch created ${created.length} of ${batch.length} records`,
-            );
-          }
-          created.forEach((record, index) => {
-            appendedRecordIdByRow.set(batch[index]!, record.id);
-          });
-          appendHeaders = response.headers as Record<string, unknown>;
-        }
-
         // Bounded convergence: every appended row's host sub-order must
         // expose the complete post-append lookup + formula state, and every
         // appended row its own computed state, through the real read path.
@@ -1029,7 +1103,6 @@ export const runCircularAppendBurstCase = async (
             return {
               convergedMs: Date.now() - startedAt,
               appendedRecords: appendedRecordIdByRow.size,
-              appendRouting: appendHeaders["x-teable-v2-feature"] ?? null,
             };
           }
           if (Date.now() >= deadline) {

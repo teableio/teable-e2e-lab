@@ -117,11 +117,12 @@ test("no computed cell survives with a constant value across rows", () => {
   // row pass by coincidence.
   const a = expectedPurificationComputed(501, config);
   const b = expectedPurificationComputed(502, config);
-  const differing = Object.keys(a).filter(
-    (field) => JSON.stringify(a[field]) !== JSON.stringify(b[field]),
+  const surviving = Object.keys(a).filter(
+    (field) => JSON.stringify(a[field]) === JSON.stringify(b[field]),
   );
-  assert.ok(
-    differing.length >= 30,
-    `expected most purification computed fields to differ between rows, got ${differing.length}`,
+  assert.deepEqual(
+    surviving,
+    [],
+    "every purification computed field must differ between adjacent rows",
   );
 });
