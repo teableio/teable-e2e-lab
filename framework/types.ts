@@ -169,6 +169,20 @@ interface BugCaseBase {
   title: string;
   bug: BugRef;
   timeoutMs: number;
+  // Why this case cannot be asked of v1 — presence alone skips the v1 column.
+  //
+  // A reason string rather than a boolean, and it is not decoration: the two
+  // things that land here look identical in a failure log and are not the same
+  // claim. Either the FEATURE does not exist on v1 (required links, undo
+  // capture, field validation), or the FIXTURE cannot be built there (a shape
+  // v1's own API normalizes away). Both mean "v1 cannot answer this question";
+  // only the first means "v1 users do not have this".
+  //
+  // Skipping is DECLARED, never inferred from what the run saw. Sniffing "v1
+  // said it does not support that" out of an error message fails open: a case
+  // that genuinely breaks, whose error happens to read that way, would be
+  // skipped forever and nobody would learn. See docs/operations/e2e-lab.md.
+  skipV1?: string;
 }
 
 // A runner-specific view of a bug case, keeping the runner literal and its

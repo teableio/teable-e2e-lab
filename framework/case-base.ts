@@ -1,5 +1,8 @@
 import { AsyncLocalStorage } from "node:async_hooks";
+import type { INestApplication } from "@nestjs/common";
 import { createBase, permanentDeleteBase } from "../../utils/init-app";
+import { labEngine } from "./engine";
+import { fixtureDb } from "./fixture-db";
 
 /**
  * A base of its own for every case.
@@ -72,6 +75,7 @@ const caseBaseName = (caseId: string, runId: string) =>
 export const withCaseBase = async <T>(
   caseId: string,
   runId: string,
+  app: INestApplication,
   body: (baseId: string) => Promise<T>,
 ): Promise<T> => {
   installBaseIdView();
@@ -80,6 +84,27 @@ export const withCaseBase = async <T>(
     spaceId: globalThis.testConfig.spaceId,
     name: caseBaseName(caseId, runId),
   });
+
+  // The only door to v1, and the reason a v1 column exists at all.
+  //
+  // Routing asks FORCE_V2_ALL first and the base's own v2 flag second, and
+  // createBase stamps every base it makes as v2. So turning the environment
+  // switch off drops to the second rule, which still answers v2: measured on
+  // 2026-08-27, a full 129-case run with the switch off produced not one
+  // observation different from the v2 baseline, and the response header said
+  // why — reason `new_base` instead of `env_force_v2_all`.
+  //
+  // Unstamping the base before the runner touches it means its tables are
+  // built by v1 as well, not just read by it. What this cannot do is make a
+  // base that was BORN on v1: real v1 customers have bases older than v2, and
+  // whether the two are equivalent in every respect is not established. That
+  // is the standing reason the v1 column is reference-only.
+  if (labEngine() === "v1") {
+    await fixtureDb(app).execute(
+      `UPDATE base SET v2_enabled = false WHERE id = $1`,
+      base.id,
+    );
+  }
 
   try {
     return await caseBaseStore.run({ baseId: base.id }, () => body(base.id));

@@ -47,5 +47,20 @@ export const resolveVerdict = (
 // how the metadata rots.
 export const verdictFailsCi = (
   verdict: BugVerdict,
-  { gating }: { gating: boolean },
-): boolean => verdict === "error" || (verdict === "regression" && gating);
+  { gating, engine }: { gating: boolean; engine?: string },
+): boolean => {
+  // v1 is a REFERENCE column and never fails anything.
+  //
+  // The lab guards v2: that is where the fixes land and where a returning bug
+  // is a regression someone must act on. v1 is run to answer a different
+  // question — "what does the engine our older customers are still on do with
+  // this?" — and its answer is information, not a contract. A v1 cell that
+  // reproduces is usually just the world without the fix, and a v1 cell that
+  // errors usually means the case leans on something v1 shapes differently.
+  // Failing the run for either would make every v1 observation a chore, and
+  // the column would be switched off within a month.
+  if (engine === "v1") {
+    return false;
+  }
+  return verdict === "error" || (verdict === "regression" && gating);
+};

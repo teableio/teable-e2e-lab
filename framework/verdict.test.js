@@ -44,3 +44,24 @@ test("verdict table", () => {
     );
   }
 });
+
+test("v1 is a reference column and never fails a run", () => {
+  // Every verdict that turns the guarded column red, on the engine that is
+  // only ever informational.
+  for (const verdict of ["error", "regression"]) {
+    assert.equal(
+      verdictFailsCi(verdict, { gating: true, engine: "v1" }),
+      false,
+      `${verdict} on v1 must not fail the run`,
+    );
+  }
+  // ... and the same verdicts still bite on the engine the lab guards.
+  assert.equal(verdictFailsCi("error", { gating: false, engine: "v2" }), true);
+  assert.equal(
+    verdictFailsCi("regression", { gating: true, engine: "v2" }),
+    true,
+  );
+  // An unstated engine is the guarded one, so a caller that forgets cannot
+  // accidentally turn gating off.
+  assert.equal(verdictFailsCi("error", { gating: true }), true);
+});
