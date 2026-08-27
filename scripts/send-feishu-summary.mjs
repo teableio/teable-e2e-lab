@@ -163,12 +163,40 @@ export const buildFeishuCard = ({ comparison, runUrl }) => {
       : null,
   ].filter(Boolean);
 
+  // One line for the reference engine, and only ever one. The card is what
+  // people actually read, so a v1 column nobody sees here is a column nobody
+  // sees — but it must not compete with the guarded result, and it must not
+  // grow with the number of cases. So: a count, no names, and it says plainly
+  // that it decided nothing.
+  const reference = (() => {
+    if (!comparison.engines?.includes("v1")) {
+      return null;
+    }
+    let present = 0;
+    let unrunnable = 0;
+    let skipped = 0;
+    for (const row of comparison.rows) {
+      for (const cell of row.referenceCells ?? []) {
+        if (cell.skipped) skipped += 1;
+        else if (cell.observed === "present") present += 1;
+        else if (cell.verdict === "error") unrunnable += 1;
+      }
+    }
+    const parts = [
+      `${present} still reproduce`,
+      unrunnable > 0 ? `${unrunnable} could not run` : null,
+      skipped > 0 ? `${skipped} not asked` : null,
+    ].filter(Boolean);
+    return `v1 reference (decides nothing): ${parts.join(", ")}`;
+  })();
+
   const elements = [
     {
       tag: "markdown",
       content: [
         headline,
         needsHuman.length > 0 ? needsHuman.join("  ·  ") : null,
+        reference,
         `[Open the run and the full comparison table](${runUrl})`,
       ]
         .filter((line) => line !== null)

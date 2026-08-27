@@ -13,6 +13,8 @@ export default defineBugCase({
   title: "An Excel sheet starting below A1 imports its header row",
   runner: "excel-import-offset-header",
   timeoutMs: 180_000,
+  skipV1:
+    "the case has the product create a second base mid-run, which is stamped v2 and cannot be unstamped before its tables are built - this method cannot ask v1, which is not the same as v1 lacking the feature",
   bug: {
     issue: "T6867",
     status: "fixed",

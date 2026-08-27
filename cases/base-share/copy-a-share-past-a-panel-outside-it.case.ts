@@ -11,6 +11,8 @@ export default defineBugCase({
   title: "A share copies past a dashboard panel outside it",
   runner: "share-copy-outside-panel",
   timeoutMs: 240_000,
+  skipV1:
+    "the case has the product create a second base mid-run, which is stamped v2 and cannot be unstamped before its tables are built - this method cannot ask v1, which is not the same as v1 lacking the feature",
   bug: {
     issue: "T3516",
     status: "fixed",
