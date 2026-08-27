@@ -5,9 +5,10 @@
 
 import { resolveCaseFilter } from "./case-catalog.mjs";
 
-// One job per commit, and every commit pays a full bootstrap (install, prisma
-// generate, migrate, seed). The bound is a runner-pool courtesy, not a design
-// limit — raise it deliberately, not by deleting the check.
+// One job per commit PER ENGINE, and every job pays a full bootstrap (install,
+// prisma generate, migrate, seed). So the cap below is jobs/2, not jobs. The
+// bound is a runner-pool courtesy, not a design limit — raise it deliberately,
+// not by deleting the check.
 export const MAX_COMMITS = 8;
 
 const SHA_PATTERN = /^[0-9a-f]{40}$/;
@@ -67,7 +68,7 @@ export const resolveRunPlan = ({
   // declarations are enforced. Earlier columns are history — a fixed bug
   // reproducing there is the world before the fix, not a regression. Errors
   // fail on every column regardless (framework/verdict.ts).
-  const executePlan = resolvedCommits.map((commit, index) => ({
+  const commitPlan = resolvedCommits.map((commit, index) => ({
     name: `c${index + 1}-${shortSha(commit.sha)}`,
     position: index + 1,
     ref: commit.ref,
@@ -77,6 +78,28 @@ export const resolveRunPlan = ({
     gating: index === resolvedCommits.length - 1,
   }));
 
+  // The execute matrix is commit x engine, one job each.
+  //
+  // Sharing a job was cheaper by one bootstrap and wrong in a way that only
+  // showed up on reflection: two passes against ONE database means the second
+  // engine runs on state the first one left, and the guarded column is the one
+  // that would have been reading it. Separate jobs give each engine its own
+  // containers and its own database built from the commit's own migrations —
+  // the arrangement teable-perf-lab has run both engines on for a year — and
+  // they run at the same time, so the wall clock is one engine's, not two.
+  //
+  // `gating` stays a property of the COMMIT: whether a reproduction there is a
+  // regression is about which revision it is, and whether it can fail anything
+  // at all is about the engine (framework/verdict.ts).
+  const executePlan = commitPlan.flatMap((commit) =>
+    engines.map((engine) => ({
+      ...commit,
+      name: `${commit.name}-${engine}`,
+      engine,
+      artifactSuffix: `${commit.artifactSuffix}-${engine}`,
+    })),
+  );
+
   const skipped = new Set(skipV1CaseIds);
   const v1CaseCount = engines.includes("v1")
     ? caseIds.filter((id) => !skipped.has(id)).length
@@ -85,18 +108,21 @@ export const resolveRunPlan = ({
 
   return {
     executePlan,
+    // The comparison reads columns, not jobs: it must see each commit once.
+    commitPlan,
     caseIds,
     engines,
     planSummary: {
-      commitCount: executePlan.length,
+      commitCount: commitPlan.length,
       caseCount: caseIds.length,
       engines,
       v1CaseCount,
       // Only the v2 half is a contract the acceptance gate enforces; the v1
       // half is counted so a reader can see the run got what it paid for.
-      expectedPayloads: executePlan.length * (v1CaseCount + v2CaseCount),
-      expectedGuardedPayloads: executePlan.length * v2CaseCount,
-      commits: executePlan.map(({ ref, short, gating }) => ({
+      jobCount: executePlan.length,
+      expectedPayloads: commitPlan.length * (v1CaseCount + v2CaseCount),
+      expectedGuardedPayloads: commitPlan.length * v2CaseCount,
+      commits: commitPlan.map(({ ref, short, gating }) => ({
         ref,
         short,
         gating,
@@ -116,7 +142,7 @@ export const renderPlanSummaryMarkdown = (planSummary) =>
       )
       .join(", ")})`,
     `- Cases: ${planSummary.caseCount} (v2), ${planSummary.v1CaseCount} of them also asked of v1`,
-    `- Engines: ${(planSummary.engines ?? ["v2"]).join(", ")}`,
+    `- Engines: ${(planSummary.engines ?? ["v2"]).join(", ")} — ${planSummary.jobCount} execute job(s), one per commit per engine`,
     `- Expected payloads: ${planSummary.expectedPayloads} (${planSummary.expectedGuardedPayloads} guarded)`,
     "",
   ].join("\n");

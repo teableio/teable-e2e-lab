@@ -14,13 +14,28 @@ const ALL_CASES = ["smoke/auth-user", "record/bulk-update-100-mixed-lands"];
     caseFilter: "all",
     allCaseIds: ALL_CASES,
   });
-  assert.equal(plan.executePlan.length, 2);
-  assert.equal(plan.executePlan[0].name, `c1-${shortSha(sha("a"))}`);
-  assert.equal(plan.executePlan[1].position, 2);
-  // Only the last commit gates — earlier columns are history.
+  // The matrix is commit x engine: two commits, two engines, four jobs.
+  assert.equal(plan.executePlan.length, 4);
+  assert.equal(plan.commitPlan.length, 2);
+  assert.equal(plan.executePlan[0].name, `c1-${shortSha(sha("a"))}-v1`);
+  assert.equal(plan.executePlan[1].name, `c1-${shortSha(sha("a"))}-v2`);
+  // Each job writes to its own artifact directory, or the two engines of one
+  // commit would overwrite each other's upload.
+  assert.equal(
+    new Set(plan.executePlan.map(({ artifactSuffix }) => artifactSuffix)).size,
+    4,
+  );
+  assert.equal(plan.commitPlan[1].position, 2);
+  // Only the last commit gates — earlier columns are history. Gating is a
+  // property of the commit, so both engines of that commit carry it; whether
+  // it can fail anything is the engine's business (framework/verdict.ts).
+  assert.deepEqual(
+    plan.commitPlan.map(({ gating }) => gating),
+    [false, true],
+  );
   assert.deepEqual(
     plan.executePlan.map(({ gating }) => gating),
-    [false, true],
+    [false, false, true, true],
   );
   assert.deepEqual(plan.caseIds, ALL_CASES);
   // Both engines run: 2 commits x 2 cases x 2 engines.
@@ -67,7 +82,7 @@ const ALL_CASES = ["smoke/auth-user", "record/bulk-update-100-mixed-lands"];
     allCaseIds: ALL_CASES,
   });
   assert.deepEqual(
-    plan.executePlan.map(({ ref }) => ref),
+    plan.commitPlan.map(({ ref }) => ref),
     ["newer", "older"],
   );
   assert.deepEqual(plan.caseIds, ["smoke/auth-user"]);

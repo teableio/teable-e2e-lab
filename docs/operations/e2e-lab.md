@@ -8,13 +8,20 @@ The executable path is deliberately the one teable-perf-lab proved out:
    resolves every requested ref to a pinned SHA. Everything downstream uses
    only those SHAs, so a branch moving mid-run cannot split the run across two
    revisions.
-3. One `execute` job per commit: checkout teable-ee at the pinned SHA, inject
-   the lab into `community/apps/nestjs-backend/test/e2e-lab/`, build the
-   database from that commit's own migrations plus the standard e2e seed, and
-   run every selected case through `@teable/backend-ee`'s vitest — once per
-   engine, one Nest app each. Both engines share the job: perf-lab splits them
-   because overlapping measurements pollute each other, and bug observations do
-   not, so a second job would re-pay the whole bootstrap to save one app boot.
+3. One `execute` job per commit **per engine**: checkout teable-ee at the
+   pinned SHA, inject the lab into
+   `community/apps/nestjs-backend/test/e2e-lab/`, build the database from that
+   commit's own migrations plus the standard e2e seed, and run every selected
+   case through `@teable/backend-ee`'s vitest.
+
+   Both engines briefly shared a job, which was cheaper by one bootstrap and
+   wrong: two passes against one database means the second engine runs on
+   state the first left, and the guarded column is what would have been
+   reading it. Split, each engine has its own containers and its own database,
+   and the jobs run at the same time — the wall clock is one engine's, not
+   two. This is the arrangement teable-perf-lab has run both engines on all
+   along.
+
 4. `report` collects every payload, renders the bug × commit table, and
    enforces acceptance fail-closed.
 
@@ -34,7 +41,12 @@ with the same case — and **nothing it reports fails a run**
 (`framework/verdict.ts`). It renders as its own table under the guarded one.
 
 Reaching v1 takes more than an environment switch, and the reason is worth
-knowing before trusting any v1 cell. Routing asks `FORCE_V2_ALL` first and the
+knowing before trusting any v1 cell. It is also the one thing teable-perf-lab
+does not have to do: its cases run against the base the prisma e2e seed writes
+straight into the database, which never went through the product's create-base
+path and so carries `v2_enabled = false`. The switch alone decides there. Every
+case here builds its own base through the API instead — that is what keeps
+cases from disturbing each other — and the API stamps it. Routing asks `FORCE_V2_ALL` first and the
 base's own v2 flag second, and the product stamps every base it creates as v2 —
 so turning the switch off just falls through to the second rule. Measured
 2026-08-27: a full 129-case run with the switch off produced **not one**

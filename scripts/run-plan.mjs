@@ -4,7 +4,9 @@
 //                             SHAs with git before calling this, so the plan
 //                             only ever contains pinned revisions.
 //   E2E_LAB_CASE_FILTER       case id, comma-separated ids, or "all".
-// Writes GitHub outputs: execute_plan, case_ids, plan_summary.
+// Writes GitHub outputs: execute_plan (the commit x engine job matrix),
+// commit_plan (each commit once — the comparison reads columns, not jobs),
+// case_ids, plan_summary.
 
 import { appendFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -31,6 +33,7 @@ const main = async () => {
       process.env.GITHUB_OUTPUT,
       [
         `execute_plan=${JSON.stringify(plan.executePlan)}`,
+        `commit_plan=${JSON.stringify(plan.commitPlan)}`,
         `case_ids=${JSON.stringify(plan.caseIds)}`,
         `plan_summary=${JSON.stringify(plan.planSummary)}`,
         "",
