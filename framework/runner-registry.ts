@@ -19,6 +19,7 @@ import { runRequiredLinkBlocksDeleteCase } from "./runners/required-link-blocks-
 import { runRequiredLinkRefreshCase } from "./runners/required-link-refresh.runner";
 import { runStaleLookupRecastCase } from "./runners/stale-lookup-recast.runner";
 import { runSearchViewFilterCase } from "./runners/search-view-filter.runner";
+import { runMixedFieldSearchViewFilterCase } from "./runners/mixed-field-search-view-filter.runner";
 import { runDeleteCollateralCase } from "./runners/delete-collateral.runner";
 import { runPasteOverPendingFieldCase } from "./runners/paste-over-pending-field.runner";
 import { runDuplicateSharedViewCase } from "./runners/duplicate-shared-view.runner";
@@ -110,6 +111,13 @@ import { runTrackedModifiedSortCase } from "./runners/tracked-modified-sort.runn
 import { runLookupOfLinkContainsCase } from "./runners/lookup-of-link-contains.runner";
 import { runDeleteWithoutUndoCaptureCase } from "./runners/delete-without-undo-capture.runner";
 import { runSingleFieldPendingStateCase } from "./runners/single-field-pending-state.runner";
+import { runAuthorityCommentScopeCase } from "./runners/authority-comment-scope.runner";
+import { runAuthorityArchiveRecordCase } from "./runners/authority-archive-record.runner";
+import { runAuthorityPersistedViewQueryCase } from "./runners/authority-persisted-view-query.runner";
+import { runGroupLocaleBrowserCase } from "./runners/group-locale-browser.runner";
+import { runCommentDeleteBrowserCase } from "./runners/comment-delete-browser.runner";
+import { runAuthorityUnreadableGroupCase } from "./runners/authority-unreadable-group.runner";
+import { runDeletedTableCollaboratorRecoveryCase } from "./runners/deleted-table-collaborator-recovery.runner";
 import { runLookupOfRollupCreateCase } from "./runners/lookup-of-rollup-create.runner";
 import { runCircularAppendBurstCase } from "./runners/circular-append-burst.runner";
 import type {
@@ -155,6 +163,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "excel-import-offset-header": runExcelImportOffsetHeaderCase,
   "paste-by-id-alignment": runPasteByIdAlignmentCase,
   "search-view-filter": runSearchViewFilterCase,
+  "mixed-field-search-view-filter": runMixedFieldSearchViewFilterCase,
   "delete-collateral": runDeleteCollateralCase,
   "user-field-notify-bulk-action": runUserFieldNotifyBulkActionCase,
   "user-field-notify-replay": runUserFieldNotifyReplayCase,
@@ -242,6 +251,14 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "lookup-of-link-contains": runLookupOfLinkContainsCase,
   "delete-without-undo-capture": runDeleteWithoutUndoCaptureCase,
   "single-field-pending-state": runSingleFieldPendingStateCase,
+  "authority-comment-scope": runAuthorityCommentScopeCase,
+  "authority-archive-record": runAuthorityArchiveRecordCase,
+  "authority-persisted-view-query": runAuthorityPersistedViewQueryCase,
+  "group-locale-browser": runGroupLocaleBrowserCase,
+  "comment-delete-browser": runCommentDeleteBrowserCase,
+  "authority-unreadable-group": runAuthorityUnreadableGroupCase,
+  "deleted-table-collaborator-recovery":
+    runDeletedTableCollaboratorRecoveryCase,
   "circular-append-burst": runCircularAppendBurstCase,
 };
 

@@ -8,6 +8,7 @@ import {
   labComputedUpdateMode,
 } from "./framework/engine";
 import { runBugCase } from "./framework/run-bug-case";
+import { closeBrowserRuntime } from "./framework/browser-runtime";
 
 // Before the app boots: pin the engine every case here guards. teable-ee is
 // migrating to v2 and v1 bugs are not being fixed, so there is one engine, not
@@ -23,14 +24,18 @@ applyEngineRuntimeEnv();
 // seed/execute mode split — bug fixtures are built and torn down inside each
 // case, and the revision under test is whatever this checkout is.
 //
-// Cases overlap, a few at a time. They used to run strictly one after another
-// because they shared a base and could not be trusted not to disturb each
-// other; framework/case-base.ts removed the sharing, and most of what a case
-// spends its time on is waiting rather than working — six of 106 cases held
-// 68% of the wall clock, nearly all of it watching for something that must not
-// happen. The width lives in vitest-e2e-lab.config.ts.
+// API cases overlap, a few at a time. Browser cases stay serial because they
+// share one development frontend and each needs its own full timeout for route
+// compilation and hydration. Framework/case-base.ts keeps their product data
+// isolated. The API concurrency width lives in vitest-e2e-lab.config.ts.
 
 const specStarted = performance.now();
+const browserRunners = new Set([
+  "authority-unreadable-group",
+  "comment-delete-browser",
+  "deleted-table-collaborator-recovery",
+  "group-locale-browser",
+]);
 
 const logPhase = (
   phase: string,
@@ -101,6 +106,7 @@ describe("e2e-lab bug regression runner (e2e)", () => {
 
   afterAll(async () => {
     const closeStarted = performance.now();
+    await closeBrowserRuntime();
     await app?.close();
     logPhase("app-closed", {
       closeMs: Math.round(performance.now() - closeStarted),
@@ -108,18 +114,21 @@ describe("e2e-lab bug regression runner (e2e)", () => {
   });
 
   for (const bugCase of bugCases) {
-    it.concurrent(
-      `observes ${bugCase.id} [${bugCase.bug.issue}]`,
-      { timeout: bugCase.timeoutMs },
-      async () => {
-        logPhase("case:start", { caseId: bugCase.id });
-        const caseStarted = performance.now();
-        await runBugCase(bugCase, { app, appUrl, cookie });
-        logPhase("case:done", {
-          caseId: bugCase.id,
-          caseMs: Math.round(performance.now() - caseStarted),
-        });
-      },
-    );
+    const title = `observes ${bugCase.id} [${bugCase.bug.issue}]`;
+    const options = { timeout: bugCase.timeoutMs };
+    const execute = async () => {
+      logPhase("case:start", { caseId: bugCase.id });
+      const caseStarted = performance.now();
+      await runBugCase(bugCase, { app, appUrl, cookie });
+      logPhase("case:done", {
+        caseId: bugCase.id,
+        caseMs: Math.round(performance.now() - caseStarted),
+      });
+    };
+    if (browserRunners.has(bugCase.runner)) {
+      it(title, options, execute);
+    } else {
+      it.concurrent(title, options, execute);
+    }
   }
 });

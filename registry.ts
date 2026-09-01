@@ -3,7 +3,7 @@ import recordBulkUpdate100MixedLandsCase from "./cases/record/y154-bulk-update-1
 import lookupOfRollupCreateCase from "./cases/record/y334-a-row-when-a-looked-up-total-lost-its-rule.case";
 import aiConfigOnlyChangePlanCase from "./cases/field/y336-change-only-the-instruction-behind-a-column.case";
 import emptyWriteNormalizationCase from "./cases/record/clear-a-cell-and-have-it-count-as-empty.case";
-import tableDeleteRealtimeCase from "./cases/realtime/y248-deleting-a-table-reaches-the-open-page.case";
+import tableDeleteCollaboratorRecoveryCase from "./cases/table/y248-collaborator-leaves-deleted-table.case";
 import archiveRecountCase from "./cases/record/y1-archive-the-rows-a-count-was-counting.case";
 import projectedGroupHeadersCase from "./cases/view/a-grouped-view-asked-for-one-column.case";
 import lookupMultiplicityVoCase from "./cases/lookup/a-borrowed-people-column-over-many-rows.case";
@@ -129,18 +129,32 @@ import userFieldUndoOfDeleteDoesNotRenotifyAssigneeCase from "./cases/user-field
 import userFieldUndoOfClearDoesNotRenotifyAssigneeCase from "./cases/user-field/y194-undo-of-clear-does-not-renotify-assignee.case";
 import userFieldAssignmentBurstArrivesCoalescedCase from "./cases/user-field/y195-assignment-burst-arrives-coalesced.case";
 import circularAppendBurstReachesEveryLookupCase from "./cases/lookup/a-burst-of-new-rows-reaches-every-lookup.case";
+import searchY164MultiFieldSearchKeepsViewFilterCase from "./cases/search/y164-multi-field-search-keeps-view-filter.case";
+import authorityY404CommentsStayInsideAuthorizedRecordsCase from "./cases/authority/y404-comments-stay-inside-authorized-records.case";
+import authorityY402ArchiveAuthorizedGroupedRecordCase from "./cases/authority/y402-archive-authorized-grouped-record.case";
+import authorityY166Y168RestrictedSavedViewStaysUsableCase from "./cases/authority/y166-y168-restricted-saved-view-stays-usable.case";
+import viewY278GroupToolsStayChineseCase from "./cases/view/y278-group-tools-stay-chinese.case";
+import commentY559DeletingACommentUpdatesTheOpenPanelCase from "./cases/comment/y559-deleting-a-comment-updates-the-open-panel.case";
+import authorityY386RestrictedGroupedGridStaysReadableCase from "./cases/authority/y386-restricted-grouped-grid-stays-readable.case";
 import type { BugCase } from "./framework/types";
 
 // Every runnable case, registered explicitly. scripts/case-catalog.mjs parses
 // this file statically (imports + the array below), so the planner and the
 // checks can enumerate cases without resolving @teable/* packages.
 const cases = [
+  commentY559DeletingACommentUpdatesTheOpenPanelCase,
+  authorityY404CommentsStayInsideAuthorizedRecordsCase,
+  authorityY402ArchiveAuthorizedGroupedRecordCase,
+  authorityY386RestrictedGroupedGridStaysReadableCase,
+  viewY278GroupToolsStayChineseCase,
+  authorityY166Y168RestrictedSavedViewStaysUsableCase,
+  searchY164MultiFieldSearchKeepsViewFilterCase,
   smokeAuthUserCase,
   recordBulkUpdate100MixedLandsCase,
   lookupOfRollupCreateCase,
   aiConfigOnlyChangePlanCase,
   emptyWriteNormalizationCase,
-  tableDeleteRealtimeCase,
+  tableDeleteCollaboratorRecoveryCase,
   archiveRecountCase,
   projectedGroupHeadersCase,
   lookupMultiplicityVoCase,

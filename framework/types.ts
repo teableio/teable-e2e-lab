@@ -32,6 +32,7 @@ export interface BugCaseConfigByRunner {
   "excel-import-offset-header": ExcelImportOffsetHeaderCaseConfig;
   "paste-by-id-alignment": PasteByIdAlignmentCaseConfig;
   "search-view-filter": SearchViewFilterCaseConfig;
+  "mixed-field-search-view-filter": MixedFieldSearchViewFilterCaseConfig;
   "user-field-notify-bulk-action": UserFieldNotifyBulkActionCaseConfig;
   "user-field-notify-replay": UserFieldNotifyReplayCaseConfig;
   "user-field-notify-burst": UserFieldNotifyBurstCaseConfig;
@@ -120,6 +121,13 @@ export interface BugCaseConfigByRunner {
   "lookup-of-link-contains": LookupOfLinkContainsCaseConfig;
   "delete-without-undo-capture": DeleteWithoutUndoCaptureCaseConfig;
   "single-field-pending-state": SingleFieldPendingStateCaseConfig;
+  "authority-comment-scope": AuthorityCommentScopeCaseConfig;
+  "authority-archive-record": AuthorityArchiveRecordCaseConfig;
+  "authority-persisted-view-query": AuthorityPersistedViewQueryCaseConfig;
+  "group-locale-browser": GroupLocaleBrowserCaseConfig;
+  "comment-delete-browser": CommentDeleteBrowserCaseConfig;
+  "authority-unreadable-group": AuthorityUnreadableGroupCaseConfig;
+  "deleted-table-collaborator-recovery": DeletedTableCollaboratorRecoveryCaseConfig;
   "circular-append-burst": CircularAppendBurstCaseConfig;
 }
 
@@ -747,6 +755,20 @@ export interface SearchViewFilterCaseConfig {
   // The rows, one per name. The runner refuses a set that does not populate
   // all three quadrants it needs; see rowProblems() for which and why.
   rows: { name: string; inView: boolean; matches: boolean }[];
+}
+
+export interface MixedFieldSearchViewFilterCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  timeZone: string;
+  searchTerm: string;
+  targetDate: string;
+  otherDate: string;
+  keptCategory: string;
+  droppedCategory: string;
+  expectedRowTitle: string;
+  sameDateOutsideViewTitle: string;
+  otherDateRowTitle: string;
 }
 
 // A second person assigned in a user field -> move that assignment in bulk ->
@@ -1905,6 +1927,54 @@ export interface TableDeleteRealtimeCaseConfig {
   // long the delete may take to reach the page.
   settleTimeoutMs: number;
   announceTimeoutMs: number;
+}
+
+export interface DeletedTableCollaboratorRecoveryCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  settleTimeoutMs: number;
+  quietPeriodMs: number;
+}
+
+export interface AuthorityCommentScopeCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  allowedTitle: string;
+  deniedTitle: string;
+  commentText: string;
+}
+
+export interface AuthorityArchiveRecordCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+}
+
+export interface AuthorityPersistedViewQueryCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+}
+
+export interface GroupLocaleBrowserCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  settleTimeoutMs: number;
+}
+
+export interface CommentDeleteBrowserCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  deletedText: string;
+  retainedText: string;
+  settleTimeoutMs: number;
+  quietPeriodMs: number;
+}
+
+export interface AuthorityUnreadableGroupCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  rows: { title: string; group: string; status: string }[];
+  subscribeTimeoutMs: number;
+  settleTimeoutMs: number;
 }
 
 export interface EmptyWriteNormalizationCaseConfig {
