@@ -1,4 +1,4 @@
-# formula/y581-columns-worked-out-from-a-new-row
+# formula/y564-columns-worked-out-from-a-new-row
 
 **T1506** — fixed.
 

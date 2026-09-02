@@ -6,7 +6,7 @@ import { defineBugCase } from "../../framework/types";
 // person and the cell went blank on the next refresh. The stored value was
 // there the whole time; nothing a person can see is wrong.
 export default defineBugCase({
-  id: "lookup/a-borrowed-people-column-over-many-rows",
+  id: "lookup/y340-a-borrowed-people-column-over-many-rows",
   title: "A borrowed people column over many rows says it holds several",
   runner: "lookup-multiplicity-vo",
   timeoutMs: 180_000,

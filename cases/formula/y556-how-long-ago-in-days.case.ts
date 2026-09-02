@@ -7,7 +7,7 @@ import { defineBugCase } from "../../framework/types";
 // back in seconds: a six-figure number where a small one was expected, and any
 // rule written against the column fires on everything or nothing.
 export default defineBugCase({
-  id: "formula/y583-how-long-ago-in-days",
+  id: "formula/y556-how-long-ago-in-days",
   title: "How long ago answers in the unit it was asked for",
   runner: "fromnow-unit",
   timeoutMs: 240_000,

@@ -8,7 +8,7 @@ import { defineBugCase } from "../../framework/types";
 // consistent with each other, and only wrong if someone checks a date they
 // know the answer for.
 export default defineBugCase({
-  id: "formula/y582-a-day-number-when-weeks-start-on-monday",
+  id: "formula/y563-a-day-number-when-weeks-start-on-monday",
   title: "A day number counts from the day the week starts",
   runner: "weekday-start-day",
   timeoutMs: 240_000,

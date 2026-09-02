@@ -8,7 +8,7 @@ import { defineBugCase } from "../../framework/types";
 // worst possible wrong answer: it looks like an empty week rather than a
 // broken column.
 export default defineBugCase({
-  id: "lookup/y580-hours-owned-by-anyone-on-this-row",
+  id: "lookup/y565-hours-owned-by-anyone-on-this-row",
   title: "Hours owned by anyone on this row are totalled",
   runner: "conditional-rollup-user-match",
   timeoutMs: 240_000,

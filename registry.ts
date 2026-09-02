@@ -6,7 +6,7 @@ import emptyWriteNormalizationCase from "./cases/record/y566-clear-a-cell-and-ha
 import tableDeleteCollaboratorRecoveryCase from "./cases/table/y248-collaborator-leaves-deleted-table.case";
 import archiveRecountCase from "./cases/record/y1-archive-the-rows-a-count-was-counting.case";
 import projectedGroupHeadersCase from "./cases/view/y569-a-grouped-view-asked-for-one-column.case";
-import lookupMultiplicityVoCase from "./cases/lookup/a-borrowed-people-column-over-many-rows.case";
+import lookupMultiplicityVoCase from "./cases/lookup/y340-a-borrowed-people-column-over-many-rows.case";
 import linkPickerShareLookupCase from "./cases/link/y570-the-picker-behind-a-borrowed-link.case";
 import manyoneTypecastShapeCase from "./cases/link/y571-fill-a-one-row-link-in-by-name.case";
 import rowCountSearchProjectionCase from "./cases/search/y572-how-many-results-with-a-column-hidden.case";
@@ -18,10 +18,10 @@ import fieldOptionPreservationCase from "./cases/field/y422-y428-field-options-s
 import departmentShareUserPickerCase from "./cases/base-share/y429-department-member-appears-in-share-picker.case";
 import staleViewColumnMetaCase from "./cases/view/y578-a-view-that-still-describes-a-deleted-column.case";
 import nestedFilterConjunctionCase from "./cases/filter/y579-a-group-inside-a-group.case";
-import conditionalRollupUserMatchCase from "./cases/lookup/y580-hours-owned-by-anyone-on-this-row.case";
-import weekdayStartDayCase from "./cases/formula/y582-a-day-number-when-weeks-start-on-monday.case";
-import fromnowUnitCase from "./cases/formula/y583-how-long-ago-in-days.case";
-import formulaOverSystemColumnsCase from "./cases/formula/y581-columns-worked-out-from-a-new-row.case";
+import conditionalRollupUserMatchCase from "./cases/lookup/y565-hours-owned-by-anyone-on-this-row.case";
+import weekdayStartDayCase from "./cases/formula/y563-a-day-number-when-weeks-start-on-monday.case";
+import fromnowUnitCase from "./cases/formula/y556-how-long-ago-in-days.case";
+import formulaOverSystemColumnsCase from "./cases/formula/y564-columns-worked-out-from-a-new-row.case";
 import trackedModifiedSortCase from "./cases/view/y568-sort-by-a-narrowed-last-changed-column.case";
 import lookupOfLinkContainsCase from "./cases/filter/y173-search-a-borrowed-link-column.case";
 import deleteWithoutUndoCaptureCase from "./cases/record/y567-delete-a-row-whose-undo-bookkeeping-is-missing.case";
@@ -128,7 +128,7 @@ import recordDuplicateNotifyCase from "./cases/user-field/y573-record-duplicate-
 import userFieldUndoOfDeleteDoesNotRenotifyAssigneeCase from "./cases/user-field/y193-undo-of-delete-does-not-renotify-assignee.case";
 import userFieldUndoOfClearDoesNotRenotifyAssigneeCase from "./cases/user-field/y194-undo-of-clear-does-not-renotify-assignee.case";
 import userFieldAssignmentBurstArrivesCoalescedCase from "./cases/user-field/y195-assignment-burst-arrives-coalesced.case";
-import circularAppendBurstReachesEveryLookupCase from "./cases/lookup/y584-a-burst-of-new-rows-reaches-every-lookup.case";
+import circularAppendBurstReachesEveryLookupCase from "./cases/lookup/y555-a-burst-of-new-rows-reaches-every-lookup.case";
 import searchY164MultiFieldSearchKeepsViewFilterCase from "./cases/search/y164-multi-field-search-keeps-view-filter.case";
 import authorityY404CommentsStayInsideAuthorizedRecordsCase from "./cases/authority/y404-comments-stay-inside-authorized-records.case";
 import authorityY402ArchiveAuthorizedGroupedRecordCase from "./cases/authority/y402-archive-authorized-grouped-record.case";

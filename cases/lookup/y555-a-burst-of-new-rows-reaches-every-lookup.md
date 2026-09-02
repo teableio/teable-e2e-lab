@@ -1,4 +1,4 @@
-# lookup/y584-a-burst-of-new-rows-reaches-every-lookup
+# lookup/y555-a-burst-of-new-rows-reaches-every-lookup
 
 **T7002** — open. Fix candidate teable-ee#3207 (`98f225c53`, "bound inline
 computed updates") shipped for this incident and does **not** close this

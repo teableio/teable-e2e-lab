@@ -1,4 +1,4 @@
-# formula/y583-how-long-ago-in-days
+# formula/y556-how-long-ago-in-days
 
 **T1970** — fixed.
 

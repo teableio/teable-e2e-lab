@@ -11,7 +11,7 @@ import { defineBugCase } from "../../framework/types";
 // triggered it, and a path the teable-ee#3207 inline bounding (98f225c53)
 // does not close: the case reproduces identically before and after that fix.
 export default defineBugCase({
-  id: "lookup/y584-a-burst-of-new-rows-reaches-every-lookup",
+  id: "lookup/y555-a-burst-of-new-rows-reaches-every-lookup",
   title: "A burst of appended linked rows reaches every lookup watching them",
   runner: "circular-append-burst",
   // Building and paced-seeding the 9.5k-row incident fixture through the
