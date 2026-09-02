@@ -44,7 +44,8 @@ export const runBaseImportFieldDescriptionCase = async (
 ): Promise<BugProbeResult> => {
   const config: BaseImportFieldDescriptionCaseConfig = bugCase.config;
   const suffix = `${config.namePrefix}-${context.runId}`;
-  const zipPath = join(tmpdir(), `e2e-lab-base-desc-${context.runId}.zip`);
+  const zipName = `e2e-lab-base-desc-${context.runId}-${bugCase.id.replace(/\//g, "-")}.zip`;
+  const zipPath = join(tmpdir(), zipName);
   let spaceId = "";
 
   if (config.shape === "describedFields" && config.describedFields.length < 1) {
@@ -146,7 +147,7 @@ export const runBaseImportFieldDescriptionCase = async (
     const notified = await apiNotify(
       signature.data.token,
       undefined,
-      `e2e-lab-base-desc-${context.runId}.zip`,
+      zipName,
     );
 
     const probe = await bugCheckpoint(
