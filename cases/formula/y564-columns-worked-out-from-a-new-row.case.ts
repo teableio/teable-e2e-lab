@@ -7,7 +7,7 @@ import { defineBugCase } from "../../framework/types";
 // the values appear later, or on the next reload, which is exactly when nobody
 // is looking any more.
 export default defineBugCase({
-  id: "formula/y581-columns-worked-out-from-a-new-row",
+  id: "formula/y564-columns-worked-out-from-a-new-row",
   title: "Columns worked out from a new row answer with it",
   runner: "formula-over-system-columns",
   timeoutMs: 180_000,
