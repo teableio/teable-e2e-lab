@@ -34,6 +34,9 @@ export type BrowserRequest = {
 
 export type BrowserRoute = {
   abort(): Promise<void>;
+  request(): BrowserRequest;
+  fetch(): Promise<BrowserResponse>;
+  fulfill(options: { response: BrowserResponse }): Promise<void>;
 };
 
 export type BrowserLocator = {
@@ -283,6 +286,7 @@ export const openBrowserPage = async (
     cookie?: string | string[];
     locale?: "zh";
     captureCanvasText?: boolean;
+    captureCanvasStrokes?: boolean;
   } = {},
 ) => {
   const state = await getRuntime(context);
@@ -310,6 +314,45 @@ export const openBrowserPage = async (
           return maxWidth === undefined
             ? original.call(this, text, x, y)
             : original.call(this, text, x, y, maxWidth);
+        };
+      })();
+    `);
+  }
+  if (options.captureCanvasStrokes) {
+    await browserContext.addInitScript(`
+      (() => {
+        const entries = [];
+        let points = [];
+        Object.defineProperty(globalThis, "__e2eLabCanvasStrokes", {
+          configurable: false,
+          value: entries,
+        });
+        const beginPath = CanvasRenderingContext2D.prototype.beginPath;
+        const moveTo = CanvasRenderingContext2D.prototype.moveTo;
+        const lineTo = CanvasRenderingContext2D.prototype.lineTo;
+        const stroke = CanvasRenderingContext2D.prototype.stroke;
+        CanvasRenderingContext2D.prototype.beginPath = function() {
+          points = [];
+          return beginPath.call(this);
+        };
+        CanvasRenderingContext2D.prototype.moveTo = function(x, y) {
+          points.push({ x: Number(x), y: Number(y) });
+          return moveTo.call(this, x, y);
+        };
+        CanvasRenderingContext2D.prototype.lineTo = function(x, y) {
+          points.push({ x: Number(x), y: Number(y) });
+          return lineTo.call(this, x, y);
+        };
+        CanvasRenderingContext2D.prototype.stroke = function(path) {
+          entries.push({
+            points: points.map((point) => ({ ...point })),
+            stroke: String(this.strokeStyle),
+            lineWidth: Number(this.lineWidth),
+            canvasWidth: this.canvas.width,
+            canvasHeight: this.canvas.height,
+          });
+          if (entries.length > 30000) entries.splice(0, entries.length - 30000);
+          return path === undefined ? stroke.call(this) : stroke.call(this, path);
         };
       })();
     `);

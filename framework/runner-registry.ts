@@ -120,6 +120,9 @@ import { runAuthorityUnreadableGroupCase } from "./runners/authority-unreadable-
 import { runDeletedTableCollaboratorRecoveryCase } from "./runners/deleted-table-collaborator-recovery.runner";
 import { runLookupOfRollupCreateCase } from "./runners/lookup-of-rollup-create.runner";
 import { runCircularAppendBurstCase } from "./runners/circular-append-burst.runner";
+import { runRollupCreateValidationCase } from "./runners/rollup-create-validation.runner";
+import { runConditionalRollupNestedOrMatrixCase } from "./runners/conditional-rollup-nested-or-matrix.runner";
+import { runLinkPickerTabSelectionBrowserCase } from "./runners/link-picker-tab-selection-browser.runner";
 import type {
   BugCase,
   BugCaseFor,
@@ -260,6 +263,9 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "deleted-table-collaborator-recovery":
     runDeletedTableCollaboratorRecoveryCase,
   "circular-append-burst": runCircularAppendBurstCase,
+  "rollup-create-validation": runRollupCreateValidationCase,
+  "conditional-rollup-nested-or-matrix": runConditionalRollupNestedOrMatrixCase,
+  "link-picker-tab-selection-browser": runLinkPickerTabSelectionBrowserCase,
 };
 
 export const executeRegisteredRunner = (

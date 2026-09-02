@@ -136,12 +136,20 @@ import authorityY166Y168RestrictedSavedViewStaysUsableCase from "./cases/authori
 import viewY278GroupToolsStayChineseCase from "./cases/view/y278-group-tools-stay-chinese.case";
 import commentY559DeletingACommentUpdatesTheOpenPanelCase from "./cases/comment/y559-deleting-a-comment-updates-the-open-panel.case";
 import authorityY386RestrictedGroupedGridStaysReadableCase from "./cases/authority/y386-restricted-grouped-grid-stays-readable.case";
+import lookupY470OrdinaryRollupRejectsIncompatibleAggregationCase from "./cases/lookup/y470-ordinary-rollup-rejects-incompatible-aggregation.case";
+import lookupY471Y472Y478Y492ConditionalRollupKeepsNestedOrCase from "./cases/lookup/y471-y472-y478-y492-conditional-rollup-keeps-nested-or.case";
+import lookupY486ConditionalRollupRejectsIncompatibleAggregationCase from "./cases/lookup/y486-conditional-rollup-rejects-incompatible-aggregation.case";
+import linkY554PickerKeepsSelectionAcrossTabsCase from "./cases/link/y554-picker-keeps-selection-across-tabs.case";
 import type { BugCase } from "./framework/types";
 
 // Every runnable case, registered explicitly. scripts/case-catalog.mjs parses
 // this file statically (imports + the array below), so the planner and the
 // checks can enumerate cases without resolving @teable/* packages.
 const cases = [
+  linkY554PickerKeepsSelectionAcrossTabsCase,
+  lookupY470OrdinaryRollupRejectsIncompatibleAggregationCase,
+  lookupY471Y472Y478Y492ConditionalRollupKeepsNestedOrCase,
+  lookupY486ConditionalRollupRejectsIncompatibleAggregationCase,
   commentY559DeletingACommentUpdatesTheOpenPanelCase,
   authorityY404CommentsStayInsideAuthorizedRecordsCase,
   authorityY402ArchiveAuthorizedGroupedRecordCase,
