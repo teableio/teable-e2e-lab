@@ -129,6 +129,9 @@ export interface BugCaseConfigByRunner {
   "authority-unreadable-group": AuthorityUnreadableGroupCaseConfig;
   "deleted-table-collaborator-recovery": DeletedTableCollaboratorRecoveryCaseConfig;
   "circular-append-burst": CircularAppendBurstCaseConfig;
+  "rollup-create-validation": RollupCreateValidationCaseConfig;
+  "conditional-rollup-nested-or-matrix": ConditionalRollupNestedOrMatrixCaseConfig;
+  "link-picker-tab-selection-browser": LinkPickerTabSelectionBrowserCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1166,6 +1169,37 @@ export interface RollupFilterPersistsCaseConfig {
   items: { name: string; category: string; amount: number }[];
   settleTimeoutMs: number;
   pollIntervalMs: number;
+}
+
+// Create-time compatibility validation for ordinary and conditional rollups.
+// Both product paths share the same observable contract but have separate bug
+// histories and therefore separate case definitions.
+export interface RollupCreateValidationCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  mode: "rollup" | "conditionalRollup";
+}
+
+// Conditional summaries over a field-reference match plus a nested OR group.
+// The four covered ids are intentionally one matrix because the filter tree is
+// the defect; only the summarized source type and expression vary.
+export interface ConditionalRollupNestedOrMatrixCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  coveredCaseIds: ["Y471", "Y472", "Y478", "Y492"];
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
+}
+
+// A saved multi-link opened in the browser picker. Switching between All and
+// Selected must keep the saved row visible and selected.
+export interface LinkPickerTabSelectionBrowserCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  selectedRowName: string;
+  otherRowNames: string[];
+  switchCount: number;
+  settleTimeoutMs: number;
 }
 
 // A lookup pointing at a date column, repointed at a text column. The two are

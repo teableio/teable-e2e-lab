@@ -61,6 +61,7 @@ places — it cannot be settled and skipped at once.
 | `0a12e96a0`  | T5496 | The fix is in the v1 generated-column SQL conversion, which nothing in v2 imports. Written in two shapes and run twice anyway; green on both columns each time. See the note below the table.                                                                                                                                   |
 | `d134190e7`  | -     | Fast undo after a selection delete could restore nothing while still reporting success. The existing sentinel `undo/y185-delete-records-undo-restores-all` was run against this parent and passed at 12 rows (run 32674455220) - the trash projection keeps up at that size. The commit's own reproduction is a 10k-row delete. |
 | `98790484e`  | T6332 | Written in three shapes and run three times, green on both columns each time: renaming, re-pointing and un-lookup-ing a lookup of a formula are all accepted on the fix's parent. See the note below the table.                                                                                                                 |
+| `893d0ce20`  | T7066 | Y460 was tried with sync and hybrid computed updates, patch and direct-create link sequences, fields created before child rows, and physical row order opposite to link order. Every public API shape already preserved first-appearance order on the fix's parent, so the case could not distinguish the fix.                  |
 
 ### Editing a lookup of a formula
 
