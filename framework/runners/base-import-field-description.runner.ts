@@ -144,11 +144,7 @@ export const runBaseImportFieldDescriptionCase = async (
       createReadStream(zipPath),
       signature.data.requestHeaders,
     );
-    const notified = await apiNotify(
-      signature.data.token,
-      undefined,
-      zipName,
-    );
+    const notified = await apiNotify(signature.data.token, undefined, zipName);
 
     const probe = await bugCheckpoint(
       config.shape === "describedFields"
