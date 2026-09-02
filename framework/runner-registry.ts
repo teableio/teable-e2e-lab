@@ -122,6 +122,8 @@ import { runLookupOfRollupCreateCase } from "./runners/lookup-of-rollup-create.r
 import { runCircularAppendBurstCase } from "./runners/circular-append-burst.runner";
 import { runRollupCreateValidationCase } from "./runners/rollup-create-validation.runner";
 import { runConditionalRollupNestedOrMatrixCase } from "./runners/conditional-rollup-nested-or-matrix.runner";
+import { runRollupLinkIdentityMatrixCase } from "./runners/rollup-link-identity-matrix.runner";
+import { runConditionalRollupEditorBrowserCase } from "./runners/conditional-rollup-editor-browser.runner";
 import { runLinkPickerTabSelectionBrowserCase } from "./runners/link-picker-tab-selection-browser.runner";
 import type {
   BugCase,
@@ -265,6 +267,8 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "circular-append-burst": runCircularAppendBurstCase,
   "rollup-create-validation": runRollupCreateValidationCase,
   "conditional-rollup-nested-or-matrix": runConditionalRollupNestedOrMatrixCase,
+  "rollup-link-identity-matrix": runRollupLinkIdentityMatrixCase,
+  "conditional-rollup-editor-browser": runConditionalRollupEditorBrowserCase,
   "link-picker-tab-selection-browser": runLinkPickerTabSelectionBrowserCase,
 };
 

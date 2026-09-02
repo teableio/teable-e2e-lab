@@ -131,6 +131,8 @@ export interface BugCaseConfigByRunner {
   "circular-append-burst": CircularAppendBurstCaseConfig;
   "rollup-create-validation": RollupCreateValidationCaseConfig;
   "conditional-rollup-nested-or-matrix": ConditionalRollupNestedOrMatrixCaseConfig;
+  "rollup-link-identity-matrix": RollupLinkIdentityMatrixCaseConfig;
+  "conditional-rollup-editor-browser": ConditionalRollupEditorBrowserCaseConfig;
   "link-picker-tab-selection-browser": LinkPickerTabSelectionBrowserCaseConfig;
 }
 
@@ -1187,6 +1189,29 @@ export interface ConditionalRollupNestedOrMatrixCaseConfig {
   baseId: "seed-base";
   tableNamePrefix: string;
   coveredCaseIds: ["Y471", "Y472", "Y478", "Y492"];
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
+}
+
+// Ordinary rollups over all four link relationships. Distinct linked records
+// with the same title remain distinct, while repeated references to one record
+// retain their expression-specific compact/unique behavior.
+export interface RollupLinkIdentityMatrixCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  coveredCaseIds: ["Y465"];
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
+}
+
+// A narrow conditional-rollup field sheet backed by an API-created source
+// matrix. The browser owns only the editor action that cannot be represented
+// by an API request; setup and result assertions remain API-based.
+export interface ConditionalRollupEditorBrowserCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  layout: "group-header" | "condition-rows";
+  coveredCaseIds: ["Y479", "Y480", "Y481", "Y482"] | ["Y483"];
   settleTimeoutMs: number;
   pollIntervalMs: number;
 }

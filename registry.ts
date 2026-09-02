@@ -139,6 +139,9 @@ import authorityY386RestrictedGroupedGridStaysReadableCase from "./cases/authori
 import lookupY470OrdinaryRollupRejectsIncompatibleAggregationCase from "./cases/lookup/y470-ordinary-rollup-rejects-incompatible-aggregation.case";
 import lookupY471Y472Y478Y492ConditionalRollupKeepsNestedOrCase from "./cases/lookup/y471-y472-y478-y492-conditional-rollup-keeps-nested-or.case";
 import lookupY486ConditionalRollupRejectsIncompatibleAggregationCase from "./cases/lookup/y486-conditional-rollup-rejects-incompatible-aggregation.case";
+import lookupY465OrdinaryRollupKeepsLinkedRecordIdentityCase from "./cases/lookup/y465-ordinary-rollup-keeps-linked-record-identity.case";
+import lookupY479Y482ConditionalRollupEditorKeepsNestedOrCase from "./cases/lookup/y479-y482-conditional-rollup-editor-keeps-nested-or.case";
+import lookupY483ConditionalRollupEditorWrapsLookupConditionsCase from "./cases/lookup/y483-conditional-rollup-editor-wraps-lookup-conditions.case";
 import linkY554PickerKeepsSelectionAcrossTabsCase from "./cases/link/y554-picker-keeps-selection-across-tabs.case";
 import type { BugCase } from "./framework/types";
 
@@ -146,6 +149,9 @@ import type { BugCase } from "./framework/types";
 // this file statically (imports + the array below), so the planner and the
 // checks can enumerate cases without resolving @teable/* packages.
 const cases = [
+  lookupY483ConditionalRollupEditorWrapsLookupConditionsCase,
+  lookupY479Y482ConditionalRollupEditorKeepsNestedOrCase,
+  lookupY465OrdinaryRollupKeepsLinkedRecordIdentityCase,
   linkY554PickerKeepsSelectionAcrossTabsCase,
   lookupY470OrdinaryRollupRejectsIncompatibleAggregationCase,
   lookupY471Y472Y478Y492ConditionalRollupKeepsNestedOrCase,
