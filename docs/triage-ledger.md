@@ -118,7 +118,10 @@ The shape is gone; the runner is not kept.
 | `b90f13537` | T3810 | Written and run: a file uploaded into a cell reaches a watching page carrying its temporary address on the fix's parent too (run 32696695384), so both columns look the same. The single-upload path is evidently decorated already; the fix also touches the batch-create and batch-update projections, which need an attachment token to reach and were not tried. |
 | `384d2dad1` | T3531 | Written in two shapes and run twice, green on both columns each time: filling a two-way link in from the far side already reaches the near side, and clearing it from there already clears it. Many-to-many in run 32697213211, one-many in run 32697577570. |
 | `2d93fbef4` | T3303 | Written and run: a formula comparing a number column against blank already answers per row on the fix's parent, empty and zero included (run 32698802701). The half that was broken is the v1 generated-column conversion in `sql-conversion.visitor.ts`, which the lab does not exercise - the same file as the T5496 row above. |
-| `7829d83c6` | T6925 | Written in two shapes and run twice, green on both columns each time: an overdue column added over existing rows computes on the fix's parent, whether written as a bare yes/no comparison (run 32705428574) or as an IF() returning two words (run 32704974280). The commit's own reproduction goes through the computed backfill a **field conversion** runs - `table.update` - not the pass that fills a newly created column, and that path was not tried. |
+| `7829d83c6` | T6925 | Written in **three** shapes now. The first two were green on both columns: an overdue column added over existing rows computes on the fix's parent, whether written as a bare yes/no comparison (run 32705428574) or as an IF() returning two words (run 32704974280). The third went at the actual cause named in the commit - an `IF()` whose branches are a **date** and a word, so the column is typed as text and every branch is trimmed - and it does not express the behaviour either: on `develop` that column is created without error and then computes **nothing at all**, for the row taking the date and for the row taking the word alike, so there is no correct answer for a pre-fix column to differ from. The path the commit's own reproduction uses is still untried: the computed backfill a **field conversion** runs (`table.update`), not the pass that fills a newly created column. |
+| `6ee7f96c4` | T6500 | Written and run twice, green on the fix's parent both times. This is the **field-conversion** backfill the T6925 row names as untried, so that path has now been tried: a table with a number column, rows, and a formula column reading it, then the number column converted to text inside the checkpoint, and in the second shape converted back again - which is what the report describes people doing. Neither direction reproduces `operator does not exist: double precision = text`. Something narrower decides whether the stored column and the freshly computed value end up different kinds; a formula that simply echoes the column is not it. The production reports name six computed fields across two tables in one base, so the shape may need a chain rather than one formula. |
+| `7b969558a` | T6890 | Sorting, and deliberately not a change to it: nullable sorts stop emitting a leading `(expr IS NULL)` key and use Postgres's own NULLS FIRST/LAST instead. The commit and the issue both say the point is that the order stays identical to v1's - what changes is the length of the sort list and whether an index can serve it. There is nothing for a case to tell apart. Performance lab, if anywhere. |
+| `1ea5d6c40` | T6669 | A read that stopped doing work twice: producing `extra.searchHitIndex` re-ran the whole v1 pipeline - bootstrapping v1 metadata, rebuilding the search WHERE, rescanning for ids that were then thrown away - to get a per-page hit index the v2 read could compute from the ids it already had. The hit index itself is the same on both sides. |
 | `d36e266aa` | T6912 | Written in two shapes and run twice, green on both columns each time. A payroll chain - rate rows rolling up into an employee's highest rate, a payroll line borrowing that rate and the employee's site, a view filtered on the borrowed site - built entirely through ordinary requests opens on the fix's parent (run 32708030924). The same chain with the borrowed total's rule stripped the way the T6911 case strips it also opens (run 32709591507). The commit's own reproduction is a stored column shape neither of those two produce; what distinguishes it is not established. The already-shipped T6911 case was also run against this parent on its own and stayed green (run 32705941080). |
 | `6c0970d52` | T6509 | Written in two shapes and run twice, green on both columns each time: a link cell pointing at a row whose name is blank, saved a second time unchanged, comes back without an empty name and can be written straight back. First shape run 32825087075; second - the link naming the column it shows, and the unnamed row written as explicitly having no name - run 32825483798. The commit's own reproduction goes through the v2 contract's own record endpoints rather than the public ones, and what the two send differently is not established. |
 | `d28589d10` | T6734 | Written in two shapes and run twice, green on both columns each time: a date borrowed across a one-to-one link arrives on the fix's parent, both when the borrowing column is added next to a link that already exists (run 32836154719) and when the host's own date column is converted into a borrowed one (run 32836945426). The commit's own reproduction drains the computed queue between each step; what the two do differently is not established. |
@@ -138,6 +141,26 @@ The shape is gone; the runner is not kept.
 | `0548611b2` | T6576 | Not attempted. The commit's own reproduction is skipped under forced v2 - the spec gates it on the v1 path - and the lab forces v2, so the case could not go red. Same reason as the T5496 and T3303 rows. |
 | `7cb4431e9` | T6502 | Not attempted, same reason: the commit covers the shape with a forced-v1 e2e, and the lab forces v2. |
 | `057443dd6` | T6719 | Not attempted. The crash needs a preview flag that turns on a different record-query wrapper; the lab does not set it, so grid statistics take the ordinary path and nothing goes red. |
+| `f160eea3b` | T7065 | Not taken while the fix is unshipped. A share-view scope bypass on the selection `*-by-id` endpoints, CVSS 8.1: the issue was still at "deployed to staging" when this batch was written, and a case here is a working public reproduction. It is a good case once it ships - the repro is a single request with a share header - so this row is a reminder, not a rejection. See CONTRIBUTING.md. |
+| `ae70b638b` | T7104 | The failure is a connection timeout inside a `table.update` schema operation that then dead-letters after three attempts. What the fix changes is how that timeout is settled - rollback rather than an unrepairable failure - and the lab has no way to make a connection time out on request. Same async-runner trap as T6768 and T6853. |
+| `8d5c0fe38` | T7067 | Selection aggregation was being answered by v1, where a date column met a cast v1 cannot do. The fix routes it to v2. That makes the pre-fix state "v1 answered", which `assertServedByV2` treats as the case being unable to run (💥) rather than as the bug - so the column that should be red is the one column the harness refuses to read. The observation is real and reachable; expressing it needs a runner allowed to assert that a request was **not** on v2, which does not exist here. |
+| `9f5509f48` | T7019 | An incident, not a behaviour. Concurrent replicas UPSERTing the same five-minute query-observation window took transaction locks that held connections until the pool was exhausted; the fix hardens that write. What a case would have to reproduce is contention between replicas, and this harness runs one application against one database - a single writer never conflicts with itself. Belongs in the performance lab if anywhere. |
+| `e3bb7671c` | T6988 | Not attempted, on the strength of the fix's own reproduction. The failure needs a client whose local `cmp_` doc was never created while the server snapshot already sits at generation 2 or higher, and the commit's e2e reaches that by stubbing the snapshot loader through a service hook **and** assigning `doc.version = 0` by hand. Neither is available here: the observation seam is a real subscription over the wire, which fetches the snapshot rather than replaying ops from zero. Reproducing it honestly means winning a race - subscribing to an empty doc and having the generation pass 1 before the create op arrives - which is the shape that produces cases green on every column. Worth revisiting if the realtime helper ever exposes the underlying doc. |
+| `4b57c03da` | T7070 | Written and run. The fixture builds cleanly - a manyOne link with a column borrowed through it, then `fixture-db` drops the hidden `__fk_` column the link's own settings still name - and adding a row to the other table is refused. But the refusal is `Failed to insert record: column t.__fk_… does not exist`, raised during the insert, while the fix repairs `Failed to propagate dirty records`, raised by the deferred propagate. Two call sites. The commit's own e2e reaches the second by draining an outbox inside the v2 test container; this harness runs the Nest application, where the same small fixture computes inline and never gets there. Tried one-way and two-way links; both fail in the insert. Same trap as T6728. **The insert-path failure is still present on `develop`** - see the note below the table. |
+| `4f35a4a64` | T7047 | The observation lives on the v2 contract's own list endpoint - `limit`/`cursor`/`includeTotal` - not on the public record API this lab reads through, and the lab's client does not speak it. What changed behind that endpoint is also performance-shaped: skip `count(*)` unless asked, page by cursor instead of OFFSET. Same reason as the T5268 row: much of the fix introduces the path it repairs, so there is no before to compare against. |
+| `a4e2a0a55` | T7105 | Cost, not behaviour. Field masks unioned every readable field into the SQL projection, so a request for 27 columns still selected all 235. What the request answers with does not change - the same fields come back either way - so there is nothing for a case here to tell apart. It is the product-side follow-up to a 503 incident about wide-table polling, and belongs in the performance lab if anywhere. |
+| `719079af1` | T6711 | The observation is a schema operation's own terminal classification - whether a leftover `table.import` is marked dead or repaired - which lives in the background runner and never reaches an HTTP response. The lab has no seam on that: the T7070 attempt established by measurement that a small fixture here computes inline and the deferred path is not reached. Same family as T6768 and T6853. |
+| `64b6446061` | T6904 | Same seam. A computed task planned against a table whose `provision_state` is still `pending` was dead-lettered as an obsolete plan instead of retried; the fix changes how the worker classifies that. Both the trigger (a table caught mid-provision by a background stage) and the observation (the task's failure classification) are inside the worker. Nothing a request answers differs. |
+| `023b657cd` | T6982 | Written and run twice, green on the fix's parent both times. A settings change was made, the job it recorded was rewritten by `fixture-db` into the interrupted shape the commit describes (pending, `metadata_pending`, no `last_error`, old enough to claim) and `table_meta.provision_state` set to `pending`. First shape asked that the table be out of reach and then come back; second asked only that it read within two minutes. **On both `28a55d9ac` and `develop` the table read immediately anyway**, so there is nothing to tell apart. Whatever else is true, a table carrying `provision_state = 'pending'` was not out of reach in this environment - which is the assumption both shapes were built on. What the fix changes is whether the keeper repairs the job or marks it dead, and that lives in the job's own row; the commit's own e2e reads it through Prisma and drives the runner in process. Same seam as T6711 and T6904. |
+| `1f33ae31c` | T7061 | Written and run twice, green on the fix's parent both times. The chain is the reported one: a conditional lookup matching on a shared reference, a formula joining what it borrows, and a matching row added on the other side inside the checkpoint, with the fixture starting empty so the arrival is the trigger. First shape was lookup plus one formula; second added three more formula steps after it, because the commit says the fault needs a stage that runs the lookup edge **while the parent plan still has leftover formula steps**. Neither reproduced. Whether a plan splits into stages at all is the planner's decision - `d74a81ab1` explicitly keeps small chains in one stage - and a case cannot ask for a split from outside. Reaching this needs a chain long or wide enough that the planner splits it, which is a size nobody has established from the public API. |
+| `38d0e067e` | T7059 | Also in the browser, and further out: Enter posted a comment while an image was still uploading, so the placeholder went out with no url. The fix holds the composer until the upload lands and makes the progress visible. There is no request to observe - the wrong one was sent on purpose. |
+| `55c73a01d` | T6893 | A migration, not a repair: it moves the remaining table REST handlers onto the v2 dual path and stops them reading v1 services. The pre-fix state is therefore "v1 answered", which `assertServedByV2` treats as the case being unable to run rather than as the bug - the column that should be red is the one the harness refuses to read. Same reading as T7067. |
+| `41e9ae6de` | T6694 | Same shape, same reason: duplicate reads are moved onto v2. Before it, v1 answers. |
+| `60f2045cf` | T6895 | The observation lives on an endpoint this commit introduces. A single POST timed out at the gateway on large workbooks, and the fix replaces it with a stream that reports committed rows as they land - so there is no request both sides answer, and the pre-fix side answers nothing at all on the input that makes the difference. The one behavioural half that is not new - other sheets keep importing after a row cap - still reaches it through the stream. Same reading as T5268. |
+| `e770dd1ac` | T7057 | Index coverage, not results. Substring search documents and the trigram indexes behind them are narrowed to text-shaped fields, and an all-field search over an uncovered field falls back to the unindexed path rather than answering differently. What a search returns is the same on both sides; what changes is whether an index can serve it. Performance lab, if anywhere - same reading as T6821. |
+| `f70f0d508` | T6944 | Neither commit carrying this issue id fixes the path `view/a-grid-grouped-by-a-column-you-cannot-read` observes. That case is red on `12407c409` (before this commit), on `7bc91231d` (after it), and on `f44a82cf8` (after both), and turns green only at `2ae77481c` — which carries T6997. This one narrows a grouping the server resolves from the view itself; the case exercises a grouping that arrives on the request, which is what the grid actually sends. Reaching the other path needs a request carrying no grouping while the view carries one, and the record endpoint the lab reads through does not obviously offer that. |
+| `a4c8c3396` | T6944 | Same reading, same measurements: the case is red on `f44a82cf8`, which is after this commit. It aligns the group metadata a view reports with the permissions applied to it, which is what the settings screen reads, not what the grid's request for rows goes through. |
+| `6235527b4` | T7027 | Not taken while the fix is unshipped. A folder's `children` still lists the ids of resources the caller may not read, so a permission-filtered response carries names of things the reader was filtered away from; the reported symptom is a console error and an empty folder. The issue was still at "deployed to staging" when this was written, and a `status: open` case here would be a public reproduction of an unshipped disclosure. Same call as T7065. The fixture it needs now exists (`framework/authority-matrix.ts`), so this is a reminder rather than a rejection: it is ready to write the day it ships. |
 
 ### The date comparison inside AND or OR
 
@@ -513,3 +536,66 @@ it in prose is how the two drift apart. To see it:
 ```bash
 pnpm triage:covered
 ```
+
+### T7070's neighbour, still open
+
+Rejecting the T7070 case turned up something that is not T7070. On `develop`,
+a base holding a link whose hidden `__fk_` column is missing **cannot accept
+rows into the table on the other side at all**: the insert itself is refused
+with `column t.__fk_… does not exist`, before any propagation runs. Measured on
+`8f3f6df16` and on `692c2b4b5`, with both one-way and two-way links.
+
+T7070 repaired the propagate path for exactly this state. The insert path was
+not part of it and answers the same way it did before. Whether that is worth
+its own report is a judgment for a person; it is recorded here so the next pass
+does not spend the same afternoon rediscovering it.
+
+### The permission-matrix family is reachable, and nobody has built the fixture yet
+
+Four uncovered fixes wait behind one piece of setup that does not exist here
+yet: `2ae77481c5`/T6997 (v2 reads over masked values), `68b7d74f05`/T7025
+(archiving gated by the matrix for restricted collaborators), `6235527b4c`/T7027
+(references to permission-filtered nodes), and `a4c8c3396b`+`f70f0d5083`/T6944
+(a grid view whose group field the reader cannot see returns no records at all,
+with "Group references a field that is not readable").
+
+None of them is blocked by the harness. The matrix is driven entirely through
+public endpoints — `PATCH /api/base/:baseId/authority-matrix/status` to turn it
+on, `GET /api/base/:baseId/authority-matrix`, `PUT
+/api/base/:baseId/authority-matrix/:id` to shape a role — and a second signed-in
+user comes from `test/utils/axios-instance/new-user`, which runners can import
+the same way they import `init-app`. `enterprise/backend-ee/test/authority/` is
+the worked example.
+
+What is missing is a fixture that puts those together: matrix on, a role that
+makes one field unreadable, a second user holding that role. That is a bigger
+piece of setup than any case here has needed, and it is worth building once
+rather than four times. T6944 is the best first customer — its symptom is the
+whole view returning nothing, which is unmistakable — and T7025 should wait
+either way, since it was still on staging when this was written.
+
+### One server-side half of `38d0e067e` is waiting for its release
+
+Alongside the two browser fixes above, that commit tightens two server checks:
+deleting your own comment now needs `record|comment` as editing it does, and the
+per-record comment count now needs `record|read` so the matrix row scope covers
+it. Both are paths that were open and are now closed, which is a case shape this
+repository can express and `framework/authority-matrix.ts` can already build.
+
+It is not written yet for the same reason as T7065 and T7027: the issues were
+still at "deployed to staging" when this was read, and a case here would be a
+public reproduction of an unenforced permission that has not shipped. Worth
+writing the day it does — the count one especially, since a count that ignores
+the row scope reports on rows the reader cannot open.
+
+### Something noticed while failing to reproduce T6925
+
+On `develop`, a formula written as `IF({a checkbox}, {a date}, "a word")` is
+accepted, is not marked as having an error, and computes nothing — no date on the
+row whose checkbox is ticked, and not even the word on the row whose checkbox is
+not. Measured while trying the third shape above, on a two-row table.
+
+That is not T6925 and it is not claimed to be a fault here; a formula mixing a
+date branch with a text branch may simply not be a supported thing to write. But
+a column that is accepted, is not flagged, and answers nothing is worth somebody
+looking at, and the next person to try this shape will hit it immediately.

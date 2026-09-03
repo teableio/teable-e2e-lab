@@ -7,6 +7,19 @@ import type { DayBucket } from "./runners/group-buckets";
 // is discriminated on `runner`, so a case that pairs a runner with the wrong
 // config shape fails `pnpm check:types` at the case file itself.
 export interface BugCaseConfigByRunner {
+  "autonumber-string-filter": AutonumberStringFilterCaseConfig;
+  "cross-base-conditional-base-id": CrossBaseConditionalBaseIdCaseConfig;
+  "group-on-an-unreadable-column": GroupOnAnUnreadableColumnCaseConfig;
+  "jsonb-lookup-aggregate": JsonbLookupAggregateCaseConfig;
+  "legacy-column-visibility-metadata": LegacyColumnVisibilityMetadataCaseConfig;
+  "nested-user-array-join-create": NestedUserArrayJoinCreateCaseConfig;
+  "or-filtered-rollup-scope": OrFilteredRollupScopeCaseConfig;
+  "same-named-fk-base-duplicate": SameNamedFkBaseDuplicateCaseConfig;
+  "select-rollup-unique-and-count": SelectRollupUniqueAndCountCaseConfig;
+  "share-view-unready-data-db": ShareViewUnreadyDataDbCaseConfig;
+  "shared-form-cover-url": SharedFormCoverUrlCaseConfig;
+  "switch-mixed-branch-storage": SwitchMixedBranchStorageCaseConfig;
+  "undo-cursor-after-a-failed-undo": UndoCursorAfterAFailedUndoCaseConfig;
   "http-check": HttpCheckCaseConfig;
   "record-flow": RecordFlowCaseConfig;
   "group-collapse": GroupCollapseCaseConfig;
@@ -956,6 +969,19 @@ export interface DuplicateSharedViewCaseConfig {
   baseId: "seed-base";
   tableNamePrefix: string;
   rowTitle: string;
+  // Which question to ask of the copy. "copyHasItsOwnLink" is the older one -
+  // the duplicate must succeed and must not answer on the source's public
+  // address. "copyIsNotShared" is what the copy should carry instead: nothing.
+  assert: "copyHasItsOwnLink" | "copyIsNotShared";
+  // Share rules set on the source view before duplicating. Only meaningful for
+  // "copyIsNotShared", where inheriting them is the point: a password the copy
+  // carries is a password that opens a table nobody chose to publish. Must
+  // include one, or the fixture check refuses to run.
+  shareMeta?: {
+    password?: string;
+    allowCopy?: boolean;
+    includeHiddenField?: boolean;
+  };
 }
 
 // A row whose id body is not the 16 characters this version generates - what
@@ -2108,4 +2134,207 @@ export interface CircularAppendBurstCaseConfig {
   pollIntervalMs: number;
   // How many stale rows the failure message names (expected vs actual).
   staleRowEvidenceLimit: number;
+}
+
+// A filter on the row-number column carrying the number as text, which is what
+// a filter box sends.
+export interface AutonumberStringFilterCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // One row per title, numbered in order by the column added after them. Needs
+  // enough rows that the threshold below splits them.
+  rowTitles: string[];
+  // "greater than" this. Must select some rows and leave others out, or a
+  // comparison that never ran would look the same as one that did.
+  threshold: number;
+}
+
+// A conditional column reading a table in a second base, read back the way the
+// settings screen reads it.
+export interface CrossBaseConditionalBaseIdCaseConfig {
+  namePrefix: string;
+  // Rows in the other base. At least one has to carry matchedCategory, or the
+  // columns compute nothing and the fixture proves nothing.
+  sourceRows: { category: string; amount: number }[];
+  // The category the single host row carries, and so the rows the columns read.
+  matchedCategory: string;
+}
+
+// A grid grouped by a column the person opening it may not read.
+export interface GroupOnAnUnreadableColumnCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Two rows at least: a request that returns nothing must not look like one
+  // that returns everything.
+  rows: { name: string; stage: string; cost: number }[];
+}
+
+// A conditional total whose source column is itself a borrowed list, which is
+// where largest/smallest/all-of/any-of went straight at the stored list.
+export interface JsonbLookupAggregateCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // The rows at the far end of the chain. Two at least, with amounts that
+  // differ - otherwise largest and smallest cannot be told apart. The runner
+  // checks that against the list the product actually built, not against these.
+  leaves: { name: string; amount: number }[];
+  // The row in the middle table, which borrows every leaf value.
+  middleRowName: string;
+  // The row doing the totalling.
+  hostRowName: string;
+  // Written to both middle and host, so the condition selects the middle row.
+  matchKey: string;
+  // Which aggregations to ask for. The tickbox half of this fix ("and"/"or")
+  // is deliberately absent: an unticked box does not reach a borrowed list, so
+  // all-of and any-of answer the same whether they work or not. See the runner.
+  aggregations: ("max" | "min")[];
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
+}
+
+// A view whose stored notes about a column carry both the older key and the
+// current one - what a view made long enough ago has been carrying all along.
+export interface LegacyColumnVisibilityMetadataCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  rowTitle: string;
+  // Which shape of old notes to write. "bothVisibilityNotes" carries the older
+  // key beside the current one; "noPosition" carries no order at all. Both are
+  // shapes nothing writes any more, and each broke differently.
+  legacy: "bothVisibilityNotes" | "noPosition";
+  // Written into the stored notes for the "bothVisibilityNotes" shape only. The
+  // other shape is defined by having no order.
+  order: number;
+  // Written into the stored notes either way, so a settled entry can be told
+  // from an emptied one.
+  width: number;
+}
+
+// A table whose formula joins several people columns together, wrapped four
+// functions deep - the shape whose statement grew a layer at a time.
+export interface NestedUserArrayJoinCreateCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // How many people columns the formula flattens. The statement grew with this
+  // number; the report was filed at seven.
+  peopleColumns: number;
+  peopleColumnPrefix: string;
+  sessionRowName: string;
+  campusValue: string;
+  noteRowName: string;
+  separator: string;
+  // How long the write may take before the case says the table cannot accept a
+  // row. Generous: this is not a measurement of speed, it is the difference
+  // between an answer and no answer.
+  writeBudgetMs: number;
+}
+
+// A total over linked rows narrowed with an "any of these" condition, which is
+// written as OR and is where the total stopped respecting the link.
+export interface OrFilteredRollupScopeCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Rows in the other table. `owner` says which host row they belong to, and
+  // only the linked host's rows are actually linked - the rest exist to be
+  // wrongly counted. The runner refuses a fixture missing any of the three
+  // kinds it needs; see the runner.
+  work: { name: string; owner: string; status: string; amount: number }[];
+  // The statuses the condition selects, ORed together. At least two, or there
+  // is no OR to get wrong.
+  selectedStatuses: string[];
+  // The host row joined to its own work.
+  linkedHost: string;
+  // The host row joined to nothing, which is the symptom the report leads with.
+  unlinkedHost: string;
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
+}
+
+// A base whose tables each carry a foreign key under one name, which is what an
+// old base has been holding since before the naming changed.
+export interface SameNamedFkBaseDuplicateCaseConfig {
+  baseNamePrefix: string;
+  // Two at least: one table cannot collide with itself, and the collision is
+  // the bug. The runner refuses fewer.
+  tableNames: string[];
+  // The single row each table carries, so the copy has rows to move.
+  rowTitle: string;
+}
+
+// A summary of a choice column across linked children: the distinct values and
+// how many there are.
+export interface SelectRollupUniqueAndCountCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // The children, in the order the link is written. Their choices must not
+  // already be in alphabetical order, or a summary that sorted them would look
+  // correct - the runner refuses that.
+  children: { name: string; status: string }[];
+  parentRowName: string;
+  // Which comes first. "beforeTheSummaries" adds the summaries to a table that
+  // already holds the row; "afterTheSummaries" writes the row into a table whose
+  // summaries already exist. Filling a new summary in and working one out during
+  // a write are different paths, and they have been wrong separately.
+  whenTheRowIsWritten: "beforeTheSummaries" | "afterTheSummaries";
+  // Whether to go on to the second half - editing a child so two agree, which is
+  // what tells counting rows from counting distinct values. A case about the
+  // first computation alone leaves it off, because the edit is a recompute and
+  // repairs what it is meant to observe.
+  alsoCheckAfterAnEdit: boolean;
+  // The edit that makes two children agree. Only used when the above is true.
+  retarget: { childName: string; status: string };
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
+}
+
+// A shared view in a space bound to a database whose connection is switched off.
+export interface ShareViewUnreadyDataDbCaseConfig {
+  namePrefix: string;
+  rowTitle: string;
+  // Written into the connection row. It is never decrypted on this path - the
+  // connection is refused for being switched off before anything reads it - so
+  // this only has to be present, and saying so in the value keeps the next
+  // reader from looking for a real secret.
+  encryptedUrlPlaceholder: string;
+}
+
+// A shared form whose picture is stored as a short path and read through two
+// layers, each of which works the address out.
+export interface SharedFormCoverUrlCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  rowTitle: string;
+  // Where the picture lives, as it is stored. Must be a short path: an address
+  // is what the fix passes through untouched, so an address here would make the
+  // case green either way. The runner refuses one.
+  storedPath: string;
+}
+
+// A column that picks its value by case, where the branches with a case attached
+// are numbers and the otherwise branch is a list of linked records.
+export interface SwitchMixedBranchStorageCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // The cases with a number behind them. Two at least: they have to agree with
+  // each other, or the step that merges the branches would have looked at the
+  // otherwise branch anyway.
+  numberBranches: { choice: string; column: string; value: number }[];
+  // The case that falls through to the linked records.
+  otherwiseChoice: string;
+  // Rows in the linked table. At least two, so the linked column holds a list.
+  linkedRows: { name: string; price: number }[];
+}
+
+// An undo that cannot be carried out, followed by a second press.
+export interface UndoCursorAfterAFailedUndoCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  rowName: string;
+  // The row that takes the let-go value, so putting it back would collide. It is
+  // written on a different window, or it lands on the stack this case walks.
+  otherRowName: string;
+  // The value the row starts with and the value it is changed to. They have to
+  // differ, or there is nothing for undo to put back.
+  originalCode: string;
+  changedCode: string;
 }

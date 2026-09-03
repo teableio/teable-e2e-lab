@@ -125,6 +125,19 @@ import { runConditionalRollupNestedOrMatrixCase } from "./runners/conditional-ro
 import { runRollupLinkIdentityMatrixCase } from "./runners/rollup-link-identity-matrix.runner";
 import { runConditionalRollupEditorBrowserCase } from "./runners/conditional-rollup-editor-browser.runner";
 import { runLinkPickerTabSelectionBrowserCase } from "./runners/link-picker-tab-selection-browser.runner";
+import { runAutonumberStringFilterCase } from "./runners/autonumber-string-filter.runner";
+import { runCrossBaseConditionalBaseIdCase } from "./runners/cross-base-conditional-base-id.runner";
+import { runGroupOnAnUnreadableColumnCase } from "./runners/group-on-an-unreadable-column.runner";
+import { runJsonbLookupAggregateCase } from "./runners/jsonb-lookup-aggregate.runner";
+import { runLegacyColumnVisibilityMetadataCase } from "./runners/legacy-column-visibility-metadata.runner";
+import { runNestedUserArrayJoinCreateCase } from "./runners/nested-user-array-join-create.runner";
+import { runOrFilteredRollupScopeCase } from "./runners/or-filtered-rollup-scope.runner";
+import { runSameNamedFkBaseDuplicateCase } from "./runners/same-named-fk-base-duplicate.runner";
+import { runSelectRollupUniqueAndCountCase } from "./runners/select-rollup-unique-and-count.runner";
+import { runShareViewUnreadyDataDbCase } from "./runners/share-view-unready-data-db.runner";
+import { runSharedFormCoverUrlCase } from "./runners/shared-form-cover-url.runner";
+import { runSwitchMixedBranchStorageCase } from "./runners/switch-mixed-branch-storage.runner";
+import { runUndoCursorAfterAFailedUndoCase } from "./runners/undo-cursor-after-a-failed-undo.runner";
 import type {
   BugCase,
   BugCaseFor,
@@ -270,6 +283,19 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "rollup-link-identity-matrix": runRollupLinkIdentityMatrixCase,
   "conditional-rollup-editor-browser": runConditionalRollupEditorBrowserCase,
   "link-picker-tab-selection-browser": runLinkPickerTabSelectionBrowserCase,
+  "autonumber-string-filter": runAutonumberStringFilterCase,
+  "cross-base-conditional-base-id": runCrossBaseConditionalBaseIdCase,
+  "group-on-an-unreadable-column": runGroupOnAnUnreadableColumnCase,
+  "jsonb-lookup-aggregate": runJsonbLookupAggregateCase,
+  "legacy-column-visibility-metadata": runLegacyColumnVisibilityMetadataCase,
+  "nested-user-array-join-create": runNestedUserArrayJoinCreateCase,
+  "or-filtered-rollup-scope": runOrFilteredRollupScopeCase,
+  "same-named-fk-base-duplicate": runSameNamedFkBaseDuplicateCase,
+  "select-rollup-unique-and-count": runSelectRollupUniqueAndCountCase,
+  "share-view-unready-data-db": runShareViewUnreadyDataDbCase,
+  "shared-form-cover-url": runSharedFormCoverUrlCase,
+  "switch-mixed-branch-storage": runSwitchMixedBranchStorageCase,
+  "undo-cursor-after-a-failed-undo": runUndoCursorAfterAFailedUndoCase,
 };
 
 export const executeRegisteredRunner = (

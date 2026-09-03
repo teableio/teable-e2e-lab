@@ -143,6 +143,21 @@ import lookupY465OrdinaryRollupKeepsLinkedRecordIdentityCase from "./cases/looku
 import lookupY479Y482ConditionalRollupEditorKeepsNestedOrCase from "./cases/lookup/y479-y482-conditional-rollup-editor-keeps-nested-or.case";
 import lookupY483ConditionalRollupEditorWrapsLookupConditionsCase from "./cases/lookup/y483-conditional-rollup-editor-wraps-lookup-conditions.case";
 import linkY554PickerKeepsSelectionAcrossTabsCase from "./cases/link/y554-picker-keeps-selection-across-tabs.case";
+import shareViewUnreadyDataDbCase from "./cases/base-share/a-share-link-whose-database-is-away.case";
+import sharedFormCoverUrlCase from "./cases/base-share/a-shared-forms-picture.case";
+import sameNamedFkBaseDuplicateCase from "./cases/base-share/copy-a-base-whose-tables-share-a-key-name.case";
+import crossBaseConditionalBaseIdCase from "./cases/field/a-cross-base-conditional-column-keeps-its-base.case";
+import autonumberStringFilterCase from "./cases/filter/a-row-number-filter-typed-into-the-box.case";
+import switchMixedBranchStorageCase from "./cases/formula/a-column-that-picks-by-case.case";
+import orFilteredRollupScopeCase from "./cases/lookup/an-any-of-these-total-stays-inside-its-link.case";
+import selectRollupUniqueAndCountCase from "./cases/lookup/distinct-choices-in-the-order-they-appear.case";
+import jsonbLookupAggregateCase from "./cases/lookup/the-largest-of-a-borrowed-list.case";
+import nestedUserArrayJoinCreateCase from "./cases/record/add-a-row-to-a-table-that-joins-people-columns.case";
+import duplicatedTableStartsUnsharedCase from "./cases/table/a-duplicated-table-starts-unshared.case";
+import undoCursorAfterAFailedUndoCase from "./cases/undo/a-second-undo-after-one-that-failed.case";
+import legacyColumnNoPositionCase from "./cases/view/a-column-the-view-does-not-place.case";
+import groupOnAnUnreadableColumnCase from "./cases/view/a-grid-grouped-by-a-column-you-cannot-read.case";
+import legacyColumnVisibilityMetadataCase from "./cases/view/a-view-that-says-both-things-about-a-column.case";
 import type { BugCase } from "./framework/types";
 
 // Every runnable case, registered explicitly. scripts/case-catalog.mjs parses
@@ -294,6 +309,21 @@ const cases = [
   userFieldUndoOfClearDoesNotRenotifyAssigneeCase,
   userFieldAssignmentBurstArrivesCoalescedCase,
   circularAppendBurstReachesEveryLookupCase,
+  shareViewUnreadyDataDbCase,
+  sharedFormCoverUrlCase,
+  sameNamedFkBaseDuplicateCase,
+  crossBaseConditionalBaseIdCase,
+  autonumberStringFilterCase,
+  switchMixedBranchStorageCase,
+  orFilteredRollupScopeCase,
+  selectRollupUniqueAndCountCase,
+  jsonbLookupAggregateCase,
+  nestedUserArrayJoinCreateCase,
+  duplicatedTableStartsUnsharedCase,
+  undoCursorAfterAFailedUndoCase,
+  legacyColumnNoPositionCase,
+  groupOnAnUnreadableColumnCase,
+  legacyColumnVisibilityMetadataCase,
 ] satisfies BugCase[];
 
 const caseById = new Map<string, BugCase>(

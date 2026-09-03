@@ -21,5 +21,6 @@ export default defineBugCase({
     baseId: "seed-base",
     tableNamePrefix: "e2e-lab-shared-view-copy",
     rowTitle: "row-1",
+    assert: "copyHasItsOwnLink",
   },
 });

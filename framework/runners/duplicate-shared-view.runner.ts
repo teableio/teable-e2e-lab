@@ -3,6 +3,7 @@ import {
   axios,
   enableShareView as apiEnableShareView,
   getViewList as apiGetViewList,
+  updateViewShareMeta as apiUpdateViewShareMeta,
   DUPLICATE_TABLE,
   urlBuilder,
 } from "@teable/openapi";
@@ -26,6 +27,14 @@ import type { DuplicateSharedViewCaseConfig } from "../types";
 // carried the same share id would be worse than the 500 - two tables answering
 // on one public address, where turning off sharing on either takes down a page
 // the other one is serving - so the ids are compared.
+//
+// The second question this runner asks (`assert: "copyIsNotShared"`) is what
+// the copy should carry INSTEAD, and it is not "a link of its own": nothing.
+// Duplicating a table is not a decision to publish one, and a copy that comes
+// out already shared - under the source's password and edit rules, with no
+// prompt and nothing in the interface saying so - publishes a table nobody
+// chose to publish. The source's own link is checked too, because "the copy is
+// not shared" must not have been reached by unsharing both.
 
 const NAME_FIELD = "Name";
 
@@ -58,6 +67,22 @@ export const runDuplicateSharedViewCase = async (
       throw new Error(
         `enabling sharing on ${viewId} returned no share id: ${JSON.stringify(shared.data)}`,
       );
+    }
+
+    // The share rules a person set on the source. They matter to the second
+    // question: a copy that inherits these is reachable with the source's
+    // password by anyone who ever had it.
+    if (config.shareMeta) {
+      await apiUpdateViewShareMeta(table.id, viewId, config.shareMeta);
+      const sourceViews = await apiGetViewList(table.id);
+      const sourceView = sourceViews.data.find(
+        (view: { id: string }) => view.id === viewId,
+      ) as { shareMeta?: Record<string, unknown> } | undefined;
+      if (!sourceView?.shareMeta?.password) {
+        throw new Error(
+          `the share rules did not stick on the source view: ${JSON.stringify(sourceView?.shareMeta)}`,
+        );
+      }
     }
 
     // Raw axios with the status open: before the fix this request is refused,
@@ -96,14 +121,54 @@ export const runDuplicateSharedViewCase = async (
           feature: "duplicateTable",
         });
 
-        // The copy's own share credential. Reusing the source's would put two
-        // tables on one public address - a success that is worse than the
-        // failure it replaced.
         const copiedViews = await apiGetViewList(copyId);
         const copiedShareIds = copiedViews.data.map(
           (view: { id: string; shareId?: string | null }) =>
             view.shareId ?? null,
         );
+
+        if (config.assert === "copyIsNotShared") {
+          // Nothing published. Each of the three is a separate way the copy can
+          // be reachable: the switch, the address, and the rules behind it.
+          for (const view of copiedViews.data as {
+            id: string;
+            name?: string;
+            enableShare?: boolean | null;
+            shareId?: string | null;
+            shareMeta?: Record<string, unknown> | null;
+          }[]) {
+            if (view.enableShare || view.shareId || view.shareMeta) {
+              throw new Error(
+                `the copied view ${view.name ?? view.id} came out shared: ` +
+                  JSON.stringify({
+                    enableShare: view.enableShare,
+                    shareId: view.shareId,
+                    shareMeta: view.shareMeta,
+                  }),
+              );
+            }
+          }
+
+          // And the source keeps its own link - otherwise "the copy is not
+          // shared" could have been reached by unsharing everything.
+          const sourceViews = await apiGetViewList(table.id);
+          const sourceView = sourceViews.data.find(
+            (view: { id: string }) => view.id === viewId,
+          ) as { enableShare?: boolean; shareId?: string } | undefined;
+          if (
+            !sourceView?.enableShare ||
+            sourceView.shareId !== sourceShareId
+          ) {
+            throw new Error(
+              `duplicating took the source's own link with it: ${JSON.stringify(sourceView)}`,
+            );
+          }
+          return { routing, copiedShareIds };
+        }
+
+        // The copy's own share credential. Reusing the source's would put two
+        // tables on one public address - a success that is worse than the
+        // failure it replaced.
         if (copiedShareIds.includes(sourceShareId)) {
           throw new Error(
             `the copied table's views carry ${JSON.stringify(copiedShareIds)}, which includes the source's ` +

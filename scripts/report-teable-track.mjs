@@ -64,6 +64,7 @@ const main = async () => {
 
   const records = [];
   let skippedUnplanned = 0;
+  let skippedReference = 0;
   for (const path of await walk(artifactDir)) {
     if (!path.endsWith(".json")) {
       continue;
@@ -75,6 +76,18 @@ const main = async () => {
       continue;
     }
     if (!isPayload(payload)) {
+      continue;
+    }
+    // The track carries the GUARDED column only.
+    //
+    // Its Run Key is (run, attempt, case, commit) — no engine — so two engines
+    // writing for one case would silently overwrite each other rather than
+    // land as two rows. Widening the key is possible but would change what
+    // every historical row means, and the v1 column does not want a queryable
+    // history: it is read once, in the run summary, beside the run that
+    // produced it. v1 payloads stay in the artifact.
+    if (payload.engine === "v1") {
+      skippedReference += 1;
       continue;
     }
     const planEntry = planBySha.get(payload.commitSha);
@@ -126,6 +139,9 @@ const main = async () => {
   console.log(
     `Regression Track: ${created} created, ${updated} updated` +
       (skippedUnplanned > 0 ? `, ${skippedUnplanned} unplanned skipped` : "") +
+      (skippedReference > 0
+        ? `, ${skippedReference} v1 reference payload(s) not tracked`
+        : "") +
       ".",
   );
 };

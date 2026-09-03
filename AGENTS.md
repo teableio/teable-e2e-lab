@@ -25,12 +25,23 @@ picture, [.agents/README.md](.agents/README.md) to add or change a case, and
 - Observe through the public API. The database is available for building
   fixtures the API cannot express, and only there — reaching for it inside a
   checkpoint throws (`framework/fixture-db.ts`).
-- Every case guards v2. v1 still answers, so runners prove which engine served
-  them (`framework/engine.ts`).
+- Every case guards v2, and every case is also asked of v1 as a reference.
+  Runners prove which engine served them (`framework/engine.ts`); a case whose
+  feature does not exist on v1 declares `skipV1: "why"` instead of failing
+  there every run.
 
 ## Things that look like oversights and are not
 
 Ask before "fixing" any of these:
+
+- **Nothing the v1 column reports can fail a run.** v1 is a reference: the lab
+  guards v2, which is where fixes land. A v1 cell is evidence to follow up, not
+  a verdict — partly because reaching v1 at all means unstamping each case's
+  base, which makes a base no real customer has (theirs predate v2).
+- **`skipV1` is declared on the case, never inferred from a failure.** Reading
+  "v1 said it does not support that" out of an error message fails open: a case
+  that genuinely breaks, whose error happens to read that way, would be skipped
+  forever and nobody would learn.
 
 - **A `fixed` case reproducing on an old commit is not red.** That is the world
   before the fix. Only the gating column turns a reproduction into a

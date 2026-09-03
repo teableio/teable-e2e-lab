@@ -17,6 +17,8 @@ export interface BugArtifactPayload {
   // The teable-ee revision this observation belongs to. The comparison table
   // groups payloads by this field, never by artifact directory names.
   commitSha: string;
+  // Which engine answered. v2 is the guarded column; v1 is reference only and
+  // never fails a run (framework/verdict.ts).
   engine: string;
   appUrl: string;
   observed: ObservedOutcome;
@@ -52,7 +54,7 @@ const VERDICT_LABEL: Record<BugVerdict, string> = {
 
 const renderSummary = (payload: BugArtifactPayload): string => {
   const lines = [
-    `### ${payload.caseId} @ ${payload.commitSha.slice(0, 10)}`,
+    `### ${payload.caseId} @ ${payload.commitSha.slice(0, 10)} (${payload.engine})`,
     "",
     `- verdict: ${VERDICT_LABEL[payload.verdict]}`,
     `- bug: ${payload.bug.issue} (declared ${payload.bug.status})`,
@@ -79,11 +81,17 @@ export const writeBugArtifacts = async (
   if (!artifactDir) {
     // Local direction-finding runs may not set an artifact dir; the console
     // summary below is still worth having.
-    console.log(`[e2e-lab] ${payload.caseId}: ${payload.verdict}`);
+    console.log(
+      `[e2e-lab] ${payload.caseId} (${payload.engine}): ${payload.verdict}`,
+    );
     return;
   }
   await mkdir(artifactDir, { recursive: true });
-  const stem = sanitizeCaseId(payload.caseId);
+  // The engine is part of the file name, not only of the payload: two engines
+  // write for the same case in the same directory, and a shared stem would
+  // leave one silently overwriting the other — which the fail-closed report
+  // would then read as a missing cell rather than as a collision.
+  const stem = `${sanitizeCaseId(payload.caseId)}-${payload.engine}`;
   await writeFileAtomically(
     join(artifactDir, `${stem}.json`),
     `${JSON.stringify(payload, null, 2)}\n`,
