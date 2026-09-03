@@ -72,3 +72,14 @@ target, and a parent summarising across the children.
 At least two targets must share a name, and the runner refuses a fixture where
 they do not: with every name different, merging by name and keeping by identity
 give the same answer and the case would be green on both sides of the fix.
+
+## The v1 column
+
+v1 reproduces this on **every** column of the acceptance matrix, `develop`
+included: both fixes are v2-only, so a summary on the older engine still merges
+two records that share a name and still loses one of them. The v1 column is a
+reference and never gates a run, so this is reported rather than enforced.
+
+That is the second case in this repository to say the same thing about v1 — see
+`lookup/distinct-choices-in-the-order-they-appear`. Both are summaries over
+linked rows.

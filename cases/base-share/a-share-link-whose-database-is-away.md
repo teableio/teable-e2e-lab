@@ -45,3 +45,18 @@ set up — and the case would pass while proving nothing.
 
 The space is created for this case alone. The binding under test is a property
 of a space, and this must not touch the one every other case reads from.
+
+## The v1 column
+
+Skipped, for a reason about this harness rather than about the product. The case
+makes its own space and base — the binding under test is a property of a space —
+and `framework/case-base.ts` unstamps only the base it manages. A base created
+inside a runner is born on v2, so a v1 run answers
+
+```
+POST /table/{tableId}/view/{viewId}/enable-share was requested of v1
+but v2 answered (reason=new_base)
+```
+
+which is the harness refusing to fabricate a reference column, not an answer
+about v1. Any future runner that creates its own base inherits this.
