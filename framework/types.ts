@@ -134,6 +134,7 @@ export interface BugCaseConfigByRunner {
   "undo-cursor-after-a-failed-undo": UndoCursorAfterAFailedUndoCaseConfig;
   "group-on-an-unreadable-column": GroupOnAnUnreadableColumnCaseConfig;
   "archive-granted-by-the-matrix": ArchiveGrantedByTheMatrixCaseConfig;
+  "comment-granted-by-the-matrix": CommentGrantedByTheMatrixCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -2206,4 +2207,14 @@ export interface ArchiveGrantedByTheMatrixCaseConfig {
   // the runner refuses a fixture missing either side.
   rows: { name: string; team: string }[];
   allowedTeam: string;
+}
+
+// Somebody whose authority-matrix role lets them comment, arriving in the base
+// through that role and therefore as a Viewer.
+export interface CommentGrantedByTheMatrixCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  rows: { name: string; team: string }[];
+  allowedTeam: string;
+  commentText: string;
 }
