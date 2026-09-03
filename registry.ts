@@ -41,6 +41,7 @@ import shareViewUnreadyDataDbCase from "./cases/base-share/a-share-link-whose-da
 import switchMixedBranchStorageCase from "./cases/formula/a-column-that-picks-by-case.case";
 import undoCursorAfterAFailedUndoCase from "./cases/undo/a-second-undo-after-one-that-failed.case";
 import groupOnAnUnreadableColumnCase from "./cases/view/a-grid-grouped-by-a-column-you-cannot-read.case";
+import archiveGrantedByTheMatrixCase from "./cases/record/archive-a-row-your-role-says-you-may.case";
 import sparseBatchUpdateCase from "./cases/record/a-batch-write-leaves-what-it-did-not-mention.case";
 import generatedFormulaColumnCase from "./cases/record/edit-a-cell-behind-a-generated-formula.case";
 import legacyGeneratedAuditColumnCase from "./cases/record/add-a-row-to-a-legacy-table.case";
@@ -192,6 +193,7 @@ const cases = [
   switchMixedBranchStorageCase,
   undoCursorAfterAFailedUndoCase,
   groupOnAnUnreadableColumnCase,
+  archiveGrantedByTheMatrixCase,
   sparseBatchUpdateCase,
   generatedFormulaColumnCase,
   legacyGeneratedAuditColumnCase,
