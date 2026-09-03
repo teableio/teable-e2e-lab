@@ -56,6 +56,17 @@ keeping row order would look correct.
 After the edit at least two children must agree, or counting rows and counting
 distinct values give the same number and the second half proves nothing.
 
+## The v1 column
+
+v1 reproduces this on **every** column of the acceptance matrix, `develop`
+included. The fix is v2-only, so anyone still on the older engine sees both
+faults today: the distinct values sorted rather than in row order, and the count
+counting rows.
+
+The v1 column never fails a run — it is a reference, not a gate — so this is
+reported rather than enforced. It is also the clearest thing the v1 column has
+said so far: not "v1 was affected too", but "v1 still is".
+
 ## Its neighbour
 
 T7066 (`893d0ce20`) reports the same wrong order, reached differently — through
