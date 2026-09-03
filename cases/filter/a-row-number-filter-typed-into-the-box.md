@@ -32,3 +32,10 @@ never did.
 
 The row-number column is added **after** the rows, which is how a table gets one
 in practice: the column numbers what is already there.
+
+## The v1 column
+
+This case is not skipped on v1, and v1 answers it correctly on every commit,
+including the ones where v2 refuses. The string the filter box sends was only
+ever a problem for the newer engine — worth knowing, because it means customers
+still on v1 never saw this.
