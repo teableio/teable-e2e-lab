@@ -39,11 +39,15 @@ page other people can already open.
 
 ## The v1 column
 
-v1 answers this correctly on the fix's parent: the copy comes out unshared
-there, with the source's password verified as set beforehand, so the assertion
-is not vacuous. That disagrees with the issue's own reading, which named the
-legacy duplicate path as carrying the share state too. The observation is
-recorded as measured; why the two differ is not established here.
+v1 reproduces this too, on both pre-fix columns of the acceptance matrix. That
+matches the issue's own reading, which named the legacy duplicate path as
+spreading the source view row wholesale and overriding only the share id.
+Customers on either engine were affected.
+
+Worth knowing for anyone re-running this: a **local** run of the v1 column on
+`9c97d777c` came back green, while CI on the same commit came back red. CI is
+the acceptance surface and its answer is the one recorded here, but the two
+disagreeing at all is a harness question that is not settled by this case.
 
 ## Its sibling on this runner
 
