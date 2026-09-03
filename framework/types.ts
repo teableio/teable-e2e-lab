@@ -124,6 +124,9 @@ export interface BugCaseConfigByRunner {
   "cross-base-conditional-base-id": CrossBaseConditionalBaseIdCaseConfig;
   "or-filtered-rollup-scope": OrFilteredRollupScopeCaseConfig;
   "same-named-fk-base-duplicate": SameNamedFkBaseDuplicateCaseConfig;
+  "jsonb-lookup-aggregate": JsonbLookupAggregateCaseConfig;
+  "nested-group-conditional-rollup": NestedGroupConditionalRollupCaseConfig;
+  "select-rollup-unique-and-count": SelectRollupUniqueAndCountCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -2029,4 +2032,68 @@ export interface SameNamedFkBaseDuplicateCaseConfig {
   tableNames: string[];
   // The single row each table carries, so the copy has rows to move.
   rowTitle: string;
+}
+
+// A conditional total whose source column is itself a borrowed list, which is
+// where largest/smallest/all-of/any-of went straight at the stored list.
+export interface JsonbLookupAggregateCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // The rows at the far end of the chain. Two at least, with amounts that
+  // differ - otherwise largest and smallest cannot be told apart. The runner
+  // checks that against the list the product actually built, not against these.
+  leaves: { name: string; amount: number }[];
+  // The row in the middle table, which borrows every leaf value.
+  middleRowName: string;
+  // The row doing the totalling.
+  hostRowName: string;
+  // Written to both middle and host, so the condition selects the middle row.
+  matchKey: string;
+  // Which aggregations to ask for. The tickbox half of this fix ("and"/"or")
+  // is deliberately absent: an unticked box does not reach a borrowed list, so
+  // all-of and any-of answer the same whether they work or not. See the runner.
+  aggregations: ("max" | "min")[];
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
+}
+
+// A conditional total whose condition has a bracket in it - "match the
+// customer, and within that either of two other things".
+export interface NestedGroupConditionalRollupCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  sourceRows: {
+    name: string;
+    matchKey: string;
+    flagA: string;
+    flagB: string;
+  }[];
+  // The rows doing the counting. The runner refuses a fixture without a host
+  // whose reference matches nothing, without a host counting anything, or
+  // without a row the bracket excludes - see the runner for why each is needed.
+  hosts: { name: string; matchKey: string }[];
+  // The bracket: FlagA is this OR FlagB is that.
+  bracketFlagAValue: string;
+  bracketFlagBValue: string;
+  // The control column beside it, with no bracket: FlagA is this.
+  flatFlagAValue: string;
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
+}
+
+// A summary of a choice column across linked children: the distinct values and
+// how many there are.
+export interface SelectRollupUniqueAndCountCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // The children, in the order the link is written. Their choices must not
+  // already be in alphabetical order, or a summary that sorted them would look
+  // correct - the runner refuses that.
+  children: { name: string; status: string }[];
+  parentRowName: string;
+  // The edit that makes two children agree, so counting rows and counting
+  // distinct values stop giving the same answer.
+  retarget: { childName: string; status: string };
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
 }
