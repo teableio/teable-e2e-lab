@@ -36,6 +36,7 @@ import jsonbLookupAggregateCase from "./cases/lookup/the-largest-of-a-borrowed-l
 import nestedGroupConditionalRollupCase from "./cases/lookup/a-condition-with-a-bracket-in-it.case";
 import selectRollupUniqueAndCountCase from "./cases/lookup/distinct-choices-in-the-order-they-appear.case";
 import linkRollupUniqueByIdentityCase from "./cases/lookup/two-records-with-one-name-are-two-records.case";
+import nestedUserArrayJoinCreateCase from "./cases/record/add-a-row-to-a-table-that-joins-people-columns.case";
 import sparseBatchUpdateCase from "./cases/record/a-batch-write-leaves-what-it-did-not-mention.case";
 import generatedFormulaColumnCase from "./cases/record/edit-a-cell-behind-a-generated-formula.case";
 import legacyGeneratedAuditColumnCase from "./cases/record/add-a-row-to-a-legacy-table.case";
@@ -182,6 +183,7 @@ const cases = [
   nestedGroupConditionalRollupCase,
   selectRollupUniqueAndCountCase,
   linkRollupUniqueByIdentityCase,
+  nestedUserArrayJoinCreateCase,
   sparseBatchUpdateCase,
   generatedFormulaColumnCase,
   legacyGeneratedAuditColumnCase,

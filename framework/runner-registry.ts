@@ -118,6 +118,7 @@ import { runJsonbLookupAggregateCase } from "./runners/jsonb-lookup-aggregate.ru
 import { runNestedGroupConditionalRollupCase } from "./runners/nested-group-conditional-rollup.runner";
 import { runSelectRollupUniqueAndCountCase } from "./runners/select-rollup-unique-and-count.runner";
 import { runLinkRollupUniqueByIdentityCase } from "./runners/link-rollup-unique-by-identity.runner";
+import { runNestedUserArrayJoinCreateCase } from "./runners/nested-user-array-join-create.runner";
 import { runLookupOfRollupCreateCase } from "./runners/lookup-of-rollup-create.runner";
 import type {
   BugCase,
@@ -257,6 +258,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "nested-group-conditional-rollup": runNestedGroupConditionalRollupCase,
   "select-rollup-unique-and-count": runSelectRollupUniqueAndCountCase,
   "link-rollup-unique-by-identity": runLinkRollupUniqueByIdentityCase,
+  "nested-user-array-join-create": runNestedUserArrayJoinCreateCase,
 };
 
 export const executeRegisteredRunner = (

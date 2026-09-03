@@ -128,6 +128,7 @@ export interface BugCaseConfigByRunner {
   "nested-group-conditional-rollup": NestedGroupConditionalRollupCaseConfig;
   "select-rollup-unique-and-count": SelectRollupUniqueAndCountCaseConfig;
   "link-rollup-unique-by-identity": LinkRollupUniqueByIdentityCaseConfig;
+  "nested-user-array-join-create": NestedUserArrayJoinCreateCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -2121,4 +2122,23 @@ export interface LinkRollupUniqueByIdentityCaseConfig {
   parentRowName: string;
   settleTimeoutMs: number;
   pollIntervalMs: number;
+}
+
+// A table whose formula joins several people columns together, wrapped four
+// functions deep - the shape whose statement grew a layer at a time.
+export interface NestedUserArrayJoinCreateCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // How many people columns the formula flattens. The statement grew with this
+  // number; the report was filed at seven.
+  peopleColumns: number;
+  peopleColumnPrefix: string;
+  sessionRowName: string;
+  campusValue: string;
+  noteRowName: string;
+  separator: string;
+  // How long the write may take before the case says the table cannot accept a
+  // row. Generous: this is not a measurement of speed, it is the difference
+  // between an answer and no answer.
+  writeBudgetMs: number;
 }
