@@ -126,6 +126,7 @@ export interface BugCaseConfigByRunner {
   "same-named-fk-base-duplicate": SameNamedFkBaseDuplicateCaseConfig;
   "jsonb-lookup-aggregate": JsonbLookupAggregateCaseConfig;
   "nested-group-conditional-rollup": NestedGroupConditionalRollupCaseConfig;
+  "select-rollup-unique-and-count": SelectRollupUniqueAndCountCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -2076,6 +2077,23 @@ export interface NestedGroupConditionalRollupCaseConfig {
   bracketFlagBValue: string;
   // The control column beside it, with no bracket: FlagA is this.
   flatFlagAValue: string;
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
+}
+
+// A summary of a choice column across linked children: the distinct values and
+// how many there are.
+export interface SelectRollupUniqueAndCountCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // The children, in the order the link is written. Their choices must not
+  // already be in alphabetical order, or a summary that sorted them would look
+  // correct - the runner refuses that.
+  children: { name: string; status: string }[];
+  parentRowName: string;
+  // The edit that makes two children agree, so counting rows and counting
+  // distinct values stop giving the same answer.
+  retarget: { childName: string; status: string };
   settleTimeoutMs: number;
   pollIntervalMs: number;
 }

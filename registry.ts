@@ -34,6 +34,7 @@ import orFilteredRollupScopeCase from "./cases/lookup/an-any-of-these-total-stay
 import sameNamedFkBaseDuplicateCase from "./cases/base-share/copy-a-base-whose-tables-share-a-key-name.case";
 import jsonbLookupAggregateCase from "./cases/lookup/the-largest-of-a-borrowed-list.case";
 import nestedGroupConditionalRollupCase from "./cases/lookup/a-condition-with-a-bracket-in-it.case";
+import selectRollupUniqueAndCountCase from "./cases/lookup/distinct-choices-in-the-order-they-appear.case";
 import sparseBatchUpdateCase from "./cases/record/a-batch-write-leaves-what-it-did-not-mention.case";
 import generatedFormulaColumnCase from "./cases/record/edit-a-cell-behind-a-generated-formula.case";
 import legacyGeneratedAuditColumnCase from "./cases/record/add-a-row-to-a-legacy-table.case";
@@ -178,6 +179,7 @@ const cases = [
   sameNamedFkBaseDuplicateCase,
   jsonbLookupAggregateCase,
   nestedGroupConditionalRollupCase,
+  selectRollupUniqueAndCountCase,
   sparseBatchUpdateCase,
   generatedFormulaColumnCase,
   legacyGeneratedAuditColumnCase,
