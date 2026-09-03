@@ -60,3 +60,12 @@ Nothing writes either shape any more, which is also why a base carrying one
 cannot get out of it from the interface. Before the checkpoint the fixture reads
 the stored notes back and requires that they really are the shape this case is
 about — for this one, that there is no `order` in them at all.
+
+## The v1 column
+
+v1 is red on every column of the acceptance matrix, `develop` included, and for
+the same reason as its sibling's: v1 does not fail the request, it answers 200 and
+hands the entry back exactly as stored — here, still without a position.
+
+So on the older engine this data never caused an outage and was never filled in
+either. Reported, not enforced.
