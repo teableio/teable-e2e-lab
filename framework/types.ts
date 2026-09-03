@@ -127,6 +127,9 @@ export interface BugCaseConfigByRunner {
   "jsonb-lookup-aggregate": JsonbLookupAggregateCaseConfig;
   "nested-group-conditional-rollup": NestedGroupConditionalRollupCaseConfig;
   "select-rollup-unique-and-count": SelectRollupUniqueAndCountCaseConfig;
+  "link-rollup-unique-by-identity": LinkRollupUniqueByIdentityCaseConfig;
+  "nested-user-array-join-create": NestedUserArrayJoinCreateCaseConfig;
+  "share-view-unready-data-db": ShareViewUnreadyDataDbCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -2091,9 +2094,63 @@ export interface SelectRollupUniqueAndCountCaseConfig {
   // correct - the runner refuses that.
   children: { name: string; status: string }[];
   parentRowName: string;
-  // The edit that makes two children agree, so counting rows and counting
-  // distinct values stop giving the same answer.
+  // Which comes first. "beforeTheSummaries" adds the summaries to a table that
+  // already holds the row; "afterTheSummaries" writes the row into a table whose
+  // summaries already exist. Filling a new summary in and working one out during
+  // a write are different paths, and they have been wrong separately.
+  whenTheRowIsWritten: "beforeTheSummaries" | "afterTheSummaries";
+  // Whether to go on to the second half - editing a child so two agree, which is
+  // what tells counting rows from counting distinct values. A case about the
+  // first computation alone leaves it off, because the edit is a recompute and
+  // repairs what it is meant to observe.
+  alsoCheckAfterAnEdit: boolean;
+  // The edit that makes two children agree. Only used when the above is true.
   retarget: { childName: string; status: string };
   settleTimeoutMs: number;
   pollIntervalMs: number;
+}
+
+// A summary of the distinct linked records across a row's children, where two of
+// those records happen to be called the same thing.
+export interface LinkRollupUniqueByIdentityCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // The names of the linked records, one record each. At least two must repeat:
+  // with every name different, merging by name and keeping by identity give the
+  // same answer and the case proves nothing. The runner refuses that.
+  targetTitles: string[];
+  childNamePrefix: string;
+  parentRowName: string;
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
+}
+
+// A table whose formula joins several people columns together, wrapped four
+// functions deep - the shape whose statement grew a layer at a time.
+export interface NestedUserArrayJoinCreateCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // How many people columns the formula flattens. The statement grew with this
+  // number; the report was filed at seven.
+  peopleColumns: number;
+  peopleColumnPrefix: string;
+  sessionRowName: string;
+  campusValue: string;
+  noteRowName: string;
+  separator: string;
+  // How long the write may take before the case says the table cannot accept a
+  // row. Generous: this is not a measurement of speed, it is the difference
+  // between an answer and no answer.
+  writeBudgetMs: number;
+}
+
+// A shared view in a space bound to a database whose connection is switched off.
+export interface ShareViewUnreadyDataDbCaseConfig {
+  namePrefix: string;
+  rowTitle: string;
+  // Written into the connection row. It is never decrypted on this path - the
+  // connection is refused for being switched off before anything reads it - so
+  // this only has to be present, and saying so in the value keeps the next
+  // reader from looking for a real secret.
+  encryptedUrlPlaceholder: string;
 }

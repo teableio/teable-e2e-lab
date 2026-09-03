@@ -35,6 +35,9 @@ import sameNamedFkBaseDuplicateCase from "./cases/base-share/copy-a-base-whose-t
 import jsonbLookupAggregateCase from "./cases/lookup/the-largest-of-a-borrowed-list.case";
 import nestedGroupConditionalRollupCase from "./cases/lookup/a-condition-with-a-bracket-in-it.case";
 import selectRollupUniqueAndCountCase from "./cases/lookup/distinct-choices-in-the-order-they-appear.case";
+import linkRollupUniqueByIdentityCase from "./cases/lookup/two-records-with-one-name-are-two-records.case";
+import nestedUserArrayJoinCreateCase from "./cases/record/add-a-row-to-a-table-that-joins-people-columns.case";
+import shareViewUnreadyDataDbCase from "./cases/base-share/a-share-link-whose-database-is-away.case";
 import sparseBatchUpdateCase from "./cases/record/a-batch-write-leaves-what-it-did-not-mention.case";
 import generatedFormulaColumnCase from "./cases/record/edit-a-cell-behind-a-generated-formula.case";
 import legacyGeneratedAuditColumnCase from "./cases/record/add-a-row-to-a-legacy-table.case";
@@ -180,6 +183,9 @@ const cases = [
   jsonbLookupAggregateCase,
   nestedGroupConditionalRollupCase,
   selectRollupUniqueAndCountCase,
+  linkRollupUniqueByIdentityCase,
+  nestedUserArrayJoinCreateCase,
+  shareViewUnreadyDataDbCase,
   sparseBatchUpdateCase,
   generatedFormulaColumnCase,
   legacyGeneratedAuditColumnCase,

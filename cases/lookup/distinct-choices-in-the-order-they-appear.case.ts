@@ -24,6 +24,8 @@ export default defineBugCase({
       { name: "child-first", status: "Todo" },
       { name: "child-second", status: "Done" },
     ],
+    whenTheRowIsWritten: "beforeTheSummaries",
+    alsoCheckAfterAnEdit: true,
     retarget: { childName: "child-second", status: "Todo" },
     settleTimeoutMs: 60_000,
     pollIntervalMs: 500,
