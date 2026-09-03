@@ -132,6 +132,7 @@ export interface BugCaseConfigByRunner {
   "share-view-unready-data-db": ShareViewUnreadyDataDbCaseConfig;
   "switch-mixed-branch-storage": SwitchMixedBranchStorageCaseConfig;
   "undo-cursor-after-a-failed-undo": UndoCursorAfterAFailedUndoCaseConfig;
+  "group-on-an-unreadable-column": GroupOnAnUnreadableColumnCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -2184,4 +2185,13 @@ export interface UndoCursorAfterAFailedUndoCaseConfig {
   // differ, or there is nothing for undo to put back.
   originalCode: string;
   changedCode: string;
+}
+
+// A grid grouped by a column the person opening it may not read.
+export interface GroupOnAnUnreadableColumnCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Two rows at least: a request that returns nothing must not look like one
+  // that returns everything.
+  rows: { name: string; stage: string; cost: number }[];
 }
