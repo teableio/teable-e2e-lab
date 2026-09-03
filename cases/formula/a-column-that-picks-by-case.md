@@ -49,3 +49,14 @@ with, and the merge may reach the otherwise branch on its own.
 The linked column must hold a **list**, checked before the checkpoint: holding a
 single value it would be the same kind of thing as the numbers, and there would
 be nothing to reconcile.
+
+## The v1 column
+
+v1 reproduces this on **every** column of the acceptance matrix, `develop`
+included. The fix is v2-only, so on the older engine a column of this shape still
+cannot be made. Reported rather than enforced — the v1 column is a reference and
+never gates a run.
+
+That is the third case here to say the same thing about v1; the others are
+`lookup/distinct-choices-in-the-order-they-appear` and
+`lookup/two-records-with-one-name-are-two-records`.

@@ -49,22 +49,30 @@ Exactly one column is withheld, and no rows are. This case is about a withheld
 **column**; a role that also hid rows would make "every row the person is allowed
 to see" a moving target.
 
-## Which commit this settles
+## Which commit this settles, and which it does not
 
-Two commits carry this issue id, and the case is red on both sides of the first
-one. Measured:
+Not the one the issue id points at. Measured, one commit at a time:
 
-| commit                                                 | grouped request                                      |
-| ------------------------------------------------------ | ---------------------------------------------------- |
-| `12407c409` (before `f70f0d508`)                       | 400, "Group references a field that is not readable" |
-| `7bc91231d` (before `a4c8c3396`, so after `f70f0d508`) | the same 400                                         |
-| `develop`                                              | 200, every row                                       |
+| commit                                   | the grouped request                                  |
+| ---------------------------------------- | ---------------------------------------------------- |
+| `12407c409` — before `f70f0d508` (T6944) | 400, "Group references a field that is not readable" |
+| `7bc91231d` — before `a4c8c3396` (T6944) | the same 400                                         |
+| `f44a82cf8` — after both T6944 commits   | the same 400                                         |
+| `8fd1e28b9` — before `2ae77481c` (T6997) | the same 400                                         |
+| `2ae77481c`                              | 200, every row                                       |
 
-So `bug.sourceCommits` names `a4c8c3396` only. The earlier `f70f0d508` is the
-same issue reached down a different path — a grouping the server resolves from
-the view itself rather than one that arrives on the request — and this case does
-not tell it apart. It is recorded in `docs/triage-ledger.md` rather than claimed
-here.
+So `bug.sourceCommits` names `2ae77481c`, which carries **T6997**'s id — "evaluate
+v2 reads over masked values" — while `bug.issue` stays T6944, because T6944 is
+what a person reported and this is that person's symptom.
+
+Both commits carrying the T6944 id leave this path exactly as it was. They are
+recorded in `docs/triage-ledger.md` as halves this case does not settle, rather
+than claimed here.
+
+The first attribution in this case was wrong and the acceptance matrix caught it:
+the case was written claiming `a4c8c3396`, and the matrix answered red on a
+column **after** that commit. Anything a case claims about which commit fixed
+what has to come from a column, not from an issue id.
 
 ## The fixture behind it
 
