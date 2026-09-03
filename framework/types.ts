@@ -127,6 +127,7 @@ export interface BugCaseConfigByRunner {
   "jsonb-lookup-aggregate": JsonbLookupAggregateCaseConfig;
   "nested-group-conditional-rollup": NestedGroupConditionalRollupCaseConfig;
   "select-rollup-unique-and-count": SelectRollupUniqueAndCountCaseConfig;
+  "link-rollup-unique-by-identity": LinkRollupUniqueByIdentityCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -2094,6 +2095,21 @@ export interface SelectRollupUniqueAndCountCaseConfig {
   // The edit that makes two children agree, so counting rows and counting
   // distinct values stop giving the same answer.
   retarget: { childName: string; status: string };
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
+}
+
+// A summary of the distinct linked records across a row's children, where two of
+// those records happen to be called the same thing.
+export interface LinkRollupUniqueByIdentityCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // The names of the linked records, one record each. At least two must repeat:
+  // with every name different, merging by name and keeping by identity give the
+  // same answer and the case proves nothing. The runner refuses that.
+  targetTitles: string[];
+  childNamePrefix: string;
+  parentRowName: string;
   settleTimeoutMs: number;
   pollIntervalMs: number;
 }
