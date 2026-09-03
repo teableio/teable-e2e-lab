@@ -123,6 +123,7 @@ export interface BugCaseConfigByRunner {
   "autonumber-string-filter": AutonumberStringFilterCaseConfig;
   "cross-base-conditional-base-id": CrossBaseConditionalBaseIdCaseConfig;
   "or-filtered-rollup-scope": OrFilteredRollupScopeCaseConfig;
+  "same-named-fk-base-duplicate": SameNamedFkBaseDuplicateCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -2017,4 +2018,15 @@ export interface OrFilteredRollupScopeCaseConfig {
   unlinkedHost: string;
   settleTimeoutMs: number;
   pollIntervalMs: number;
+}
+
+// A base whose tables each carry a foreign key under one name, which is what an
+// old base has been holding since before the naming changed.
+export interface SameNamedFkBaseDuplicateCaseConfig {
+  baseNamePrefix: string;
+  // Two at least: one table cannot collide with itself, and the collision is
+  // the bug. The runner refuses fewer.
+  tableNames: string[];
+  // The single row each table carries, so the copy has rows to move.
+  rowTitle: string;
 }
