@@ -57,10 +57,10 @@ The incident base's dependency shape, field-for-field (counts guarded by
 Row mappings are permutation-deterministic and injective, so every
 purification row has exactly one host sub-order and every cell value is a
 pure function of row numbers. Seeding goes through the public API in
-batches, **paced** — each batch waits for a probe row to settle before the
-next is sent — so the fixture cannot lose its own propagation to the bug
-it exists to catch; a fixture that fails to settle is an error, not the
-bug.
+batches, **paced** — every row and its host must settle before the next
+batch is sent. A single probe cannot prove the previous batch's remaining
+outbox work is finished. This keeps the fixture from triggering the race it
+exists to catch; a fixture that fails to settle is an error, not the bug.
 
 ## What the checkpoint asserts
 

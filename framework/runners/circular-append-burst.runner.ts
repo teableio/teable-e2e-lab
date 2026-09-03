@@ -121,10 +121,10 @@ import {
 // order of magnitude above that.
 //
 // The seed phase deliberately does NOT provoke the race it exists to set up:
-// batches during seeding are paced by waiting for a probe row of each batch
-// to settle before sending the next, so the fixture comes up deterministic
-// and the burst inside the checkpoint is the only back-to-back write. A
-// fixture corrupted by its own seeding would be an error, not the bug.
+// each purification batch waits for every row and every host to settle before
+// the next batch is sent, so the fixture cannot have a previous batch's outbox
+// work in flight. A fixture corrupted during seeding would be an error, not
+// the bug.
 
 type NamedField = {
   id: string;
@@ -325,11 +325,11 @@ export const runCircularAppendBurstCase = async (
 
   const createdTableIds: string[] = [];
 
-  // One paced seed batch: create the records, then wait for a probe row of
-  // the batch to settle before the caller sends the next batch. Returns the
-  // created record ids and the response headers of the LAST request, so the
-  // caller can assert v2 routing on the exact operation the checkpoint will
-  // later perform back-to-back.
+  // One paced seed batch: create the records, then run the caller's settlement
+  // check before sending the next batch. Returns the created record ids and
+  // the response headers of the LAST request, so the caller can assert v2
+  // routing on the exact operation the checkpoint will later perform
+  // back-to-back.
   const seedInBatches = async (
     tableId: string,
     records: Array<Record<string, unknown>>,
@@ -886,9 +886,9 @@ export const runCircularAppendBurstCase = async (
       };
     };
 
-    // --- Seed Purification, paced on both ends of the cascade: the row's own
-    // computed state AND its host sub-order's, so no batch is in flight when
-    // the next one is sent ---
+    // --- Seed Purification, paced on both ends of the cascade for EVERY row
+    // in the batch. A single settled probe does not prove the batch's remaining
+    // outbox work is done, so it cannot safely gate the next write. ---
     await seedInBatches(
       purification.id,
       range(config.purificationRowCount).map((p) =>
@@ -897,33 +897,33 @@ export const runCircularAppendBurstCase = async (
       config.purificationSeedBatchSize,
       FieldKeyType.Id,
       async (batchRecordIds, firstIndexInBatch) => {
-        const p = firstIndexInBatch + batchRecordIds.length;
-        await waitForRow(
-          purification.id,
-          batchRecordIds[batchRecordIds.length - 1]!,
-          `Purification ${p}`,
-          purificationFields,
-          expectedPurificationComputed(p, config),
-        );
-        const host = subOrderRowForPurification(p, config);
-        await waitForRow(
-          subOrders.id,
-          subOrderRecordIds[host - 1]!,
-          `SubOrder ${host}`,
-          subOrderFields,
-          expectedSubOrderComputed(host, config, p),
-        );
+        for (let index = 0; index < batchRecordIds.length; index += 1) {
+          const p = firstIndexInBatch + index + 1;
+          await waitForRow(
+            purification.id,
+            batchRecordIds[index]!,
+            `Purification ${p}`,
+            purificationFields,
+            expectedPurificationComputed(p, config),
+          );
+          const host = subOrderRowForPurification(p, config);
+          await waitForRow(
+            subOrders.id,
+            subOrderRecordIds[host - 1]!,
+            `SubOrder ${host}`,
+            subOrderFields,
+            expectedSubOrderComputed(host, config, p),
+          );
+        }
       },
     );
 
     // Fixture verification, outside the checkpoint: the ENTIRE seed settled.
-    // The per-batch pacing above probes one row per batch, which paces but
-    // does not prove the whole batch's propagation landed — and a seed
-    // corrupted by the very race this case observes must be judged an error,
-    // not the bug. Full paged scans of both cascade tables, retried until
-    // every row matches its expected state, close that gap; they also prove
-    // every future host starts purification-free, so "the lookup arrived"
-    // in the checkpoint cannot be a leftover.
+    // Per-batch settlement above prevents one purification batch from racing
+    // the previous batch's unfinished outbox work. Full paged scans of both
+    // cascade tables still prove the complete fixture, including every
+    // purification-free future host, so "the lookup arrived" in the checkpoint
+    // cannot be a leftover.
     const seedMap = purificationRowBySubOrderRow(config, "seed");
     const scanSeedOnce = async (): Promise<CellMismatch | undefined> => {
       const scanTable = async (
