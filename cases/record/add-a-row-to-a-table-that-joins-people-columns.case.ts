@@ -25,7 +25,10 @@ export default defineBugCase({
     sessionRowName: "the-session",
     campusValue: "the-campus",
     noteRowName: "the-note-being-added",
-    separator: "、",
+    // A plain separator. The customer's was an ideographic comma; what grows
+    // the statement is the nesting, not the character, and this repository is
+    // English-only.
+    separator: ", ",
     writeBudgetMs: 60_000,
   },
 });

@@ -129,6 +129,7 @@ export interface BugCaseConfigByRunner {
   "select-rollup-unique-and-count": SelectRollupUniqueAndCountCaseConfig;
   "link-rollup-unique-by-identity": LinkRollupUniqueByIdentityCaseConfig;
   "nested-user-array-join-create": NestedUserArrayJoinCreateCaseConfig;
+  "share-view-unready-data-db": ShareViewUnreadyDataDbCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -2141,4 +2142,15 @@ export interface NestedUserArrayJoinCreateCaseConfig {
   // row. Generous: this is not a measurement of speed, it is the difference
   // between an answer and no answer.
   writeBudgetMs: number;
+}
+
+// A shared view in a space bound to a database whose connection is switched off.
+export interface ShareViewUnreadyDataDbCaseConfig {
+  namePrefix: string;
+  rowTitle: string;
+  // Written into the connection row. It is never decrypted on this path - the
+  // connection is refused for being switched off before anything reads it - so
+  // this only has to be present, and saying so in the value keeps the next
+  // reader from looking for a real secret.
+  encryptedUrlPlaceholder: string;
 }

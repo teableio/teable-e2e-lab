@@ -119,6 +119,7 @@ import { runNestedGroupConditionalRollupCase } from "./runners/nested-group-cond
 import { runSelectRollupUniqueAndCountCase } from "./runners/select-rollup-unique-and-count.runner";
 import { runLinkRollupUniqueByIdentityCase } from "./runners/link-rollup-unique-by-identity.runner";
 import { runNestedUserArrayJoinCreateCase } from "./runners/nested-user-array-join-create.runner";
+import { runShareViewUnreadyDataDbCase } from "./runners/share-view-unready-data-db.runner";
 import { runLookupOfRollupCreateCase } from "./runners/lookup-of-rollup-create.runner";
 import type {
   BugCase,
@@ -259,6 +260,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "select-rollup-unique-and-count": runSelectRollupUniqueAndCountCase,
   "link-rollup-unique-by-identity": runLinkRollupUniqueByIdentityCase,
   "nested-user-array-join-create": runNestedUserArrayJoinCreateCase,
+  "share-view-unready-data-db": runShareViewUnreadyDataDbCase,
 };
 
 export const executeRegisteredRunner = (
