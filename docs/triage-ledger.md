@@ -137,6 +137,9 @@ The shape is gone; the runner is not kept.
 | `0548611b2` | T6576 | Not attempted. The commit's own reproduction is skipped under forced v2 - the spec gates it on the v1 path - and the lab forces v2, so the case could not go red. Same reason as the T5496 and T3303 rows. |
 | `7cb4431e9` | T6502 | Not attempted, same reason: the commit covers the shape with a forced-v1 e2e, and the lab forces v2. |
 | `057443dd6` | T6719 | Not attempted. The crash needs a preview flag that turns on a different record-query wrapper; the lab does not set it, so grid statistics take the ordinary path and nothing goes red. |
+| `f160eea3b` | T7065 | Not taken while the fix is unshipped. A share-view scope bypass on the selection `*-by-id` endpoints, CVSS 8.1: the issue was still at "deployed to staging" when this batch was written, and a case here is a working public reproduction. It is a good case once it ships - the repro is a single request with a share header - so this row is a reminder, not a rejection. See CONTRIBUTING.md. |
+| `ae70b638b` | T7104 | The failure is a connection timeout inside a `table.update` schema operation that then dead-letters after three attempts. What the fix changes is how that timeout is settled - rollback rather than an unrepairable failure - and the lab has no way to make a connection time out on request. Same async-runner trap as T6768 and T6853. |
+| `8d5c0fe38` | T7067 | Selection aggregation was being answered by v1, where a date column met a cast v1 cannot do. The fix routes it to v2. That makes the pre-fix state "v1 answered", which `assertServedByV2` treats as the case being unable to run (💥) rather than as the bug - so the column that should be red is the one column the harness refuses to read. The observation is real and reachable; expressing it needs a runner allowed to assert that a request was **not** on v2, which does not exist here. |
 
 ### The date comparison inside AND or OR
 
