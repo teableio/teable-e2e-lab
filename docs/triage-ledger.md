@@ -148,6 +148,7 @@ The shape is gone; the runner is not kept.
 | `a4e2a0a55` | T7105 | Cost, not behaviour. Field masks unioned every readable field into the SQL projection, so a request for 27 columns still selected all 235. What the request answers with does not change - the same fields come back either way - so there is nothing for a case here to tell apart. It is the product-side follow-up to a 503 incident about wide-table polling, and belongs in the performance lab if anywhere. |
 | `719079af1` | T6711 | The observation is a schema operation's own terminal classification - whether a leftover `table.import` is marked dead or repaired - which lives in the background runner and never reaches an HTTP response. The lab has no seam on that: the T7070 attempt established by measurement that a small fixture here computes inline and the deferred path is not reached. Same family as T6768 and T6853. |
 | `64b6446061` | T6904 | Same seam. A computed task planned against a table whose `provision_state` is still `pending` was dead-lettered as an obsolete plan instead of retried; the fix changes how the worker classifies that. Both the trigger (a table caught mid-provision by a background stage) and the observation (the task's failure classification) are inside the worker. Nothing a request answers differs. |
+| `e770dd1ac` | T7057 | Index coverage, not results. Substring search documents and the trigram indexes behind them are narrowed to text-shaped fields, and an all-field search over an uncovered field falls back to the unindexed path rather than answering differently. What a search returns is the same on both sides; what changes is whether an index can serve it. Performance lab, if anywhere - same reading as T6821. |
 
 ### The date comparison inside AND or OR
 
@@ -536,3 +537,27 @@ T7070 repaired the propagate path for exactly this state. The insert path was
 not part of it and answers the same way it did before. Whether that is worth
 its own report is a judgment for a person; it is recorded here so the next pass
 does not spend the same afternoon rediscovering it.
+
+### The permission-matrix family is reachable, and nobody has built the fixture yet
+
+Four uncovered fixes wait behind one piece of setup that does not exist here
+yet: `2ae77481c5`/T6997 (v2 reads over masked values), `68b7d74f05`/T7025
+(archiving gated by the matrix for restricted collaborators), `6235527b4c`/T7027
+(references to permission-filtered nodes), and `a4c8c3396b`+`f70f0d5083`/T6944
+(a grid view whose group field the reader cannot see returns no records at all,
+with "Group references a field that is not readable").
+
+None of them is blocked by the harness. The matrix is driven entirely through
+public endpoints — `PATCH /api/base/:baseId/authority-matrix/status` to turn it
+on, `GET /api/base/:baseId/authority-matrix`, `PUT
+/api/base/:baseId/authority-matrix/:id` to shape a role — and a second signed-in
+user comes from `test/utils/axios-instance/new-user`, which runners can import
+the same way they import `init-app`. `enterprise/backend-ee/test/authority/` is
+the worked example.
+
+What is missing is a fixture that puts those together: matrix on, a role that
+makes one field unreadable, a second user holding that role. That is a bigger
+piece of setup than any case here has needed, and it is worth building once
+rather than four times. T6944 is the best first customer — its symptom is the
+whole view returning nothing, which is unmistakable — and T7025 should wait
+either way, since it was still on staging when this was written.
