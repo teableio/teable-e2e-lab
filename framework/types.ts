@@ -131,6 +131,7 @@ export interface BugCaseConfigByRunner {
   "nested-user-array-join-create": NestedUserArrayJoinCreateCaseConfig;
   "share-view-unready-data-db": ShareViewUnreadyDataDbCaseConfig;
   "switch-mixed-branch-storage": SwitchMixedBranchStorageCaseConfig;
+  "undo-cursor-after-a-failed-undo": UndoCursorAfterAFailedUndoCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -2169,4 +2170,18 @@ export interface SwitchMixedBranchStorageCaseConfig {
   otherwiseChoice: string;
   // Rows in the linked table. At least two, so the linked column holds a list.
   linkedRows: { name: string; price: number }[];
+}
+
+// An undo that cannot be carried out, followed by a second press.
+export interface UndoCursorAfterAFailedUndoCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  rowName: string;
+  // The row that takes the let-go value, so putting it back would collide. It is
+  // written on a different window, or it lands on the stack this case walks.
+  otherRowName: string;
+  // The value the row starts with and the value it is changed to. They have to
+  // differ, or there is nothing for undo to put back.
+  originalCode: string;
+  changedCode: string;
 }

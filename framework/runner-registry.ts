@@ -121,6 +121,7 @@ import { runLinkRollupUniqueByIdentityCase } from "./runners/link-rollup-unique-
 import { runNestedUserArrayJoinCreateCase } from "./runners/nested-user-array-join-create.runner";
 import { runShareViewUnreadyDataDbCase } from "./runners/share-view-unready-data-db.runner";
 import { runSwitchMixedBranchStorageCase } from "./runners/switch-mixed-branch-storage.runner";
+import { runUndoCursorAfterAFailedUndoCase } from "./runners/undo-cursor-after-a-failed-undo.runner";
 import { runLookupOfRollupCreateCase } from "./runners/lookup-of-rollup-create.runner";
 import type {
   BugCase,
@@ -263,6 +264,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "nested-user-array-join-create": runNestedUserArrayJoinCreateCase,
   "share-view-unready-data-db": runShareViewUnreadyDataDbCase,
   "switch-mixed-branch-storage": runSwitchMixedBranchStorageCase,
+  "undo-cursor-after-a-failed-undo": runUndoCursorAfterAFailedUndoCase,
 };
 
 export const executeRegisteredRunner = (

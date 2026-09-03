@@ -39,6 +39,7 @@ import linkRollupUniqueByIdentityCase from "./cases/lookup/two-records-with-one-
 import nestedUserArrayJoinCreateCase from "./cases/record/add-a-row-to-a-table-that-joins-people-columns.case";
 import shareViewUnreadyDataDbCase from "./cases/base-share/a-share-link-whose-database-is-away.case";
 import switchMixedBranchStorageCase from "./cases/formula/a-column-that-picks-by-case.case";
+import undoCursorAfterAFailedUndoCase from "./cases/undo/a-second-undo-after-one-that-failed.case";
 import sparseBatchUpdateCase from "./cases/record/a-batch-write-leaves-what-it-did-not-mention.case";
 import generatedFormulaColumnCase from "./cases/record/edit-a-cell-behind-a-generated-formula.case";
 import legacyGeneratedAuditColumnCase from "./cases/record/add-a-row-to-a-legacy-table.case";
@@ -188,6 +189,7 @@ const cases = [
   nestedUserArrayJoinCreateCase,
   shareViewUnreadyDataDbCase,
   switchMixedBranchStorageCase,
+  undoCursorAfterAFailedUndoCase,
   sparseBatchUpdateCase,
   generatedFormulaColumnCase,
   legacyGeneratedAuditColumnCase,
