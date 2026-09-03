@@ -142,6 +142,7 @@ The shape is gone; the runner is not kept.
 | `8d5c0fe38` | T7067 | Selection aggregation was being answered by v1, where a date column met a cast v1 cannot do. The fix routes it to v2. That makes the pre-fix state "v1 answered", which `assertServedByV2` treats as the case being unable to run (💥) rather than as the bug - so the column that should be red is the one column the harness refuses to read. The observation is real and reachable; expressing it needs a runner allowed to assert that a request was **not** on v2, which does not exist here. |
 | `9f5509f48` | T7019 | An incident, not a behaviour. Concurrent replicas UPSERTing the same five-minute query-observation window took transaction locks that held connections until the pool was exhausted; the fix hardens that write. What a case would have to reproduce is contention between replicas, and this harness runs one application against one database - a single writer never conflicts with itself. Belongs in the performance lab if anywhere. |
 | `e3bb7671c` | T6988 | Not attempted, on the strength of the fix's own reproduction. The failure needs a client whose local `cmp_` doc was never created while the server snapshot already sits at generation 2 or higher, and the commit's e2e reaches that by stubbing the snapshot loader through a service hook **and** assigning `doc.version = 0` by hand. Neither is available here: the observation seam is a real subscription over the wire, which fetches the snapshot rather than replaying ops from zero. Reproducing it honestly means winning a race - subscribing to an empty doc and having the generation pass 1 before the create op arrives - which is the shape that produces cases green on every column. Worth revisiting if the realtime helper ever exposes the underlying doc. |
+| `4b57c03da` | T7070 | Written and run. The fixture builds cleanly - a manyOne link with a column borrowed through it, then `fixture-db` drops the hidden `__fk_` column the link's own settings still name - and adding a row to the other table is refused. But the refusal is `Failed to insert record: column t.__fk_… does not exist`, raised during the insert, while the fix repairs `Failed to propagate dirty records`, raised by the deferred propagate. Two call sites. The commit's own e2e reaches the second by draining an outbox inside the v2 test container; this harness runs the Nest application, where the same small fixture computes inline and never gets there. Tried one-way and two-way links; both fail in the insert. Same trap as T6728. **The insert-path failure is still present on `develop`** - see the note below the table. |
 
 ### The date comparison inside AND or OR
 
@@ -517,3 +518,16 @@ it in prose is how the two drift apart. To see it:
 ```bash
 pnpm triage:covered
 ```
+
+### T7070's neighbour, still open
+
+Rejecting the T7070 case turned up something that is not T7070. On `develop`,
+a base holding a link whose hidden `__fk_` column is missing **cannot accept
+rows into the table on the other side at all**: the insert itself is refused
+with `column t.__fk_… does not exist`, before any propagation runs. Measured on
+`8f3f6df16` and on `692c2b4b5`, with both one-way and two-way links.
+
+T7070 repaired the propagate path for exactly this state. The insert path was
+not part of it and answers the same way it did before. Whether that is worth
+its own report is a judgment for a person; it is recorded here so the next pass
+does not spend the same afternoon rediscovering it.
