@@ -25,6 +25,10 @@ import trackedModifiedSortCase from "./cases/view/sort-by-a-narrowed-last-change
 import lookupOfLinkContainsCase from "./cases/filter/search-a-borrowed-link-column.case";
 import deleteWithoutUndoCaptureCase from "./cases/record/delete-a-row-whose-undo-bookkeeping-is-missing.case";
 import singleFieldPendingStateCase from "./cases/field/a-settled-column-read-on-its-own.case";
+import rollupCreateCompatibilityCase from "./cases/field/a-total-its-source-cannot-give.case";
+import conditionalRollupCreateCompatibilityCase from "./cases/field/a-conditional-total-its-source-cannot-give.case";
+import autonumberStringFilterCase from "./cases/filter/a-row-number-filter-typed-into-the-box.case";
+import crossBaseConditionalBaseIdCase from "./cases/field/a-cross-base-conditional-column-keeps-its-base.case";
 import sparseBatchUpdateCase from "./cases/record/a-batch-write-leaves-what-it-did-not-mention.case";
 import generatedFormulaColumnCase from "./cases/record/edit-a-cell-behind-a-generated-formula.case";
 import legacyGeneratedAuditColumnCase from "./cases/record/add-a-row-to-a-legacy-table.case";
@@ -160,6 +164,10 @@ const cases = [
   lookupOfLinkContainsCase,
   deleteWithoutUndoCaptureCase,
   singleFieldPendingStateCase,
+  rollupCreateCompatibilityCase,
+  conditionalRollupCreateCompatibilityCase,
+  autonumberStringFilterCase,
+  crossBaseConditionalBaseIdCase,
   sparseBatchUpdateCase,
   generatedFormulaColumnCase,
   legacyGeneratedAuditColumnCase,

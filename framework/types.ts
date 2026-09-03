@@ -119,6 +119,9 @@ export interface BugCaseConfigByRunner {
   "lookup-of-link-contains": LookupOfLinkContainsCaseConfig;
   "delete-without-undo-capture": DeleteWithoutUndoCaptureCaseConfig;
   "single-field-pending-state": SingleFieldPendingStateCaseConfig;
+  "rollup-create-compatibility": RollupCreateCompatibilityCaseConfig;
+  "autonumber-string-filter": AutonumberStringFilterCaseConfig;
+  "cross-base-conditional-base-id": CrossBaseConditionalBaseIdCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1931,4 +1934,52 @@ export interface LookupOfRollupCreateCaseConfig {
   usageRowTitle: string;
   firstAmount: number;
   secondAmount: number;
+}
+
+// A totalling column asked for a total its source cannot give, sent straight to
+// the API. Two shapes on one runner because the question is the same: does the
+// API check what the field editor checks.
+export interface RollupCreateCompatibilityCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Which kind of total. "rollup" follows a link to the other table;
+  // "conditionalRollup" matches rows in it. Different code paths.
+  column: "rollup" | "conditionalRollup";
+  // Written into the matching column on both tables, so the conditional
+  // variant's condition selects the seeded row.
+  matchKey: string;
+  // The combinations the field editor refuses to offer. Each one is sent and
+  // each one must be refused - a single accepted combination is the bug.
+  attempts: {
+    // Names the combination in the report.
+    name: string;
+    // The column type in the other table the total would read.
+    source: "button" | "number" | "checkbox";
+    // The function asked of it.
+    expression: string;
+  }[];
+}
+
+// A filter on the row-number column carrying the number as text, which is what
+// a filter box sends.
+export interface AutonumberStringFilterCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // One row per title, numbered in order by the column added after them. Needs
+  // enough rows that the threshold below splits them.
+  rowTitles: string[];
+  // "greater than" this. Must select some rows and leave others out, or a
+  // comparison that never ran would look the same as one that did.
+  threshold: number;
+}
+
+// A conditional column reading a table in a second base, read back the way the
+// settings screen reads it.
+export interface CrossBaseConditionalBaseIdCaseConfig {
+  namePrefix: string;
+  // Rows in the other base. At least one has to carry matchedCategory, or the
+  // columns compute nothing and the fixture proves nothing.
+  sourceRows: { category: string; amount: number }[];
+  // The category the single host row carries, and so the rows the columns read.
+  matchedCategory: string;
 }

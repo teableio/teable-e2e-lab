@@ -109,6 +109,9 @@ import { runTrackedModifiedSortCase } from "./runners/tracked-modified-sort.runn
 import { runLookupOfLinkContainsCase } from "./runners/lookup-of-link-contains.runner";
 import { runDeleteWithoutUndoCaptureCase } from "./runners/delete-without-undo-capture.runner";
 import { runSingleFieldPendingStateCase } from "./runners/single-field-pending-state.runner";
+import { runRollupCreateCompatibilityCase } from "./runners/rollup-create-compatibility.runner";
+import { runAutonumberStringFilterCase } from "./runners/autonumber-string-filter.runner";
+import { runCrossBaseConditionalBaseIdCase } from "./runners/cross-base-conditional-base-id.runner";
 import { runLookupOfRollupCreateCase } from "./runners/lookup-of-rollup-create.runner";
 import type {
   BugCase,
@@ -239,6 +242,9 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "lookup-of-link-contains": runLookupOfLinkContainsCase,
   "delete-without-undo-capture": runDeleteWithoutUndoCaptureCase,
   "single-field-pending-state": runSingleFieldPendingStateCase,
+  "rollup-create-compatibility": runRollupCreateCompatibilityCase,
+  "autonumber-string-filter": runAutonumberStringFilterCase,
+  "cross-base-conditional-base-id": runCrossBaseConditionalBaseIdCase,
 };
 
 export const executeRegisteredRunner = (
