@@ -135,6 +135,7 @@ export interface BugCaseConfigByRunner {
   "group-on-an-unreadable-column": GroupOnAnUnreadableColumnCaseConfig;
   "archive-granted-by-the-matrix": ArchiveGrantedByTheMatrixCaseConfig;
   "comment-granted-by-the-matrix": CommentGrantedByTheMatrixCaseConfig;
+  "legacy-column-visibility-metadata": LegacyColumnVisibilityMetadataCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -2217,4 +2218,16 @@ export interface CommentGrantedByTheMatrixCaseConfig {
   rows: { name: string; team: string }[];
   allowedTeam: string;
   commentText: string;
+}
+
+// A view whose stored notes about a column carry both the older key and the
+// current one - what a view made long enough ago has been carrying all along.
+export interface LegacyColumnVisibilityMetadataCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  rowTitle: string;
+  // Written into the stored notes beside the two visibility keys, so the case
+  // can tell a settled entry from an emptied one.
+  order: number;
+  width: number;
 }
