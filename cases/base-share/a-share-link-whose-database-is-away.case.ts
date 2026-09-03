@@ -12,8 +12,6 @@ export default defineBugCase({
   title: "A share link whose database is away says so",
   runner: "share-view-unready-data-db",
   timeoutMs: 180_000,
-  skipV1:
-    "the case makes its own space and base, and only the case base is unstamped - a base created inside a runner is born on v2, so the v1 column answers 'requested of v1 but v2 answered (reason=new_base)' rather than answering the question",
   bug: {
     issue: "T6926",
     status: "fixed",

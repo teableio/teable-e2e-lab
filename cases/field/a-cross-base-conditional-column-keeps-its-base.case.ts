@@ -11,8 +11,6 @@ export default defineBugCase({
   title: "A conditional column reading another base still names that base",
   runner: "cross-base-conditional-base-id",
   timeoutMs: 300_000,
-  skipV1:
-    "conditional lookups and totals are v2 column types, and the dropped base id is on the v1-v2 mapping boundary this fix moved",
   bug: {
     issue: "T7064",
     status: "fixed",

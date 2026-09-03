@@ -1,18 +1,17 @@
 /**
- * Which engine a run asks for, how it gets there, and proof that it answered.
+ * The engine this lab guards, and proof that it answered.
  *
- * v2 is what this lab GUARDS: it is where fixes land, and a bug returning
- * there is a regression someone must act on. v1 is run as a REFERENCE — it
- * answers "what does the engine our older customers are still on do with
- * this?" — and never fails anything (framework/verdict.ts).
+ * teable-ee is migrating to v2 and v1 bugs are not being fixed. So there is
+ * one engine here, not a choice: every case guards v2, and a result measured
+ * on v1 is not a weaker result, it is a different question nobody asked.
  *
- * That split is what makes running both engines safe here. teable-perf-lab's
- * framework/routing.ts, which this is otherwise a port of, asks only "did I
- * get the engine I requested". Copying that alone once reproduced the exact
- * bug it was meant to prevent: pinned to v1, three v2 cases ran, found
- * nothing, and reported green. So the v2 assertion below stays absolute — on
- * a v2 run, v2 must have answered — and the v1 assertion is its mirror rather
- * than a relaxation.
+ * That is the one thing this module does differently from teable-perf-lab's
+ * framework/routing.ts, which it is otherwise a port of. perf-lab runs BOTH
+ * engines on purpose — comparing them is its job — so its assertion asks "did
+ * I get the engine I requested", and v1 answering a v1 request is success.
+ * Copying that here reproduced the exact bug it was meant to prevent one level
+ * up: pinned to v1, three v2 cases ran, found nothing, and reported green.
+ * Here the question is "did v2 answer", full stop.
  *
  * What is worth taking from perf-lab, and is taken:
  *
@@ -31,18 +30,9 @@
  * instead of just this assertion.
  */
 
-export type LabEngine = "v1" | "v2";
-
-// Read LIVE, never captured into a module constant.
-//
-// The spec runs one engine block after another in the same process, so a
-// constant read at import time would pin every later block to whichever engine
-// happened to be first — and the failure would be silent: the v1 block would
-// quietly report v2's answers under v1's name. The routing assertion below
-// would catch it, but only because it too reads live. Defaults to v2, the
-// guarded engine.
-export const labEngine = (): LabEngine =>
-  process.env.E2E_LAB_ENGINE === "v1" ? "v1" : "v2";
+// Stamped into every artifact. A constant today, and deliberately not a
+// parameter: the day there is a v3 to guard, this is where that shows up.
+export const LAB_ENGINE = "v2";
 
 export interface RoutingHeaders {
   "x-teable-v2": string;
@@ -57,16 +47,64 @@ export interface EngineRouting {
   reason: string;
 }
 
-// Called before each engine's app boots. FORCE_V2_ALL is read live per
-// request, but some paths also read it at startup, so it is set explicitly.
-//
-// Turning it off is necessary to reach v1 and NOT sufficient: the router asks
-// FORCE_V2_ALL first and the base's own v2 flag second, and every base the
-// product creates is stamped v2. Unstamping it is framework/case-base.ts's
-// job, and without that step a "v1" run is a second v2 run wearing a label —
-// measured 2026-08-27, 129 cases, not one observation different.
-export const applyEngineRuntimeEnv = (engine: LabEngine = labEngine()) => {
-  process.env.FORCE_V2_ALL = engine === "v2" ? "true" : "false";
+/**
+ * The v2 computed-update strategy this invocation runs.
+ *
+ * teable-ee's e2e setup pins `V2_COMPUTED_UPDATE_MODE=sync` so the broad
+ * suite is deterministic — every computed value has landed by the time a
+ * write answers. That pin makes one whole class of production bug
+ * unobservable here: the DEFAULT production strategy is hybrid (bounded
+ * inline work, remainder dispatched through the computed-update outbox), and
+ * bugs that live in the dispatch/lock seam simply do not exist under sync.
+ *
+ * So the mode is an invocation-level choice, not a per-case one: the strategy
+ * is read once, when the app process builds its v2 container, and every base
+ * in the e2e database shares that container. A case cannot flip it after
+ * boot. Cases that need hybrid declare `computedUpdateMode: "hybrid"` and the
+ * workflow runs them in a separate vitest invocation whose app boots with the
+ * variable UNSET — the env schema accepts only "sync"; hybrid IS the unset
+ * default, and exporting the literal "hybrid" fails validation at boot.
+ */
+export type LabComputedUpdateMode = "sync" | "hybrid";
+
+export const labComputedUpdateMode = (): LabComputedUpdateMode =>
+  process.env.E2E_LAB_COMPUTED_UPDATE_MODE === "hybrid" ? "hybrid" : "sync";
+
+// Called before the app boots. FORCE_V2_ALL is read live per request, but some
+// paths also read it at startup, so it is set once for the process.
+export const applyEngineRuntimeEnv = () => {
+  process.env.FORCE_V2_ALL = "true";
+  if (labComputedUpdateMode() === "hybrid") {
+    // The setup file has already pinned sync by the time the spec module
+    // loads; unpin it before initApp() builds the v2 container. See
+    // labComputedUpdateMode above for why unset means hybrid.
+    delete process.env.V2_COMPUTED_UPDATE_MODE;
+  }
+};
+
+/**
+ * Prove, from a runner's SETUP phase, that this invocation really runs the
+ * hybrid strategy. The failure mode this guards is the same shape as a silent
+ * v1 answer: a hybrid case running against a sync app observes nothing, its
+ * bug cannot exist there, and "absent" would read as good news. Failing in
+ * setup makes that an error verdict instead.
+ */
+export const assertHybridComputedRuntime = (caseId: string) => {
+  if (labComputedUpdateMode() !== "hybrid") {
+    throw new Error(
+      `${caseId} declares computedUpdateMode "hybrid" but this invocation runs "${labComputedUpdateMode()}". ` +
+        "Its bug lives in the outbox dispatch seam, which sync mode does not have — " +
+        "run it with E2E_LAB_COMPUTED_UPDATE_MODE=hybrid (the workflow's hybrid step does).",
+    );
+  }
+  if (process.env.V2_COMPUTED_UPDATE_MODE !== undefined) {
+    throw new Error(
+      `${caseId} needs the app booted WITHOUT V2_COMPUTED_UPDATE_MODE (hybrid is the unset default), ` +
+        `but the variable reads "${process.env.V2_COMPUTED_UPDATE_MODE}". The engine env was applied ` +
+        "after the setup file re-pinned it, or something re-set it since — either way the container " +
+        "may have been built sync, and observing nothing would be meaningless.",
+    );
+  }
 };
 
 // Genuinely case-insensitive, not just "try the lowercase spelling too": HTTP
@@ -99,9 +137,6 @@ export const pickRoutingHeaders = (
  * run), so "the lab asked the wrong engine" can never be read as "the bug is
  * gone" — which is exactly what happened before this existed: two v2 cases
  * passed on their own pre-fix commits, four columns of green.
- *
- * On a v1 run the name still reads right: it asserts the run got the engine it
- * asked for. Runners call it unchanged.
  */
 export const assertServedByV2 = (
   headers: Record<string, unknown>,
@@ -110,26 +145,6 @@ export const assertServedByV2 = (
   const routing = pickRoutingHeaders(headers);
   const engine = routing["x-teable-v2"];
   const feature = routing["x-teable-v2-feature"];
-
-  // The v1 mirror. Not a relaxation of the check below: a v1 run answered by
-  // v2 is a fabricated reference column, which is worse than no column, so it
-  // throws just as hard. What it does not do is demand a feature header — that
-  // header is a v2 concept and its absence on v1 is the expected answer.
-  if (labEngine() === "v1") {
-    if (engine === "true") {
-      throw new Error(
-        `${options.operation} was requested of v1 but v2 answered ` +
-          `(reason=${routing["x-teable-v2-reason"] || "(none)"}). ` +
-          "The base was not unstamped; see framework/case-base.ts.",
-      );
-    }
-    return {
-      engine,
-      feature,
-      expectedFeature: options.feature,
-      reason: routing["x-teable-v2-reason"],
-    };
-  }
 
   if (engine !== "true") {
     throw new Error(

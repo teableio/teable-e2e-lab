@@ -2,7 +2,10 @@ import assert from "node:assert/strict";
 import { MAX_COMMITS, resolveRunPlan, shortSha } from "./run-plan-model.mjs";
 
 const sha = (seed) => seed.repeat(40).slice(0, 40);
-const ALL_CASES = ["smoke/auth-user", "record/bulk-update-100-mixed-lands"];
+const ALL_CASES = [
+  "smoke/y153-auth-user",
+  "record/y154-bulk-update-100-mixed-lands",
+];
 
 // Happy path: two commits, all cases.
 {
@@ -14,61 +17,48 @@ const ALL_CASES = ["smoke/auth-user", "record/bulk-update-100-mixed-lands"];
     caseFilter: "all",
     allCaseIds: ALL_CASES,
   });
-  // The matrix is commit x engine: two commits, two engines, four jobs.
-  assert.equal(plan.executePlan.length, 4);
-  assert.equal(plan.commitPlan.length, 2);
-  assert.equal(plan.executePlan[0].name, `c1-${shortSha(sha("a"))}-v1`);
-  assert.equal(plan.executePlan[1].name, `c1-${shortSha(sha("a"))}-v2`);
-  // Each job writes to its own artifact directory, or the two engines of one
-  // commit would overwrite each other's upload.
-  assert.equal(
-    new Set(plan.executePlan.map(({ artifactSuffix }) => artifactSuffix)).size,
-    4,
-  );
-  assert.equal(plan.commitPlan[1].position, 2);
-  // Only the last commit gates — earlier columns are history. Gating is a
-  // property of the commit, so both engines of that commit carry it; whether
-  // it can fail anything is the engine's business (framework/verdict.ts).
-  assert.deepEqual(
-    plan.commitPlan.map(({ gating }) => gating),
-    [false, true],
-  );
+  assert.equal(plan.executePlan.length, 2);
+  assert.equal(plan.executePlan[0].name, `c1-${shortSha(sha("a"))}`);
+  assert.equal(plan.executePlan[1].position, 2);
+  // Only the last commit gates — earlier columns are history.
   assert.deepEqual(
     plan.executePlan.map(({ gating }) => gating),
-    [false, false, true, true],
+    [false, true],
   );
   assert.deepEqual(plan.caseIds, ALL_CASES);
-  // Both engines run: 2 commits x 2 cases x 2 engines.
-  assert.equal(plan.planSummary.expectedPayloads, 8);
-  // Only the v2 half is the contract the acceptance gate enforces.
-  assert.equal(plan.planSummary.expectedGuardedPayloads, 4);
-  assert.deepEqual(plan.planSummary.engines, ["v1", "v2"]);
+  assert.equal(plan.planSummary.expectedPayloads, 4);
+  // Without hybrid declarations everything runs in the sync invocation.
+  assert.deepEqual(plan.syncCaseIds, ALL_CASES);
+  assert.deepEqual(plan.hybridCaseIds, []);
 }
 
-// A case declaring skipV1 is not expected to produce a v1 payload, so the
-// coverage contract must not go looking for one.
+// Hybrid cases split into their own invocation filter; every selected case
+// lands in exactly one list and the coverage contract is unchanged.
 {
   const plan = resolveRunPlan({
     resolvedCommits: [{ ref: "develop", sha: sha("a") }],
     caseFilter: "all",
-    allCaseIds: ALL_CASES,
-    skipV1CaseIds: ["smoke/auth-user"],
+    allCaseIds: [...ALL_CASES, "lookup/hybrid-only"],
+    hybridCaseIds: ["lookup/hybrid-only"],
   });
-  assert.equal(plan.planSummary.v1CaseCount, 1);
+  assert.deepEqual(plan.syncCaseIds, ALL_CASES);
+  assert.deepEqual(plan.hybridCaseIds, ["lookup/hybrid-only"]);
+  assert.equal(
+    plan.syncCaseIds.length + plan.hybridCaseIds.length,
+    plan.caseIds.length,
+  );
+  assert.equal(plan.planSummary.hybridCaseCount, 1);
   assert.equal(plan.planSummary.expectedPayloads, 3);
-  assert.equal(plan.planSummary.expectedGuardedPayloads, 2);
-}
 
-// A v2-only run still counts only the guarded half, and expects no v1 cell.
-{
-  const plan = resolveRunPlan({
+  // A filter selecting only the hybrid case empties the sync invocation.
+  const hybridOnly = resolveRunPlan({
     resolvedCommits: [{ ref: "develop", sha: sha("a") }],
-    caseFilter: "all",
-    allCaseIds: ALL_CASES,
-    engines: ["v2"],
+    caseFilter: "lookup/hybrid-only",
+    allCaseIds: [...ALL_CASES, "lookup/hybrid-only"],
+    hybridCaseIds: ["lookup/hybrid-only"],
   });
-  assert.equal(plan.planSummary.v1CaseCount, 0);
-  assert.equal(plan.planSummary.expectedPayloads, 2);
+  assert.deepEqual(hybridOnly.syncCaseIds, []);
+  assert.deepEqual(hybridOnly.hybridCaseIds, ["lookup/hybrid-only"]);
 }
 
 // Column order is dispatch order, verbatim.
@@ -78,14 +68,14 @@ const ALL_CASES = ["smoke/auth-user", "record/bulk-update-100-mixed-lands"];
       { ref: "newer", sha: sha("b") },
       { ref: "older", sha: sha("a") },
     ],
-    caseFilter: "smoke/auth-user",
+    caseFilter: "smoke/y153-auth-user",
     allCaseIds: ALL_CASES,
   });
   assert.deepEqual(
-    plan.commitPlan.map(({ ref }) => ref),
+    plan.executePlan.map(({ ref }) => ref),
     ["newer", "older"],
   );
-  assert.deepEqual(plan.caseIds, ["smoke/auth-user"]);
+  assert.deepEqual(plan.caseIds, ["smoke/y153-auth-user"]);
 }
 
 // Refusals, each with the reason a dispatcher will actually hit.

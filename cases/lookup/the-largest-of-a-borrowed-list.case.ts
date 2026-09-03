@@ -12,8 +12,6 @@ export default defineBugCase({
   title: "The largest of a borrowed list is a number, not a refusal",
   runner: "jsonb-lookup-aggregate",
   timeoutMs: 300_000,
-  skipV1:
-    "conditional totals are a v2 column type - v1 has no field to ask this of",
   bug: {
     issue: "T7099",
     status: "fixed",

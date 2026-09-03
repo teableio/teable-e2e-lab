@@ -13,8 +13,6 @@ export default defineBugCase({
   title: "A base whose tables share a key name can still be copied",
   runner: "same-named-fk-base-duplicate",
   timeoutMs: 300_000,
-  skipV1:
-    "the fix is on the v2 duplicate route's own foreign-key introspection; v1 keeps its untouched legacy helper, so the v1 column answers a different question",
   bug: {
     issue: "T6990",
     status: "fixed",

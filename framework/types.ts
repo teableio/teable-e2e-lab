@@ -7,6 +7,19 @@ import type { DayBucket } from "./runners/group-buckets";
 // is discriminated on `runner`, so a case that pairs a runner with the wrong
 // config shape fails `pnpm check:types` at the case file itself.
 export interface BugCaseConfigByRunner {
+  "autonumber-string-filter": AutonumberStringFilterCaseConfig;
+  "cross-base-conditional-base-id": CrossBaseConditionalBaseIdCaseConfig;
+  "group-on-an-unreadable-column": GroupOnAnUnreadableColumnCaseConfig;
+  "jsonb-lookup-aggregate": JsonbLookupAggregateCaseConfig;
+  "legacy-column-visibility-metadata": LegacyColumnVisibilityMetadataCaseConfig;
+  "nested-user-array-join-create": NestedUserArrayJoinCreateCaseConfig;
+  "or-filtered-rollup-scope": OrFilteredRollupScopeCaseConfig;
+  "same-named-fk-base-duplicate": SameNamedFkBaseDuplicateCaseConfig;
+  "select-rollup-unique-and-count": SelectRollupUniqueAndCountCaseConfig;
+  "share-view-unready-data-db": ShareViewUnreadyDataDbCaseConfig;
+  "shared-form-cover-url": SharedFormCoverUrlCaseConfig;
+  "switch-mixed-branch-storage": SwitchMixedBranchStorageCaseConfig;
+  "undo-cursor-after-a-failed-undo": UndoCursorAfterAFailedUndoCaseConfig;
   "http-check": HttpCheckCaseConfig;
   "record-flow": RecordFlowCaseConfig;
   "group-collapse": GroupCollapseCaseConfig;
@@ -32,6 +45,7 @@ export interface BugCaseConfigByRunner {
   "excel-import-offset-header": ExcelImportOffsetHeaderCaseConfig;
   "paste-by-id-alignment": PasteByIdAlignmentCaseConfig;
   "search-view-filter": SearchViewFilterCaseConfig;
+  "mixed-field-search-view-filter": MixedFieldSearchViewFilterCaseConfig;
   "user-field-notify-bulk-action": UserFieldNotifyBulkActionCaseConfig;
   "user-field-notify-replay": UserFieldNotifyReplayCaseConfig;
   "user-field-notify-burst": UserFieldNotifyBurstCaseConfig;
@@ -108,7 +122,8 @@ export interface BugCaseConfigByRunner {
   "lookup-select-choices-kept": LookupSelectChoicesKeptCaseConfig;
   "boolean-formula-filter": BooleanFormulaFilterCaseConfig;
   "duplicate-base-recent-list": DuplicateBaseRecentListCaseConfig;
-  "longtext-markdown-convert": LongtextMarkdownConvertCaseConfig;
+  "field-option-preservation": FieldOptionPreservationCaseConfig;
+  "department-share-user-picker": DepartmentShareUserPickerCaseConfig;
   "stale-view-column-meta": StaleViewColumnMetaCaseConfig;
   "nested-filter-conjunction": NestedFilterConjunctionCaseConfig;
   "conditional-rollup-user-match": ConditionalRollupUserMatchCaseConfig;
@@ -119,24 +134,19 @@ export interface BugCaseConfigByRunner {
   "lookup-of-link-contains": LookupOfLinkContainsCaseConfig;
   "delete-without-undo-capture": DeleteWithoutUndoCaptureCaseConfig;
   "single-field-pending-state": SingleFieldPendingStateCaseConfig;
-  "rollup-create-compatibility": RollupCreateCompatibilityCaseConfig;
-  "autonumber-string-filter": AutonumberStringFilterCaseConfig;
-  "cross-base-conditional-base-id": CrossBaseConditionalBaseIdCaseConfig;
-  "or-filtered-rollup-scope": OrFilteredRollupScopeCaseConfig;
-  "same-named-fk-base-duplicate": SameNamedFkBaseDuplicateCaseConfig;
-  "jsonb-lookup-aggregate": JsonbLookupAggregateCaseConfig;
-  "nested-group-conditional-rollup": NestedGroupConditionalRollupCaseConfig;
-  "select-rollup-unique-and-count": SelectRollupUniqueAndCountCaseConfig;
-  "link-rollup-unique-by-identity": LinkRollupUniqueByIdentityCaseConfig;
-  "nested-user-array-join-create": NestedUserArrayJoinCreateCaseConfig;
-  "share-view-unready-data-db": ShareViewUnreadyDataDbCaseConfig;
-  "switch-mixed-branch-storage": SwitchMixedBranchStorageCaseConfig;
-  "undo-cursor-after-a-failed-undo": UndoCursorAfterAFailedUndoCaseConfig;
-  "group-on-an-unreadable-column": GroupOnAnUnreadableColumnCaseConfig;
-  "archive-granted-by-the-matrix": ArchiveGrantedByTheMatrixCaseConfig;
-  "comment-granted-by-the-matrix": CommentGrantedByTheMatrixCaseConfig;
-  "legacy-column-visibility-metadata": LegacyColumnVisibilityMetadataCaseConfig;
-  "shared-form-cover-url": SharedFormCoverUrlCaseConfig;
+  "authority-comment-scope": AuthorityCommentScopeCaseConfig;
+  "authority-archive-record": AuthorityArchiveRecordCaseConfig;
+  "authority-persisted-view-query": AuthorityPersistedViewQueryCaseConfig;
+  "group-locale-browser": GroupLocaleBrowserCaseConfig;
+  "comment-delete-browser": CommentDeleteBrowserCaseConfig;
+  "authority-unreadable-group": AuthorityUnreadableGroupCaseConfig;
+  "deleted-table-collaborator-recovery": DeletedTableCollaboratorRecoveryCaseConfig;
+  "circular-append-burst": CircularAppendBurstCaseConfig;
+  "rollup-create-validation": RollupCreateValidationCaseConfig;
+  "conditional-rollup-nested-or-matrix": ConditionalRollupNestedOrMatrixCaseConfig;
+  "rollup-link-identity-matrix": RollupLinkIdentityMatrixCaseConfig;
+  "conditional-rollup-editor-browser": ConditionalRollupEditorBrowserCaseConfig;
+  "link-picker-tab-selection-browser": LinkPickerTabSelectionBrowserCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -187,20 +197,14 @@ interface BugCaseBase {
   title: string;
   bug: BugRef;
   timeoutMs: number;
-  // Why this case cannot be asked of v1 — presence alone skips the v1 column.
-  //
-  // A reason string rather than a boolean, and it is not decoration: the two
-  // things that land here look identical in a failure log and are not the same
-  // claim. Either the FEATURE does not exist on v1 (required links, undo
-  // capture, field validation), or the FIXTURE cannot be built there (a shape
-  // v1's own API normalizes away). Both mean "v1 cannot answer this question";
-  // only the first means "v1 users do not have this".
-  //
-  // Skipping is DECLARED, never inferred from what the run saw. Sniffing "v1
-  // said it does not support that" out of an error message fails open: a case
-  // that genuinely breaks, whose error happens to read that way, would be
-  // skipped forever and nobody would learn. See docs/operations/e2e-lab.md.
-  skipV1?: string;
+  // Which v2 computed-update strategy the case's bug lives under. Absent
+  // means the harness default (sync — deterministic, pinned by teable-ee's
+  // e2e setup). "hybrid" opts into the production default strategy (bounded
+  // inline + outbox dispatch); the strategy is fixed when the app process
+  // boots, so the workflow runs hybrid cases in a separate vitest invocation
+  // and the spec filters each invocation to its own mode. Must be a string
+  // literal — the planner reads it by static parsing. See framework/engine.ts.
+  computedUpdateMode?: "hybrid";
 }
 
 // A runner-specific view of a bug case, keeping the runner literal and its
@@ -771,6 +775,20 @@ export interface SearchViewFilterCaseConfig {
   rows: { name: string; inView: boolean; matches: boolean }[];
 }
 
+export interface MixedFieldSearchViewFilterCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  timeZone: string;
+  searchTerm: string;
+  targetDate: string;
+  otherDate: string;
+  keptCategory: string;
+  droppedCategory: string;
+  expectedRowTitle: string;
+  sameDateOutsideViewTitle: string;
+  otherDateRowTitle: string;
+}
+
 // A second person assigned in a user field -> move that assignment in bulk ->
 // checkpoint: their notification list stays empty for the whole quiet budget.
 // The budget is the assertion, and it is only trusted because the same run
@@ -1179,6 +1197,60 @@ export interface RollupFilterPersistsCaseConfig {
   items: { name: string; category: string; amount: number }[];
   settleTimeoutMs: number;
   pollIntervalMs: number;
+}
+
+// Create-time compatibility validation for ordinary and conditional rollups.
+// Both product paths share the same observable contract but have separate bug
+// histories and therefore separate case definitions.
+export interface RollupCreateValidationCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  mode: "rollup" | "conditionalRollup";
+}
+
+// Conditional summaries over a field-reference match plus a nested OR group.
+// The four covered ids are intentionally one matrix because the filter tree is
+// the defect; only the summarized source type and expression vary.
+export interface ConditionalRollupNestedOrMatrixCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  coveredCaseIds: ["Y471", "Y472", "Y478", "Y492"];
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
+}
+
+// Ordinary rollups over all four link relationships. Distinct linked records
+// with the same title remain distinct, while repeated references to one record
+// retain their expression-specific compact/unique behavior.
+export interface RollupLinkIdentityMatrixCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  coveredCaseIds: ["Y465"];
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
+}
+
+// A narrow conditional-rollup field sheet backed by an API-created source
+// matrix. The browser owns only the editor action that cannot be represented
+// by an API request; setup and result assertions remain API-based.
+export interface ConditionalRollupEditorBrowserCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  layout: "group-header" | "condition-rows";
+  coveredCaseIds: ["Y479", "Y480", "Y481", "Y482"] | ["Y483"];
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
+}
+
+// A saved multi-link opened in the browser picker. Switching between All and
+// Selected must keep the saved row visible and selected.
+export interface LinkPickerTabSelectionBrowserCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  selectedRowName: string;
+  otherRowNames: string[];
+  switchCount: number;
+  settleTimeoutMs: number;
 }
 
 // A lookup pointing at a date column, repointed at a text column. The two are
@@ -1839,12 +1911,18 @@ export interface StaleViewColumnMetaCaseConfig {
   deletedColumnName: string;
 }
 
-export interface LongtextMarkdownConvertCaseConfig {
+export interface FieldOptionPreservationCaseConfig {
   baseId: "seed-base";
   tableNamePrefix: string;
-  // The one thing the edit actually changes. It has to differ from the
-  // column's name - see the runner.
-  renamedTo: string;
+  coveredCaseIds: ["Y422", "Y423", "Y424", "Y425", "Y426", "Y427", "Y428"];
+}
+
+export interface DepartmentShareUserPickerCaseConfig {
+  spaceNamePrefix: string;
+  baseNamePrefix: string;
+  tableNamePrefix: string;
+  departmentNamePrefix: string;
+  memberNamePrefix: string;
 }
 
 export interface DuplicateBaseRecentListCaseConfig {
@@ -1936,6 +2014,54 @@ export interface TableDeleteRealtimeCaseConfig {
   announceTimeoutMs: number;
 }
 
+export interface DeletedTableCollaboratorRecoveryCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  settleTimeoutMs: number;
+  quietPeriodMs: number;
+}
+
+export interface AuthorityCommentScopeCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  allowedTitle: string;
+  deniedTitle: string;
+  commentText: string;
+}
+
+export interface AuthorityArchiveRecordCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+}
+
+export interface AuthorityPersistedViewQueryCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+}
+
+export interface GroupLocaleBrowserCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  settleTimeoutMs: number;
+}
+
+export interface CommentDeleteBrowserCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  deletedText: string;
+  retainedText: string;
+  settleTimeoutMs: number;
+  quietPeriodMs: number;
+}
+
+export interface AuthorityUnreadableGroupCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  rows: { title: string; group: string; status: string }[];
+  subscribeTimeoutMs: number;
+  settleTimeoutMs: number;
+}
+
 export interface EmptyWriteNormalizationCaseConfig {
   baseId: "seed-base";
   tableNamePrefix: string;
@@ -1964,28 +2090,50 @@ export interface LookupOfRollupCreateCaseConfig {
   secondAmount: number;
 }
 
-// A totalling column asked for a total its source cannot give, sent straight to
-// the API. Two shapes on one runner because the question is the same: does the
-// API check what the field editor checks.
-export interface RollupCreateCompatibilityCaseConfig {
+// The 2026-08-27 CN incident fixture: four tables whose SubOrders and
+// Purification link to each other in both directions and look each other up,
+// with a duplicate one-many link pair doubling the dependency edges. The
+// operation under test appends `appendRowCount` Purification rows in
+// sequential bulk batches of `appendBatchSize`, every row wiring all four
+// link cells. Scale and permutations are the model's input — see
+// framework/runners/circular-append-burst-workload.ts. Requires
+// `computedUpdateMode: "hybrid"` on the case: the bug lives in the outbox
+// dispatch seam, which sync mode does not have.
+export interface CircularAppendBurstCaseConfig {
   baseId: "seed-base";
   tableNamePrefix: string;
-  // Which kind of total. "rollup" follows a link to the other table;
-  // "conditionalRollup" matches rows in it. Different code paths.
-  column: "rollup" | "conditionalRollup";
-  // Written into the matching column on both tables, so the conditional
-  // variant's condition selects the seeded row.
-  matchKey: string;
-  // The combinations the field editor refuses to offer. Each one is sent and
-  // each one must be refused - a single accepted combination is the bug.
-  attempts: {
-    // Names the combination in the report.
-    name: string;
-    // The column type in the other table the total would read.
-    source: "button" | "number" | "checkbox";
-    // The function asked of it.
-    expression: string;
-  }[];
+  orderRowCount: number;
+  subOrderRowCount: number;
+  purificationRowCount: number;
+  plasmidRowCount: number;
+  // Row mappings; multipliers must be coprime with their target row counts,
+  // and purificationRowCount + appendRowCount <= subOrderRowCount so every
+  // appended row lands on its own previously purification-free host (the
+  // runner proves injectivity before building anything).
+  orderPermutation: { multiplier: number; offset: number };
+  purificationSubOrderPermutation: { multiplier: number; offset: number };
+  purificationOrderPermutation: { multiplier: number; offset: number };
+  // Seeding writes in batches too, but PACED: each batch waits for a probe
+  // row to settle before the next is sent, so the only back-to-back burst is
+  // the one inside the checkpoint.
+  seedBatchSize: number;
+  purificationSeedBatchSize: number;
+  // Per-batch settle bound during seeding. Exceeding it is an error verdict
+  // (the fixture never stood up), not the bug.
+  seedSettleTimeoutMs: number;
+  // The burst: appendRowCount rows in back-to-back batches of
+  // appendBatchSize — the write shape that races the previous batch's
+  // dispatched outbox task on the per-table computed advisory lock.
+  appendRowCount: number;
+  appendBatchSize: number;
+  // The bounded window in which every host sub-order and every appended row
+  // must converge. Generous on purpose: a healthy run of this operation
+  // converges more than an order of magnitude faster, and dropped
+  // propagation never converges at all — the timeout IS the assertion.
+  convergenceTimeoutMs: number;
+  pollIntervalMs: number;
+  // How many stale rows the failure message names (expected vs actual).
+  staleRowEvidenceLimit: number;
 }
 
 // A filter on the row-number column carrying the number as text, which is what
@@ -2010,6 +2158,75 @@ export interface CrossBaseConditionalBaseIdCaseConfig {
   sourceRows: { category: string; amount: number }[];
   // The category the single host row carries, and so the rows the columns read.
   matchedCategory: string;
+}
+
+// A grid grouped by a column the person opening it may not read.
+export interface GroupOnAnUnreadableColumnCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Two rows at least: a request that returns nothing must not look like one
+  // that returns everything.
+  rows: { name: string; stage: string; cost: number }[];
+}
+
+// A conditional total whose source column is itself a borrowed list, which is
+// where largest/smallest/all-of/any-of went straight at the stored list.
+export interface JsonbLookupAggregateCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // The rows at the far end of the chain. Two at least, with amounts that
+  // differ - otherwise largest and smallest cannot be told apart. The runner
+  // checks that against the list the product actually built, not against these.
+  leaves: { name: string; amount: number }[];
+  // The row in the middle table, which borrows every leaf value.
+  middleRowName: string;
+  // The row doing the totalling.
+  hostRowName: string;
+  // Written to both middle and host, so the condition selects the middle row.
+  matchKey: string;
+  // Which aggregations to ask for. The tickbox half of this fix ("and"/"or")
+  // is deliberately absent: an unticked box does not reach a borrowed list, so
+  // all-of and any-of answer the same whether they work or not. See the runner.
+  aggregations: ("max" | "min")[];
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
+}
+
+// A view whose stored notes about a column carry both the older key and the
+// current one - what a view made long enough ago has been carrying all along.
+export interface LegacyColumnVisibilityMetadataCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  rowTitle: string;
+  // Which shape of old notes to write. "bothVisibilityNotes" carries the older
+  // key beside the current one; "noPosition" carries no order at all. Both are
+  // shapes nothing writes any more, and each broke differently.
+  legacy: "bothVisibilityNotes" | "noPosition";
+  // Written into the stored notes for the "bothVisibilityNotes" shape only. The
+  // other shape is defined by having no order.
+  order: number;
+  // Written into the stored notes either way, so a settled entry can be told
+  // from an emptied one.
+  width: number;
+}
+
+// A table whose formula joins several people columns together, wrapped four
+// functions deep - the shape whose statement grew a layer at a time.
+export interface NestedUserArrayJoinCreateCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // How many people columns the formula flattens. The statement grew with this
+  // number; the report was filed at seven.
+  peopleColumns: number;
+  peopleColumnPrefix: string;
+  sessionRowName: string;
+  campusValue: string;
+  noteRowName: string;
+  separator: string;
+  // How long the write may take before the case says the table cannot accept a
+  // row. Generous: this is not a measurement of speed, it is the difference
+  // between an answer and no answer.
+  writeBudgetMs: number;
 }
 
 // A total over linked rows narrowed with an "any of these" condition, which is
@@ -2044,53 +2261,6 @@ export interface SameNamedFkBaseDuplicateCaseConfig {
   rowTitle: string;
 }
 
-// A conditional total whose source column is itself a borrowed list, which is
-// where largest/smallest/all-of/any-of went straight at the stored list.
-export interface JsonbLookupAggregateCaseConfig {
-  baseId: "seed-base";
-  tableNamePrefix: string;
-  // The rows at the far end of the chain. Two at least, with amounts that
-  // differ - otherwise largest and smallest cannot be told apart. The runner
-  // checks that against the list the product actually built, not against these.
-  leaves: { name: string; amount: number }[];
-  // The row in the middle table, which borrows every leaf value.
-  middleRowName: string;
-  // The row doing the totalling.
-  hostRowName: string;
-  // Written to both middle and host, so the condition selects the middle row.
-  matchKey: string;
-  // Which aggregations to ask for. The tickbox half of this fix ("and"/"or")
-  // is deliberately absent: an unticked box does not reach a borrowed list, so
-  // all-of and any-of answer the same whether they work or not. See the runner.
-  aggregations: ("max" | "min")[];
-  settleTimeoutMs: number;
-  pollIntervalMs: number;
-}
-
-// A conditional total whose condition has a bracket in it - "match the
-// customer, and within that either of two other things".
-export interface NestedGroupConditionalRollupCaseConfig {
-  baseId: "seed-base";
-  tableNamePrefix: string;
-  sourceRows: {
-    name: string;
-    matchKey: string;
-    flagA: string;
-    flagB: string;
-  }[];
-  // The rows doing the counting. The runner refuses a fixture without a host
-  // whose reference matches nothing, without a host counting anything, or
-  // without a row the bracket excludes - see the runner for why each is needed.
-  hosts: { name: string; matchKey: string }[];
-  // The bracket: FlagA is this OR FlagB is that.
-  bracketFlagAValue: string;
-  bracketFlagBValue: string;
-  // The control column beside it, with no bracket: FlagA is this.
-  flatFlagAValue: string;
-  settleTimeoutMs: number;
-  pollIntervalMs: number;
-}
-
 // A summary of a choice column across linked children: the distinct values and
 // how many there are.
 export interface SelectRollupUniqueAndCountCaseConfig {
@@ -2117,40 +2287,6 @@ export interface SelectRollupUniqueAndCountCaseConfig {
   pollIntervalMs: number;
 }
 
-// A summary of the distinct linked records across a row's children, where two of
-// those records happen to be called the same thing.
-export interface LinkRollupUniqueByIdentityCaseConfig {
-  baseId: "seed-base";
-  tableNamePrefix: string;
-  // The names of the linked records, one record each. At least two must repeat:
-  // with every name different, merging by name and keeping by identity give the
-  // same answer and the case proves nothing. The runner refuses that.
-  targetTitles: string[];
-  childNamePrefix: string;
-  parentRowName: string;
-  settleTimeoutMs: number;
-  pollIntervalMs: number;
-}
-
-// A table whose formula joins several people columns together, wrapped four
-// functions deep - the shape whose statement grew a layer at a time.
-export interface NestedUserArrayJoinCreateCaseConfig {
-  baseId: "seed-base";
-  tableNamePrefix: string;
-  // How many people columns the formula flattens. The statement grew with this
-  // number; the report was filed at seven.
-  peopleColumns: number;
-  peopleColumnPrefix: string;
-  sessionRowName: string;
-  campusValue: string;
-  noteRowName: string;
-  separator: string;
-  // How long the write may take before the case says the table cannot accept a
-  // row. Generous: this is not a measurement of speed, it is the difference
-  // between an answer and no answer.
-  writeBudgetMs: number;
-}
-
 // A shared view in a space bound to a database whose connection is switched off.
 export interface ShareViewUnreadyDataDbCaseConfig {
   namePrefix: string;
@@ -2160,6 +2296,18 @@ export interface ShareViewUnreadyDataDbCaseConfig {
   // this only has to be present, and saying so in the value keeps the next
   // reader from looking for a real secret.
   encryptedUrlPlaceholder: string;
+}
+
+// A shared form whose picture is stored as a short path and read through two
+// layers, each of which works the address out.
+export interface SharedFormCoverUrlCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  rowTitle: string;
+  // Where the picture lives, as it is stored. Must be a short path: an address
+  // is what the fix passes through untouched, so an address here would make the
+  // case green either way. The runner refuses one.
+  storedPath: string;
 }
 
 // A column that picks its value by case, where the branches with a case attached
@@ -2189,64 +2337,4 @@ export interface UndoCursorAfterAFailedUndoCaseConfig {
   // differ, or there is nothing for undo to put back.
   originalCode: string;
   changedCode: string;
-}
-
-// A grid grouped by a column the person opening it may not read.
-export interface GroupOnAnUnreadableColumnCaseConfig {
-  baseId: "seed-base";
-  tableNamePrefix: string;
-  // Two rows at least: a request that returns nothing must not look like one
-  // that returns everything.
-  rows: { name: string; stage: string; cost: number }[];
-}
-
-// Somebody whose authority-matrix role grants archiving, arriving in the base
-// through that role and therefore as a Viewer.
-export interface ArchiveGrantedByTheMatrixCaseConfig {
-  baseId: "seed-base";
-  tableNamePrefix: string;
-  // Rows, split by team. The role reaches one team's rows and not the other's;
-  // the runner refuses a fixture missing either side.
-  rows: { name: string; team: string }[];
-  allowedTeam: string;
-}
-
-// Somebody whose authority-matrix role lets them comment, arriving in the base
-// through that role and therefore as a Viewer.
-export interface CommentGrantedByTheMatrixCaseConfig {
-  baseId: "seed-base";
-  tableNamePrefix: string;
-  rows: { name: string; team: string }[];
-  allowedTeam: string;
-  commentText: string;
-}
-
-// A view whose stored notes about a column carry both the older key and the
-// current one - what a view made long enough ago has been carrying all along.
-export interface LegacyColumnVisibilityMetadataCaseConfig {
-  baseId: "seed-base";
-  tableNamePrefix: string;
-  rowTitle: string;
-  // Which shape of old notes to write. "bothVisibilityNotes" carries the older
-  // key beside the current one; "noPosition" carries no order at all. Both are
-  // shapes nothing writes any more, and each broke differently.
-  legacy: "bothVisibilityNotes" | "noPosition";
-  // Written into the stored notes for the "bothVisibilityNotes" shape only. The
-  // other shape is defined by having no order.
-  order: number;
-  // Written into the stored notes either way, so a settled entry can be told
-  // from an emptied one.
-  width: number;
-}
-
-// A shared form whose picture is stored as a short path and read through two
-// layers, each of which works the address out.
-export interface SharedFormCoverUrlCaseConfig {
-  baseId: "seed-base";
-  tableNamePrefix: string;
-  rowTitle: string;
-  // Where the picture lives, as it is stored. Must be a short path: an address
-  // is what the fix passes through untouched, so an address here would make the
-  // case green either way. The runner refuses one.
-  storedPath: string;
 }

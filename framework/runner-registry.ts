@@ -19,6 +19,7 @@ import { runRequiredLinkBlocksDeleteCase } from "./runners/required-link-blocks-
 import { runRequiredLinkRefreshCase } from "./runners/required-link-refresh.runner";
 import { runStaleLookupRecastCase } from "./runners/stale-lookup-recast.runner";
 import { runSearchViewFilterCase } from "./runners/search-view-filter.runner";
+import { runMixedFieldSearchViewFilterCase } from "./runners/mixed-field-search-view-filter.runner";
 import { runDeleteCollateralCase } from "./runners/delete-collateral.runner";
 import { runPasteOverPendingFieldCase } from "./runners/paste-over-pending-field.runner";
 import { runDuplicateSharedViewCase } from "./runners/duplicate-shared-view.runner";
@@ -93,7 +94,8 @@ import { runManyoneTypecastShapeCase } from "./runners/manyone-typecast-shape.ru
 import { runRowCountSearchProjectionCase } from "./runners/row-count-search-projection.runner";
 import { runBooleanFormulaFilterCase } from "./runners/boolean-formula-filter.runner";
 import { runDuplicateBaseRecentListCase } from "./runners/duplicate-base-recent-list.runner";
-import { runLongtextMarkdownConvertCase } from "./runners/longtext-markdown-convert.runner";
+import { runFieldOptionPreservationCase } from "./runners/field-option-preservation.runner";
+import { runDepartmentShareUserPickerCase } from "./runners/department-share-user-picker.runner";
 import { runConditionalRollupUserMatchCase } from "./runners/conditional-rollup-user-match.runner";
 import { runFromnowUnitCase } from "./runners/fromnow-unit.runner";
 import { runWeekdayStartDayCase } from "./runners/weekday-start-day.runner";
@@ -109,25 +111,33 @@ import { runTrackedModifiedSortCase } from "./runners/tracked-modified-sort.runn
 import { runLookupOfLinkContainsCase } from "./runners/lookup-of-link-contains.runner";
 import { runDeleteWithoutUndoCaptureCase } from "./runners/delete-without-undo-capture.runner";
 import { runSingleFieldPendingStateCase } from "./runners/single-field-pending-state.runner";
-import { runRollupCreateCompatibilityCase } from "./runners/rollup-create-compatibility.runner";
+import { runAuthorityCommentScopeCase } from "./runners/authority-comment-scope.runner";
+import { runAuthorityArchiveRecordCase } from "./runners/authority-archive-record.runner";
+import { runAuthorityPersistedViewQueryCase } from "./runners/authority-persisted-view-query.runner";
+import { runGroupLocaleBrowserCase } from "./runners/group-locale-browser.runner";
+import { runCommentDeleteBrowserCase } from "./runners/comment-delete-browser.runner";
+import { runAuthorityUnreadableGroupCase } from "./runners/authority-unreadable-group.runner";
+import { runDeletedTableCollaboratorRecoveryCase } from "./runners/deleted-table-collaborator-recovery.runner";
+import { runLookupOfRollupCreateCase } from "./runners/lookup-of-rollup-create.runner";
+import { runCircularAppendBurstCase } from "./runners/circular-append-burst.runner";
+import { runRollupCreateValidationCase } from "./runners/rollup-create-validation.runner";
+import { runConditionalRollupNestedOrMatrixCase } from "./runners/conditional-rollup-nested-or-matrix.runner";
+import { runRollupLinkIdentityMatrixCase } from "./runners/rollup-link-identity-matrix.runner";
+import { runConditionalRollupEditorBrowserCase } from "./runners/conditional-rollup-editor-browser.runner";
+import { runLinkPickerTabSelectionBrowserCase } from "./runners/link-picker-tab-selection-browser.runner";
 import { runAutonumberStringFilterCase } from "./runners/autonumber-string-filter.runner";
 import { runCrossBaseConditionalBaseIdCase } from "./runners/cross-base-conditional-base-id.runner";
+import { runGroupOnAnUnreadableColumnCase } from "./runners/group-on-an-unreadable-column.runner";
+import { runJsonbLookupAggregateCase } from "./runners/jsonb-lookup-aggregate.runner";
+import { runLegacyColumnVisibilityMetadataCase } from "./runners/legacy-column-visibility-metadata.runner";
+import { runNestedUserArrayJoinCreateCase } from "./runners/nested-user-array-join-create.runner";
 import { runOrFilteredRollupScopeCase } from "./runners/or-filtered-rollup-scope.runner";
 import { runSameNamedFkBaseDuplicateCase } from "./runners/same-named-fk-base-duplicate.runner";
-import { runJsonbLookupAggregateCase } from "./runners/jsonb-lookup-aggregate.runner";
-import { runNestedGroupConditionalRollupCase } from "./runners/nested-group-conditional-rollup.runner";
 import { runSelectRollupUniqueAndCountCase } from "./runners/select-rollup-unique-and-count.runner";
-import { runLinkRollupUniqueByIdentityCase } from "./runners/link-rollup-unique-by-identity.runner";
-import { runNestedUserArrayJoinCreateCase } from "./runners/nested-user-array-join-create.runner";
 import { runShareViewUnreadyDataDbCase } from "./runners/share-view-unready-data-db.runner";
+import { runSharedFormCoverUrlCase } from "./runners/shared-form-cover-url.runner";
 import { runSwitchMixedBranchStorageCase } from "./runners/switch-mixed-branch-storage.runner";
 import { runUndoCursorAfterAFailedUndoCase } from "./runners/undo-cursor-after-a-failed-undo.runner";
-import { runGroupOnAnUnreadableColumnCase } from "./runners/group-on-an-unreadable-column.runner";
-import { runArchiveGrantedByTheMatrixCase } from "./runners/archive-granted-by-the-matrix.runner";
-import { runCommentGrantedByTheMatrixCase } from "./runners/comment-granted-by-the-matrix.runner";
-import { runLegacyColumnVisibilityMetadataCase } from "./runners/legacy-column-visibility-metadata.runner";
-import { runSharedFormCoverUrlCase } from "./runners/shared-form-cover-url.runner";
-import { runLookupOfRollupCreateCase } from "./runners/lookup-of-rollup-create.runner";
 import type {
   BugCase,
   BugCaseFor,
@@ -171,6 +181,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "excel-import-offset-header": runExcelImportOffsetHeaderCase,
   "paste-by-id-alignment": runPasteByIdAlignmentCase,
   "search-view-filter": runSearchViewFilterCase,
+  "mixed-field-search-view-filter": runMixedFieldSearchViewFilterCase,
   "delete-collateral": runDeleteCollateralCase,
   "user-field-notify-bulk-action": runUserFieldNotifyBulkActionCase,
   "user-field-notify-replay": runUserFieldNotifyReplayCase,
@@ -246,7 +257,8 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "lookup-select-choices-kept": runLookupSelectChoicesKeptCase,
   "boolean-formula-filter": runBooleanFormulaFilterCase,
   "duplicate-base-recent-list": runDuplicateBaseRecentListCase,
-  "longtext-markdown-convert": runLongtextMarkdownConvertCase,
+  "field-option-preservation": runFieldOptionPreservationCase,
+  "department-share-user-picker": runDepartmentShareUserPickerCase,
   "stale-view-column-meta": runStaleViewColumnMetaCase,
   "nested-filter-conjunction": runNestedFilterConjunctionCase,
   "conditional-rollup-user-match": runConditionalRollupUserMatchCase,
@@ -257,24 +269,33 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "lookup-of-link-contains": runLookupOfLinkContainsCase,
   "delete-without-undo-capture": runDeleteWithoutUndoCaptureCase,
   "single-field-pending-state": runSingleFieldPendingStateCase,
-  "rollup-create-compatibility": runRollupCreateCompatibilityCase,
+  "authority-comment-scope": runAuthorityCommentScopeCase,
+  "authority-archive-record": runAuthorityArchiveRecordCase,
+  "authority-persisted-view-query": runAuthorityPersistedViewQueryCase,
+  "group-locale-browser": runGroupLocaleBrowserCase,
+  "comment-delete-browser": runCommentDeleteBrowserCase,
+  "authority-unreadable-group": runAuthorityUnreadableGroupCase,
+  "deleted-table-collaborator-recovery":
+    runDeletedTableCollaboratorRecoveryCase,
+  "circular-append-burst": runCircularAppendBurstCase,
+  "rollup-create-validation": runRollupCreateValidationCase,
+  "conditional-rollup-nested-or-matrix": runConditionalRollupNestedOrMatrixCase,
+  "rollup-link-identity-matrix": runRollupLinkIdentityMatrixCase,
+  "conditional-rollup-editor-browser": runConditionalRollupEditorBrowserCase,
+  "link-picker-tab-selection-browser": runLinkPickerTabSelectionBrowserCase,
   "autonumber-string-filter": runAutonumberStringFilterCase,
   "cross-base-conditional-base-id": runCrossBaseConditionalBaseIdCase,
+  "group-on-an-unreadable-column": runGroupOnAnUnreadableColumnCase,
+  "jsonb-lookup-aggregate": runJsonbLookupAggregateCase,
+  "legacy-column-visibility-metadata": runLegacyColumnVisibilityMetadataCase,
+  "nested-user-array-join-create": runNestedUserArrayJoinCreateCase,
   "or-filtered-rollup-scope": runOrFilteredRollupScopeCase,
   "same-named-fk-base-duplicate": runSameNamedFkBaseDuplicateCase,
-  "jsonb-lookup-aggregate": runJsonbLookupAggregateCase,
-  "nested-group-conditional-rollup": runNestedGroupConditionalRollupCase,
   "select-rollup-unique-and-count": runSelectRollupUniqueAndCountCase,
-  "link-rollup-unique-by-identity": runLinkRollupUniqueByIdentityCase,
-  "nested-user-array-join-create": runNestedUserArrayJoinCreateCase,
   "share-view-unready-data-db": runShareViewUnreadyDataDbCase,
+  "shared-form-cover-url": runSharedFormCoverUrlCase,
   "switch-mixed-branch-storage": runSwitchMixedBranchStorageCase,
   "undo-cursor-after-a-failed-undo": runUndoCursorAfterAFailedUndoCase,
-  "group-on-an-unreadable-column": runGroupOnAnUnreadableColumnCase,
-  "archive-granted-by-the-matrix": runArchiveGrantedByTheMatrixCase,
-  "comment-granted-by-the-matrix": runCommentGrantedByTheMatrixCase,
-  "legacy-column-visibility-metadata": runLegacyColumnVisibilityMetadataCase,
-  "shared-form-cover-url": runSharedFormCoverUrlCase,
 };
 
 export const executeRegisteredRunner = (

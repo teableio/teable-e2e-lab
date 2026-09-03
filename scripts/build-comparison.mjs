@@ -13,7 +13,6 @@ import { loadCaseCatalog, resolveCaseFilter } from "./case-catalog.mjs";
 import {
   buildComparison,
   renderComparisonMarkdown,
-  renderReferenceMarkdown,
 } from "./comparison-model.mjs";
 import { requiredEnv } from "./env.mjs";
 
@@ -77,7 +76,6 @@ const main = async () => {
 
   const payloads = await collectPayloads(artifactDir);
   const comparison = buildComparison({
-    engines: JSON.parse(process.env.E2E_LAB_ENGINES ?? '["v1","v2"]'),
     caseCatalog: plannedCatalog,
     executePlan,
     payloads,
@@ -86,8 +84,7 @@ const main = async () => {
   await mkdir(dirname(outputPath), { recursive: true });
   await writeFile(outputPath, `${JSON.stringify(comparison, null, 2)}\n`);
 
-  const markdown =
-    renderComparisonMarkdown(comparison) + renderReferenceMarkdown(comparison);
+  const markdown = renderComparisonMarkdown(comparison);
   if (process.env.GITHUB_STEP_SUMMARY) {
     appendFileSync(process.env.GITHUB_STEP_SUMMARY, markdown);
   } else {

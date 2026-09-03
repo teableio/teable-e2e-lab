@@ -138,11 +138,11 @@ export const loadCaseCatalog = async (repoRoot) => {
       runner: literalField(source, "runner", path),
       timeoutMs: numericField(source, "timeoutMs"),
       link: optionalLiteralField(source, "link"),
-      // Present = this case is never asked of v1, and the string says why.
-      // See framework/types.ts for the two things that legitimately land here.
-      skipV1: optionalLiteralField(source, "skipV1"),
       appliesSince: optionalLiteralField(source, "appliesSince"),
       sourceCommits: literalArrayField(source, "sourceCommits"),
+      // Absent means the harness default (sync). "hybrid" cases run in their
+      // own vitest invocation — see framework/engine.ts and run-plan-model.
+      computedUpdateMode: optionalLiteralField(source, "computedUpdateMode"),
     });
   }
   return catalog;

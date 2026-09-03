@@ -23,7 +23,7 @@ do not restate it elsewhere.
   the fixture seam: it only reads, it is what a browser sees, and it belongs
   INSIDE the checkpoint. It speaks the same SockJS transport a browser does,
   because the serialization boundary is often exactly where the damage is —
-  `realtime/view-filter-update-reaches-subscribers` reproduces an op that was
+  `realtime/y183-view-filter-update-reaches-subscribers` reproduces an op that was
   well-formed in memory and instruction-less on the wire.
 
 - **Which engine is the bug on?** teable-ee has two record engines, and v1 bugs
@@ -48,6 +48,15 @@ do not restate it elsewhere.
   column). Sentinel cases — guarding currently-correct behavior with no
   historical bug behind them — use `issue: "sentinel/<name>"` with status
   `fixed`.
+- **Which computed-update strategy is the bug under?** Almost always the
+  default: the harness pins the deterministic sync strategy and nothing needs
+  declaring. Bugs that live in the outbox dispatch seam only exist under the
+  production-default hybrid strategy, which is fixed at app boot — such a case
+  declares `computedUpdateMode: "hybrid"` (a string literal; the planner
+  parses it) and the workflow runs it in a separate vitest invocation. Its
+  runner must call `assertHybridComputedRuntime()` in setup, for the same
+  reason every runner proves v2: observing "absent" on an app that cannot
+  express the bug is the worst kind of green. See `framework/engine.ts`.
 
 ## 2. Write the files
 

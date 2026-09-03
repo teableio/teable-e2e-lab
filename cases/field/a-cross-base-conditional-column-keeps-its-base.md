@@ -38,3 +38,7 @@ so the state this case is about only exists between two bases of one space.
 
 The engine is asserted on the create response of the cross-base column itself —
 the request that puts the state under test in place.
+
+## Only v2 has these columns
+
+Conditional lookups and totals are v2 column types, and the dropped base id sat on the mapping boundary between the two engines that this fix moved.

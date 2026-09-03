@@ -13,8 +13,6 @@ export default defineBugCase({
   title: "A grid grouped by a column you cannot read still shows its rows",
   runner: "group-on-an-unreadable-column",
   timeoutMs: 300_000,
-  skipV1:
-    "the case builds its own base for the authority matrix, and only the case base is unstamped - a base created inside a runner is born on v2, so v1 cannot be asked this",
   bug: {
     issue: "T6944",
     status: "fixed",

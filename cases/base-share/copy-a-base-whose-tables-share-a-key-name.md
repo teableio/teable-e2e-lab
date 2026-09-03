@@ -39,8 +39,6 @@ The fixture then counts, before the checkpoint, how many tables in the schema
 carry the name. With only one there is nothing to collide, and the case would
 report on nothing.
 
-## The v1 column
+## Only v2 was repaired
 
-Skipped. The fix is on the v2 duplicate route's own foreign-key introspection;
-v1 keeps its legacy helper untouched until it retires, so a v1 answer here is a
-different question rather than a comparison.
+The fix is on the v2 duplicate route's own foreign-key introspection. v1 keeps its untouched legacy helper, so this case says nothing about the older engine either way.

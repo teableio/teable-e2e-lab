@@ -2,33 +2,40 @@ import type { INestApplication } from "@nestjs/common";
 import { performance } from "node:perf_hooks";
 import { initApp } from "../utils/init-app";
 import { getBugCase, resolveBugCaseIds } from "./registry";
-import { applyEngineRuntimeEnv, type LabEngine } from "./framework/engine";
+import {
+  applyEngineRuntimeEnv,
+  LAB_ENGINE,
+  labComputedUpdateMode,
+} from "./framework/engine";
 import { runBugCase } from "./framework/run-bug-case";
+import { closeBrowserRuntime } from "./framework/browser-runtime";
+
+// Before the app boots: pin the engine every case here guards. teable-ee is
+// migrating to v2 and v1 bugs are not being fixed, so there is one engine, not
+// a choice. See framework/engine.ts.
+applyEngineRuntimeEnv();
 
 // The single executable entry point, in the perf-lab mold: this file is copied
 // into teable-ee/community/apps/nestjs-backend/test/e2e-lab/ and run through
 // teable-ee's own vitest e2e setup, so auth bootstrap, seed user, and Nest app
 // startup stay aligned with the harness the product already maintains.
 //
-// One app PER ENGINE, every selected case in registry order under each. v2 is
-// the engine this lab guards — fixes land there and a returning bug is a
-// regression. v1 is a reference column: it is run to answer "what does the
-// engine our older customers are still on do with this?", it is recorded, and
-// it never fails a run. See framework/verdict.ts.
+// One app, every selected case in registry order. No engine loop and no
+// seed/execute mode split — bug fixtures are built and torn down inside each
+// case, and the revision under test is whatever this checkout is.
 //
-// Two things a reader will look for and should find here rather than guess:
-// reaching v1 takes more than an environment switch (framework/case-base.ts
-// unstamps each case's base), and a case whose feature does not exist on v1
-// declares `skipV1` rather than being discovered as a failure every run.
-//
-// Cases overlap, a few at a time. They used to run strictly one after another
-// because they shared a base and could not be trusted not to disturb each
-// other; framework/case-base.ts removed the sharing, and most of what a case
-// spends its time on is waiting rather than working — six of 106 cases held
-// 68% of the wall clock, nearly all of it watching for something that must not
-// happen. The width lives in vitest-e2e-lab.config.ts.
+// API cases overlap, a few at a time. Browser cases stay serial because they
+// share one development frontend and each needs its own full timeout for route
+// compilation and hydration. Framework/case-base.ts keeps their product data
+// isolated. The API concurrency width lives in vitest-e2e-lab.config.ts.
 
 const specStarted = performance.now();
+const browserRunners = new Set([
+  "authority-unreadable-group",
+  "comment-delete-browser",
+  "deleted-table-collaborator-recovery",
+  "group-locale-browser",
+]);
 
 const logPhase = (
   phase: string,
@@ -45,99 +52,83 @@ const logPhase = (
   );
 };
 
-// Which engines this run asks for. Both by default: v1 costs one extra app
-// boot and one extra pass, and a reference column nobody runs is not a
-// reference. A single-engine list is how a local direction-finding run keeps
-// its turnaround short.
-const parseEngineList = (raw = "v1,v2"): LabEngine[] => {
-  const engines = raw
-    .split(",")
-    .map((engine) => engine.trim())
-    .filter(Boolean);
-  const unsupported = engines.filter(
-    (engine) => engine !== "v1" && engine !== "v2",
-  );
-  if (unsupported.length > 0) {
-    throw new Error(
-      `Unsupported E2E_LAB_ENGINE_LIST: ${unsupported.join(", ")}. Available: v1, v2.`,
-    );
-  }
-  if (engines.length === 0) {
-    throw new Error("E2E_LAB_ENGINE_LIST must name at least one engine");
-  }
-  // v1 first, v2 last: the guarded engine is the one a reader should see at
-  // the bottom of the log, next to the exit code only it can turn red.
-  const unique = new Set(engines as LabEngine[]);
-  return (["v1", "v2"] as LabEngine[]).filter((engine) => unique.has(engine));
-};
-
 describe("e2e-lab bug regression runner (e2e)", () => {
   const caseIds = resolveBugCaseIds(process.env.E2E_LAB_CASE_FILTER ?? "all");
-  const bugCases = caseIds.map(getBugCase);
-  const engines = parseEngineList(process.env.E2E_LAB_ENGINE_LIST);
+  // The computed-update strategy is fixed when this process's app boots
+  // (framework/engine.ts), so an invocation can only honestly run the cases
+  // that declared its mode. The others are excluded loudly rather than run
+  // wrong: a hybrid case observed under sync would report "absent" about a
+  // seam that does not exist there.
+  const mode = labComputedUpdateMode();
+  const allSelected = caseIds.map(getBugCase);
+  const bugCases = allSelected.filter(
+    (bugCase) => (bugCase.computedUpdateMode ?? "sync") === mode,
+  );
+  const excluded = allSelected.filter(
+    (bugCase) => (bugCase.computedUpdateMode ?? "sync") !== mode,
+  );
+  if (excluded.length > 0) {
+    logPhase("mode-excluded", {
+      mode,
+      cases: excluded.map((bugCase) => bugCase.id).join(","),
+    });
+  }
+  if (bugCases.length === 0) {
+    throw new Error(
+      `No selected case runs under computed-update mode "${mode}". ` +
+        "The workflow gates each invocation on its own case list; locally, " +
+        "match E2E_LAB_COMPUTED_UPDATE_MODE to the cases in the filter.",
+    );
+  }
 
   logPhase("module-loaded", {
-    cases: caseIds.join(","),
+    cases: bugCases.map((bugCase) => bugCase.id).join(","),
+    computedUpdateMode: mode,
     commitSha: process.env.E2E_LAB_COMMIT_SHA ?? "(local)",
-    engines: engines.join(","),
+    engine: LAB_ENGINE,
   });
 
-  for (const engine of engines) {
-    describe(`engine ${engine}`, () => {
-      let app: INestApplication;
-      let appUrl: string;
-      let cookie: string | undefined;
+  let app: INestApplication;
+  let appUrl: string;
+  let cookie: string | undefined;
 
-      beforeAll(async () => {
-        // Set before the app boots and left set for the whole block: every
-        // helper reads the engine live, so this assignment is what makes the
-        // block mean what its name says.
-        process.env.E2E_LAB_ENGINE = engine;
-        applyEngineRuntimeEnv(engine);
-        const initStarted = performance.now();
-        const appCtx = await initApp();
-        app = appCtx.app;
-        appUrl = appCtx.appUrl;
-        cookie = appCtx.cookie;
-        logPhase("app-ready", {
-          engine,
-          initAppMs: Math.round(performance.now() - initStarted),
-          appUrl,
-        });
-      });
-
-      afterAll(async () => {
-        const closeStarted = performance.now();
-        await app?.close();
-        logPhase("app-closed", {
-          engine,
-          closeMs: Math.round(performance.now() - closeStarted),
-        });
-      });
-
-      for (const bugCase of bugCases) {
-        const skipReason = engine === "v1" ? bugCase.skipV1 : undefined;
-        const title = `observes ${bugCase.id} [${bugCase.bug.issue}] (${engine})`;
-
-        if (skipReason) {
-          // Skipped out loud. A case that silently vanished from one engine
-          // would leave a gap the report cannot tell from a lost payload, and
-          // the reason is the part a reader needs six months from now.
-          it.skip(`${title} — skipped on v1: ${skipReason}`, () => {});
-          continue;
-        }
-
-        it.concurrent(title, { timeout: bugCase.timeoutMs }, async () => {
-          logPhase("case:start", { caseId: bugCase.id, engine });
-          const caseStarted = performance.now();
-          await runBugCase(bugCase, { app, appUrl, cookie });
-          logPhase("case:done", {
-            caseId: bugCase.id,
-            engine,
-            caseMs: Math.round(performance.now() - caseStarted),
-          });
-        });
-      }
+  beforeAll(async () => {
+    const initStarted = performance.now();
+    const appCtx = await initApp();
+    app = appCtx.app;
+    appUrl = appCtx.appUrl;
+    cookie = appCtx.cookie;
+    logPhase("app-ready", {
+      initAppMs: Math.round(performance.now() - initStarted),
+      appUrl,
     });
+  });
+
+  afterAll(async () => {
+    const closeStarted = performance.now();
+    await closeBrowserRuntime();
+    await app?.close();
+    logPhase("app-closed", {
+      closeMs: Math.round(performance.now() - closeStarted),
+    });
+  });
+
+  for (const bugCase of bugCases) {
+    const title = `observes ${bugCase.id} [${bugCase.bug.issue}]`;
+    const options = { timeout: bugCase.timeoutMs };
+    const execute = async () => {
+      logPhase("case:start", { caseId: bugCase.id });
+      const caseStarted = performance.now();
+      await runBugCase(bugCase, { app, appUrl, cookie });
+      logPhase("case:done", {
+        caseId: bugCase.id,
+        caseMs: Math.round(performance.now() - caseStarted),
+      });
+    };
+    if (browserRunners.has(bugCase.runner)) {
+      it(title, options, execute);
+    } else {
+      it.concurrent(title, options, execute);
+    }
   }
 });

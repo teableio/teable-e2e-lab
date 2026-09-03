@@ -8,20 +8,20 @@ The executable path is deliberately the one teable-perf-lab proved out:
    resolves every requested ref to a pinned SHA. Everything downstream uses
    only those SHAs, so a branch moving mid-run cannot split the run across two
    revisions.
-3. One `execute` job per commit **per engine**: checkout teable-ee at the
-   pinned SHA, inject the lab into
-   `community/apps/nestjs-backend/test/e2e-lab/`, build the database from that
-   commit's own migrations plus the standard e2e seed, and run every selected
-   case through `@teable/backend-ee`'s vitest.
-
-   Both engines briefly shared a job, which was cheaper by one bootstrap and
-   wrong: two passes against one database means the second engine runs on
-   state the first left, and the guarded column is what would have been
-   reading it. Split, each engine has its own containers and its own database,
-   and the jobs run at the same time — the wall clock is one engine's, not
-   two. This is the arrangement teable-perf-lab has run both engines on all
-   along.
-
+3. One `execute` job per commit: checkout teable-ee at the pinned SHA, inject
+   the lab into `community/apps/nestjs-backend/test/e2e-lab/`, build the
+   database from that commit's own migrations plus the standard e2e seed, and
+   run every selected case serially through `@teable/backend-ee`'s vitest.
+   The job runs up to TWO vitest invocations against the same database: the
+   main one (teable-ee's e2e setup pins the deterministic sync computed-update
+   strategy), and — when the selection includes cases declaring
+   `computedUpdateMode: "hybrid"` — a second one whose app boots with
+   `V2_COMPUTED_UPDATE_MODE` unset, i.e. the production-default hybrid
+   strategy. The strategy is read once when the app process builds its v2
+   container, which is why this is an invocation split and not a per-case
+   switch; the planner emits one case filter per invocation and both write
+   into the same artifact directory, so acceptance counts them as one run.
+   See `framework/engine.ts`.
 4. `report` collects every payload, renders the bug × commit table, and
    enforces acceptance fail-closed.
 
@@ -29,52 +29,6 @@ There is no seed/execute job split and no seed-dump cache. Bug fixtures are
 small and built inside each case, and dumps could not be shared across commits
 anyway — different commits carry different Prisma migrations, which is exactly
 why perf-lab's cache key hashes the schema.
-
-## The two engines
-
-**v2 is guarded. v1 is a reference.**
-
-v2 is where fixes land, so a bug returning there is a regression someone must
-act on, and the verdict table below applies to it in full. v1 is run to answer
-a different question — what does the engine our older customers are still on do
-with the same case — and **nothing it reports fails a run**
-(`framework/verdict.ts`). It renders as its own table under the guarded one.
-
-Reaching v1 takes more than an environment switch, and the reason is worth
-knowing before trusting any v1 cell. It is also the one thing teable-perf-lab
-does not have to do: its cases run against the base the prisma e2e seed writes
-straight into the database, which never went through the product's create-base
-path and so carries `v2_enabled = false`. The switch alone decides there. Every
-case here builds its own base through the API instead — that is what keeps
-cases from disturbing each other — and the API stamps it. Routing asks `FORCE_V2_ALL` first and the
-base's own v2 flag second, and the product stamps every base it creates as v2 —
-so turning the switch off just falls through to the second rule. Measured
-2026-08-27: a full 129-case run with the switch off produced **not one**
-observation different from the v2 baseline, and the response header said why
-(reason `new_base` instead of `env_force_v2_all`). So `framework/case-base.ts`
-unstamps each case's base before the runner touches it. What that cannot do is
-make a base that was _born_ on v1, which is what real v1 customers have. That
-gap is the standing reason v1 never gates.
-
-### Cases that cannot be asked of v1
-
-A case declares `skipV1: "why"` and its v1 cell renders `⊘` — never run, never
-red. Two different things legitimately land there, which is why the field is a
-sentence and not a boolean:
-
-- **the feature does not exist on v1** — required links, undo capture columns,
-  field validation. v1 users do not have the bug because they do not have the
-  feature.
-- **the fixture cannot be built on v1** — a stored shape v1's own API
-  normalizes away. The feature works on v1; the case just cannot set up its
-  question there.
-
-Skipping is always DECLARED. Sniffing it out of an error message fails open: a
-case that genuinely breaks, whose error happens to read like a capability
-refusal, would be skipped forever and nobody would learn. Of 129 cases, 11
-declare it — established by re-asking each failure on a clean v1 base without
-the case's own fixture, which is the only method that separates a real v1
-defect from a v2-shaped fixture.
 
 ## Verdicts and gating
 
@@ -101,9 +55,7 @@ test); anything thrown outside every checkpoint is `error`.
 
 The report job fails when any of these hold, and only then:
 
-- a planned (case × commit) cell has no payload, or more than one — the
-  **v2** cells only; the same problems on the v1 side are listed under the
-  reference table and fail nothing;
+- a planned (case × commit) cell has no payload, or more than one;
 - a payload arrived for a case or commit outside the plan;
 - a payload carries a verdict string the table cannot render;
 - any cell is an `error`;
@@ -129,9 +81,7 @@ cell.
 ## Artifacts
 
 - `e2e-lab-results-<shortsha>-<run>`: one per commit — a JSON payload and a
-  markdown summary per case per engine, the engine in the file name as well as
-  in the payload (a shared stem would leave one engine overwriting the other,
-  which the fail-closed report would then read as a missing cell). Named without the attempt and uploaded with
+  markdown summary per case. Named without the attempt and uploaded with
   `overwrite`, so "Re-run failed jobs" replaces only the re-run column.
 - `e2e-lab-comparison-<run>-<attempt>`: `comparison.json`, the exact model the
   acceptance gate judged.
@@ -162,7 +112,7 @@ gh workflow run e2e-lab.yml \
   --repo teableio/teable-e2e-lab \
   --ref main \
   -f teable_ee_commits=develop \
-  -f case_filter=record/bulk-update-100-mixed-lands
+  -f case_filter=record/y154-bulk-update-100-mixed-lands
 ```
 
 Because `teableio/teable-ee` is private, the repository needs a read-only

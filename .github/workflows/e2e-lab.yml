@@ -62,6 +62,12 @@ jobs:
       execute_plan: ${{ steps.plan.outputs.execute_plan }}
       commit_plan: ${{ steps.plan.outputs.commit_plan }}
       case_ids: ${{ steps.plan.outputs.case_ids }}
+      # Per-invocation case filters: the computed-update strategy is fixed at
+      # app boot, so hybrid-mode cases run in a second vitest invocation.
+      # Empty means that invocation has nothing to run and its step is
+      # skipped. See framework/engine.ts.
+      sync_case_filter: ${{ steps.plan.outputs.sync_case_filter }}
+      hybrid_case_filter: ${{ steps.plan.outputs.hybrid_case_filter }}
       plan_summary: ${{ steps.plan.outputs.plan_summary }}
 
     steps:
@@ -205,16 +211,44 @@ jobs:
           pnpm exec playwright install --with-deps chromium
 
       - name: Run bug cases through teable-ee e2e
+        if: needs.resolve_inputs.outputs.sync_case_filter != ''
         working-directory: teable-ee
         run: |
           set -euo pipefail
 
           export E2E_LAB_ARTIFACT_DIR="${GITHUB_WORKSPACE}/e2e-lab-artifacts/${{ matrix.plan.artifactSuffix }}"
           export E2E_LAB_RUN_ID="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
-          export E2E_LAB_CASE_FILTER="${{ inputs.case_filter }}"
+          export E2E_LAB_CASE_FILTER="${{ needs.resolve_inputs.outputs.sync_case_filter }}"
           export E2E_LAB_COMMIT_SHA="${{ matrix.plan.sha }}"
           export E2E_LAB_GATING="${{ matrix.plan.gating }}"
           export E2E_LAB_ENGINE_LIST="${{ matrix.plan.engine }}"
+
+          pnpm -F @teable/backend-ee exec vitest run \
+            --config ./vitest-e2e-lab.config.ts \
+            ../../community/apps/nestjs-backend/test/e2e-lab/e2e-lab.e2e-spec.ts \
+            --silent=false
+
+      # Second invocation, own app process: cases declaring
+      # computedUpdateMode "hybrid" need the app booted WITHOUT
+      # V2_COMPUTED_UPDATE_MODE (the production-default strategy; the e2e
+      # setup otherwise pins sync). Runs even when the sync invocation went
+      # red — each invocation is independent evidence, and skipping this one
+      # would fail acceptance with missing payloads instead of an
+      # observation.
+      - name: Run hybrid computed-update bug cases through teable-ee e2e
+        if: >-
+          !cancelled() &&
+          needs.resolve_inputs.outputs.hybrid_case_filter != ''
+        working-directory: teable-ee
+        run: |
+          set -euo pipefail
+
+          export E2E_LAB_ARTIFACT_DIR="${GITHUB_WORKSPACE}/e2e-lab-artifacts/${{ matrix.plan.artifactSuffix }}"
+          export E2E_LAB_RUN_ID="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          export E2E_LAB_CASE_FILTER="${{ needs.resolve_inputs.outputs.hybrid_case_filter }}"
+          export E2E_LAB_COMMIT_SHA="${{ matrix.plan.sha }}"
+          export E2E_LAB_GATING="${{ matrix.plan.gating }}"
+          export E2E_LAB_COMPUTED_UPDATE_MODE="hybrid"
 
           pnpm -F @teable/backend-ee exec vitest run \
             --config ./vitest-e2e-lab.config.ts \

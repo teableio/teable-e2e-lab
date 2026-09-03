@@ -61,7 +61,7 @@ test("every column starts at the same offset on every line", () => {
       commits: twoCommits,
       rows: [
         {
-          caseId: "base-share/save-into-existing-base-twice",
+          caseId: "base-share/y156-save-into-existing-base-twice",
           issue: "T6840",
           status: "fixed",
           cells: [
@@ -71,7 +71,7 @@ test("every column starts at the same offset on every line", () => {
           transitions: [],
         },
         {
-          caseId: "smoke/auth-user",
+          caseId: "smoke/y153-auth-user",
           issue: "sentinel/auth",
           status: "fixed",
           cells: [{ verdict: "error", observed: "error" }, { missing: true }],

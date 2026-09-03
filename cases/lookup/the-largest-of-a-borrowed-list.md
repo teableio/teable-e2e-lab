@@ -67,3 +67,7 @@ column.
 Covering that half needs a source list that can hold `false`, which a borrowed
 tickbox column does not appear to produce. The runner refuses the boolean
 aggregations rather than asking a question it cannot tell the answer to.
+
+## Only v2 has this column
+
+Conditional totals are a v2 column type. There is no field on the older engine to ask this of.

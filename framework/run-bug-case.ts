@@ -3,7 +3,7 @@ import { writeBugArtifacts, type BugArtifactPayload } from "./artifacts";
 import { normalizeBugError, toBugTestFailure } from "./bug-error";
 import { withCaseBase } from "./case-base";
 import { executeRegisteredRunner } from "./runner-registry";
-import { labEngine } from "./engine";
+import { LAB_ENGINE } from "./engine";
 import { resolveVerdict, verdictFailsCi } from "./verdict";
 import { BugPresentError } from "./types";
 import type { BugCase, BugProbeResult, BugRunContext } from "./types";
@@ -23,7 +23,7 @@ export const runBugCase = async (
     ...appContext,
     runId: process.env.E2E_LAB_RUN_ID ?? `local-${Date.now()}`,
     commitSha: process.env.E2E_LAB_COMMIT_SHA ?? "local",
-    engine: labEngine(),
+    engine: LAB_ENGINE,
     artifactDir: process.env.E2E_LAB_ARTIFACT_DIR,
   };
   // Default gating: a local or single-commit run is judging "does this bug
@@ -39,15 +39,10 @@ export const runBugCase = async (
   // instead of escaping as a bare vitest error. See framework/case-base.ts for
   // why every case gets its own.
   try {
-    probe = await withCaseBase(
-      bugCase.id,
-      context.runId,
-      appContext.app,
-      async (baseId) => {
-        caseBaseId = baseId;
-        return executeRegisteredRunner(bugCase, context);
-      },
-    );
+    probe = await withCaseBase(bugCase.id, context.runId, async (baseId) => {
+      caseBaseId = baseId;
+      return executeRegisteredRunner(bugCase, context);
+    });
   } catch (error) {
     caught = error;
   }
@@ -93,7 +88,7 @@ export const runBugCase = async (
 
   await writeBugArtifacts(context.artifactDir, payload);
 
-  if (verdict === "unexpected-pass" && gating && context.engine !== "v1") {
+  if (verdict === "unexpected-pass" && gating) {
     // Good news, routed to a human instead of to the exit code: the metadata
     // flip is a judgment (was it really this bug that got fixed?), and failing
     // the run for good news teaches people to flip status without verifying.
@@ -106,7 +101,7 @@ export const runBugCase = async (
     );
   }
 
-  if (verdictFailsCi(verdict, { gating, engine: context.engine })) {
+  if (verdictFailsCi(verdict, { gating })) {
     throw toBugTestFailure(
       caught ??
         new Error(`verdict ${verdict} with nothing caught — harness bug`),
