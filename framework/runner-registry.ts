@@ -126,6 +126,7 @@ import { runGroupOnAnUnreadableColumnCase } from "./runners/group-on-an-unreadab
 import { runArchiveGrantedByTheMatrixCase } from "./runners/archive-granted-by-the-matrix.runner";
 import { runCommentGrantedByTheMatrixCase } from "./runners/comment-granted-by-the-matrix.runner";
 import { runLegacyColumnVisibilityMetadataCase } from "./runners/legacy-column-visibility-metadata.runner";
+import { runSharedFormCoverUrlCase } from "./runners/shared-form-cover-url.runner";
 import { runLookupOfRollupCreateCase } from "./runners/lookup-of-rollup-create.runner";
 import type {
   BugCase,
@@ -273,6 +274,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "archive-granted-by-the-matrix": runArchiveGrantedByTheMatrixCase,
   "comment-granted-by-the-matrix": runCommentGrantedByTheMatrixCase,
   "legacy-column-visibility-metadata": runLegacyColumnVisibilityMetadataCase,
+  "shared-form-cover-url": runSharedFormCoverUrlCase,
 };
 
 export const executeRegisteredRunner = (
