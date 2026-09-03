@@ -143,20 +143,29 @@ export const runSelectRollupUniqueAndCountCase = async (
 
     // The link is written in the children's declared order, which is the order
     // the summary is supposed to keep.
-    await apiCreateRecords(parent.id, {
-      fieldKeyType: FieldKeyType.Name,
-      typecast: false,
-      records: [
-        {
-          fields: {
-            [NAME_FIELD]: config.parentRowName,
-            [LINK_FIELD]: config.children.map((child) => ({
-              id: childIdByName.get(child.name) as string,
-            })),
+    const writeTheRow = async () =>
+      apiCreateRecords(parent.id, {
+        fieldKeyType: FieldKeyType.Name,
+        typecast: false,
+        records: [
+          {
+            fields: {
+              [NAME_FIELD]: config.parentRowName,
+              [LINK_FIELD]: config.children.map((child) => ({
+                id: childIdByName.get(child.name) as string,
+              })),
+            },
           },
-        },
-      ],
-    });
+        ],
+      });
+
+    // Which comes first, the row or the summaries. Adding a summary to a table
+    // that already holds rows fills it in as one job; writing a row into a table
+    // whose summaries already exist works them out as part of the write. Those
+    // are different paths and they have been wrong separately.
+    if (config.whenTheRowIsWritten === "beforeTheSummaries") {
+      await writeTheRow();
+    }
 
     const summary = async (name: string, expression: string) =>
       createField(parent.id, {
@@ -173,6 +182,32 @@ export const runSelectRollupUniqueAndCountCase = async (
     await summary(COMPACT_FIELD, "array_compact({values})");
     await summary(UNIQUE_FIELD, "array_unique({values})");
     await summary(COUNT_FIELD, "count({values})");
+
+    if (config.whenTheRowIsWritten === "afterTheSummaries") {
+      // The row first, then the links, as two writes. That is what a script
+      // does - create the parent, then attach the children - and it is the
+      // sequence the report follows. Writing both at once is a different path
+      // and is answered correctly on both sides of this fix.
+      const created = await apiCreateRecords(parent.id, {
+        fieldKeyType: FieldKeyType.Name,
+        typecast: false,
+        records: [{ fields: { [NAME_FIELD]: config.parentRowName } }],
+      });
+      const parentRowId = created.data.records[0]?.id;
+      if (!parentRowId) {
+        throw new Error("the parent row was not created");
+      }
+      await apiUpdateRecord(parent.id, parentRowId, {
+        fieldKeyType: FieldKeyType.Name,
+        record: {
+          fields: {
+            [LINK_FIELD]: config.children.map((child) => ({
+              id: childIdByName.get(child.name) as string,
+            })),
+          },
+        },
+      });
+    }
 
     const readParent = async () => {
       const response = await apiGetRecords(parent.id, {
@@ -287,6 +322,15 @@ export const runSelectRollupUniqueAndCountCase = async (
         // where it is broken - the order is wrong there first, and the count
         // only becomes wrong once two children agree.
         const first = check(settled.fields, initialUnique, "at first");
+
+        if (!config.alsoCheckAfterAnEdit) {
+          if (first.problems.length > 0) {
+            throw new Error(
+              `${first.problems.join("; ")}. The row read ${JSON.stringify(first.scene)}`,
+            );
+          }
+          return { first: first.scene, second: null };
+        }
 
         // The second half of the report: make two children agree, so the count
         // of distinct values and the count of rows stop being the same number.

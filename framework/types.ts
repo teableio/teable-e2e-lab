@@ -2092,8 +2092,17 @@ export interface SelectRollupUniqueAndCountCaseConfig {
   // correct - the runner refuses that.
   children: { name: string; status: string }[];
   parentRowName: string;
-  // The edit that makes two children agree, so counting rows and counting
-  // distinct values stop giving the same answer.
+  // Which comes first. "beforeTheSummaries" adds the summaries to a table that
+  // already holds the row; "afterTheSummaries" writes the row into a table whose
+  // summaries already exist. Filling a new summary in and working one out during
+  // a write are different paths, and they have been wrong separately.
+  whenTheRowIsWritten: "beforeTheSummaries" | "afterTheSummaries";
+  // Whether to go on to the second half - editing a child so two agree, which is
+  // what tells counting rows from counting distinct values. A case about the
+  // first computation alone leaves it off, because the edit is a recompute and
+  // repairs what it is meant to observe.
+  alsoCheckAfterAnEdit: boolean;
+  // The edit that makes two children agree. Only used when the above is true.
   retarget: { childName: string; status: string };
   settleTimeoutMs: number;
   pollIntervalMs: number;
