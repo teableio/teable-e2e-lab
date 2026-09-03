@@ -122,6 +122,8 @@ export interface BugCaseConfigByRunner {
   "rollup-create-compatibility": RollupCreateCompatibilityCaseConfig;
   "autonumber-string-filter": AutonumberStringFilterCaseConfig;
   "cross-base-conditional-base-id": CrossBaseConditionalBaseIdCaseConfig;
+  "or-filtered-rollup-scope": OrFilteredRollupScopeCaseConfig;
+  "same-named-fk-base-duplicate": SameNamedFkBaseDuplicateCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -936,6 +938,19 @@ export interface DuplicateSharedViewCaseConfig {
   baseId: "seed-base";
   tableNamePrefix: string;
   rowTitle: string;
+  // Which question to ask of the copy. "copyHasItsOwnLink" is the older one -
+  // the duplicate must succeed and must not answer on the source's public
+  // address. "copyIsNotShared" is what the copy should carry instead: nothing.
+  assert: "copyHasItsOwnLink" | "copyIsNotShared";
+  // Share rules set on the source view before duplicating. Only meaningful for
+  // "copyIsNotShared", where inheriting them is the point: a password the copy
+  // carries is a password that opens a table nobody chose to publish. Must
+  // include one, or the fixture check refuses to run.
+  shareMeta?: {
+    password?: string;
+    allowCopy?: boolean;
+    includeHiddenField?: boolean;
+  };
 }
 
 // A row whose id body is not the 16 characters this version generates - what
@@ -1982,4 +1997,36 @@ export interface CrossBaseConditionalBaseIdCaseConfig {
   sourceRows: { category: string; amount: number }[];
   // The category the single host row carries, and so the rows the columns read.
   matchedCategory: string;
+}
+
+// A total over linked rows narrowed with an "any of these" condition, which is
+// written as OR and is where the total stopped respecting the link.
+export interface OrFilteredRollupScopeCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Rows in the other table. `owner` says which host row they belong to, and
+  // only the linked host's rows are actually linked - the rest exist to be
+  // wrongly counted. The runner refuses a fixture missing any of the three
+  // kinds it needs; see the runner.
+  work: { name: string; owner: string; status: string; amount: number }[];
+  // The statuses the condition selects, ORed together. At least two, or there
+  // is no OR to get wrong.
+  selectedStatuses: string[];
+  // The host row joined to its own work.
+  linkedHost: string;
+  // The host row joined to nothing, which is the symptom the report leads with.
+  unlinkedHost: string;
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
+}
+
+// A base whose tables each carry a foreign key under one name, which is what an
+// old base has been holding since before the naming changed.
+export interface SameNamedFkBaseDuplicateCaseConfig {
+  baseNamePrefix: string;
+  // Two at least: one table cannot collide with itself, and the collision is
+  // the bug. The runner refuses fewer.
+  tableNames: string[];
+  // The single row each table carries, so the copy has rows to move.
+  rowTitle: string;
 }

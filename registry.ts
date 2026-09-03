@@ -29,6 +29,9 @@ import rollupCreateCompatibilityCase from "./cases/field/a-total-its-source-cann
 import conditionalRollupCreateCompatibilityCase from "./cases/field/a-conditional-total-its-source-cannot-give.case";
 import autonumberStringFilterCase from "./cases/filter/a-row-number-filter-typed-into-the-box.case";
 import crossBaseConditionalBaseIdCase from "./cases/field/a-cross-base-conditional-column-keeps-its-base.case";
+import duplicatedTableStartsUnsharedCase from "./cases/table/a-duplicated-table-starts-unshared.case";
+import orFilteredRollupScopeCase from "./cases/lookup/an-any-of-these-total-stays-inside-its-link.case";
+import sameNamedFkBaseDuplicateCase from "./cases/base-share/copy-a-base-whose-tables-share-a-key-name.case";
 import sparseBatchUpdateCase from "./cases/record/a-batch-write-leaves-what-it-did-not-mention.case";
 import generatedFormulaColumnCase from "./cases/record/edit-a-cell-behind-a-generated-formula.case";
 import legacyGeneratedAuditColumnCase from "./cases/record/add-a-row-to-a-legacy-table.case";
@@ -168,6 +171,9 @@ const cases = [
   conditionalRollupCreateCompatibilityCase,
   autonumberStringFilterCase,
   crossBaseConditionalBaseIdCase,
+  duplicatedTableStartsUnsharedCase,
+  orFilteredRollupScopeCase,
+  sameNamedFkBaseDuplicateCase,
   sparseBatchUpdateCase,
   generatedFormulaColumnCase,
   legacyGeneratedAuditColumnCase,
