@@ -21,6 +21,7 @@ export default defineBugCase({
     baseId: "seed-base",
     tableNamePrefix: "e2e-lab-legacy-column-meta",
     rowTitle: "a-row-in-the-table",
+    legacy: "bothVisibilityNotes",
     order: 1,
     width: 241,
   },

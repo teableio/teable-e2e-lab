@@ -44,6 +44,8 @@ import groupOnAnUnreadableColumnCase from "./cases/view/a-grid-grouped-by-a-colu
 import archiveGrantedByTheMatrixCase from "./cases/record/archive-a-row-your-role-says-you-may.case";
 import commentGrantedByTheMatrixCase from "./cases/record/comment-on-a-row-your-role-lets-you-see.case";
 import legacyColumnVisibilityMetadataCase from "./cases/view/a-view-that-says-both-things-about-a-column.case";
+import legacyColumnNoPositionCase from "./cases/view/a-column-the-view-does-not-place.case";
+import sharedFormCoverUrlCase from "./cases/base-share/a-shared-forms-picture.case";
 import sparseBatchUpdateCase from "./cases/record/a-batch-write-leaves-what-it-did-not-mention.case";
 import generatedFormulaColumnCase from "./cases/record/edit-a-cell-behind-a-generated-formula.case";
 import legacyGeneratedAuditColumnCase from "./cases/record/add-a-row-to-a-legacy-table.case";
@@ -198,6 +200,8 @@ const cases = [
   archiveGrantedByTheMatrixCase,
   commentGrantedByTheMatrixCase,
   legacyColumnVisibilityMetadataCase,
+  legacyColumnNoPositionCase,
+  sharedFormCoverUrlCase,
   sparseBatchUpdateCase,
   generatedFormulaColumnCase,
   legacyGeneratedAuditColumnCase,

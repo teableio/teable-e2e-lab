@@ -136,6 +136,7 @@ export interface BugCaseConfigByRunner {
   "archive-granted-by-the-matrix": ArchiveGrantedByTheMatrixCaseConfig;
   "comment-granted-by-the-matrix": CommentGrantedByTheMatrixCaseConfig;
   "legacy-column-visibility-metadata": LegacyColumnVisibilityMetadataCaseConfig;
+  "shared-form-cover-url": SharedFormCoverUrlCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -2226,8 +2227,26 @@ export interface LegacyColumnVisibilityMetadataCaseConfig {
   baseId: "seed-base";
   tableNamePrefix: string;
   rowTitle: string;
-  // Written into the stored notes beside the two visibility keys, so the case
-  // can tell a settled entry from an emptied one.
+  // Which shape of old notes to write. "bothVisibilityNotes" carries the older
+  // key beside the current one; "noPosition" carries no order at all. Both are
+  // shapes nothing writes any more, and each broke differently.
+  legacy: "bothVisibilityNotes" | "noPosition";
+  // Written into the stored notes for the "bothVisibilityNotes" shape only. The
+  // other shape is defined by having no order.
   order: number;
+  // Written into the stored notes either way, so a settled entry can be told
+  // from an emptied one.
   width: number;
+}
+
+// A shared form whose picture is stored as a short path and read through two
+// layers, each of which works the address out.
+export interface SharedFormCoverUrlCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  rowTitle: string;
+  // Where the picture lives, as it is stored. Must be a short path: an address
+  // is what the fix passes through untouched, so an address here would make the
+  // case green either way. The runner refuses one.
+  storedPath: string;
 }
