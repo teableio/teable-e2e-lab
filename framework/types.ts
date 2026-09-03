@@ -125,6 +125,7 @@ export interface BugCaseConfigByRunner {
   "or-filtered-rollup-scope": OrFilteredRollupScopeCaseConfig;
   "same-named-fk-base-duplicate": SameNamedFkBaseDuplicateCaseConfig;
   "jsonb-lookup-aggregate": JsonbLookupAggregateCaseConfig;
+  "nested-group-conditional-rollup": NestedGroupConditionalRollupCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -2051,6 +2052,30 @@ export interface JsonbLookupAggregateCaseConfig {
   // is deliberately absent: an unticked box does not reach a borrowed list, so
   // all-of and any-of answer the same whether they work or not. See the runner.
   aggregations: ("max" | "min")[];
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
+}
+
+// A conditional total whose condition has a bracket in it - "match the
+// customer, and within that either of two other things".
+export interface NestedGroupConditionalRollupCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  sourceRows: {
+    name: string;
+    matchKey: string;
+    flagA: string;
+    flagB: string;
+  }[];
+  // The rows doing the counting. The runner refuses a fixture without a host
+  // whose reference matches nothing, without a host counting anything, or
+  // without a row the bracket excludes - see the runner for why each is needed.
+  hosts: { name: string; matchKey: string }[];
+  // The bracket: FlagA is this OR FlagB is that.
+  bracketFlagAValue: string;
+  bracketFlagBValue: string;
+  // The control column beside it, with no bracket: FlagA is this.
+  flatFlagAValue: string;
   settleTimeoutMs: number;
   pollIntervalMs: number;
 }

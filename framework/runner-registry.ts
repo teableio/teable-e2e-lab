@@ -115,6 +115,7 @@ import { runCrossBaseConditionalBaseIdCase } from "./runners/cross-base-conditio
 import { runOrFilteredRollupScopeCase } from "./runners/or-filtered-rollup-scope.runner";
 import { runSameNamedFkBaseDuplicateCase } from "./runners/same-named-fk-base-duplicate.runner";
 import { runJsonbLookupAggregateCase } from "./runners/jsonb-lookup-aggregate.runner";
+import { runNestedGroupConditionalRollupCase } from "./runners/nested-group-conditional-rollup.runner";
 import { runLookupOfRollupCreateCase } from "./runners/lookup-of-rollup-create.runner";
 import type {
   BugCase,
@@ -251,6 +252,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "or-filtered-rollup-scope": runOrFilteredRollupScopeCase,
   "same-named-fk-base-duplicate": runSameNamedFkBaseDuplicateCase,
   "jsonb-lookup-aggregate": runJsonbLookupAggregateCase,
+  "nested-group-conditional-rollup": runNestedGroupConditionalRollupCase,
 };
 
 export const executeRegisteredRunner = (

@@ -33,6 +33,7 @@ import duplicatedTableStartsUnsharedCase from "./cases/table/a-duplicated-table-
 import orFilteredRollupScopeCase from "./cases/lookup/an-any-of-these-total-stays-inside-its-link.case";
 import sameNamedFkBaseDuplicateCase from "./cases/base-share/copy-a-base-whose-tables-share-a-key-name.case";
 import jsonbLookupAggregateCase from "./cases/lookup/the-largest-of-a-borrowed-list.case";
+import nestedGroupConditionalRollupCase from "./cases/lookup/a-condition-with-a-bracket-in-it.case";
 import sparseBatchUpdateCase from "./cases/record/a-batch-write-leaves-what-it-did-not-mention.case";
 import generatedFormulaColumnCase from "./cases/record/edit-a-cell-behind-a-generated-formula.case";
 import legacyGeneratedAuditColumnCase from "./cases/record/add-a-row-to-a-legacy-table.case";
@@ -176,6 +177,7 @@ const cases = [
   orFilteredRollupScopeCase,
   sameNamedFkBaseDuplicateCase,
   jsonbLookupAggregateCase,
+  nestedGroupConditionalRollupCase,
   sparseBatchUpdateCase,
   generatedFormulaColumnCase,
   legacyGeneratedAuditColumnCase,
