@@ -114,6 +114,7 @@ import { runAutonumberStringFilterCase } from "./runners/autonumber-string-filte
 import { runCrossBaseConditionalBaseIdCase } from "./runners/cross-base-conditional-base-id.runner";
 import { runOrFilteredRollupScopeCase } from "./runners/or-filtered-rollup-scope.runner";
 import { runSameNamedFkBaseDuplicateCase } from "./runners/same-named-fk-base-duplicate.runner";
+import { runJsonbLookupAggregateCase } from "./runners/jsonb-lookup-aggregate.runner";
 import { runLookupOfRollupCreateCase } from "./runners/lookup-of-rollup-create.runner";
 import type {
   BugCase,
@@ -249,6 +250,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "cross-base-conditional-base-id": runCrossBaseConditionalBaseIdCase,
   "or-filtered-rollup-scope": runOrFilteredRollupScopeCase,
   "same-named-fk-base-duplicate": runSameNamedFkBaseDuplicateCase,
+  "jsonb-lookup-aggregate": runJsonbLookupAggregateCase,
 };
 
 export const executeRegisteredRunner = (
