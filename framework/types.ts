@@ -2226,8 +2226,14 @@ export interface LegacyColumnVisibilityMetadataCaseConfig {
   baseId: "seed-base";
   tableNamePrefix: string;
   rowTitle: string;
-  // Written into the stored notes beside the two visibility keys, so the case
-  // can tell a settled entry from an emptied one.
+  // Which shape of old notes to write. "bothVisibilityNotes" carries the older
+  // key beside the current one; "noPosition" carries no order at all. Both are
+  // shapes nothing writes any more, and each broke differently.
+  legacy: "bothVisibilityNotes" | "noPosition";
+  // Written into the stored notes for the "bothVisibilityNotes" shape only. The
+  // other shape is defined by having no order.
   order: number;
+  // Written into the stored notes either way, so a settled entry can be told
+  // from an emptied one.
   width: number;
 }

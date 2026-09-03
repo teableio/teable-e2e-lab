@@ -7,9 +7,12 @@ import { fixtureDb } from "../fixture-db";
 import type { BugCaseFor, BugProbeResult, BugRunContext } from "../types";
 import type { LegacyColumnVisibilityMetadataCaseConfig } from "../types";
 
-// A view whose stored notes about a column say both "shown" and "not hidden" ->
-// open the table -> checkpoint: the view comes back, and says one thing about
-// that column.
+// A view whose stored notes about a column are of a shape nothing writes any
+// more -> open the table -> checkpoint: the view comes back, and the entry is
+// settled.
+//
+// Two shapes, on one runner because the fixture and the observation are the
+// same: write notes no request produces, then read the views.
 //
 // Which columns a view shows has been recorded two ways over the life of this
 // product: an older note saying whether a column is SHOWN, and the current one
@@ -72,18 +75,24 @@ export const runLegacyColumnVisibilityMetadataCase = async (
       feature: "getViews",
     });
 
-    // What a view made long enough ago carries: the older note about whether
-    // the column is shown, beside the current one about whether it is hidden.
-    // Written with SQL because nothing writes that shape any more.
+    // What a view made long enough ago carries. Written with SQL because
+    // nothing writes either shape any more.
     const db = fixtureDb(context.app);
-    const legacy = {
-      [columnId]: {
-        order: config.order,
-        visible: true,
-        hidden: false,
-        width: config.width,
-      },
-    };
+    const columnIndex = table.fields.findIndex(
+      (field: { id: string }) => field.id === columnId,
+    );
+    const legacy =
+      config.legacy === "bothVisibilityNotes"
+        ? {
+            [columnId]: {
+              order: config.order,
+              visible: true,
+              hidden: false,
+              width: config.width,
+            },
+          }
+        : // No position at all - the other shape old views carry.
+          { [columnId]: { width: config.width } };
     await db.execute(
       `UPDATE "view" SET "column_meta" = $1 WHERE "id" = $2`,
       JSON.stringify(legacy),
@@ -97,14 +106,19 @@ export const runLegacyColumnVisibilityMetadataCase = async (
       `SELECT "column_meta" AS "columnMeta" FROM "view" WHERE "id" = $1`,
       viewId,
     );
-    if (!String(stored[0]?.columnMeta ?? "").includes('"visible"')) {
+    const storedText = String(stored[0]?.columnMeta ?? "");
+    const missingMark =
+      config.legacy === "bothVisibilityNotes" ? '"visible"' : '"order"';
+    const present = storedText.includes(missingMark);
+    if (config.legacy === "bothVisibilityNotes" ? !present : present) {
       throw new Error(
-        `the stored notes do not carry the older key: ${stored[0]?.columnMeta} - the fixture is not in place`,
+        `the stored notes are not the shape this case is about (${config.legacy}): ${storedText} - ` +
+          "the fixture is not in place",
       );
     }
 
     const probe = await bugCheckpoint(
-      "a-view-carrying-both-notes-about-a-column-still-reads",
+      "a-view-with-old-notes-about-a-column-still-reads",
       async () => {
         const listed = await readViews();
         const body =
@@ -129,16 +143,34 @@ export const runLegacyColumnVisibilityMetadataCase = async (
             `the view came back with nothing about the column: ${body}`,
           );
         }
-        if ("visible" in entry) {
-          throw new Error(
-            `the view still says both things about the column: ${JSON.stringify(entry)} - ` +
-              "whatever reads this next is handed the contradiction",
-          );
+        if (config.legacy === "bothVisibilityNotes") {
+          if ("visible" in entry) {
+            throw new Error(
+              `the view still says both things about the column: ${JSON.stringify(entry)} - ` +
+                "whatever reads this next is handed the contradiction",
+            );
+          }
+          if (entry.hidden !== false) {
+            throw new Error(
+              `the view came back saying the column is ${JSON.stringify(entry.hidden)}, expected false: ` +
+                JSON.stringify(entry),
+            );
+          }
+        } else {
+          // The entry has to come back with a position. Where a column sits is
+          // not optional to whatever draws the view, and the stored notes do
+          // not say.
+          if (entry.order !== columnIndex) {
+            throw new Error(
+              `the view came back with the column at ${JSON.stringify(entry.order)}, expected ` +
+                `${columnIndex} - its place among the columns: ${JSON.stringify(entry)}`,
+            );
+          }
         }
-        if (entry.hidden !== false) {
+        // Either way, what the notes did carry survives.
+        if (entry.width !== config.width) {
           throw new Error(
-            `the view came back saying the column is ${JSON.stringify(entry.hidden)}, expected false: ` +
-              JSON.stringify(entry),
+            `the width was ${JSON.stringify(entry.width)}, expected ${config.width}: ${JSON.stringify(entry)}`,
           );
         }
         return { entry };
