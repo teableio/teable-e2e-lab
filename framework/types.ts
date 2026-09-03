@@ -936,6 +936,19 @@ export interface DuplicateSharedViewCaseConfig {
   baseId: "seed-base";
   tableNamePrefix: string;
   rowTitle: string;
+  // Which question to ask of the copy. "copyHasItsOwnLink" is the older one -
+  // the duplicate must succeed and must not answer on the source's public
+  // address. "copyIsNotShared" is what the copy should carry instead: nothing.
+  assert: "copyHasItsOwnLink" | "copyIsNotShared";
+  // Share rules set on the source view before duplicating. Only meaningful for
+  // "copyIsNotShared", where inheriting them is the point: a password the copy
+  // carries is a password that opens a table nobody chose to publish. Must
+  // include one, or the fixture check refuses to run.
+  shareMeta?: {
+    password?: string;
+    allowCopy?: boolean;
+    includeHiddenField?: boolean;
+  };
 }
 
 // A row whose id body is not the 16 characters this version generates - what
