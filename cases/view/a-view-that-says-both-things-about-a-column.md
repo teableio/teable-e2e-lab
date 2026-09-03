@@ -44,3 +44,24 @@ and the case would report on nothing.
 The entry also carries an order and a width, so a "settled" entry can be told
 from an emptied one: dropping the whole entry would satisfy "the older note is
 gone" without keeping anything the view needs.
+
+## The v1 column
+
+v1 is red on every column of the acceptance matrix, `develop` included, and for a
+different reason from v2's. It does not fail the request — it answers 200 and
+hands back the entry exactly as stored:
+
+```
+{"order":1,"visible":true,"hidden":false,"width":241}
+```
+
+So on the older engine this data never caused an outage and was never settled
+either; both notes are still passed through today. The two engines fail this case
+in opposite directions, which is worth knowing before anyone reads the v1 column
+as "v1 was affected too".
+
+Reported, not enforced — the v1 column is a reference and never gates a run. It
+is the fourth case here to find a v2-only fix leaving the older engine as it was;
+the others are `lookup/distinct-choices-in-the-order-they-appear`,
+`lookup/two-records-with-one-name-are-two-records` and
+`formula/a-column-that-picks-by-case`.
