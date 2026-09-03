@@ -133,6 +133,9 @@ export interface BugCaseConfigByRunner {
   "switch-mixed-branch-storage": SwitchMixedBranchStorageCaseConfig;
   "undo-cursor-after-a-failed-undo": UndoCursorAfterAFailedUndoCaseConfig;
   "group-on-an-unreadable-column": GroupOnAnUnreadableColumnCaseConfig;
+  "archive-granted-by-the-matrix": ArchiveGrantedByTheMatrixCaseConfig;
+  "comment-granted-by-the-matrix": CommentGrantedByTheMatrixCaseConfig;
+  "legacy-column-visibility-metadata": LegacyColumnVisibilityMetadataCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -2194,4 +2197,37 @@ export interface GroupOnAnUnreadableColumnCaseConfig {
   // Two rows at least: a request that returns nothing must not look like one
   // that returns everything.
   rows: { name: string; stage: string; cost: number }[];
+}
+
+// Somebody whose authority-matrix role grants archiving, arriving in the base
+// through that role and therefore as a Viewer.
+export interface ArchiveGrantedByTheMatrixCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Rows, split by team. The role reaches one team's rows and not the other's;
+  // the runner refuses a fixture missing either side.
+  rows: { name: string; team: string }[];
+  allowedTeam: string;
+}
+
+// Somebody whose authority-matrix role lets them comment, arriving in the base
+// through that role and therefore as a Viewer.
+export interface CommentGrantedByTheMatrixCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  rows: { name: string; team: string }[];
+  allowedTeam: string;
+  commentText: string;
+}
+
+// A view whose stored notes about a column carry both the older key and the
+// current one - what a view made long enough ago has been carrying all along.
+export interface LegacyColumnVisibilityMetadataCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  rowTitle: string;
+  // Written into the stored notes beside the two visibility keys, so the case
+  // can tell a settled entry from an emptied one.
+  order: number;
+  width: number;
 }

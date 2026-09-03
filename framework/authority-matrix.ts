@@ -68,6 +68,8 @@ export interface RestrictedTableRule {
 type SignedInClient = Awaited<ReturnType<typeof createNewUserAxios>>;
 
 export interface RestrictedPerson {
+  // How they got in, carried through so a case can say so in its report.
+  join: "editor" | "throughTheRoleAlone";
   // Signed in as the restricted person. Their requests are the observation.
   axios: SignedInClient;
   userId: string;
@@ -97,6 +99,13 @@ export const withRestrictedPerson = async (options: {
   namePrefix: string;
   runId: string;
   buildTables: (baseId: string) => Promise<RestrictedTableRule[]>;
+  // How the person gets into the space. "editor" invites them first, which is
+  // the ordinary shape: somebody already working in the space, further limited
+  // by a role. "throughTheRoleAlone" invites nobody - being given the role is
+  // what joins them, and it joins them as a Viewer. That difference is not
+  // cosmetic: a Viewer's base role withholds things a role may grant, and bugs
+  // have lived exactly in the gap between the two.
+  join?: "editor" | "throughTheRoleAlone";
 }): Promise<RestrictedPerson> => {
   if (isInsideCheckpoint()) {
     throw new Error(
@@ -132,13 +141,16 @@ export const withRestrictedPerson = async (options: {
     });
     const userId = (await personAxios.get(USER_ME)).data.id as string;
 
-    // Into the space as an ordinary editor. Not an administrator of the matrix:
+    // Into the space as an ordinary editor, unless the case wants the person to
+    // arrive through the role alone. Never as an administrator of the matrix:
     // an administrator is exempt from it, and this whole fixture exists to
     // produce somebody who is not.
-    await axios.post(urlBuilder(EMAIL_SPACE_INVITATION, { spaceId }), {
-      role: Role.Editor,
-      emails: [RESTRICTED_EMAIL],
-    });
+    if ((options.join ?? "editor") === "editor") {
+      await axios.post(urlBuilder(EMAIL_SPACE_INVITATION, { spaceId }), {
+        role: Role.Editor,
+        emails: [RESTRICTED_EMAIL],
+      });
+    }
 
     await axios.patch(urlBuilder(UPDATE_AUTHORITY_MATRIX_STATUS, { baseId }), {
       enabled: true,
@@ -182,6 +194,7 @@ export const withRestrictedPerson = async (options: {
 
     return {
       axios: personAxios,
+      join: options.join ?? "editor",
       userId,
       email: RESTRICTED_EMAIL,
       spaceId,

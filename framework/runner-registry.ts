@@ -123,6 +123,9 @@ import { runShareViewUnreadyDataDbCase } from "./runners/share-view-unready-data
 import { runSwitchMixedBranchStorageCase } from "./runners/switch-mixed-branch-storage.runner";
 import { runUndoCursorAfterAFailedUndoCase } from "./runners/undo-cursor-after-a-failed-undo.runner";
 import { runGroupOnAnUnreadableColumnCase } from "./runners/group-on-an-unreadable-column.runner";
+import { runArchiveGrantedByTheMatrixCase } from "./runners/archive-granted-by-the-matrix.runner";
+import { runCommentGrantedByTheMatrixCase } from "./runners/comment-granted-by-the-matrix.runner";
+import { runLegacyColumnVisibilityMetadataCase } from "./runners/legacy-column-visibility-metadata.runner";
 import { runLookupOfRollupCreateCase } from "./runners/lookup-of-rollup-create.runner";
 import type {
   BugCase,
@@ -267,6 +270,9 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "switch-mixed-branch-storage": runSwitchMixedBranchStorageCase,
   "undo-cursor-after-a-failed-undo": runUndoCursorAfterAFailedUndoCase,
   "group-on-an-unreadable-column": runGroupOnAnUnreadableColumnCase,
+  "archive-granted-by-the-matrix": runArchiveGrantedByTheMatrixCase,
+  "comment-granted-by-the-matrix": runCommentGrantedByTheMatrixCase,
+  "legacy-column-visibility-metadata": runLegacyColumnVisibilityMetadataCase,
 };
 
 export const executeRegisteredRunner = (
