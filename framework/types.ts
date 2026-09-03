@@ -122,6 +122,7 @@ export interface BugCaseConfigByRunner {
   "rollup-create-compatibility": RollupCreateCompatibilityCaseConfig;
   "autonumber-string-filter": AutonumberStringFilterCaseConfig;
   "cross-base-conditional-base-id": CrossBaseConditionalBaseIdCaseConfig;
+  "or-filtered-rollup-scope": OrFilteredRollupScopeCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -1995,4 +1996,25 @@ export interface CrossBaseConditionalBaseIdCaseConfig {
   sourceRows: { category: string; amount: number }[];
   // The category the single host row carries, and so the rows the columns read.
   matchedCategory: string;
+}
+
+// A total over linked rows narrowed with an "any of these" condition, which is
+// written as OR and is where the total stopped respecting the link.
+export interface OrFilteredRollupScopeCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Rows in the other table. `owner` says which host row they belong to, and
+  // only the linked host's rows are actually linked - the rest exist to be
+  // wrongly counted. The runner refuses a fixture missing any of the three
+  // kinds it needs; see the runner.
+  work: { name: string; owner: string; status: string; amount: number }[];
+  // The statuses the condition selects, ORed together. At least two, or there
+  // is no OR to get wrong.
+  selectedStatuses: string[];
+  // The host row joined to its own work.
+  linkedHost: string;
+  // The host row joined to nothing, which is the symptom the report leads with.
+  unlinkedHost: string;
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
 }

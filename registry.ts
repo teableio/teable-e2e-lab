@@ -30,6 +30,7 @@ import conditionalRollupCreateCompatibilityCase from "./cases/field/a-conditiona
 import autonumberStringFilterCase from "./cases/filter/a-row-number-filter-typed-into-the-box.case";
 import crossBaseConditionalBaseIdCase from "./cases/field/a-cross-base-conditional-column-keeps-its-base.case";
 import duplicatedTableStartsUnsharedCase from "./cases/table/a-duplicated-table-starts-unshared.case";
+import orFilteredRollupScopeCase from "./cases/lookup/an-any-of-these-total-stays-inside-its-link.case";
 import sparseBatchUpdateCase from "./cases/record/a-batch-write-leaves-what-it-did-not-mention.case";
 import generatedFormulaColumnCase from "./cases/record/edit-a-cell-behind-a-generated-formula.case";
 import legacyGeneratedAuditColumnCase from "./cases/record/add-a-row-to-a-legacy-table.case";
@@ -170,6 +171,7 @@ const cases = [
   autonumberStringFilterCase,
   crossBaseConditionalBaseIdCase,
   duplicatedTableStartsUnsharedCase,
+  orFilteredRollupScopeCase,
   sparseBatchUpdateCase,
   generatedFormulaColumnCase,
   legacyGeneratedAuditColumnCase,

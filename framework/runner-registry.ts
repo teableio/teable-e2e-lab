@@ -112,6 +112,7 @@ import { runSingleFieldPendingStateCase } from "./runners/single-field-pending-s
 import { runRollupCreateCompatibilityCase } from "./runners/rollup-create-compatibility.runner";
 import { runAutonumberStringFilterCase } from "./runners/autonumber-string-filter.runner";
 import { runCrossBaseConditionalBaseIdCase } from "./runners/cross-base-conditional-base-id.runner";
+import { runOrFilteredRollupScopeCase } from "./runners/or-filtered-rollup-scope.runner";
 import { runLookupOfRollupCreateCase } from "./runners/lookup-of-rollup-create.runner";
 import type {
   BugCase,
@@ -245,6 +246,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "rollup-create-compatibility": runRollupCreateCompatibilityCase,
   "autonumber-string-filter": runAutonumberStringFilterCase,
   "cross-base-conditional-base-id": runCrossBaseConditionalBaseIdCase,
+  "or-filtered-rollup-scope": runOrFilteredRollupScopeCase,
 };
 
 export const executeRegisteredRunner = (
