@@ -145,6 +145,12 @@ The shape is gone; the runner is not kept.
 | `4b57c03da` | T7070 | Written and run. The fixture builds cleanly - a manyOne link with a column borrowed through it, then `fixture-db` drops the hidden `__fk_` column the link's own settings still name - and adding a row to the other table is refused. But the refusal is `Failed to insert record: column t.__fk_… does not exist`, raised during the insert, while the fix repairs `Failed to propagate dirty records`, raised by the deferred propagate. Two call sites. The commit's own e2e reaches the second by draining an outbox inside the v2 test container; this harness runs the Nest application, where the same small fixture computes inline and never gets there. Tried one-way and two-way links; both fail in the insert. Same trap as T6728. **The insert-path failure is still present on `develop`** - see the note below the table. |
 | `893d0ce20` | T7066 | Written and run twice, green on the fix's parent both times. The report's precondition is that the summaries exist before the row does, so the answer is worked out during the write rather than filled in afterwards - built first by creating the row and its links in one call, then by creating the row and attaching the children as two writes, which is what the report's own steps describe. Neither reproduces. The sibling case `lookup/distinct-choices-in-the-order-they-appear` (T7044) is also **green** on this parent, measured, so it does not cover this either. The shape stays behind the `select-rollup-unique-and-count` runner's `whenTheRowIsWritten` and `alsoCheckAfterAnEdit` config values; a third attempt should start by finding what else the CLI path does that these two do not. |
 | `4f35a4a64` | T7047 | The observation lives on the v2 contract's own list endpoint - `limit`/`cursor`/`includeTotal` - not on the public record API this lab reads through, and the lab's client does not speak it. What changed behind that endpoint is also performance-shaped: skip `count(*)` unless asked, page by cursor instead of OFFSET. Same reason as the T5268 row: much of the fix introduces the path it repairs, so there is no before to compare against. |
+| `a4e2a0a55` | T7105 | Cost, not behaviour. Field masks unioned every readable field into the SQL projection, so a request for 27 columns still selected all 235. What the request answers with does not change - the same fields come back either way - so there is nothing for a case here to tell apart. It is the product-side follow-up to a 503 incident about wide-table polling, and belongs in the performance lab if anywhere. |
+| `719079af1` | T6711 | The observation is a schema operation's own terminal classification - whether a leftover `table.import` is marked dead or repaired - which lives in the background runner and never reaches an HTTP response. The lab has no seam on that: the T7070 attempt established by measurement that a small fixture here computes inline and the deferred path is not reached. Same family as T6768 and T6853. |
+| `64b6446061` | T6904 | Same seam. A computed task planned against a table whose `provision_state` is still `pending` was dead-lettered as an obsolete plan instead of retried; the fix changes how the worker classifies that. Both the trigger (a table caught mid-provision by a background stage) and the observation (the task's failure classification) are inside the worker. Nothing a request answers differs. |
+| `e770dd1ac` | T7057 | Index coverage, not results. Substring search documents and the trigram indexes behind them are narrowed to text-shaped fields, and an all-field search over an uncovered field falls back to the unindexed path rather than answering differently. What a search returns is the same on both sides; what changes is whether an index can serve it. Performance lab, if anywhere - same reading as T6821. |
+| `f70f0d508` | T6944 | Neither commit carrying this issue id fixes the path `view/a-grid-grouped-by-a-column-you-cannot-read` observes. That case is red on `12407c409` (before this commit), on `7bc91231d` (after it), and on `f44a82cf8` (after both), and turns green only at `2ae77481c` — which carries T6997. This one narrows a grouping the server resolves from the view itself; the case exercises a grouping that arrives on the request, which is what the grid actually sends. Reaching the other path needs a request carrying no grouping while the view carries one, and the record endpoint the lab reads through does not obviously offer that. |
+| `a4c8c3396` | T6944 | Same reading, same measurements: the case is red on `f44a82cf8`, which is after this commit. It aligns the group metadata a view reports with the permissions applied to it, which is what the settings screen reads, not what the grid's request for rows goes through. |
 
 ### The date comparison inside AND or OR
 
@@ -533,3 +539,27 @@ T7070 repaired the propagate path for exactly this state. The insert path was
 not part of it and answers the same way it did before. Whether that is worth
 its own report is a judgment for a person; it is recorded here so the next pass
 does not spend the same afternoon rediscovering it.
+
+### The permission-matrix family is reachable, and nobody has built the fixture yet
+
+Four uncovered fixes wait behind one piece of setup that does not exist here
+yet: `2ae77481c5`/T6997 (v2 reads over masked values), `68b7d74f05`/T7025
+(archiving gated by the matrix for restricted collaborators), `6235527b4c`/T7027
+(references to permission-filtered nodes), and `a4c8c3396b`+`f70f0d5083`/T6944
+(a grid view whose group field the reader cannot see returns no records at all,
+with "Group references a field that is not readable").
+
+None of them is blocked by the harness. The matrix is driven entirely through
+public endpoints — `PATCH /api/base/:baseId/authority-matrix/status` to turn it
+on, `GET /api/base/:baseId/authority-matrix`, `PUT
+/api/base/:baseId/authority-matrix/:id` to shape a role — and a second signed-in
+user comes from `test/utils/axios-instance/new-user`, which runners can import
+the same way they import `init-app`. `enterprise/backend-ee/test/authority/` is
+the worked example.
+
+What is missing is a fixture that puts those together: matrix on, a role that
+makes one field unreadable, a second user holding that role. That is a bigger
+piece of setup than any case here has needed, and it is worth building once
+rather than four times. T6944 is the best first customer — its symptom is the
+whole view returning nothing, which is unmistakable — and T7025 should wait
+either way, since it was still on staging when this was written.

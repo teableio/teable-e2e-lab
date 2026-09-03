@@ -130,6 +130,9 @@ export interface BugCaseConfigByRunner {
   "link-rollup-unique-by-identity": LinkRollupUniqueByIdentityCaseConfig;
   "nested-user-array-join-create": NestedUserArrayJoinCreateCaseConfig;
   "share-view-unready-data-db": ShareViewUnreadyDataDbCaseConfig;
+  "switch-mixed-branch-storage": SwitchMixedBranchStorageCaseConfig;
+  "undo-cursor-after-a-failed-undo": UndoCursorAfterAFailedUndoCaseConfig;
+  "group-on-an-unreadable-column": GroupOnAnUnreadableColumnCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -2153,4 +2156,42 @@ export interface ShareViewUnreadyDataDbCaseConfig {
   // this only has to be present, and saying so in the value keeps the next
   // reader from looking for a real secret.
   encryptedUrlPlaceholder: string;
+}
+
+// A column that picks its value by case, where the branches with a case attached
+// are numbers and the otherwise branch is a list of linked records.
+export interface SwitchMixedBranchStorageCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // The cases with a number behind them. Two at least: they have to agree with
+  // each other, or the step that merges the branches would have looked at the
+  // otherwise branch anyway.
+  numberBranches: { choice: string; column: string; value: number }[];
+  // The case that falls through to the linked records.
+  otherwiseChoice: string;
+  // Rows in the linked table. At least two, so the linked column holds a list.
+  linkedRows: { name: string; price: number }[];
+}
+
+// An undo that cannot be carried out, followed by a second press.
+export interface UndoCursorAfterAFailedUndoCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  rowName: string;
+  // The row that takes the let-go value, so putting it back would collide. It is
+  // written on a different window, or it lands on the stack this case walks.
+  otherRowName: string;
+  // The value the row starts with and the value it is changed to. They have to
+  // differ, or there is nothing for undo to put back.
+  originalCode: string;
+  changedCode: string;
+}
+
+// A grid grouped by a column the person opening it may not read.
+export interface GroupOnAnUnreadableColumnCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Two rows at least: a request that returns nothing must not look like one
+  // that returns everything.
+  rows: { name: string; stage: string; cost: number }[];
 }

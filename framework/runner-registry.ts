@@ -120,6 +120,9 @@ import { runSelectRollupUniqueAndCountCase } from "./runners/select-rollup-uniqu
 import { runLinkRollupUniqueByIdentityCase } from "./runners/link-rollup-unique-by-identity.runner";
 import { runNestedUserArrayJoinCreateCase } from "./runners/nested-user-array-join-create.runner";
 import { runShareViewUnreadyDataDbCase } from "./runners/share-view-unready-data-db.runner";
+import { runSwitchMixedBranchStorageCase } from "./runners/switch-mixed-branch-storage.runner";
+import { runUndoCursorAfterAFailedUndoCase } from "./runners/undo-cursor-after-a-failed-undo.runner";
+import { runGroupOnAnUnreadableColumnCase } from "./runners/group-on-an-unreadable-column.runner";
 import { runLookupOfRollupCreateCase } from "./runners/lookup-of-rollup-create.runner";
 import type {
   BugCase,
@@ -261,6 +264,9 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "link-rollup-unique-by-identity": runLinkRollupUniqueByIdentityCase,
   "nested-user-array-join-create": runNestedUserArrayJoinCreateCase,
   "share-view-unready-data-db": runShareViewUnreadyDataDbCase,
+  "switch-mixed-branch-storage": runSwitchMixedBranchStorageCase,
+  "undo-cursor-after-a-failed-undo": runUndoCursorAfterAFailedUndoCase,
+  "group-on-an-unreadable-column": runGroupOnAnUnreadableColumnCase,
 };
 
 export const executeRegisteredRunner = (
