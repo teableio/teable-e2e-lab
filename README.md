@@ -25,20 +25,15 @@ The execution skeleton is teable-perf-lab's, proven in production there:
 - **Pinning**: refs are resolved to SHAs once, up front; every job checks out
   the pinned SHA.
 - **One job per commit**: isolated database built from that commit's own
-  migrations, every selected case run once per engine, one JSON payload per
-  case per engine written _before_ any assertion throws — the payloads are the
-  source of truth, and failures carry the server's own error body.
+  migrations, every selected case run once on v2, one JSON payload per case
+  written _before_ any assertion throws — the payloads are the source of truth,
+  and failures carry the server's own error body.
 - **Fail-closed report**: every planned (case × commit) cell must have exactly
   one payload. Missing evidence fails the run; it never renders as an empty
   cell someone might read as green.
 
-**Two engines, one of them guarded.** v2 is where fixes land, so that is the
-column the run is judged on. v1 is asked the same cases as a reference — what
-does the engine our older customers are still on do with this — and nothing it
-reports fails a run; it renders as its own table. Reaching v1 needs more than
-an environment switch, and a case whose feature v1 does not have declares
-`skipV1` rather than failing there every run. Both are explained in
-[docs/operations/e2e-lab.md](docs/operations/e2e-lab.md).
+**One guarded engine.** The active regression matrix runs v2 only, because that
+is where fixes land. v1 is not currently executed by this workflow.
 
 What is this repository's own: the verdict model. Each case declares the bug
 it reproduces and its believed status (`open` / `fixed`); the run observes
