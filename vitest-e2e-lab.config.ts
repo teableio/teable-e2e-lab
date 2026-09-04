@@ -75,15 +75,14 @@ export default defineConfig({
     // exists and rejects with nobody to catch it, and vitest fails the whole
     // file on that. Measured on run 33055688034: 247 tests passed, 11 skipped,
     // none failed, every payload written and the report job's acceptance gate
-    // green — and the job was red anyway, on one such rejection from a v1
-    // import case.
+    // green — and the job was red anyway, on one such late import rejection.
     //
     // Ignoring them costs no signal. A case's evidence only ever arrives
     // through bugCheckpoint() and is written to its payload before anything is
     // allowed to throw; the payloads, judged by the report job, are what says
     // whether a run passed. Vitest still PRINTS these under "Unhandled
-    // Errors", which is the same bargain the v1 column takes: visible, and
-    // gating nothing.
+    // Errors" while the complete payload set remains the acceptance source of
+    // truth.
     dangerouslyIgnoreUnhandledErrors: true,
     logHeapUsage: true,
     reporters: ["verbose"],

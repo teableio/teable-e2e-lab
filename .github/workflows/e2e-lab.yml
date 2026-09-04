@@ -60,7 +60,6 @@ jobs:
     timeout-minutes: 10
     outputs:
       execute_plan: ${{ steps.plan.outputs.execute_plan }}
-      commit_plan: ${{ steps.plan.outputs.commit_plan }}
       case_ids: ${{ steps.plan.outputs.case_ids }}
       # Per-invocation case filters: the computed-update strategy is fixed at
       # app boot, so hybrid-mode cases run in a second vitest invocation.
@@ -129,13 +128,8 @@ jobs:
           E2E_LAB_CASE_FILTER: ${{ inputs.case_filter }}
         run: node e2e-lab/scripts/run-plan.mjs
 
-  # One job per commit PER ENGINE. Two engines sharing a job was cheaper by one
-  # bootstrap and wrong in a way that only showed up on reflection: two passes
-  # against one database means the second engine runs on state the first left,
-  # and the guarded column is what would have been reading it. Split, each
-  # engine gets its own containers and its own database from the commit's own
-  # migrations, and the two run at the same time — the wall clock is one
-  # engine's, not two.
+  # One isolated v2 job per commit. v1 is not part of the active regression
+  # matrix; every job builds its database from the commit's own migrations.
   execute:
     name: Run cases (${{ matrix.plan.name }})
     needs: resolve_inputs
@@ -221,7 +215,6 @@ jobs:
           export E2E_LAB_CASE_FILTER="${{ needs.resolve_inputs.outputs.sync_case_filter }}"
           export E2E_LAB_COMMIT_SHA="${{ matrix.plan.sha }}"
           export E2E_LAB_GATING="${{ matrix.plan.gating }}"
-          export E2E_LAB_ENGINE_LIST="${{ matrix.plan.engine }}"
 
           pnpm -F @teable/backend-ee exec vitest run \
             --config ./vitest-e2e-lab.config.ts \
@@ -314,9 +307,8 @@ jobs:
       - name: Build comparison table
         env:
           E2E_LAB_ARTIFACT_DIR: ${{ github.workspace }}/e2e-lab-artifacts
-          E2E_LAB_EXECUTE_PLAN: ${{ needs.resolve_inputs.outputs.commit_plan }}
+          E2E_LAB_EXECUTE_PLAN: ${{ needs.resolve_inputs.outputs.execute_plan }}
           E2E_LAB_CASE_FILTER: ${{ inputs.case_filter }}
-          E2E_LAB_ENGINES: '["v1","v2"]'
           E2E_LAB_COMPARISON_PATH: ${{ github.workspace }}/e2e-lab-report/comparison.json
         run: node e2e-lab/scripts/build-comparison.mjs
 
@@ -338,7 +330,7 @@ jobs:
         continue-on-error: true
         env:
           E2E_LAB_ARTIFACT_DIR: ${{ github.workspace }}/e2e-lab-artifacts
-          E2E_LAB_EXECUTE_PLAN: ${{ needs.resolve_inputs.outputs.commit_plan }}
+          E2E_LAB_EXECUTE_PLAN: ${{ needs.resolve_inputs.outputs.execute_plan }}
         run: node e2e-lab/scripts/report-teable-track.mjs
 
       # The run's card, built from the same comparison.json the acceptance
