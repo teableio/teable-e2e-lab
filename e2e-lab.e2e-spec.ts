@@ -27,14 +27,18 @@ applyEngineRuntimeEnv();
 // API cases overlap, a few at a time. Browser cases stay serial because they
 // share one development frontend and each needs its own full timeout for route
 // compilation and hydration. Framework/case-base.ts keeps their product data
-// isolated. The API concurrency width lives in vitest-e2e-lab.config.ts.
+// isolated, except for user-wide state such as the recent-base list: those
+// cases must also run serially. API concurrency lives in vitest-e2e-lab.config.ts.
 
 const specStarted = performance.now();
-const browserRunners = new Set([
+const serialRunners = new Set([
   "authority-unreadable-group",
   "comment-delete-browser",
   "deleted-table-collaborator-recovery",
   "group-locale-browser",
+  // Recent bases belong to the shared user, not the per-case base. Another
+  // concurrent case can visit a base between duplication and the list read.
+  "duplicate-base-recent-list",
 ]);
 
 const logPhase = (
@@ -125,7 +129,7 @@ describe("e2e-lab bug regression runner (e2e)", () => {
         caseMs: Math.round(performance.now() - caseStarted),
       });
     };
-    if (browserRunners.has(bugCase.runner)) {
+    if (serialRunners.has(bugCase.runner)) {
       it(title, options, execute);
     } else {
       it.concurrent(title, options, execute);
