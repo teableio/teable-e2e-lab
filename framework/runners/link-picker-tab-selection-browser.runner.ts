@@ -127,7 +127,7 @@ export const runLinkPickerTabSelectionBrowserCase = async (
       captureCanvasStrokes: true,
     });
     await browser.page.route(
-      `**/api/table/${foreign.id}/record**`,
+      `**/api/{table/${foreign.id}/record,share/${link.id}/view/records}**`,
       async (route) => {
         const response = await route.fetch();
         const isSelectedQuery = route
@@ -166,10 +166,21 @@ export const runLinkPickerTabSelectionBrowserCase = async (
       "the link picker did not show its All and Selected tabs",
     );
 
-    const clearCanvasEvidence = () =>
+    const clearCanvasEvidence = (tabName: string) =>
       browser!.page.evaluate<void>(`(() => {
-        globalThis.__e2eLabCanvasText?.splice(0);
-        globalThis.__e2eLabCanvasStrokes?.splice(0);
+        const tab = Array.from(document.querySelectorAll('[role="tab"]')).find(
+          (element) => element.textContent?.trim() === ${JSON.stringify(tabName)}
+        );
+        if (!tab) throw new Error("the target picker tab was not found");
+        globalThis.__e2eLabCanvasCaptureStarted = false;
+        // Radix activates on mousedown. Clear at pointerdown capture, before
+        // React handles activation, not before Playwright's actionability wait
+        // or after click() returns (which would discard the first new frame).
+        tab.addEventListener("pointerdown", () => {
+          globalThis.__e2eLabCanvasText?.splice(0);
+          globalThis.__e2eLabCanvasStrokes?.splice(0);
+          globalThis.__e2eLabCanvasCaptureStarted = true;
+        }, { capture: true, once: true });
       })()`);
 
     const readCanvasEvidence = () =>
@@ -217,6 +228,11 @@ export const runLinkPickerTabSelectionBrowserCase = async (
       };
       await waitUntil(
         async () => {
+          const activated = await browser!.page.evaluate<boolean>(`(() =>
+            globalThis.__e2eLabCanvasCaptureStarted === true &&
+            document.querySelector('[role="tab"][data-state="active"]')?.textContent?.trim() === ${JSON.stringify(tabName)}
+          )()`);
+          if (!activated) return false;
           evidence = await readCanvasEvidence();
           return evidence.textCount > 0;
         },
@@ -274,7 +290,8 @@ export const runLinkPickerTabSelectionBrowserCase = async (
           await startCanvasRemovalWatch();
           for (let index = 0; index < config.switchCount; index += 1) {
             const tabName = index % 2 === 0 ? "Selected" : "All";
-            if (index >= config.switchCount - 2) await clearCanvasEvidence();
+            if (index >= config.switchCount - 2)
+              await clearCanvasEvidence(tabName);
             await browser!.page
               .locator('[role="tab"]')
               .nth(tabName === "Selected" ? 1 : 0)

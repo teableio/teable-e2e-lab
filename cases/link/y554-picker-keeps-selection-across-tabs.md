@@ -14,6 +14,12 @@ The API creates the foreign rows, the multi-link field, and a host row already
 linked to Y3. The browser then opens that saved cell's picker, rapidly switches
 the two tabs ten times, closes the picker, and repeats after reopening it.
 
+Both the legacy table-record and current share-view record requests are delayed
+to exercise the loading transition. Canvas capture starts synchronously at the
+target tab's native pointerdown, before Radix activates it on mousedown. This
+excludes legal All-tab hover paints during Playwright's actionability wait
+without discarding any frame after activation.
+
 ## What the checkpoint asserts
 
 After each rapid switching burst, Selected contains Y3 without stale
