@@ -32,6 +32,7 @@ applyEngineRuntimeEnv();
 
 const specStarted = performance.now();
 const serialRunners = new Set([
+  "user-mode-switch",
   "authority-unreadable-group",
   "comment-delete-browser",
   "deleted-table-collaborator-recovery",
