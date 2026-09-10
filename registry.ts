@@ -1,4 +1,6 @@
 import smokeAuthUserCase from "./cases/smoke/y153-auth-user.case";
+import userModeValuesCase from "./cases/field/y873-user-mode-switch-keeps-values.case";
+import userModeFiltersCase from "./cases/field/y874-user-mode-switch-keeps-filters.case";
 import recordBulkUpdate100MixedLandsCase from "./cases/record/y154-bulk-update-100-mixed-lands.case";
 import lookupOfRollupCreateCase from "./cases/record/y334-a-row-when-a-looked-up-total-lost-its-rule.case";
 import aiConfigOnlyChangePlanCase from "./cases/field/y336-change-only-the-instruction-behind-a-column.case";
@@ -164,6 +166,8 @@ import type { BugCase } from "./framework/types";
 // this file statically (imports + the array below), so the planner and the
 // checks can enumerate cases without resolving @teable/* packages.
 const cases = [
+  userModeValuesCase,
+  userModeFiltersCase,
   lookupY483ConditionalRollupEditorWrapsLookupConditionsCase,
   lookupY479Y482ConditionalRollupEditorKeepsNestedOrCase,
   lookupY465OrdinaryRollupKeepsLinkedRecordIdentityCase,

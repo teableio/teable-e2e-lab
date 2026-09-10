@@ -7,6 +7,7 @@ import type { DayBucket } from "./runners/group-buckets";
 // is discriminated on `runner`, so a case that pairs a runner with the wrong
 // config shape fails `pnpm check:types` at the case file itself.
 export interface BugCaseConfigByRunner {
+  "user-mode-switch": UserModeSwitchCaseConfig;
   "autonumber-string-filter": AutonumberStringFilterCaseConfig;
   "cross-base-conditional-base-id": CrossBaseConditionalBaseIdCaseConfig;
   "group-on-an-unreadable-column": GroupOnAnUnreadableColumnCaseConfig;
@@ -150,6 +151,12 @@ export interface BugCaseConfigByRunner {
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
+
+export interface UserModeSwitchCaseConfig {
+  tableNamePrefix: string;
+  observation: "values" | "filters";
+  settleTimeoutMs: number;
+}
 
 // The bug a case reproduces, and what we currently believe about it. `status`
 // is the only human-maintained judgment input in the whole system:

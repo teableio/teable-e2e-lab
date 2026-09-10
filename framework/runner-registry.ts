@@ -74,6 +74,7 @@ import { runTiedSortOffsetCase } from "./runners/tied-sort-offset.runner";
 import { runFormRequiredComputedCase } from "./runners/form-required-computed.runner";
 import { runLookupConfigRealtimeCase } from "./runners/lookup-config-realtime.runner";
 import { runUserMultiplicityFormulaCase } from "./runners/user-multiplicity-formula.runner";
+import { runUserModeSwitchCase } from "./runners/user-mode-switch.runner";
 import { runGroupedRangeOffsetCase } from "./runners/grouped-range-offset.runner";
 import { runTableUsableAfterFailedUpdateCase } from "./runners/table-usable-after-failed-update.runner";
 import { runRestoreInboundLinkCase } from "./runners/restore-inbound-link.runner";
@@ -231,6 +232,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "form-required-computed": runFormRequiredComputedCase,
   "lookup-config-realtime": runLookupConfigRealtimeCase,
   "user-multiplicity-formula": runUserMultiplicityFormulaCase,
+  "user-mode-switch": runUserModeSwitchCase,
   "grouped-range-offset": runGroupedRangeOffsetCase,
   "table-usable-after-failed-update": runTableUsableAfterFailedUpdateCase,
   "restore-inbound-link": runRestoreInboundLinkCase,
