@@ -10,7 +10,14 @@ The account owns the page — the token that made it cannot see it.
 
 ## What was measured
 
-Pending: to be filled in from the matrix run on the fix's parent and `develop`.
+On the fix's parent `06d5863ce` the token creates the page and is then refused
+403 `restricted_resource` on all three reads — the page, its versions, and the
+list. On `develop` all three answer 200. Run 34578916073.
+
+Two earlier attempts never reached the checkpoint, both outside it and both
+reported as the case being unable to run rather than as the bug: the create
+request needs a `type` (run 34578588402), and the create answer names the page
+`artifactId` rather than `id` (run 34578588402's successor).
 
 ## Why creating worked and nothing else did
 
