@@ -1,10 +1,13 @@
 import { FieldKeyType, FieldType } from "@teable/core";
 import {
   axios,
+  createRecords as apiCreateRecords,
   getRecords as apiGetRecords,
+  getRowCount as apiGetRowCount,
   urlBuilder,
 } from "@teable/openapi";
 import { createTable, permanentDeleteTable } from "../../../utils/init-app";
+import { chunk } from "../chunk";
 import { bugCheckpoint } from "../checkpoint";
 import { assertServedByV2 } from "../engine";
 import type { BugCaseFor, BugProbeResult, BugRunContext } from "../types";
@@ -75,10 +78,13 @@ export const runDeleteAllExceptCase = async (
     const kept = config.keepPositions.map((position) => rows[position]!);
     const keptNames = kept.map((row) => String(row.fields[NAME_FIELD] ?? ""));
 
-    const readAll = async () => {
+    // What is left after the delete is small, so it is read in full; before the
+    // delete only the count is asked for, because reading thousands of rows to
+    // confirm they exist is not what this case is about.
+    const readWhatIsLeft = async () => {
       const response = await apiGetRecords(tableId, {
         fieldKeyType: FieldKeyType.Name,
-        take: config.rowCount,
+        take: config.keepPositions.length + 20,
       });
       return {
         headers: response.headers,
@@ -91,14 +97,14 @@ export const runDeleteAllExceptCase = async (
 
     // Fixture verification, outside the checkpoint: every row is there before
     // anything is deleted.
-    const before = await readAll();
-    assertServedByV2(before.headers, {
-      operation: "GET /table/{tableId}/record",
-      feature: "getRecords",
+    const counted = await apiGetRowCount(tableId, {});
+    assertServedByV2(counted.headers, {
+      operation: "GET /table/{tableId}/aggregation/row-count",
+      feature: "getRowCount",
     });
-    if (before.names.length !== config.rowCount) {
+    if (counted.data.rowCount !== config.rowCount) {
       throw new Error(
-        `the table holds ${before.names.length} rows, expected ${config.rowCount}`,
+        `the table holds ${counted.data.rowCount} rows, expected ${config.rowCount}`,
       );
     }
 
@@ -129,7 +135,14 @@ export const runDeleteAllExceptCase = async (
           );
         }
 
-        const after = await readAll();
+        const remaining = await apiGetRowCount(tableId, {});
+        if (remaining.data.rowCount !== keptNames.length) {
+          throw new Error(
+            `after deleting everything except ${keptNames.length} rows, ${remaining.data.rowCount} rows are left - ` +
+              `${remaining.data.rowCount - keptNames.length} of them were selected for deletion and are still there`,
+          );
+        }
+        const after = await readWhatIsLeft();
         const left = [...after.names].sort();
         const expected = [...keptNames].sort();
         if (JSON.stringify(left) !== JSON.stringify(expected)) {

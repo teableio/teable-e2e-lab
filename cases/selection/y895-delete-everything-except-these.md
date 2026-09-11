@@ -15,7 +15,15 @@ table is looking at the table, not at a count.
 
 Pending: to be filled in from the matrix run on the fix's parent and `develop`.
 
-## Why the kept rows have to be interleaved
+## Why there have to be this many rows
+
+The delete walks the table in batches of 5000. A stalled offset only shows when
+the walk has to cross from one batch into the next, so a table that fits in one
+batch is green on both sides — eight rows was, on the fix's parent and on
+develop alike (run 34575930130). The row count is a config value for exactly
+that reason.
+
+## Why the kept rows have to be early
 
 The rows are deleted in batches that walk the table by position. A row being
 kept was passed over without the position moving past it, so the next batch
@@ -25,7 +33,7 @@ after it. The runner refuses a fixture that keeps nothing.
 
 ## How the case is built
 
-Eight rows, two of them unselected — positions 1 and 4 — and one delete request
+5200 rows, two of them unselected — positions 3 and 1500 — and one delete request
 carrying no list of rows at all, only the two to exclude: the rows are then
 whatever the current scope holds minus those, which is what the click sends.
 

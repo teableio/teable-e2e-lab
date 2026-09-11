@@ -2015,9 +2015,14 @@ export interface LookupMultiplicityVoCaseConfig {
 export interface DeleteAllExceptCaseConfig {
   baseId: "seed-base";
   tableNamePrefix: string;
+  // More rows than one delete batch carries - the batches are 5000 rows, and
+  // the fault only shows when the walk crosses from one to the next.
   rowCount: number;
+  // Rows per write. The rows are fixture; this keeps each write a reasonable
+  // size.
+  writeBatchSize: number;
   // Which rows, by position, are unselected before the delete. At least one,
-  // and interleaved rather than trailing - see the runner and the doc.
+  // and early rather than trailing - see the runner and the doc.
   keepPositions: number[];
 }
 

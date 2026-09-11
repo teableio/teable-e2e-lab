@@ -10,7 +10,7 @@ export default defineBugCase({
   id: "selection/y895-delete-everything-except-these",
   title: "Deleting everything except a few rows leaves exactly those rows",
   runner: "delete-all-except",
-  timeoutMs: 180_000,
+  timeoutMs: 900_000,
   bug: {
     issue: "T6074",
     status: "fixed",
@@ -19,9 +19,13 @@ export default defineBugCase({
   config: {
     baseId: "seed-base",
     tableNamePrefix: "e2e-lab-delete-all-except",
-    rowCount: 8,
-    // Interleaved, not trailing: a kept row early in the table is what stalls
-    // the walk for everything after it.
-    keepPositions: [1, 4],
+    // The delete walks the table in batches of 5000, and a stalled offset only
+    // shows when the walk has to cross into the next batch. Eight rows is one
+    // batch and is green on both sides - run 34575930130.
+    rowCount: 5200,
+    writeBatchSize: 500,
+    // Early, not trailing: a kept row near the start is what stalls the walk
+    // for everything after it.
+    keepPositions: [3, 1500],
   },
 });
