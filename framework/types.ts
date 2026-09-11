@@ -21,6 +21,7 @@ export interface BugCaseConfigByRunner {
   "formula-branch-error-backfill": FormulaBranchErrorBackfillCaseConfig;
   "wide-window-socket-load": WideWindowSocketLoadCaseConfig;
   "provision-window-read-race": ProvisionWindowReadRaceCaseConfig;
+  "number-show-as-cleared": NumberShowAsClearedCaseConfig;
   "search-hidden-field-inlined-view": SearchHiddenFieldInlinedViewCaseConfig;
   "rollup-expression-convert": RollupExpressionConvertCaseConfig;
   "share-view-unready-data-db": ShareViewUnreadyDataDbCaseConfig;
@@ -1999,6 +2000,15 @@ export interface LookupMultiplicityVoCaseConfig {
   hostRowName: string;
   // Two linked rows at least - see the runner.
   linkedRowNames: string[];
+}
+
+// A number column drawn as a bar, switched back to a plain number.
+export interface NumberShowAsClearedCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  rowTitle: string;
+  precision: number;
+  maxValue: number;
 }
 
 // A table being read while columns are added to it.
