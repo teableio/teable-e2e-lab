@@ -537,6 +537,21 @@ it in prose is how the two drift apart. To see it:
 pnpm triage:covered
 ```
 
+### The comment-count fix, T7161
+
+`764aee642c` makes per-record comment counts cheap by counting only the record
+ids a page actually loaded. It is in the triage script's public-API bucket and
+its own spec drives the public endpoints, so it reads as an easy case — and it
+is not one, because the fix REPLACES the endpoint it repairs. The parent serves
+`get-counts-by-query`; the fix retires it and adds `get-counts-by-records`,
+which takes a different request shape. A case written against either spelling
+is an error on one side and an observation on the other, and neither says
+anything about counts.
+
+There may still be a case here in the behaviour rather than the transport — a
+count that disagrees with the comments a page can open — but it has to be
+written against a request both sides answer, and this pass did not find one.
+
 ### T7070's neighbour, still open
 
 Rejecting the T7070 case turned up something that is not T7070. On `develop`,

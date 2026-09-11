@@ -15,8 +15,10 @@ rather than report.
 
 ## What was measured
 
-Pending: to be filled in from the matrix run on the fix's parent `764aee642`
-and `develop`.
+On `2c9ebe653` and on the fix's parent `764aee642` both group headings come
+back with no total at all, while the foot of the table says 35 — the totals are
+keyed by 3 groups the list does not show, one per raw timestamp. On `develop`
+the two headings read 30 and 5. Run 34559846298.
 
 ## How the case is built
 

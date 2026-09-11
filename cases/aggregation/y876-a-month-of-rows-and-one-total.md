@@ -10,8 +10,9 @@ heading prints no total.
 
 ## What was measured
 
-Pending: to be filled in from the matrix run on the fix's parent `764aee642`
-and `develop`.
+The same shape one truncation up: on `2c9ebe653` and on the fix's parent
+`764aee642` both headings come back empty against a foot total of 250, keyed by
+3 groups instead of 2. On `develop` they read 200 and 50. Run 34559846298.
 
 ## Why both units
 

@@ -11,8 +11,10 @@ way out is deleting the column and building it again.
 
 ## What was measured
 
-Pending: to be filled in from the matrix run on the fix's parent `2c9ebe653`
-and `develop`.
+On the fix's parent `2c9ebe653` the change is refused with `400 Invalid
+RollupField formatting` (`validation_error`, domain code `validation.invalid`)
+and the column stays a list of words. On `764aee642` — after the fix, before
+the date-group one — and on `develop` it is accepted and the row reads 2. Run 34559846298.
 
 ## Why the edit carries formatting
 
