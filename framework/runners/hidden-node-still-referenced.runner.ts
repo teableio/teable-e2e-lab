@@ -47,6 +47,7 @@ export const runHiddenNodeStillReferencedCase = async (
   let hiddenTableId = "";
   let visibleTableId = "";
   let folderId = "";
+  let hiddenNodeId = "";
   let personBaseId = "";
 
   try {
@@ -93,6 +94,12 @@ export const runHiddenNodeStillReferencedCase = async (
         );
         for (const tableId of [hiddenTableId, visibleTableId]) {
           const node = nodes.data.find((item) => item.resourceId === tableId);
+          if (node && tableId === hiddenTableId) {
+            // What a folder records its contents as: the NODE id, not the
+            // table's. Searching for the table id alone finds nothing on
+            // either side - run 34574756753.
+            hiddenNodeId = node.id;
+          }
           if (!node) {
             throw new Error(
               `the table ${tableId} has no node in the base: ${JSON.stringify(nodes.data)}`,
@@ -154,6 +161,12 @@ export const runHiddenNodeStillReferencedCase = async (
       );
     }
 
+    if (!hiddenNodeId) {
+      throw new Error(
+        "the withheld table has no node id recorded - the case would be searching for the wrong identifier",
+      );
+    }
+
     const probe = await bugCheckpoint(
       "a-withheld-table-is-not-named-anywhere",
       async () => {
@@ -169,8 +182,10 @@ export const runHiddenNodeStillReferencedCase = async (
             );
           }
           const text = JSON.stringify(answer.data);
-          if (text.includes(hiddenTableId)) {
-            mentions.push({ where, text: text.slice(0, 200) });
+          // Both identifiers: the table's, and the node's, which is what a
+          // folder records its contents as.
+          if (text.includes(hiddenTableId) || text.includes(hiddenNodeId)) {
+            mentions.push({ where, text: text.slice(0, 240) });
           }
         }
         if (mentions.length > 0) {
@@ -189,6 +204,7 @@ export const runHiddenNodeStillReferencedCase = async (
         baseId: personBaseId,
         folderId,
         hiddenTableId,
+        hiddenNodeId,
         visibleTableId,
         answersChecked: probe.checked,
         routing,

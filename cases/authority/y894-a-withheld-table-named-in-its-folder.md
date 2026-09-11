@@ -31,10 +31,11 @@ for reasons that have nothing to do with this.
 
 ## What the checkpoint asserts
 
-The withheld table's id appears nowhere in what they are given — not in the flat
-list, not in the tree the sidebar draws — with both answers searched as text, so
-a reference surviving in a folder's contents or in a parent pointer is caught
-wherever it hides.
+Neither identifier for the withheld table appears in what they are given — not
+in the flat list, not in the tree the sidebar draws. Both are searched because a
+folder records its contents as **node** ids, not table ids: a first attempt
+searched for the table id alone and was green on both columns (run
+34574756753).
 
 ## Limits
 
