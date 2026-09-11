@@ -35,6 +35,11 @@ Before the checkpoint the case confirms the bytes are a JPEG and really carry an
 EXIF block. Without the note the stored size is the displayed size, and the case
 would be asserting nothing.
 
+Asking for somewhere to put the bytes and putting them there is fixture too, so
+it happens outside the checkpoint. A first attempt did it inside and reported a
+rejected signature request — "The baseId is required when type is Table" — as
+the bug reproducing, on both columns (run 34568213403).
+
 ## What the checkpoint asserts
 
 The size that comes back is 16 wide by 64 high — the displayed size. A build

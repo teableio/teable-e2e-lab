@@ -60,22 +60,32 @@ export const runSidewaysPhotoDimensionsCase = async (
     }
     await writeFile(photoPath, bytes);
 
+    // Getting somewhere to put the bytes and putting them there is fixture, so
+    // it stays outside the checkpoint: a rejected signature request is the case
+    // failing to run, not the product answering wrongly. The first attempt did
+    // this inside the checkpoint and reported "The baseId is required when type
+    // is Table" as a reproduction on both columns (run 34568213403).
+    const signature = await apiGetSignature(
+      {
+        type: UploadType.Table,
+        baseId: globalThis.testConfig.baseId,
+        contentLength: bytes.byteLength,
+        contentType: "image/jpeg",
+      },
+      undefined,
+    );
+    await apiUploadFile(
+      signature.data.token,
+      createReadStream(photoPath),
+      signature.data.requestHeaders,
+    );
+
     const probe = await bugCheckpoint(
       "a-sideways-photo-is-recorded-at-the-size-it-is-shown",
       async () => {
-        const signature = await apiGetSignature(
-          {
-            type: UploadType.Table,
-            contentLength: bytes.byteLength,
-            contentType: "image/jpeg",
-          },
-          undefined,
-        );
-        await apiUploadFile(
-          signature.data.token,
-          createReadStream(photoPath),
-          signature.data.requestHeaders,
-        );
+        // Telling the product the bytes arrived is what makes it look at them,
+        // and its answer carries the size everything downstream reserves space
+        // from.
         const notified = await apiNotify(
           signature.data.token,
           undefined,
