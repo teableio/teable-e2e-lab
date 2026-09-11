@@ -69,7 +69,7 @@ type SignedInClient = Awaited<ReturnType<typeof createNewUserAxios>>;
 
 export interface RestrictedPerson {
   // How they got in, carried through so a case can say so in its report.
-  join: "editor" | "throughTheRoleAlone";
+  join: "editor" | "creator" | "throughTheRoleAlone";
   // Signed in as the restricted person. Their requests are the observation.
   axios: SignedInClient;
   userId: string;
@@ -101,11 +101,15 @@ export const withRestrictedPerson = async (options: {
   buildTables: (baseId: string) => Promise<RestrictedTableRule[]>;
   // How the person gets into the space. "editor" invites them first, which is
   // the ordinary shape: somebody already working in the space, further limited
-  // by a role. "throughTheRoleAlone" invites nobody - being given the role is
-  // what joins them, and it joins them as a Viewer. That difference is not
-  // cosmetic: a Viewer's base role withholds things a role may grant, and bugs
-  // have lived exactly in the gap between the two.
-  join?: "editor" | "throughTheRoleAlone";
+  // by a role. "creator" invites them with the higher role instead, which is
+  // what a case needs when the thing being withheld is something an Editor
+  // could not do anyway - a refusal that the base role would have produced on
+  // its own proves nothing about the matrix. "throughTheRoleAlone" invites
+  // nobody - being given the role is what joins them, and it joins them as a
+  // Viewer. That difference is not cosmetic: a Viewer's base role withholds
+  // things a role may grant, and bugs have lived exactly in the gap between the
+  // two.
+  join?: "editor" | "creator" | "throughTheRoleAlone";
 }): Promise<RestrictedPerson> => {
   if (isInsideCheckpoint()) {
     throw new Error(
@@ -145,9 +149,10 @@ export const withRestrictedPerson = async (options: {
     // arrive through the role alone. Never as an administrator of the matrix:
     // an administrator is exempt from it, and this whole fixture exists to
     // produce somebody who is not.
-    if ((options.join ?? "editor") === "editor") {
+    const join = options.join ?? "editor";
+    if (join === "editor" || join === "creator") {
       await axios.post(urlBuilder(EMAIL_SPACE_INVITATION, { spaceId }), {
-        role: Role.Editor,
+        role: join === "creator" ? Role.Creator : Role.Editor,
         emails: [RESTRICTED_EMAIL],
       });
     }
@@ -194,7 +199,7 @@ export const withRestrictedPerson = async (options: {
 
     return {
       axios: personAxios,
-      join: options.join ?? "editor",
+      join,
       userId,
       email: RESTRICTED_EMAIL,
       spaceId,

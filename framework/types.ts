@@ -31,6 +31,9 @@ export interface BugCaseConfigByRunner {
   "oauth-scope-not-widened": OauthScopeNotWidenedCaseConfig;
   "hidden-node-still-referenced": HiddenNodeStillReferencedCaseConfig;
   "token-reaches-its-own-artifact": TokenReachesItsOwnArtifactCaseConfig;
+  "form-submit-flag-cannot-brick": FormSubmitFlagCannotBrickCaseConfig;
+  "link-picker-foreign-scope": LinkPickerForeignScopeCaseConfig;
+  "restricted-cannot-share-a-base": RestrictedCannotShareABaseCaseConfig;
   "search-hidden-field-inlined-view": SearchHiddenFieldInlinedViewCaseConfig;
   "rollup-expression-convert": RollupExpressionConvertCaseConfig;
   "share-view-unready-data-db": ShareViewUnreadyDataDbCaseConfig;
@@ -2009,6 +2012,40 @@ export interface LookupMultiplicityVoCaseConfig {
   hostRowName: string;
   // Two linked rows at least - see the runner.
   linkedRowNames: string[];
+}
+
+// Somebody a role restricts, and the two ways of handing out a link.
+export interface RestrictedCannotShareABaseCaseConfig {
+  namePrefix: string;
+  rowName: string;
+  // The base role the person joins with. It has to be one that could publish
+  // on its own - an Editor is refused both kinds by the base role alone, which
+  // says nothing about the matrix (run 34584209084).
+  join: "editor" | "creator" | "throughTheRoleAlone";
+  // What a refusal should look like. Anything else is reported rather than
+  // accepted.
+  expectedStatus: number;
+}
+
+// A link column whose target table the reader's role narrows.
+export interface LinkPickerForeignScopeCaseConfig {
+  namePrefix: string;
+  sourceRowName: string;
+  // The two records the column points at: one inside the reader's narrowing of
+  // that table, one outside it.
+  inScopeName: string;
+  outOfScopeName: string;
+  visibleScope: string;
+  hiddenScope: string;
+}
+
+// A shared form whose share settings are given a flag no screen offers.
+export interface FormSubmitFlagCannotBrickCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // What a stranger fills in before the flag is written, and after.
+  beforeValue: string;
+  afterValue: string;
 }
 
 // A page made with an API token, and whether the same token can read it back.

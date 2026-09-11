@@ -74,18 +74,35 @@ made so the column no longer blocks edit and convert.
 | rename the column                                         | ✅ / ✅                         | 32675528990 |
 | re-point it at a plain number on the same link            | ✅ / ✅                         | 32675852808 |
 | convert it into a plain number field, not a lookup at all | ✅ / ✅                         | 32676121196 |
+| rename and reformat a lookup of a **two-column** formula  | ✅ / ✅                         | 34582424969 |
 
 All three were accepted on the fix's parent, and the control - the same edits
 on a lookup of a plain column - was accepted too, so nothing separates the
 columns.
 
 **Why is not established.** The fix touches create, convert, hydrate and
-persistence; a lookup of a formula built through the public API on a
-single-level formula may simply never carry the copied expression that the
-blocking depends on. The next thing to try is a foreign formula whose
-expression cannot be parsed outside its own table - one referencing several
-fields, or a formula over a lookup - since it is the parse of the copied
-expression that failed.
+persistence; a lookup of a formula built through the public API may simply never
+carry the copied expression that the blocking depends on.
+
+The last two rows close this out. The note used to end by naming what to try
+next - "a foreign formula whose expression cannot be parsed outside its own
+table - one referencing several fields, or a formula over a lookup" - and on
+2026-09-11 both were tried:
+
+- a lookup of `{amount} * 2 + {bonus}`, renamed and reformatted in one save:
+  accepted on the fix's parent exactly as on develop, value intact (47 both
+  sides);
+- three tables, so the borrowed formula is itself worked out from a borrowed
+  column - the instruction already names another table before anything copies
+  it - and the same save: accepted on both, value 42 both sides.
+
+**All four named shapes are measured and none separates the columns.** Whatever
+carries the copied expression into the blocking state is not something the
+public API produces when a lookup of a formula is built this way. A next attempt
+should not spend another run on a shape: it should first probe what the borrowed
+column's stored options actually contain on the fix's parent - if no foreign
+expression is there, there is nothing to reproduce from outside, and this row
+becomes a permanent rejection rather than an open lead.
 
 The shapes are gone; the runner is not kept.
 | `6421635ca` | T6106 | Written and run: a pasted link cell reaches a watching client carrying the linked record's name on the fix's parent, so both columns look the same. See the note below the table. |
@@ -141,7 +158,7 @@ The shape is gone; the runner is not kept.
 | `0548611b2` | T6576 | Not attempted. The commit's own reproduction is skipped under forced v2 - the spec gates it on the v1 path - and the lab forces v2, so the case could not go red. Same reason as the T5496 and T3303 rows. |
 | `7cb4431e9` | T6502 | Not attempted, same reason: the commit covers the shape with a forced-v1 e2e, and the lab forces v2. |
 | `057443dd6` | T6719 | Not attempted. The crash needs a preview flag that turns on a different record-query wrapper; the lab does not set it, so grid statistics take the ordinary path and nothing goes red. |
-| `f160eea3b` | T7065 | Not taken while the fix is unshipped. A share-view scope bypass on the selection `*-by-id` endpoints, CVSS 8.1: the issue was still at "deployed to staging" when this batch was written, and a case here is a working public reproduction. It is a good case once it ships - the repro is a single request with a share header - so this row is a reminder, not a rejection. See CONTRIBUTING.md. |
+| `f160eea3b` | T7065 | Not taken while the fix is unshipped, and **re-checked on 2026-09-11: the issue still reads "Deployed to staging"**, so it stays out. A share-view scope bypass on the selection `*-by-id` endpoints, CVSS 8.1: a case here is a working public reproduction until it ships. It is a good case the day it does - the repro is a single request with a share header. The status is worth checking rather than assuming: `.agents/skills/issue/scripts/fetch-issue.sh T7065` prints it, and the five security cases written so far (T5101, T6185, T6285, T7027, T7115) all read "Launched" when checked the same way. See CONTRIBUTING.md. |
 | `ae70b638b` | T7104 | The failure is a connection timeout inside a `table.update` schema operation that then dead-letters after three attempts. What the fix changes is how that timeout is settled - rollback rather than an unrepairable failure - and the lab has no way to make a connection time out on request. Same async-runner trap as T6768 and T6853. |
 | `8d5c0fe38` | T7067 | Selection aggregation was being answered by v1, where a date column met a cast v1 cannot do. The fix routes it to v2. That makes the pre-fix state "v1 answered", which `assertServedByV2` treats as the case being unable to run (💥) rather than as the bug - so the column that should be red is the one column the harness refuses to read. The observation is real and reachable; expressing it needs a runner allowed to assert that a request was **not** on v2, which does not exist here. |
 | `9f5509f48` | T7019 | An incident, not a behaviour. Concurrent replicas UPSERTing the same five-minute query-observation window took transaction locks that held connections until the pool was exhausted; the fix hardens that write. What a case would have to reproduce is contention between replicas, and this harness runs one application against one database - a single writer never conflicts with itself. Belongs in the performance lab if anywhere. |
