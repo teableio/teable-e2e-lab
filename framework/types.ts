@@ -22,6 +22,7 @@ export interface BugCaseConfigByRunner {
   "wide-window-socket-load": WideWindowSocketLoadCaseConfig;
   "provision-window-read-race": ProvisionWindowReadRaceCaseConfig;
   "number-show-as-cleared": NumberShowAsClearedCaseConfig;
+  "share-picker-email-oracle": SharePickerEmailOracleCaseConfig;
   "search-hidden-field-inlined-view": SearchHiddenFieldInlinedViewCaseConfig;
   "rollup-expression-convert": RollupExpressionConvertCaseConfig;
   "share-view-unready-data-db": ShareViewUnreadyDataDbCaseConfig;
@@ -2000,6 +2001,13 @@ export interface LookupMultiplicityVoCaseConfig {
   hostRowName: string;
   // Two linked rows at least - see the runner.
   linkedRowNames: string[];
+}
+
+// A shared form with a people column, and what its picker answers to an email
+// address.
+export interface SharePickerEmailOracleCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
 }
 
 // A number column drawn as a bar, switched back to a plain number.
