@@ -25,6 +25,7 @@ export interface BugCaseConfigByRunner {
   "share-picker-email-oracle": SharePickerEmailOracleCaseConfig;
   "whole-base-share-replay": WholeBaseShareReplayCaseConfig;
   "sideways-photo-dimensions": SidewaysPhotoDimensionsCaseConfig;
+  "two-way-link-delete-cleanup": TwoWayLinkDeleteCleanupCaseConfig;
   "search-hidden-field-inlined-view": SearchHiddenFieldInlinedViewCaseConfig;
   "rollup-expression-convert": RollupExpressionConvertCaseConfig;
   "share-view-unready-data-db": ShareViewUnreadyDataDbCaseConfig;
@@ -2003,6 +2004,19 @@ export interface LookupMultiplicityVoCaseConfig {
   hostRowName: string;
   // Two linked rows at least - see the runner.
   linkedRowNames: string[];
+}
+
+// One row linked to several rows in another table, shown on both sides, and
+// what the cell says after one of those rows is deleted.
+export interface TwoWayLinkDeleteCleanupCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  hostRowName: string;
+  // The linked rows. The first is the one deleted; the rest are the control.
+  // Two at least - see the runner.
+  linkedRowNames: string[];
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
 }
 
 // A photo whose pixels are landscape and whose rotation note makes it

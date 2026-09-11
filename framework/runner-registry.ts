@@ -113,6 +113,7 @@ import { runNumberShowAsClearedCase } from "./runners/number-show-as-cleared.run
 import { runSharePickerEmailOracleCase } from "./runners/share-picker-email-oracle.runner";
 import { runWholeBaseShareReplayCase } from "./runners/whole-base-share-replay.runner";
 import { runSidewaysPhotoDimensionsCase } from "./runners/sideways-photo-dimensions.runner";
+import { runTwoWayLinkDeleteCleanupCase } from "./runners/two-way-link-delete-cleanup.runner";
 import { runWideWindowSocketLoadCase } from "./runners/wide-window-socket-load.runner";
 import { runSearchHiddenFieldInlinedViewCase } from "./runners/search-hidden-field-inlined-view.runner";
 import { runProjectedGroupHeadersCase } from "./runners/projected-group-headers.runner";
@@ -267,6 +268,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "share-picker-email-oracle": runSharePickerEmailOracleCase,
   "whole-base-share-replay": runWholeBaseShareReplayCase,
   "sideways-photo-dimensions": runSidewaysPhotoDimensionsCase,
+  "two-way-link-delete-cleanup": runTwoWayLinkDeleteCleanupCase,
   "wide-window-socket-load": runWideWindowSocketLoadCase,
   "search-hidden-field-inlined-view": runSearchHiddenFieldInlinedViewCase,
   "projected-group-headers": runProjectedGroupHeadersCase,

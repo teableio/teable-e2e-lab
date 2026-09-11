@@ -16,6 +16,7 @@ import numberShowAsClearedCase from "./cases/field/y885-turning-off-a-bar-turns-
 import sharePickerEmailOracleCase from "./cases/base-share/y887-a-shared-picker-and-an-email-address.case";
 import wholeBaseShareReplayCase from "./cases/base-share/y888-a-share-link-and-somebody-elses-base.case";
 import sidewaysPhotoDimensionsCase from "./cases/attachment/y889-a-photo-taken-sideways.case";
+import twoWayLinkDeleteCleanupCase from "./cases/link/y890-a-deleted-row-stops-being-named.case";
 import searchHiddenFieldInlinedViewCase from "./cases/search/y880-a-search-inside-a-view-that-hides-a-column.case";
 import dateGroupMonthStatisticsCase from "./cases/aggregation/y876-a-month-of-rows-and-one-total.case";
 import rollupExpressionConvertCase from "./cases/lookup/y877-turn-a-list-of-people-into-a-count.case";
@@ -209,6 +210,7 @@ const cases = [
   sharePickerEmailOracleCase,
   wholeBaseShareReplayCase,
   sidewaysPhotoDimensionsCase,
+  twoWayLinkDeleteCleanupCase,
   searchHiddenFieldInlinedViewCase,
   dateGroupMonthStatisticsCase,
   rollupExpressionConvertCase,
