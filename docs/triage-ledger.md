@@ -536,6 +536,31 @@ it in prose is how the two drift apart. To see it:
 pnpm triage:covered
 ```
 
+### The stale-cache refill, T6646, and where its reads actually are
+
+`822b30e17` stops a slow reader putting an invalidated blob back into the
+performance cache after a write. The symptom would be excellent - a value
+changed, and the product keeps serving the old one - but the reads it guards
+are not where a case can watch them:
+
+- The record read that goes through `performanceCacheService.wrap` is the
+  socket **doc-ids** read, and its cache key already carries the table's
+  `lastModifiedTime`. A write moves the key, so a stale refill lands under the
+  old one and is never read again.
+- The wraps worth probing instead are the aggregation controller's and
+  `base-node.service`'s. Both would need a read in flight while a write
+  commits, which is a race the lab can only fire at, not schedule.
+
+Anyone picking this up should first check, on `develop` alone, whether those two
+keys are also stamped with a modified time. If they are, there is nothing to
+reproduce through the public API at all.
+
+### T7297's routine settlement
+
+`c6b1226bf`, 2026-09-11. A routine run is settled from its generation receipt
+when the worker is gone. The observable is a background worker's own
+bookkeeping; there is no request that answers differently.
+
 ### T6074's delete-all-except walk, measured but never red
 
 "Everything except these" - select all, click off a few rows, delete - left rows
