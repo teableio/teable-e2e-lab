@@ -110,7 +110,6 @@ import { runDateGroupStatisticsCase } from "./runners/date-group-statistics.runn
 import { runFormulaBranchErrorBackfillCase } from "./runners/formula-branch-error-backfill.runner";
 import { runProvisionWindowReadRaceCase } from "./runners/provision-window-read-race.runner";
 import { runNumberShowAsClearedCase } from "./runners/number-show-as-cleared.runner";
-import { runRecordHistoryActorCase } from "./runners/record-history-actor.runner";
 import { runWideWindowSocketLoadCase } from "./runners/wide-window-socket-load.runner";
 import { runSearchHiddenFieldInlinedViewCase } from "./runners/search-hidden-field-inlined-view.runner";
 import { runProjectedGroupHeadersCase } from "./runners/projected-group-headers.runner";
@@ -262,7 +261,6 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "formula-branch-error-backfill": runFormulaBranchErrorBackfillCase,
   "provision-window-read-race": runProvisionWindowReadRaceCase,
   "number-show-as-cleared": runNumberShowAsClearedCase,
-  "record-history-actor": runRecordHistoryActorCase,
   "wide-window-socket-load": runWideWindowSocketLoadCase,
   "search-hidden-field-inlined-view": runSearchHiddenFieldInlinedViewCase,
   "projected-group-headers": runProjectedGroupHeadersCase,

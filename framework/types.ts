@@ -22,7 +22,6 @@ export interface BugCaseConfigByRunner {
   "wide-window-socket-load": WideWindowSocketLoadCaseConfig;
   "provision-window-read-race": ProvisionWindowReadRaceCaseConfig;
   "number-show-as-cleared": NumberShowAsClearedCaseConfig;
-  "record-history-actor": RecordHistoryActorCaseConfig;
   "search-hidden-field-inlined-view": SearchHiddenFieldInlinedViewCaseConfig;
   "rollup-expression-convert": RollupExpressionConvertCaseConfig;
   "share-view-unready-data-db": ShareViewUnreadyDataDbCaseConfig;
@@ -2001,17 +2000,6 @@ export interface LookupMultiplicityVoCaseConfig {
   hostRowName: string;
   // Two linked rows at least - see the runner.
   linkedRowNames: string[];
-}
-
-// Two people writing rows of the same table at the same time, and what each
-// row's history says about who changed it.
-export interface RecordHistoryActorCaseConfig {
-  baseId: "seed-base";
-  tableNamePrefix: string;
-  // Rows each person writes. At least two each - see the runner.
-  rowsPerWriter: number;
-  historyTimeoutMs: number;
-  pollIntervalMs: number;
 }
 
 // A number column drawn as a bar, switched back to a plain number.
