@@ -14,7 +14,10 @@ a table nobody meant that person to know exists.
 
 ## What was measured
 
-Pending: to be filled in from the matrix run on the fix's parent and `develop`.
+On the fix's parent `1c88dc911` the withheld table is named in both answers —
+the flat list and the tree — through the folder's record of its contents. On
+`develop` neither answer names it, while the table the role leaves alone is
+still there. Run 34575089052.
 
 ## How the case is built
 
