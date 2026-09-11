@@ -106,7 +106,9 @@ import { runStaleViewColumnMetaCase } from "./runners/stale-view-column-meta.run
 import { runLookupSelectChoicesKeptCase } from "./runners/lookup-select-choices-kept.runner";
 import { runShareCopyOutsidePanelCase } from "./runners/share-copy-outside-panel.runner";
 import { runLookupMultiplicityVoCase } from "./runners/lookup-multiplicity-vo.runner";
+import { runDateGroupStatisticsCase } from "./runners/date-group-statistics.runner";
 import { runProjectedGroupHeadersCase } from "./runners/projected-group-headers.runner";
+import { runRollupExpressionConvertCase } from "./runners/rollup-expression-convert.runner";
 import { runTableDeleteRealtimeCase } from "./runners/table-delete-realtime.runner";
 import { runTrackedModifiedSortCase } from "./runners/tracked-modified-sort.runner";
 import { runLookupOfLinkContainsCase } from "./runners/lookup-of-link-contains.runner";
@@ -250,7 +252,9 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "empty-write-normalization": runEmptyWriteNormalizationCase,
   "table-delete-realtime": runTableDeleteRealtimeCase,
   "archive-recount": runArchiveRecountCase,
+  "date-group-statistics": runDateGroupStatisticsCase,
   "projected-group-headers": runProjectedGroupHeadersCase,
+  "rollup-expression-convert": runRollupExpressionConvertCase,
   "lookup-multiplicity-vo": runLookupMultiplicityVoCase,
   "link-picker-share-lookup": runLinkPickerShareLookupCase,
   "manyone-typecast-shape": runManyoneTypecastShapeCase,

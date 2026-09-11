@@ -17,6 +17,8 @@ export interface BugCaseConfigByRunner {
   "or-filtered-rollup-scope": OrFilteredRollupScopeCaseConfig;
   "same-named-fk-base-duplicate": SameNamedFkBaseDuplicateCaseConfig;
   "select-rollup-unique-and-count": SelectRollupUniqueAndCountCaseConfig;
+  "date-group-statistics": DateGroupStatisticsCaseConfig;
+  "rollup-expression-convert": RollupExpressionConvertCaseConfig;
   "share-view-unready-data-db": ShareViewUnreadyDataDbCaseConfig;
   "shared-form-cover-url": SharedFormCoverUrlCaseConfig;
   "switch-mixed-branch-storage": SwitchMixedBranchStorageCaseConfig;
@@ -1993,6 +1995,41 @@ export interface LookupMultiplicityVoCaseConfig {
   hostRowName: string;
   // Two linked rows at least - see the runner.
   linkedRowNames: string[];
+}
+
+// A table grouped by a date column, and the per-group totals a grid prints in
+// each group heading.
+export interface DateGroupStatisticsCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // What the date column is formatted as, which is the unit the list groups
+  // it by: a calendar day or a calendar month.
+  unit: "day" | "month";
+  // The column's own timezone. The rows below are written as UTC instants, so
+  // this is what decides which bucket each one falls into.
+  timeZone: string;
+  // The rows. At least one bucket must hold two rows written at different
+  // instants - see the runner, which refuses a fixture that does not straddle
+  // the unit.
+  rows: { title: string; amount: number; at: string }[];
+}
+
+// A summary column over a linked people column, changed from listing values to
+// counting them.
+export interface RollupExpressionConvertCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  hostRowName: string;
+  // The linked rows, all naming the same person. Two at least - see the
+  // runner.
+  linkedRowNames: string[];
+  // The summary before the edit: one that answers with words.
+  expressionBefore: string;
+  // The summary after it: one that answers with a number, which is why the
+  // edit carries number formatting.
+  expressionAfter: string;
+  precision: number;
+  timeZone: string;
 }
 
 export interface ProjectedGroupHeadersCaseConfig {
