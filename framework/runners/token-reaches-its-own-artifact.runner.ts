@@ -85,14 +85,20 @@ export const runTokenReachesItsOwnArtifactCase = async (
         }),
       },
     );
-    const made = (await madeResponse.json()) as { id?: string };
-    if (!madeResponse.ok || !made.id) {
+    const made = (await madeResponse.json()) as {
+      artifactId?: string;
+      id?: string;
+    };
+    // The create answer names the page `artifactId`; reading it as `id` finds
+    // nothing and reports a working create as a broken fixture (run
+    // 34578588402).
+    const artifactId = made.artifactId ?? made.id;
+    if (!madeResponse.ok || !artifactId) {
       throw new Error(
         `the token could not even make a page (${madeResponse.status}): ${JSON.stringify(made)} - the fixture is ` +
           "not in place",
       );
     }
-    const artifactId = made.id;
 
     const probe = await bugCheckpoint(
       "a-token-can-read-back-what-it-made",
