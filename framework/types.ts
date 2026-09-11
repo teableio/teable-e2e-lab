@@ -19,6 +19,9 @@ export interface BugCaseConfigByRunner {
   "select-rollup-unique-and-count": SelectRollupUniqueAndCountCaseConfig;
   "date-group-statistics": DateGroupStatisticsCaseConfig;
   "formula-branch-error-backfill": FormulaBranchErrorBackfillCaseConfig;
+  "wide-window-socket-load": WideWindowSocketLoadCaseConfig;
+  "provision-window-read-race": ProvisionWindowReadRaceCaseConfig;
+  "number-show-as-cleared": NumberShowAsClearedCaseConfig;
   "search-hidden-field-inlined-view": SearchHiddenFieldInlinedViewCaseConfig;
   "rollup-expression-convert": RollupExpressionConvertCaseConfig;
   "share-view-unready-data-db": ShareViewUnreadyDataDbCaseConfig;
@@ -1997,6 +2000,44 @@ export interface LookupMultiplicityVoCaseConfig {
   hostRowName: string;
   // Two linked rows at least - see the runner.
   linkedRowNames: string[];
+}
+
+// A number column drawn as a bar, switched back to a plain number.
+export interface NumberShowAsClearedCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  rowTitle: string;
+  precision: number;
+  maxValue: number;
+}
+
+// A table being read while columns are added to it.
+export interface ProvisionWindowReadRaceCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  rowCount: number;
+  // How many columns are added, one after another. At least two - see the
+  // runner: one window is a coin flip, a burst is the reported shape.
+  columnsToAdd: number;
+  // How many ordinary reads are in flight at a time while a column is being
+  // added.
+  concurrentReads: number;
+}
+
+// A table long enough that the page asks for every row in one request.
+export interface WideWindowSocketLoadCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // How many rows. Enough that their ids alone, written as a query string,
+  // exceed the header limit below - the runner measures that and refuses a
+  // fixture that does not.
+  recordCount: number;
+  // Rows per write. The rows are only fixture; this keeps each write a
+  // reasonable size.
+  writeBatchSize: number;
+  // Node's default maximum header size, which is what refused the request.
+  headerLimitBytes: number;
+  subscribeTimeoutMs: number;
 }
 
 // A worked-out column whose formula chooses between branches, added to a table

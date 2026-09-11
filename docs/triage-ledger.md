@@ -537,6 +537,60 @@ it in prose is how the two drift apart. To see it:
 pnpm triage:covered
 ```
 
+### The older public-API window, read on 2026-09-11
+
+Widening the scan to 800 commits turned up seven more uncovered fixes with
+public-API specs. None of them is a case:
+
+- **T6479** (`7de765bf8a`, socket snapshot-bulk moved from GET query to POST
+  body). The parent has no POST route, so a case cannot send the same request to
+  both sides. The symptom — a wide table's grid window exceeding Node's 16KB
+  header limit and being refused with 431 — is only transport-agnostic when
+  watched over the socket, which is worth trying one day: a 300-field table,
+  300 rows, and a query subscription that carries a projection of every field.
+  What has to be checked first is whether this repository's query subscription
+  makes the server fetch snapshots at all, or only ids.
+- **T6392** (`04d39d97e8`, invite mail and notification converged). The shape
+  that changed is an invitation to an address with no account yet: that account
+  now has an unread invite notification waiting at first login. The lab cannot
+  sign in as an account the invitation itself created, and for an address that
+  already has an account the old path notified correctly — so what is reachable
+  is the half that was never broken.
+- **T6420, T6411, T6386, T6382** — v2 migrations and pool sharing. Same shape as
+  T6479: what changed is which engine or which connection answers, not the
+  answer.
+- **T6618, T6449** — byodb settings and PgBouncer switching, which need a base
+  whose storage really is another database. Same blocker as T7247.
+
+### The compute-activity and contention family, read on 2026-09-11
+
+Everything left uncovered in the last 400 commits that is not already named
+elsewhere in this file, read and dropped without a run:
+
+- **T7157** (`ec61dee8b7`, idle tables stuck reporting themselves as syncing).
+  The symptom is good — a table nothing is happening to keeps saying it is
+  computing — but the reproduction needs `COMPUTED_RELIABILITY_ENABLED` and
+  `COMPUTED_RELIABILITY_UI_ENABLED` set at boot, the reliability schema created,
+  and rows seeded into `computed_table_activity` / `computed_field_activity`.
+  The env flags are the blocker: the lab cannot boot an app per case, the way it
+  cannot for `computedUpdateMode`.
+- **T7062** (`5e42495a2e`, schema repair tripping over a soft-deleted link).
+  Needs a soft-deleted oneMany link whose `fkHostTableName` still names a table
+  that has been dropped, and then the repair to run. Reachable only by building
+  the drifted state through fixture-db and driving the schema-operation runner —
+  the same two obstacles as T7114.
+- **T7149** (`9d63551e0a`, `d843ed4674`, a share client asking for the private
+  compute aggregate). This one is worth coming back to: the symptom is a "this
+  resource is restricted" message on a shared view somebody is allowed to open.
+  What is missing is a share-link socket client — `framework/realtime.ts`
+  connects with the seed user's session cookie, and the bug only exists for a
+  client that has no session and is holding a cached document id.
+- **T7145, T7147, T7148, T7180, T7181, T7158, T7139, T7152, T7209, T7251** —
+  contention, budgeting, log shape, and lock-ordering fixes. Each one's own test
+  measures work done or queries issued, not an answer a person reads. T7075 in
+  this file is the measured example of what happens when one of these is tried
+  anyway.
+
 ### T7159's computed-activity capability is not on the field list the lab gets
 
 The plan was a worked-out column read by somebody a role keeps rows from, and an

@@ -10,6 +10,9 @@ import archiveRecountCase from "./cases/record/y1-archive-the-rows-a-count-was-c
 import projectedGroupHeadersCase from "./cases/view/y569-a-grouped-view-asked-for-one-column.case";
 import dateGroupDayStatisticsCase from "./cases/aggregation/y875-a-day-of-rows-and-one-total.case";
 import formulaBranchAlertCase from "./cases/formula/y878-a-branch-that-was-not-taken.case";
+import wideWindowSocketLoadCase from "./cases/realtime/y883-a-long-table-opened-on-a-page.case";
+import provisionWindowReadRaceCase from "./cases/table/y884-a-table-being-changed-is-still-there.case";
+import numberShowAsClearedCase from "./cases/field/y885-turning-off-a-bar-turns-it-off.case";
 import searchHiddenFieldInlinedViewCase from "./cases/search/y880-a-search-inside-a-view-that-hides-a-column.case";
 import dateGroupMonthStatisticsCase from "./cases/aggregation/y876-a-month-of-rows-and-one-total.case";
 import rollupExpressionConvertCase from "./cases/lookup/y877-turn-a-list-of-people-into-a-count.case";
@@ -197,6 +200,9 @@ const cases = [
   projectedGroupHeadersCase,
   dateGroupDayStatisticsCase,
   formulaBranchAlertCase,
+  wideWindowSocketLoadCase,
+  provisionWindowReadRaceCase,
+  numberShowAsClearedCase,
   searchHiddenFieldInlinedViewCase,
   dateGroupMonthStatisticsCase,
   rollupExpressionConvertCase,
