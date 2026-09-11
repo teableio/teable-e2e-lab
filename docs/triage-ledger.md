@@ -537,6 +537,26 @@ it in prose is how the two drift apart. To see it:
 pnpm triage:covered
 ```
 
+### T7159's computed-activity capability is not on the field list the lab gets
+
+The plan was a worked-out column read by somebody a role keeps rows from, and an
+assertion that the column arrives carrying `computedActivityRead: false` — the
+answer the page decides its progress subscription on, which the fix restores to
+initial field responses.
+
+On `develop` (run 34561744523) the column comes back to that person as plain
+field metadata: no `computedActivityRead`, and no `recordRead` either. Both are
+enterprise per-field capabilities, and the enterprise field controller that
+projects them is evidently not what answers `GET /table/{tableId}/field` in the
+app the lab boots. So the case was red on the gating column — a `fixed` case
+that fails `develop` is a regression report, not coverage — and it is out.
+
+Whoever picks this up next should first check, on `develop` alone, which
+endpoint hands the lab's app a field carrying `recordRead`: if
+`field/socket/snapshot-bulk` does and the REST list does not, the case is that
+request alone. The runner and case are on
+`attempt/t7159-computed-activity-capability`.
+
 ### T7075's cross-base chain refreshes fine, at one total and at ten
 
 A narrowed total over a link, a formula reading it, and two conditional rollups
