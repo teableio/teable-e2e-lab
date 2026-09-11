@@ -12,7 +12,8 @@ is why the two are rarely connected.
 
 ## What was measured
 
-Pending: to be filled in from the matrix run on the fix's parent and `develop`.
+On the fix's parent `407f382bf` the cell still lists both rows 30s after one of
+them was deleted. On `develop` it lists only the survivor. Run 34571960111.
 
 ## How long the fault existed
 
