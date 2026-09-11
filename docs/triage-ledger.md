@@ -537,6 +537,35 @@ it in prose is how the two drift apart. To see it:
 pnpm triage:covered
 ```
 
+### The compute-activity and contention family, read on 2026-09-11
+
+Everything left uncovered in the last 400 commits that is not already named
+elsewhere in this file, read and dropped without a run:
+
+- **T7157** (`ec61dee8b7`, idle tables stuck reporting themselves as syncing).
+  The symptom is good — a table nothing is happening to keeps saying it is
+  computing — but the reproduction needs `COMPUTED_RELIABILITY_ENABLED` and
+  `COMPUTED_RELIABILITY_UI_ENABLED` set at boot, the reliability schema created,
+  and rows seeded into `computed_table_activity` / `computed_field_activity`.
+  The env flags are the blocker: the lab cannot boot an app per case, the way it
+  cannot for `computedUpdateMode`.
+- **T7062** (`5e42495a2e`, schema repair tripping over a soft-deleted link).
+  Needs a soft-deleted oneMany link whose `fkHostTableName` still names a table
+  that has been dropped, and then the repair to run. Reachable only by building
+  the drifted state through fixture-db and driving the schema-operation runner —
+  the same two obstacles as T7114.
+- **T7149** (`9d63551e0a`, `d843ed4674`, a share client asking for the private
+  compute aggregate). This one is worth coming back to: the symptom is a "this
+  resource is restricted" message on a shared view somebody is allowed to open.
+  What is missing is a share-link socket client — `framework/realtime.ts`
+  connects with the seed user's session cookie, and the bug only exists for a
+  client that has no session and is holding a cached document id.
+- **T7145, T7147, T7148, T7180, T7181, T7158, T7139, T7152, T7209, T7251** —
+  contention, budgeting, log shape, and lock-ordering fixes. Each one's own test
+  measures work done or queries issued, not an answer a person reads. T7075 in
+  this file is the measured example of what happens when one of these is tried
+  anyway.
+
 ### T7159's computed-activity capability is not on the field list the lab gets
 
 The plan was a worked-out column read by somebody a role keeps rows from, and an
