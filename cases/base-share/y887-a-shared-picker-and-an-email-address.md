@@ -12,7 +12,10 @@ them who works there.
 
 ## What was measured
 
-Pending: to be filled in from the matrix run on the fix's parent and `develop`.
+On the fix's parent `3aaa5fa92` typing the owner's full address into the shared
+form's picker returns that person — carrying their email address in the answer.
+On `develop` the same search returns nobody, while the name search still
+returns its two matches. Run 34567034845.
 
 ## How the case is built
 
