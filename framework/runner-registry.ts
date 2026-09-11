@@ -116,6 +116,7 @@ import { runSidewaysPhotoDimensionsCase } from "./runners/sideways-photo-dimensi
 import { runTwoWayLinkDeleteCleanupCase } from "./runners/two-way-link-delete-cleanup.runner";
 import { runPluginSecretInListCase } from "./runners/plugin-secret-in-list.runner";
 import { runUploadPathFromTheClientCase } from "./runners/upload-path-from-the-client.runner";
+import { runOauthScopeNotWidenedCase } from "./runners/oauth-scope-not-widened.runner";
 import { runWideWindowSocketLoadCase } from "./runners/wide-window-socket-load.runner";
 import { runSearchHiddenFieldInlinedViewCase } from "./runners/search-hidden-field-inlined-view.runner";
 import { runProjectedGroupHeadersCase } from "./runners/projected-group-headers.runner";
@@ -273,6 +274,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "two-way-link-delete-cleanup": runTwoWayLinkDeleteCleanupCase,
   "plugin-secret-in-list": runPluginSecretInListCase,
   "upload-path-from-the-client": runUploadPathFromTheClientCase,
+  "oauth-scope-not-widened": runOauthScopeNotWidenedCase,
   "wide-window-socket-load": runWideWindowSocketLoadCase,
   "search-hidden-field-inlined-view": runSearchHiddenFieldInlinedViewCase,
   "projected-group-headers": runProjectedGroupHeadersCase,

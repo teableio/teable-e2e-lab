@@ -28,6 +28,7 @@ export interface BugCaseConfigByRunner {
   "two-way-link-delete-cleanup": TwoWayLinkDeleteCleanupCaseConfig;
   "plugin-secret-in-list": PluginSecretInListCaseConfig;
   "upload-path-from-the-client": UploadPathFromTheClientCaseConfig;
+  "oauth-scope-not-widened": OauthScopeNotWidenedCaseConfig;
   "search-hidden-field-inlined-view": SearchHiddenFieldInlinedViewCaseConfig;
   "rollup-expression-convert": RollupExpressionConvertCaseConfig;
   "share-view-unready-data-db": ShareViewUnreadyDataDbCaseConfig;
@@ -2006,6 +2007,20 @@ export interface LookupMultiplicityVoCaseConfig {
   hostRowName: string;
   // Two linked rows at least - see the runner.
   linkedRowNames: string[];
+}
+
+// An app approved for one narrow permission, and what its token can reach.
+export interface OauthScopeNotWidenedCaseConfig {
+  appName: string;
+  homepage: string;
+  redirectUri: string;
+  // The one permission the approval screen offers and the person approves.
+  consentedScope: string;
+  // Something inside that permission, used to prove the token works at all.
+  inScopePath: string;
+  // Something outside it, which is what must be refused.
+  outOfScopePath: string;
+  expectedStatus: number;
 }
 
 // A request for somewhere to put a file, carrying a name that climbs out of
