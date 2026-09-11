@@ -166,34 +166,38 @@ export const runRecordHistoryActorCase = async (
         const expectedBy = (index: number) =>
           rows[index]!.writer === "second" ? secondUser.id : firstUserId;
 
-        // The entries are written after the requests answer, so each row is
-        // asked until it has one.
-        const attribution: {
-          row: string;
-          expected: string;
-          named: string | null;
-        }[] = [];
-        for (const [index, record] of created.entries()) {
-          const deadline = Date.now() + config.historyTimeoutMs;
-          let named: string | null = null;
-          for (;;) {
-            const history = await apiGetRecordHistory(tableId, record.id, {});
-            const latest = history.data.historyList?.[0];
-            if (latest) {
-              named = String(latest.createdBy);
-              break;
+        // The entries are written after the requests answer, so the rows are
+        // asked together and under one deadline rather than one after another:
+        // twelve rows each waiting out their own timeout is twelve times the
+        // wait, and the case would time out rather than report anything.
+        const named = new Map<string, string>();
+        const deadline = Date.now() + config.historyTimeoutMs;
+        for (;;) {
+          const pending = created.filter((record) => !named.has(record.id));
+          if (pending.length === 0 || Date.now() >= deadline) {
+            break;
+          }
+          const answers = await Promise.all(
+            pending.map(async (record) => ({
+              id: record.id,
+              latest: (await apiGetRecordHistory(tableId, record.id, {})).data
+                .historyList?.[0],
+            })),
+          );
+          for (const answer of answers) {
+            if (answer.latest) {
+              named.set(answer.id, String(answer.latest.createdBy));
             }
-            if (Date.now() >= deadline) {
-              break;
-            }
+          }
+          if (named.size < created.length) {
             await sleep(config.pollIntervalMs);
           }
-          attribution.push({
-            row: rows[index]!.name,
-            expected: expectedBy(index),
-            named,
-          });
         }
+        const attribution = created.map((record, index) => ({
+          row: rows[index]!.name,
+          expected: expectedBy(index),
+          named: named.get(record.id) ?? null,
+        }));
 
         const missing = attribution.filter((entry) => entry.named === null);
         if (missing.length > 0) {

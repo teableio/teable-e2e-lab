@@ -38,6 +38,13 @@ editor. Before the checkpoint the case makes them write once and requires that
 write to succeed: if they cannot write, every row would be the first person's
 and the case would be watching one writer.
 
+## How long it waits
+
+All twelve rows are asked together and under one deadline. Asking them one
+after another, each waiting out its own timeout, is twelve times the wait: the
+first attempt did that and the case timed out at 300s on both columns without
+reporting anything (run 34565408714).
+
 ## What the checkpoint asserts
 
 Every row's newest history entry names the person who wrote that row. Rows with
