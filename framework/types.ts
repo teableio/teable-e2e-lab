@@ -30,6 +30,7 @@ export interface BugCaseConfigByRunner {
   "upload-path-from-the-client": UploadPathFromTheClientCaseConfig;
   "oauth-scope-not-widened": OauthScopeNotWidenedCaseConfig;
   "hidden-node-still-referenced": HiddenNodeStillReferencedCaseConfig;
+  "token-reaches-its-own-artifact": TokenReachesItsOwnArtifactCaseConfig;
   "search-hidden-field-inlined-view": SearchHiddenFieldInlinedViewCaseConfig;
   "rollup-expression-convert": RollupExpressionConvertCaseConfig;
   "share-view-unready-data-db": ShareViewUnreadyDataDbCaseConfig;
@@ -2008,6 +2009,17 @@ export interface LookupMultiplicityVoCaseConfig {
   hostRowName: string;
   // Two linked rows at least - see the runner.
   linkedRowNames: string[];
+}
+
+// A page made with an API token, and whether the same token can read it back.
+export interface TokenReachesItsOwnArtifactCaseConfig {
+  tokenNamePrefix: string;
+  // What the token may do. Scoped to the space the page lives in, so a refusal
+  // is about the route rather than the token being too narrow.
+  scopes: string[];
+  tokenLifetimeMs: number;
+  artifactName: string;
+  artifactContent: string;
 }
 
 // A folder holding two tables, one of them withheld from the person reading.
