@@ -160,7 +160,6 @@ The shape is gone; the runner is not kept.
 | `e770dd1ac` | T7057 | Index coverage, not results. Substring search documents and the trigram indexes behind them are narrowed to text-shaped fields, and an all-field search over an uncovered field falls back to the unindexed path rather than answering differently. What a search returns is the same on both sides; what changes is whether an index can serve it. Performance lab, if anywhere - same reading as T6821. |
 | `f70f0d508` | T6944 | Neither commit carrying this issue id fixes the path `view/a-grid-grouped-by-a-column-you-cannot-read` observes. That case is red on `12407c409` (before this commit), on `7bc91231d` (after it), and on `f44a82cf8` (after both), and turns green only at `2ae77481c` — which carries T6997. This one narrows a grouping the server resolves from the view itself; the case exercises a grouping that arrives on the request, which is what the grid actually sends. Reaching the other path needs a request carrying no grouping while the view carries one, and the record endpoint the lab reads through does not obviously offer that. |
 | `a4c8c3396` | T6944 | Same reading, same measurements: the case is red on `f44a82cf8`, which is after this commit. It aligns the group metadata a view reports with the permissions applied to it, which is what the settings screen reads, not what the grid's request for rows goes through. |
-| `6235527b4` | T7027 | Not taken while the fix is unshipped. A folder's `children` still lists the ids of resources the caller may not read, so a permission-filtered response carries names of things the reader was filtered away from; the reported symptom is a console error and an empty folder. The issue was still at "deployed to staging" when this was written, and a `status: open` case here would be a public reproduction of an unshipped disclosure. Same call as T7065. The fixture it needs now exists (`framework/authority-matrix.ts`), so this is a reminder rather than a rejection: it is ready to write the day it ships. |
 
 ### The date comparison inside AND or OR
 
@@ -537,6 +536,59 @@ it in prose is how the two drift apart. To see it:
 pnpm triage:covered
 ```
 
+### The stale-cache refill, T6646, and where its reads actually are
+
+`822b30e17` stops a slow reader putting an invalidated blob back into the
+performance cache after a write. The symptom would be excellent - a value
+changed, and the product keeps serving the old one - but the reads it guards
+are not where a case can watch them:
+
+- The record read that goes through `performanceCacheService.wrap` is the
+  socket **doc-ids** read, and its cache key already carries the table's
+  `lastModifiedTime`. A write moves the key, so a stale refill lands under the
+  old one and is never read again.
+- The wraps worth probing instead are the aggregation controller's and
+  `base-node.service`'s. Both would need a read in flight while a write
+  commits, which is a race the lab can only fire at, not schedule.
+
+Anyone picking this up should first check, on `develop` alone, whether those two
+keys are also stamped with a modified time. If they are, there is nothing to
+reproduce through the public API at all.
+
+### T7297's routine settlement
+
+`c6b1226bf`, 2026-09-11. A routine run is settled from its generation receipt
+when the worker is gone. The observable is a background worker's own
+bookkeeping; there is no request that answers differently.
+
+### T6074's delete-all-except walk, measured but never red
+
+"Everything except these" - select all, click off a few rows, delete - left rows
+behind, because a skipped row did not advance the walk's offset. `87079ae8e`
+repairs it. Four runs on its parent `bf5aa5255` and on `develop` never separated
+the two:
+
+- 8 rows, 2 excluded: correct on both (run 34575930130).
+- 5200 rows, excluded at positions 3 and 1500: correct on both (runs
+  34576375172, 34576678800).
+
+What was measured along the way, which is what a next attempt needs:
+
+- The delete walks in batches of `DEFAULT_DELETE_STREAM_BATCH_SIZE = 5000`, so a
+  table under that size is one batch and cannot show a stalled offset.
+- The public endpoints do not accept a batch size, so the fixture cannot be
+  shrunk to meet the walk; it has to be grown past it.
+- 5200 rows is enough table for the endpoint to answer correctly on both sides,
+  so size alone is not the trigger. The remaining candidates are the stream
+  endpoint (`delete-by-id-stream`, which is what the grid uses for large deletes
+  and reports per-chunk progress) and a failing chunk, which is the other branch
+  the fix touches.
+- Row count was not on v2 when this fix landed: asserting v2 on it turns the
+  pre-fix column into "the lab could not run" (run 34576375172). The runner
+  records the engine instead.
+
+The runner and case are on `attempt/t6074-delete-all-except`.
+
 ### T4966's record history never arrives in this lab's app
 
 A row's history naming the wrong colleague is as good a symptom as this
@@ -760,12 +812,25 @@ does not spend the same afternoon rediscovering it.
 
 ### The permission-matrix family is reachable, and nobody has built the fixture yet
 
-Four uncovered fixes wait behind one piece of setup that does not exist here
-yet: `2ae77481c5`/T6997 (v2 reads over masked values), `68b7d74f05`/T7025
-(archiving gated by the matrix for restricted collaborators), `6235527b4c`/T7027
-(references to permission-filtered nodes), and `a4c8c3396b`+`f70f0d5083`/T6944
-(a grid view whose group field the reader cannot see returns no records at all,
-with "Group references a field that is not readable").
+Four uncovered fixes waited behind one piece of setup that did not exist here
+when this was written: `2ae77481c5`/T6997 (v2 reads over masked values),
+`68b7d74f05`/T7025 (archiving gated by the matrix for restricted
+collaborators), `6235527b4c`/T7027 (references to permission-filtered nodes),
+and `a4c8c3396b`+`f70f0d5083`/T6944 (a grid view whose group field the reader
+cannot see returns no records at all, with "Group references a field that is
+not readable").
+
+Three of the four are now written — T6944 as
+`authority/y402`-era coverage, T7025 as
+`authority/y402-archive-authorized-grouped-record`, and T7027 as
+`authority/y894-a-withheld-table-named-in-its-folder` — on the fixture that
+this section asked for and that now exists as `framework/authority-matrix.ts`.
+T6997 is the one still waiting.
+
+T7027 also carries the reason it waited, which is the reusable part: while the
+fix was unshipped, a `status: open` case here would have been a working public
+reproduction of an unshipped disclosure. It was written the day after it
+shipped, as `fixed`.
 
 None of them is blocked by the harness. The matrix is driven entirely through
 public endpoints — `PATCH /api/base/:baseId/authority-matrix/status` to turn it
