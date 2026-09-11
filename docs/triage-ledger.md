@@ -659,6 +659,30 @@ public-API specs. None of them is a case:
 - **T6618, T6449** — byodb settings and PgBouncer switching, which need a base
   whose storage really is another database. Same blocker as T7247.
 
+### What is left in the last 400 commits, read on 2026-09-11
+
+After the cases written this week, the scan's remaining uncovered fixes are
+named here so the next pass can skip them by reading rather than by running:
+
+- **Admin and observability surfaces** - T7237, T7236, T7222, T7207, T7203,
+  T7188, T7186, T7185, T7178, T7156, T7189, T6908. These change what an
+  operator's console shows or how a catalog is paged. The lab has no operator
+  console, and none of them changes an answer a customer's request gets.
+- **AI, chat and routine** - T7285, T7286, T7214, T7175, T7190, T7298, T7040's
+  editor half. Browser-shaped or agent-shaped; the one backend half worth a
+  second look is T7197 (the OpenAPI document now says which operations a token
+  may call), and that one needs `/docs` to be mounted in the app the lab boots,
+  which it is not: the document is written by `setupSwagger` from `bootstrap`,
+  and the e2e app does not run it.
+- **Infrastructure** - T6675 (retry a pg connect timeout once), T7239 (a
+  dependency upgrade), T7205 (cold-archive compaction bookkeeping). No request
+  answers differently.
+- **Computed locking and budgets** - T7018, T6996, T7160, T7272. Same family as
+  the row above this one, same reason.
+
+What this leaves is a window that has been read end to end. The next productive
+pass is more likely to start from a new teable-ee commit than from this list.
+
 ### The compute-activity and contention family, read on 2026-09-11
 
 Everything left uncovered in the last 400 commits that is not already named
