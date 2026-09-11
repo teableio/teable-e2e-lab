@@ -24,6 +24,7 @@ export default defineBugCase({
     ignoredKind: "credit",
     countedLineName: "Debit line",
     ignoredLineName: "Credit line",
+    narrowedTotalsOnTheLink: 10,
     amountBefore: 10,
     amountAfter: 15,
     ignoredAmount: 7,

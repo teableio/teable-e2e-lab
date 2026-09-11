@@ -537,6 +537,33 @@ it in prose is how the two drift apart. To see it:
 pnpm triage:covered
 ```
 
+### Four recent fixes that have no lab shape at all
+
+Read on 2026-09-11 while scanning the last 120 commits, and dropped before any
+run — each for a reason visible in the fix itself:
+
+- **T7223** (`fbeeebf030`, indexed searches served from validated table
+  metadata). Its own spec stubs `V2_TABLE_QUERY_OPS_*` environment variables and
+  spies on `ConfigService.get` to force a runtime mode. What it observes is
+  which access path served a search, not what the search answered.
+- **T7221** (`77167d91cd`, table-query-ops defaulted off). A change of default
+  configuration. There is no user-visible answer that differs.
+- **T7247** (`6b182f57f9`, byodb attachment cell refs read from the data db).
+  Needs a base whose storage really is somebody else's database. The lab can
+  build a data-db connection row that is switched off
+  (`share-view-unready-data-db`) but not a working external one.
+- **T7196** (`89b29e4fdb`, field snapshots hydrated by field-id spec). Mostly a
+  read-path rewrite; the user-visible half is a 500 on snapshot-bulk for a field
+  with no version, which needs a version-less field row — a drifted state, so a
+  fixture-db case. Worth writing the day someone wants it; it is a bigger
+  fixture than anything here has needed.
+- **T7114** (`bf5ca33b02`, formula creates leaving a table hidden). The
+  reproduction needs an aborted create — the spec resolves the schema-operation
+  runner out of the v2 container and drives it by hand after injecting a
+  begin-only operation row. Seeding the leftover state through fixture-db would
+  reproduce the damage on both sides: the fix stops the state being created, it
+  does not change what a leftover pending does.
+
 ### T7122's simpler shape: a column that is a number or nothing
 
 `IF({amount}<=0,"",{amount})`, added to a table holding a zero row, a positive

@@ -61,6 +61,11 @@ export const runFilteredRollupCrossBaseRefreshCase = async (
   let sourceTableId = "";
   let hostTableId = "";
 
+  if (config.narrowedTotalsOnTheLink < 1) {
+    throw new Error(
+      "there has to be at least one narrowed total - it is what the whole chain reads from",
+    );
+  }
   if (config.amountBefore === config.amountAfter) {
     throw new Error(
       "the number has to change - writing the same value back does not ask anything to be worked out again",
@@ -111,27 +116,38 @@ export const runFilteredRollupCrossBaseRefreshCase = async (
         lookupFieldId: sourceNameId,
       },
     });
-    // The narrowed total: only the lines of the counted kind.
-    const hostTotal = await createField(hostTableId, {
-      name: HOST_TOTAL_FIELD,
-      type: FieldType.Rollup,
-      options: { expression: "sum({values})" },
-      lookupOptions: {
-        foreignTableId: sourceTableId,
-        linkFieldId: link.id,
-        lookupFieldId: sourceAmountId,
-        filter: {
-          conjunction: "and",
-          filterSet: [
-            {
-              fieldId: sourceKindId,
-              operator: "is",
-              value: config.countedKind,
-            },
-          ],
+    // The narrowed totals: only the lines of the counted kind. There are
+    // several of them on the same link because that is the shape the report
+    // came in as - each one was worked out separately during an update, and it
+    // is the number of them together that ran past the time a statement is
+    // allowed. The first is the one the rest of the case reads.
+    const narrowedFilter = {
+      conjunction: "and",
+      filterSet: [
+        {
+          fieldId: sourceKindId,
+          operator: "is",
+          value: config.countedKind,
         },
-      },
-    });
+      ],
+    };
+    const narrowedTotals = [];
+    for (let index = 0; index < config.narrowedTotalsOnTheLink; index += 1) {
+      narrowedTotals.push(
+        await createField(hostTableId, {
+          name: index === 0 ? HOST_TOTAL_FIELD : `${HOST_TOTAL_FIELD} ${index}`,
+          type: FieldType.Rollup,
+          options: { expression: "sum({values})" },
+          lookupOptions: {
+            foreignTableId: sourceTableId,
+            linkFieldId: link.id,
+            lookupFieldId: sourceAmountId,
+            filter: narrowedFilter,
+          },
+        }),
+      );
+    }
+    const hostTotal = narrowedTotals[0]!;
     const hostDisplay = await createField(hostTableId, {
       name: HOST_DISPLAY_FIELD,
       type: FieldType.Formula,
@@ -300,6 +316,7 @@ export const runFilteredRollupCrossBaseRefreshCase = async (
         hostTableId,
         mirrorBaseId,
         countedKind: config.countedKind,
+        narrowedTotalsOnTheLink: config.narrowedTotalsOnTheLink,
         amountBefore: config.amountBefore,
         amountAfter: config.amountAfter,
         valuesBefore: before.values,

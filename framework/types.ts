@@ -2014,6 +2014,10 @@ export interface FilteredRollupCrossBaseRefreshCaseConfig {
   ignoredKind: string;
   countedLineName: string;
   ignoredLineName: string;
+  // How many narrowed totals sit on the same link. One is enough to watch the
+  // change travel; the report it came from carried about ten, and it is the
+  // number of them together that ran past the time a statement is allowed.
+  narrowedTotalsOnTheLink: number;
   amountBefore: number;
   amountAfter: number;
   ignoredAmount: number;

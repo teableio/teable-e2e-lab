@@ -14,7 +14,11 @@ it says 15, and the report somebody actually sends says 10.
 
 ## What was measured
 
-Pending: to be filled in from the matrix run on the fix's parent and `develop`.
+A first attempt with a single narrowed total was green on the fix's parent
+`0ad204535` — all four columns read 15 — run 34560984928. The report the fix
+came from carried about ten narrowed totals on one link, and the commit message
+names that number as what ran past the statement time limit, so the fixture now
+builds ten. Pending: the run that settles whether that reproduces.
 
 ## Why the condition matters
 
@@ -29,8 +33,8 @@ one.
 
 ## How the case is built
 
-A source table, a host row linked to two lines — one counted, one not — and a
-second base holding the report. The lines are written and linked after the
+A source table, a host row linked to two lines — one counted, one not — ten
+narrowed totals on that link, and a second base holding the report. The lines are written and linked after the
 columns exist, because that is the order the report came in as: it puts the
 work on the update path rather than on the create.
 
@@ -45,6 +49,6 @@ the near ones following while the far ones do not is the half people report.
 
 ## Limits
 
-One narrowed total and one host row. The report describes a host carrying about
-ten such totals; a single one is enough to observe whether the update reaches
-the end of the chain, but not to observe the time limit the fix is about.
+One host row and one link. The number of narrowed totals on that link is a
+config value because it is the load, not the shape, that the fix is about: a
+single total travels the same code and finishes well inside the time limit.
