@@ -10,8 +10,10 @@ matching is not on screen. It reads as the search matching at random.
 
 ## What was measured
 
-Pending: to be filled in from the matrix run on `b6b57761`, the fix's parent
-`375e14ef2`, and `develop`.
+On `b6b577618` and on the fix's parent `375e14ef2` the search inside the view
+returns the row that matches only in the hidden column — one row where none
+belongs. On `develop` both request shapes return nothing and the control search
+still returns its row. Run 34560377621.
 
 ## Why the request shape is the whole point
 

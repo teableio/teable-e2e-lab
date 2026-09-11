@@ -15,8 +15,11 @@ asked for.
 
 ## What was measured
 
-Pending: to be filled in from the matrix run on the fix's parent `b6b57761`,
-`375e14ef2` and `develop`.
+On the fix's parent `b6b577618` the two rows with no baseline read nothing —
+`no-baseline` and `blank-qty` both come back `null` where "no baseline"
+belongs, after 60s of polling — while the two rows that take the other branch
+read correctly. The column is not flagged. On `375e14ef2` and on `develop` all
+four rows read their branch. Run 34560377621.
 
 ## Why the branch that is not taken matters
 
@@ -49,5 +52,6 @@ the column create answers.
 
 ## Limits
 
-One nesting depth and one arithmetic error (division by zero). The empty-string
-branch shape is `formula/y879-a-column-that-is-a-number-or-nothing`.
+One nesting depth and one arithmetic error (division by zero). The simpler
+empty-string-branch shape does not reproduce through the public API at all —
+see `docs/triage-ledger.md`.

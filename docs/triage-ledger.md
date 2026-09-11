@@ -537,6 +537,20 @@ it in prose is how the two drift apart. To see it:
 pnpm triage:covered
 ```
 
+### T7122's simpler shape: a column that is a number or nothing
+
+`IF({amount}<=0,"",{amount})`, added to a table holding a zero row, a positive
+row and an empty one, is green on the fix's parent `b6b577618` — the positive
+row reads 12.5, the other two read nothing, exactly as it should. Run 34560377621.
+
+The nested shape from the same fix reproduces on that same commit
+(`formula/y878-a-branch-that-was-not-taken`), so this is not the fix being
+absent: whatever the empty-string branch did to the fill-in inside the v2
+package's own harness, the public field-create path does not do. The shape is
+kept reachable — the `formula-branch-error-backfill` runner still takes
+`shape: "empty-else"` — so a later attempt costs a case file rather than a
+runner.
+
 ### The comment-count fix, T7161
 
 `764aee642c` makes per-record comment counts cheap by counting only the record
