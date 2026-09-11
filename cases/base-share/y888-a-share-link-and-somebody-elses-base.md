@@ -15,12 +15,14 @@ of their own.
 ## What was measured
 
 On the fix's parent `c488c5ed2` the link holder asking for the other base's
-node list is answered 200. On `develop` the same request is refused with 403,
-for the node list and for the export. Run 34567517303.
+node list is answered 200, and the answer lists that base's table by id. On
+`develop` the same request is refused with 403, for the node list and for the
+export. Run 34567780155.
 
-That first run had an empty base as the victim, so the unauthorised answer came
-back as `[]` — the same leak, reading like nothing happened. The victim base now
-holds a table, so the answer names something that belongs to somebody else.
+An earlier run had an empty base as the victim, so the unauthorised answer came
+back as `[]` — the same leak, reading like nothing happened (run 34567517303).
+The victim base now holds a table, so the answer names something that belongs
+to somebody else.
 
 ## How the case is built
 
