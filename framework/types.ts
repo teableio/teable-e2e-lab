@@ -25,6 +25,9 @@ export interface BugCaseConfigByRunner {
   "share-picker-email-oracle": SharePickerEmailOracleCaseConfig;
   "whole-base-share-replay": WholeBaseShareReplayCaseConfig;
   "sideways-photo-dimensions": SidewaysPhotoDimensionsCaseConfig;
+  "two-way-link-delete-cleanup": TwoWayLinkDeleteCleanupCaseConfig;
+  "plugin-secret-in-list": PluginSecretInListCaseConfig;
+  "upload-path-from-the-client": UploadPathFromTheClientCaseConfig;
   "search-hidden-field-inlined-view": SearchHiddenFieldInlinedViewCaseConfig;
   "rollup-expression-convert": RollupExpressionConvertCaseConfig;
   "share-view-unready-data-db": ShareViewUnreadyDataDbCaseConfig;
@@ -2003,6 +2006,37 @@ export interface LookupMultiplicityVoCaseConfig {
   hostRowName: string;
   // Two linked rows at least - see the runner.
   linkedRowNames: string[];
+}
+
+// A request for somewhere to put a file, carrying a name that climbs out of
+// the upload area.
+export interface UploadPathFromTheClientCaseConfig {
+  // Prefixed to the run id, so the name is unique per run and still climbs.
+  traversalPrefix: string;
+  uploadType: number;
+  contentLength: number;
+}
+
+// A registered plugin, and what the list of one's plugins carries for it.
+export interface PluginSecretInListCaseConfig {
+  namePrefix: string;
+  logo: string;
+  // Where the plugin says it can be placed. At least one is required by the
+  // registration endpoint.
+  positions: string[];
+}
+
+// One row linked to several rows in another table, shown on both sides, and
+// what the cell says after one of those rows is deleted.
+export interface TwoWayLinkDeleteCleanupCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  hostRowName: string;
+  // The linked rows. The first is the one deleted; the rest are the control.
+  // Two at least - see the runner.
+  linkedRowNames: string[];
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
 }
 
 // A photo whose pixels are landscape and whose rotation note makes it
