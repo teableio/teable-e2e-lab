@@ -74,18 +74,27 @@ made so the column no longer blocks edit and convert.
 | rename the column                                         | ✅ / ✅                         | 32675528990 |
 | re-point it at a plain number on the same link            | ✅ / ✅                         | 32675852808 |
 | convert it into a plain number field, not a lookup at all | ✅ / ✅                         | 32676121196 |
+| rename and reformat a lookup of a **two-column** formula  | ✅ / ✅                         | 34582424969 |
 
 All three were accepted on the fix's parent, and the control - the same edits
 on a lookup of a plain column - was accepted too, so nothing separates the
 columns.
 
 **Why is not established.** The fix touches create, convert, hydrate and
-persistence; a lookup of a formula built through the public API on a
-single-level formula may simply never carry the copied expression that the
-blocking depends on. The next thing to try is a foreign formula whose
-expression cannot be parsed outside its own table - one referencing several
-fields, or a formula over a lookup - since it is the parse of the copied
-expression that failed.
+persistence; a lookup of a formula built through the public API may simply never
+carry the copied expression that the blocking depends on.
+
+The fourth row is this file working as intended: the note used to end by naming
+what to try next - "a foreign formula whose expression cannot be parsed outside
+its own table - one referencing several fields, or a formula over a lookup" -
+and on 2026-09-11 the first of those two was tried. A lookup of
+`{amount} * 2 + {bonus}`, renamed and reformatted in one save, is accepted on
+the fix's parent exactly as on develop, value intact (47 both sides).
+
+So the remaining candidate is the second one: a foreign formula **over a
+lookup**, which needs a third table so the source formula's own instruction
+reaches outside its table before it is copied anywhere. That is the only shape
+of the four named that has not been measured.
 
 The shapes are gone; the runner is not kept.
 | `6421635ca` | T6106 | Written and run: a pasted link cell reaches a watching client carrying the linked record's name on the fix's parent, so both columns look the same. See the note below the table. |
