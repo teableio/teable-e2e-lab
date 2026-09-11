@@ -537,6 +537,34 @@ it in prose is how the two drift apart. To see it:
 pnpm triage:covered
 ```
 
+### T4966's record history never arrives in this lab's app
+
+A row's history naming the wrong colleague is as good a symptom as this
+repository gets, and the reproduction is ordinary: two signed-in people writing
+different rows of one table at the same time, then asking each row who changed
+it. The fixture stood up — the second collaborator signs in, is invited, and
+writes successfully — and then, on the fix's parent `211e46dd8` AND on
+`develop`, all twelve rows answered with no history at all within 30s (run
+34566030183).
+
+So nothing in this lab's app writes what `GET /table/{tableId}/record/{recordId}/history`
+reads, and the case cannot tell a wrong name from no name. `RECORD_HISTORY_DISABLED`
+is set nowhere in teable-ee or in this workflow, and the listener's only other
+gates are "not a computed source" and "changes is non-empty", so the reason is
+not yet known. The fix's own spec sets `recordHistoryDisabled = false` on the
+app object by hand, which suggests the e2e app does not write history by
+default for a reason that is worth finding.
+
+Next step for whoever picks this up: probe on `develop` alone — one ordinary
+update, then read that record's history, with and without query parameters on
+the request. If history is genuinely absent, this case needs the harness to
+turn it on, which is app configuration the lab does not currently do for any
+case. The runner and case are on `attempt/t4966-record-history-actor`.
+
+An earlier attempt also timed out at 300s on both columns by polling twelve
+rows one after another, each with its own 30s budget (run 34565408714); the
+branch has the repaired version, which asks them together under one deadline.
+
 ### The older public-API window, read on 2026-09-11
 
 Widening the scan to 800 commits turned up seven more uncovered fixes with
