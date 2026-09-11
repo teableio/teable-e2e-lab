@@ -16,10 +16,14 @@ Pending: to be filled in from the matrix run on the fix's parent and `develop`.
 ## How the clearing is said
 
 The settings screen omits "show as" when the column goes back to being a plain
-number, and what reaches the server is that absence, said explicitly as null.
-The number path had no branch for it, so it read as "nothing supplied" rather
-than "take it away", and the change was planned as a no-op. The text and
-formula columns had that branch already.
+number, and the saved options simply do not carry it. The number path had no
+branch for that absence, so it read as "nothing supplied" rather than "take it
+away", and the change was planned as a no-op. The text and formula columns had
+that branch already.
+
+Saying it as an explicit `null` instead is refused by the request schema, on
+both sides of the fix (run 34564638692), so the case sends what the screen
+sends: the options without it.
 
 ## How the case is built
 

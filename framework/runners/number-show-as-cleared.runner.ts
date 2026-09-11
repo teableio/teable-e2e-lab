@@ -83,15 +83,17 @@ export const runNumberShowAsClearedCase = async (
     const probe = await bugCheckpoint(
       "turning-off-a-bar-turns-it-off",
       async () => {
-        // Null is how "no longer drawn as anything" is said: the settings
-        // screen omits it, and the request that reaches the server carries the
-        // absence explicitly.
+        // The settings screen omits "show as" when the column goes back to
+        // being a plain number, so the saved options simply do not carry it.
+        // Sending it as an explicit null instead is refused by the request
+        // schema on both sides - run 34564638692 - so the absence is what this
+        // request says, exactly as the screen says it.
         const response = await axios.put(
           urlBuilder(CONVERT_FIELD, { tableId, fieldId: created.id }),
           {
             name: NUMBER_FIELD,
             type: FieldType.Number,
-            options: { formatting, showAs: null },
+            options: { formatting },
           },
           { validateStatus: () => true },
         );
