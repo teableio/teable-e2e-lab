@@ -114,6 +114,7 @@ import { runSharePickerEmailOracleCase } from "./runners/share-picker-email-orac
 import { runWholeBaseShareReplayCase } from "./runners/whole-base-share-replay.runner";
 import { runSidewaysPhotoDimensionsCase } from "./runners/sideways-photo-dimensions.runner";
 import { runTwoWayLinkDeleteCleanupCase } from "./runners/two-way-link-delete-cleanup.runner";
+import { runPluginSecretInListCase } from "./runners/plugin-secret-in-list.runner";
 import { runWideWindowSocketLoadCase } from "./runners/wide-window-socket-load.runner";
 import { runSearchHiddenFieldInlinedViewCase } from "./runners/search-hidden-field-inlined-view.runner";
 import { runProjectedGroupHeadersCase } from "./runners/projected-group-headers.runner";
@@ -269,6 +270,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "whole-base-share-replay": runWholeBaseShareReplayCase,
   "sideways-photo-dimensions": runSidewaysPhotoDimensionsCase,
   "two-way-link-delete-cleanup": runTwoWayLinkDeleteCleanupCase,
+  "plugin-secret-in-list": runPluginSecretInListCase,
   "wide-window-socket-load": runWideWindowSocketLoadCase,
   "search-hidden-field-inlined-view": runSearchHiddenFieldInlinedViewCase,
   "projected-group-headers": runProjectedGroupHeadersCase,

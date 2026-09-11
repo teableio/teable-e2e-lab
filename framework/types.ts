@@ -26,6 +26,7 @@ export interface BugCaseConfigByRunner {
   "whole-base-share-replay": WholeBaseShareReplayCaseConfig;
   "sideways-photo-dimensions": SidewaysPhotoDimensionsCaseConfig;
   "two-way-link-delete-cleanup": TwoWayLinkDeleteCleanupCaseConfig;
+  "plugin-secret-in-list": PluginSecretInListCaseConfig;
   "search-hidden-field-inlined-view": SearchHiddenFieldInlinedViewCaseConfig;
   "rollup-expression-convert": RollupExpressionConvertCaseConfig;
   "share-view-unready-data-db": ShareViewUnreadyDataDbCaseConfig;
@@ -2004,6 +2005,15 @@ export interface LookupMultiplicityVoCaseConfig {
   hostRowName: string;
   // Two linked rows at least - see the runner.
   linkedRowNames: string[];
+}
+
+// A registered plugin, and what the list of one's plugins carries for it.
+export interface PluginSecretInListCaseConfig {
+  namePrefix: string;
+  logo: string;
+  // Where the plugin says it can be placed. At least one is required by the
+  // registration endpoint.
+  positions: string[];
 }
 
 // One row linked to several rows in another table, shown on both sides, and
