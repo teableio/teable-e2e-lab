@@ -29,15 +29,20 @@ The authority matrix on a base of its own; a customers table with two rows, an
 orders table with a link column pointing at it, and a role that lets the
 restricted person work in orders while narrowing customers to one of the two.
 
-Before the checkpoint that person searches the picker for the customer inside
-their narrowing and must find it. A picker that answers nothing at all is broken
-in a different way, and the checkpoint could not tell the two apart.
+Before the checkpoint the **owner** searches the picker and must be offered the
+customers. Asking the restricted person there would be asking the question the
+checkpoint asks: on the fix's parent their picker is empty for both customers,
+and a first attempt reported that as a broken fixture rather than as the bug
+(run 34581492782).
 
 ## What the checkpoint asserts
 
-Searching the same picker for the customer outside their narrowing offers it.
-The request is the one the picker makes — the share-field route, with the
-link-candidate filter naming the column and the row being filled in.
+The restricted person's picker offers both customers — the one inside their
+narrowing and the one outside it. Both, because the fault empties the picker
+rather than filtering it: the first says whether the picker works for them at
+all, the second is what the column is for. The request is the one the picker
+makes: the share-field route, with the link-candidate filter naming the column
+and the row being filled in.
 
 ## Limits
 

@@ -125,8 +125,13 @@ export const runLinkPickerForeignScopeCase = async (
       },
     });
 
-    const searchPicker = (term: string) =>
-      person!.axios.get<{ records?: PickerRecord[] }>(
+    const searchPickerAs = (
+      client: typeof person extends undefined
+        ? never
+        : NonNullable<typeof person>["axios"],
+      term: string,
+    ) =>
+      client.get<{ records?: PickerRecord[] }>(
         urlBuilder(SHARE_VIEW_RECORDS, { shareId: linkFieldId }),
         {
           params: {
@@ -139,49 +144,61 @@ export const runLinkPickerForeignScopeCase = async (
         },
       );
 
-    // Fixture verification, outside the checkpoint: the picker opens for this
-    // person and offers the customer inside their narrowing. A picker that
-    // answers nothing at all is broken in a different way, and the checkpoint
-    // below could not tell the two apart.
-    const control = await searchPicker(config.inScopeName);
-    if (control.status !== 200) {
+    const namesOffered = (data: { records?: PickerRecord[] }) =>
+      (data.records ?? []).map((record) =>
+        String(Object.values(record.fields)[0] ?? ""),
+      );
+
+    // Fixture verification, outside the checkpoint, and asked as the OWNER
+    // rather than as the restricted person: the picker exists, reaches the
+    // customers table, and offers both of them. Asking the restricted person
+    // here would be asking the question the checkpoint asks - and on the
+    // fix's parent their picker is empty for both customers, which would be
+    // reported as a broken fixture rather than as the bug (run 34581492782).
+    const asOwner = await searchPickerAs(axios, config.inScopeName);
+    if (asOwner.status !== 200) {
       throw new Error(
-        `the picker answers ${control.status} for the restricted person: ${JSON.stringify(control.data)}`,
+        `the picker answers ${asOwner.status} for the base's owner: ${JSON.stringify(asOwner.data)}`,
       );
     }
-    const routing = pickRoutingHeaders(control.headers);
-    const controlNames = (control.data.records ?? []).map((record) =>
-      String(Object.values(record.fields)[0] ?? ""),
-    );
-    if (!controlNames.some((name) => name.includes(config.inScopeName))) {
+    const routing = pickRoutingHeaders(asOwner.headers);
+    const ownerNames = namesOffered(asOwner.data);
+    if (!ownerNames.some((name) => name.includes(config.inScopeName))) {
       throw new Error(
-        `searching the picker for ${JSON.stringify(config.inScopeName)} offered ${JSON.stringify(controlNames)} - ` +
-          "the fixture is not in place",
+        `the owner's picker offered ${JSON.stringify(ownerNames)} - the fixture is not in place`,
       );
     }
 
     const probe = await bugCheckpoint(
       "a-link-picker-offers-what-the-column-points-at",
       async () => {
-        const searched = await searchPicker(config.outOfScopeName);
-        if (searched.status !== 200) {
+        // Both customers, because the fault empties the picker rather than
+        // filtering it: the one inside this person's narrowing says whether
+        // the picker works for them at all, and the one outside it is what the
+        // column is for.
+        const missing: { asked: string; offered: string[] }[] = [];
+        const seen: Record<string, string[]> = {};
+        for (const asked of [config.inScopeName, config.outOfScopeName]) {
+          const searched = await searchPickerAs(person!.axios, asked);
+          if (searched.status !== 200) {
+            throw new Error(
+              `the picker answers ${searched.status} for the restricted person: ${JSON.stringify(searched.data)}`,
+            );
+          }
+          const offered = namesOffered(searched.data);
+          seen[asked] = offered;
+          if (!offered.some((name) => name.includes(asked))) {
+            missing.push({ asked, offered });
+          }
+        }
+        if (missing.length > 0) {
           throw new Error(
-            `the picker answers ${searched.status} for a customer outside the person's row scope: ` +
-              JSON.stringify(searched.data),
+            `the restricted person's picker offered nothing for ${JSON.stringify(missing)} - the column points at ` +
+              "those customers and they may use the column, but their own narrowing of the customer table is " +
+              "being applied to the picker, so the list comes back empty with nothing on screen to say why",
           );
         }
-        const offered = (searched.data.records ?? []).map((record) =>
-          String(Object.values(record.fields)[0] ?? ""),
-        );
-        if (!offered.some((name) => name.includes(config.outOfScopeName))) {
-          throw new Error(
-            `the picker offered ${JSON.stringify(offered)} when asked for ${JSON.stringify(config.outOfScopeName)} - ` +
-              "the column points at that customer and the person may use the column, but their own narrowing of " +
-              "the customer table is being applied to the picker, so the list comes back empty with nothing on " +
-              "screen to say why",
-          );
-        }
-        return { offered };
+        return { offered: seen };
       },
     );
 
@@ -189,7 +206,7 @@ export const runLinkPickerForeignScopeCase = async (
       details: {
         linkFieldId,
         sourceRowId,
-        controlNames,
+        ownerNames,
         offered: probe.offered,
         routing,
       },
