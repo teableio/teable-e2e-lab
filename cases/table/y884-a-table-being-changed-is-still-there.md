@@ -11,7 +11,9 @@ later it reads fine again.
 
 ## What was measured
 
-Pending: to be filled in from the matrix run on the fix's parent and `develop`.
+On the fix's parent `df34859d0`, 12 of 96 ordinary reads failed while the six
+columns were being added — every one of them a 404 reading `Table not found
+(TableByIdSpec)`. On `develop` all 96 answered. Run 34564154053.
 
 ## Why a burst rather than one column
 
