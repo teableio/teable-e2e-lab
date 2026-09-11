@@ -27,6 +27,7 @@ export interface BugCaseConfigByRunner {
   "sideways-photo-dimensions": SidewaysPhotoDimensionsCaseConfig;
   "two-way-link-delete-cleanup": TwoWayLinkDeleteCleanupCaseConfig;
   "plugin-secret-in-list": PluginSecretInListCaseConfig;
+  "upload-path-from-the-client": UploadPathFromTheClientCaseConfig;
   "search-hidden-field-inlined-view": SearchHiddenFieldInlinedViewCaseConfig;
   "rollup-expression-convert": RollupExpressionConvertCaseConfig;
   "share-view-unready-data-db": ShareViewUnreadyDataDbCaseConfig;
@@ -2005,6 +2006,15 @@ export interface LookupMultiplicityVoCaseConfig {
   hostRowName: string;
   // Two linked rows at least - see the runner.
   linkedRowNames: string[];
+}
+
+// A request for somewhere to put a file, carrying a name that climbs out of
+// the upload area.
+export interface UploadPathFromTheClientCaseConfig {
+  // Prefixed to the run id, so the name is unique per run and still climbs.
+  traversalPrefix: string;
+  uploadType: number;
+  contentLength: number;
 }
 
 // A registered plugin, and what the list of one's plugins carries for it.

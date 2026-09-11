@@ -18,6 +18,7 @@ import wholeBaseShareReplayCase from "./cases/base-share/y888-a-share-link-and-s
 import sidewaysPhotoDimensionsCase from "./cases/attachment/y889-a-photo-taken-sideways.case";
 import twoWayLinkDeleteCleanupCase from "./cases/link/y890-a-deleted-row-stops-being-named.case";
 import pluginSecretInListCase from "./cases/plugin/y891-the-list-of-plugins-and-a-secret.case";
+import uploadPathFromTheClientCase from "./cases/attachment/y892-where-an-upload-lands.case";
 import searchHiddenFieldInlinedViewCase from "./cases/search/y880-a-search-inside-a-view-that-hides-a-column.case";
 import dateGroupMonthStatisticsCase from "./cases/aggregation/y876-a-month-of-rows-and-one-total.case";
 import rollupExpressionConvertCase from "./cases/lookup/y877-turn-a-list-of-people-into-a-count.case";
@@ -213,6 +214,7 @@ const cases = [
   sidewaysPhotoDimensionsCase,
   twoWayLinkDeleteCleanupCase,
   pluginSecretInListCase,
+  uploadPathFromTheClientCase,
   searchHiddenFieldInlinedViewCase,
   dateGroupMonthStatisticsCase,
   rollupExpressionConvertCase,
