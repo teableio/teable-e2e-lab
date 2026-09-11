@@ -19,7 +19,9 @@ Pending: to be filled in from the matrix run on the fix's parent and `develop`.
 ## How the case is built
 
 The authority matrix on a base of its own, a folder holding two tables, and a
-role that withholds one of them outright from a second signed-in person.
+role that names only one of them. A table a role does not name is not that
+person's at all, which is how a whole table is withheld — withholding
+`table|read` by name is not something a role rule accepts (run 34574388667).
 
 Before the checkpoint that person asks for the base's contents, and three things
 have to hold: they can read it at all, the table the role leaves alone is in

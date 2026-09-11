@@ -110,11 +110,15 @@ export const runHiddenNodeStillReferencedCase = async (
           }
         }
 
-        // One table withheld outright. The other is untouched.
+        // The role names only the table this person may work in. A table the
+        // role does not name is not theirs at all, which is how a whole table
+        // is withheld - naming it with an action withheld is a different
+        // shape, and `table|read` is not something a role rule accepts (run
+        // 34574388667).
         return [
           {
-            tableId: hiddenTableId,
-            disabledActions: ["table|read"],
+            tableId: visibleTableId,
+            disabledActions: [],
           },
         ];
       },
