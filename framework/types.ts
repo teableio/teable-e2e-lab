@@ -17,6 +17,10 @@ export interface BugCaseConfigByRunner {
   "or-filtered-rollup-scope": OrFilteredRollupScopeCaseConfig;
   "same-named-fk-base-duplicate": SameNamedFkBaseDuplicateCaseConfig;
   "select-rollup-unique-and-count": SelectRollupUniqueAndCountCaseConfig;
+  "date-group-statistics": DateGroupStatisticsCaseConfig;
+  "formula-branch-error-backfill": FormulaBranchErrorBackfillCaseConfig;
+  "search-hidden-field-inlined-view": SearchHiddenFieldInlinedViewCaseConfig;
+  "rollup-expression-convert": RollupExpressionConvertCaseConfig;
   "share-view-unready-data-db": ShareViewUnreadyDataDbCaseConfig;
   "shared-form-cover-url": SharedFormCoverUrlCaseConfig;
   "switch-mixed-branch-storage": SwitchMixedBranchStorageCaseConfig;
@@ -1993,6 +1997,78 @@ export interface LookupMultiplicityVoCaseConfig {
   hostRowName: string;
   // Two linked rows at least - see the runner.
   linkedRowNames: string[];
+}
+
+// A worked-out column whose formula chooses between branches, added to a table
+// that already holds rows.
+export interface FormulaBranchErrorBackfillCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Which shape the formula takes. "nested-alert" builds the intermediate
+  // worked-out columns first, so the branch that is not taken divides by a
+  // total that is zero on those rows; "empty-else" is the one-column shape
+  // whose unused branch is an empty string where a number belongs.
+  shape: "nested-alert" | "empty-else";
+  // The rows, written before the column is added. Which numbers a row carries
+  // depends on the shape - see the runner, which refuses rows that do not take
+  // both branches.
+  rows: {
+    name: string;
+    qty?: number;
+    unitCost?: number;
+    baselineUnitCost?: number;
+    amount?: number;
+  }[];
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
+}
+
+// A search inside a view that hides one of the two columns, sent the way a grid
+// sends it.
+export interface SearchHiddenFieldInlinedViewCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  rows: { title: string; note: string }[];
+  // A word that appears only in the hidden column. The runner refuses a term
+  // that also appears in the visible one.
+  hiddenTerm: string;
+  // A word in the visible column, for the control half of the checkpoint.
+  visibleTerm: string;
+}
+
+// A table grouped by a date column, and the per-group totals a grid prints in
+// each group heading.
+export interface DateGroupStatisticsCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // What the date column is formatted as, which is the unit the list groups
+  // it by: a calendar day or a calendar month.
+  unit: "day" | "month";
+  // The column's own timezone. The rows below are written as UTC instants, so
+  // this is what decides which bucket each one falls into.
+  timeZone: string;
+  // The rows. At least one bucket must hold two rows written at different
+  // instants - see the runner, which refuses a fixture that does not straddle
+  // the unit.
+  rows: { title: string; amount: number; at: string }[];
+}
+
+// A summary column over a linked people column, changed from listing values to
+// counting them.
+export interface RollupExpressionConvertCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  hostRowName: string;
+  // The linked rows, all naming the same person. Two at least - see the
+  // runner.
+  linkedRowNames: string[];
+  // The summary before the edit: one that answers with words.
+  expressionBefore: string;
+  // The summary after it: one that answers with a number, which is why the
+  // edit carries number formatting.
+  expressionAfter: string;
+  precision: number;
+  timeZone: string;
 }
 
 export interface ProjectedGroupHeadersCaseConfig {

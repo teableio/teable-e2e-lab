@@ -537,6 +537,102 @@ it in prose is how the two drift apart. To see it:
 pnpm triage:covered
 ```
 
+### T7159's computed-activity capability is not on the field list the lab gets
+
+The plan was a worked-out column read by somebody a role keeps rows from, and an
+assertion that the column arrives carrying `computedActivityRead: false` — the
+answer the page decides its progress subscription on, which the fix restores to
+initial field responses.
+
+On `develop` (run 34561744523) the column comes back to that person as plain
+field metadata: no `computedActivityRead`, and no `recordRead` either. Both are
+enterprise per-field capabilities, and the enterprise field controller that
+projects them is evidently not what answers `GET /table/{tableId}/field` in the
+app the lab boots. So the case was red on the gating column — a `fixed` case
+that fails `develop` is a regression report, not coverage — and it is out.
+
+Whoever picks this up next should first check, on `develop` alone, which
+endpoint hands the lab's app a field carrying `recordRead`: if
+`field/socket/snapshot-bulk` does and the REST list does not, the case is that
+request alone. The runner and case are on
+`attempt/t7159-computed-activity-capability`.
+
+### T7075's cross-base chain refreshes fine, at one total and at ten
+
+A narrowed total over a link, a formula reading it, and two conditional rollups
+in a second base reading both. Change the counted line's amount and every one
+of the four follows, on the fix's parent `0ad204535` as well as on `develop` —
+with one narrowed total on the link (run 34560984928) and with ten (run
+34561258087), ten being the number the commit message names as enough to run
+past `statement_timeout`.
+
+So the correctness half of that fix is not reachable by adding totals. What the
+fix changes is how each one is worked out during a dirty-host update — one
+correlated LATERAL per filter, instead of a set-based join — and the lab's CI
+database gets through ten of them well inside whatever its statement limit is.
+A reproduction would need the cost per total to be much higher (many more
+linked rows per host, or a much larger source table), not merely more of them.
+
+The runner and case are kept on the unmerged branch
+`attempt/t7075-filtered-rollup-cross-base`; they are not on main, because a
+case green on every column reads as coverage and never gets looked at again.
+
+### Four recent fixes that have no lab shape at all
+
+Read on 2026-09-11 while scanning the last 120 commits, and dropped before any
+run — each for a reason visible in the fix itself:
+
+- **T7223** (`fbeeebf030`, indexed searches served from validated table
+  metadata). Its own spec stubs `V2_TABLE_QUERY_OPS_*` environment variables and
+  spies on `ConfigService.get` to force a runtime mode. What it observes is
+  which access path served a search, not what the search answered.
+- **T7221** (`77167d91cd`, table-query-ops defaulted off). A change of default
+  configuration. There is no user-visible answer that differs.
+- **T7247** (`6b182f57f9`, byodb attachment cell refs read from the data db).
+  Needs a base whose storage really is somebody else's database. The lab can
+  build a data-db connection row that is switched off
+  (`share-view-unready-data-db`) but not a working external one.
+- **T7196** (`89b29e4fdb`, field snapshots hydrated by field-id spec). Mostly a
+  read-path rewrite; the user-visible half is a 500 on snapshot-bulk for a field
+  with no version, which needs a version-less field row — a drifted state, so a
+  fixture-db case. Worth writing the day someone wants it; it is a bigger
+  fixture than anything here has needed.
+- **T7114** (`bf5ca33b02`, formula creates leaving a table hidden). The
+  reproduction needs an aborted create — the spec resolves the schema-operation
+  runner out of the v2 container and drives it by hand after injecting a
+  begin-only operation row. Seeding the leftover state through fixture-db would
+  reproduce the damage on both sides: the fix stops the state being created, it
+  does not change what a leftover pending does.
+
+### T7122's simpler shape: a column that is a number or nothing
+
+`IF({amount}<=0,"",{amount})`, added to a table holding a zero row, a positive
+row and an empty one, is green on the fix's parent `b6b577618` — the positive
+row reads 12.5, the other two read nothing, exactly as it should. Run 34560377621.
+
+The nested shape from the same fix reproduces on that same commit
+(`formula/y878-a-branch-that-was-not-taken`), so this is not the fix being
+absent: whatever the empty-string branch did to the fill-in inside the v2
+package's own harness, the public field-create path does not do. The shape is
+kept reachable — the `formula-branch-error-backfill` runner still takes
+`shape: "empty-else"` — so a later attempt costs a case file rather than a
+runner.
+
+### The comment-count fix, T7161
+
+`764aee642c` makes per-record comment counts cheap by counting only the record
+ids a page actually loaded. It is in the triage script's public-API bucket and
+its own spec drives the public endpoints, so it reads as an easy case — and it
+is not one, because the fix REPLACES the endpoint it repairs. The parent serves
+`get-counts-by-query`; the fix retires it and adds `get-counts-by-records`,
+which takes a different request shape. A case written against either spelling
+is an error on one side and an observation on the other, and neither says
+anything about counts.
+
+There may still be a case here in the behaviour rather than the transport — a
+count that disagrees with the comments a page can open — but it has to be
+written against a request both sides answer, and this pass did not find one.
+
 ### T7070's neighbour, still open
 
 Rejecting the T7070 case turned up something that is not T7070. On `develop`,

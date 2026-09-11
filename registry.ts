@@ -8,6 +8,11 @@ import emptyWriteNormalizationCase from "./cases/record/y566-clear-a-cell-and-ha
 import tableDeleteCollaboratorRecoveryCase from "./cases/table/y248-collaborator-leaves-deleted-table.case";
 import archiveRecountCase from "./cases/record/y1-archive-the-rows-a-count-was-counting.case";
 import projectedGroupHeadersCase from "./cases/view/y569-a-grouped-view-asked-for-one-column.case";
+import dateGroupDayStatisticsCase from "./cases/aggregation/y875-a-day-of-rows-and-one-total.case";
+import formulaBranchAlertCase from "./cases/formula/y878-a-branch-that-was-not-taken.case";
+import searchHiddenFieldInlinedViewCase from "./cases/search/y880-a-search-inside-a-view-that-hides-a-column.case";
+import dateGroupMonthStatisticsCase from "./cases/aggregation/y876-a-month-of-rows-and-one-total.case";
+import rollupExpressionConvertCase from "./cases/lookup/y877-turn-a-list-of-people-into-a-count.case";
 import lookupMultiplicityVoCase from "./cases/lookup/y340-a-borrowed-people-column-over-many-rows.case";
 import linkPickerShareLookupCase from "./cases/link/y570-the-picker-behind-a-borrowed-link.case";
 import manyoneTypecastShapeCase from "./cases/link/y571-fill-a-one-row-link-in-by-name.case";
@@ -190,6 +195,11 @@ const cases = [
   tableDeleteCollaboratorRecoveryCase,
   archiveRecountCase,
   projectedGroupHeadersCase,
+  dateGroupDayStatisticsCase,
+  formulaBranchAlertCase,
+  searchHiddenFieldInlinedViewCase,
+  dateGroupMonthStatisticsCase,
+  rollupExpressionConvertCase,
   lookupMultiplicityVoCase,
   linkPickerShareLookupCase,
   manyoneTypecastShapeCase,
