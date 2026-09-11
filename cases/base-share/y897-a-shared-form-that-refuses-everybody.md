@@ -26,9 +26,11 @@ The fix removes the flag. A form takes submissions because it is a form.
 
 A form view with every field put on it, shared, and a submission from somebody
 with no session at all — which is what filling in a public form is. The fields
-have to be on the form: one that still has hidden fields refuses submissions
-outright, which is a different refusal and stopped a first attempt before it
-could observe anything (run 34579613695). Then the flag is written through the
+have to be on the form and the submission has to name them by id: a form with
+hidden fields refuses submissions outright, and the server decides what is
+hidden by comparing the keys of what was sent against the ids on the form — so a
+submission keyed by field name is refused the same way. Both stopped an attempt
+before it could observe anything (runs 34579613695, 34579964949). Then the flag is written through the
 settings endpoint, and the same stranger fills the form in again.
 
 The first submission is the fixture check, outside the checkpoint: a refusal

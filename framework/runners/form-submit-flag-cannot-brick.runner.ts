@@ -86,11 +86,20 @@ export const runFormSubmitFlagCannotBrickCase = async (
     }
     const shareId = shared.data.shareId;
 
+    const nameFieldId = (table.fields as { name: string; id: string }[]).find(
+      (field) => field.name === NAME_FIELD,
+    )?.id;
+    if (!nameFieldId) {
+      throw new Error(`Table ${tableId} is not in place`);
+    }
+    // Submitted by field id: the server compares the keys of what is sent
+    // against the ids of the fields on the form, so a submission keyed by name
+    // is refused as containing hidden fields (run 34579964949).
     const submitAsAStranger = (value: string) =>
       fetch(`${apiUrl}${urlBuilder(SHARE_VIEW_FORM_SUBMIT, { shareId })}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fields: { [NAME_FIELD]: value } }),
+        body: JSON.stringify({ fields: { [nameFieldId]: value } }),
       });
 
     // Fixture verification, outside the checkpoint: somebody with no account
