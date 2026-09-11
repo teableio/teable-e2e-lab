@@ -15,7 +15,9 @@ it.
 
 ## What was measured
 
-Pending: to be filled in from the matrix run on the fix's parent and `develop`.
+On the fix's parent `567ff0703` a token approved only for `table|read` answers
+200 on `/base/access/all` and returns the account's bases. On `develop` the same
+token is refused with 403, while the in-scope request still answers 200. Run 34573850558.
 
 ## How the case is built
 
