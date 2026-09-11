@@ -12,7 +12,9 @@ wherever the name says.
 
 ## What was measured
 
-Pending: to be filled in from the matrix run on the fix's parent and `develop`.
+On the fix's parent `567ff0703` the address comes back as
+`../escaped-<run id>` — the name the client sent, one directory above where
+uploads belong. On `develop` it comes back as `table/<server token>`. Run 34572921498.
 
 ## What the case does, and what it deliberately does not
 
