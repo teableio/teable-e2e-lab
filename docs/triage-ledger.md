@@ -160,7 +160,6 @@ The shape is gone; the runner is not kept.
 | `e770dd1ac` | T7057 | Index coverage, not results. Substring search documents and the trigram indexes behind them are narrowed to text-shaped fields, and an all-field search over an uncovered field falls back to the unindexed path rather than answering differently. What a search returns is the same on both sides; what changes is whether an index can serve it. Performance lab, if anywhere - same reading as T6821. |
 | `f70f0d508` | T6944 | Neither commit carrying this issue id fixes the path `view/a-grid-grouped-by-a-column-you-cannot-read` observes. That case is red on `12407c409` (before this commit), on `7bc91231d` (after it), and on `f44a82cf8` (after both), and turns green only at `2ae77481c` — which carries T6997. This one narrows a grouping the server resolves from the view itself; the case exercises a grouping that arrives on the request, which is what the grid actually sends. Reaching the other path needs a request carrying no grouping while the view carries one, and the record endpoint the lab reads through does not obviously offer that. |
 | `a4c8c3396` | T6944 | Same reading, same measurements: the case is red on `f44a82cf8`, which is after this commit. It aligns the group metadata a view reports with the permissions applied to it, which is what the settings screen reads, not what the grid's request for rows goes through. |
-| `6235527b4` | T7027 | Not taken while the fix is unshipped. A folder's `children` still lists the ids of resources the caller may not read, so a permission-filtered response carries names of things the reader was filtered away from; the reported symptom is a console error and an empty folder. The issue was still at "deployed to staging" when this was written, and a `status: open` case here would be a public reproduction of an unshipped disclosure. Same call as T7065. The fixture it needs now exists (`framework/authority-matrix.ts`), so this is a reminder rather than a rejection: it is ready to write the day it ships. |
 
 ### The date comparison inside AND or OR
 
@@ -730,12 +729,25 @@ does not spend the same afternoon rediscovering it.
 
 ### The permission-matrix family is reachable, and nobody has built the fixture yet
 
-Four uncovered fixes wait behind one piece of setup that does not exist here
-yet: `2ae77481c5`/T6997 (v2 reads over masked values), `68b7d74f05`/T7025
-(archiving gated by the matrix for restricted collaborators), `6235527b4c`/T7027
-(references to permission-filtered nodes), and `a4c8c3396b`+`f70f0d5083`/T6944
-(a grid view whose group field the reader cannot see returns no records at all,
-with "Group references a field that is not readable").
+Four uncovered fixes waited behind one piece of setup that did not exist here
+when this was written: `2ae77481c5`/T6997 (v2 reads over masked values),
+`68b7d74f05`/T7025 (archiving gated by the matrix for restricted
+collaborators), `6235527b4c`/T7027 (references to permission-filtered nodes),
+and `a4c8c3396b`+`f70f0d5083`/T6944 (a grid view whose group field the reader
+cannot see returns no records at all, with "Group references a field that is
+not readable").
+
+Three of the four are now written — T6944 as
+`authority/y402`-era coverage, T7025 as
+`authority/y402-archive-authorized-grouped-record`, and T7027 as
+`authority/y894-a-withheld-table-named-in-its-folder` — on the fixture that
+this section asked for and that now exists as `framework/authority-matrix.ts`.
+T6997 is the one still waiting.
+
+T7027 also carries the reason it waited, which is the reusable part: while the
+fix was unshipped, a `status: open` case here would have been a working public
+reproduction of an unshipped disclosure. It was written the day after it
+shipped, as `fixed`.
 
 None of them is blocked by the harness. The matrix is driven entirely through
 public endpoints — `PATCH /api/base/:baseId/authority-matrix/status` to turn it
