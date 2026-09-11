@@ -9,7 +9,7 @@ import {
 import { createTable, permanentDeleteTable } from "../../../utils/init-app";
 import { chunk } from "../chunk";
 import { bugCheckpoint } from "../checkpoint";
-import { assertServedByV2 } from "../engine";
+import { pickRoutingHeaders } from "../engine";
 import type { BugCaseFor, BugProbeResult, BugRunContext } from "../types";
 import type { DeleteAllExceptCaseConfig } from "../types";
 
@@ -98,10 +98,11 @@ export const runDeleteAllExceptCase = async (
     // Fixture verification, outside the checkpoint: every row is there before
     // anything is deleted.
     const counted = await apiGetRowCount(tableId, {});
-    assertServedByV2(counted.headers, {
-      operation: "GET /table/{tableId}/aggregation/row-count",
-      feature: "getRowCount",
-    });
+    // Which engine answers the count is recorded rather than asserted: it was
+    // not on v2 when this fix landed, so requiring it turns the pre-fix column
+    // from "the rows were left behind" into "the lab could not run" (run
+    // 34576375172).
+    const routing = pickRoutingHeaders(counted.headers);
     if (counted.data.rowCount !== config.rowCount) {
       throw new Error(
         `the table holds ${counted.data.rowCount} rows, expected ${config.rowCount}`,
@@ -161,6 +162,7 @@ export const runDeleteAllExceptCase = async (
     return {
       details: {
         tableId,
+        routing,
         rowCount: config.rowCount,
         kept: keptNames,
         left: probe.left,
