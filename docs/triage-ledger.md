@@ -619,6 +619,15 @@ elsewhere in this file, read and dropped without a run:
   this file is the measured example of what happens when one of these is tried
   anyway.
 
+  teable-perf-lab picked eight of these up the same day and kept none of them.
+  Its own `docs/triage-ledger.md` carries the row per commit; the short version
+  is that measuring work done needs an instrument this pair of labs does not
+  have yet, not a different fixture. T7180, T7181 and T7272 want a client that
+  polls one table from many viewers at once. T7251 — the lock-ordering one, and
+  the strongest of the batch there, because a writer stalling behind a
+  table-wide lock really is a latency — wants two concurrent sessions, which
+  neither lab can hold. Do not re-derive these; read that file first.
+
 ### T7159's computed-activity capability is not on the field list the lab gets
 
 The plan was a worked-out column read by somebody a role keeps rows from, and an
@@ -654,6 +663,17 @@ correlated LATERAL per filter, instead of a set-based join — and the lab's CI
 database gets through ten of them well inside whatever its statement limit is.
 A reproduction would need the cost per total to be much higher (many more
 linked rows per host, or a much larger source table), not merely more of them.
+
+teable-perf-lab tried exactly that on 2026-09-11 and it did not settle it
+either. A host/line fixture on one real link, ten filtered rollups against one
+as the control, and the dirty-host update timed rather than asserted: ten cost
+about twice one on the fix's parent and on `develop` alike, at ten linked rows
+per host and again at fifty. Four full-scale runs across the two commits, and
+the only phase that moved moved in opposite directions at the two fanouts. That
+is the run-to-run variation between two local checkouts, not the fix. Its
+ledger's reading is that the effect is now smaller than the noise a single
+local sample carries, so the next attempt belongs in that lab's same-host
+paired base/candidate lane rather than in a larger fixture on either side.
 
 The runner and case are kept on the unmerged branch
 `attempt/t7075-filtered-rollup-cross-base`; they are not on main, because a
