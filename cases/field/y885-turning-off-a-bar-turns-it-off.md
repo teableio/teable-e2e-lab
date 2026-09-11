@@ -11,7 +11,10 @@ what was sent the first.
 
 ## What was measured
 
-Pending: to be filled in from the matrix run on the fix's parent and `develop`.
+On the fix's parent `ef92496a9` the save answers 200 and the column still reads
+`{"type":"bar","color":"green","showValue":true,"maxValue":100}`. On `develop`
+the same save leaves the column with its decimal formatting and nothing else.
+Run 34564894746.
 
 ## How the clearing is said
 
