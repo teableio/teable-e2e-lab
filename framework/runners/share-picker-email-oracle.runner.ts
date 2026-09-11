@@ -5,13 +5,16 @@ import type {
 } from "@teable/openapi";
 import {
   axios,
-  createView,
   ENABLE_SHARE_VIEW,
   SHARE_VIEW_COLLABORATORS,
   urlBuilder,
   USER_ME,
 } from "@teable/openapi";
-import { createTable, permanentDeleteTable } from "../../../utils/init-app";
+import {
+  createTable,
+  createView,
+  permanentDeleteTable,
+} from "../../../utils/init-app";
 import { bugCheckpoint } from "../checkpoint";
 import { assertServedByV2 } from "../engine";
 import type { BugCaseFor, BugProbeResult, BugRunContext } from "../types";
