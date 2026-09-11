@@ -121,6 +121,7 @@ import { runHiddenNodeStillReferencedCase } from "./runners/hidden-node-still-re
 import { runTokenReachesItsOwnArtifactCase } from "./runners/token-reaches-its-own-artifact.runner";
 import { runFormSubmitFlagCannotBrickCase } from "./runners/form-submit-flag-cannot-brick.runner";
 import { runLinkPickerForeignScopeCase } from "./runners/link-picker-foreign-scope.runner";
+import { runRestrictedCannotShareABaseCase } from "./runners/restricted-cannot-share-a-base.runner";
 import { runWideWindowSocketLoadCase } from "./runners/wide-window-socket-load.runner";
 import { runSearchHiddenFieldInlinedViewCase } from "./runners/search-hidden-field-inlined-view.runner";
 import { runProjectedGroupHeadersCase } from "./runners/projected-group-headers.runner";
@@ -283,6 +284,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "token-reaches-its-own-artifact": runTokenReachesItsOwnArtifactCase,
   "form-submit-flag-cannot-brick": runFormSubmitFlagCannotBrickCase,
   "link-picker-foreign-scope": runLinkPickerForeignScopeCase,
+  "restricted-cannot-share-a-base": runRestrictedCannotShareABaseCase,
   "wide-window-socket-load": runWideWindowSocketLoadCase,
   "search-hidden-field-inlined-view": runSearchHiddenFieldInlinedViewCase,
   "projected-group-headers": runProjectedGroupHeadersCase,

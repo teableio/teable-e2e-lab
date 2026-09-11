@@ -33,6 +33,7 @@ export interface BugCaseConfigByRunner {
   "token-reaches-its-own-artifact": TokenReachesItsOwnArtifactCaseConfig;
   "form-submit-flag-cannot-brick": FormSubmitFlagCannotBrickCaseConfig;
   "link-picker-foreign-scope": LinkPickerForeignScopeCaseConfig;
+  "restricted-cannot-share-a-base": RestrictedCannotShareABaseCaseConfig;
   "search-hidden-field-inlined-view": SearchHiddenFieldInlinedViewCaseConfig;
   "rollup-expression-convert": RollupExpressionConvertCaseConfig;
   "share-view-unready-data-db": ShareViewUnreadyDataDbCaseConfig;
@@ -2011,6 +2012,15 @@ export interface LookupMultiplicityVoCaseConfig {
   hostRowName: string;
   // Two linked rows at least - see the runner.
   linkedRowNames: string[];
+}
+
+// Somebody a role restricts, and the two ways of handing out a link.
+export interface RestrictedCannotShareABaseCaseConfig {
+  namePrefix: string;
+  rowName: string;
+  // What a refusal should look like. Anything else is reported rather than
+  // accepted.
+  expectedStatus: number;
 }
 
 // A link column whose target table the reader's role narrows.
