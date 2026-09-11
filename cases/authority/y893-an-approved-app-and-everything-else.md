@@ -26,9 +26,11 @@ The token is then used the way a real app uses it: a bare HTTP client with no
 session, carrying only the bearer token. Using the lab's signed-in client would
 prove nothing, because that session can list bases on its own.
 
-Before the checkpoint the token is used inside its own scope and must work. A
-token that works nowhere would be refused everywhere, and the refusal this case
-is about would mean nothing.
+Before the checkpoint the token is used for something any working token can do
+and must succeed. A token that works nowhere would be refused everywhere, and
+the refusal this case is about would mean nothing. A first attempt used an
+endpoint the consented scope does not cover and was refused on both columns —
+an error, not an observation (run 34573492395).
 
 ## What the checkpoint asserts
 

@@ -21,8 +21,10 @@ export default defineBugCase({
     appName: "e2e-lab-scope",
     homepage: "http://localhost:3000",
     redirectUri: "http://localhost:3000/callback",
-    consentedScope: "user|email_read",
-    inScopePath: "/auth/user/me",
+    consentedScope: "table|read",
+    // Any working token answers here; the case only needs to know the token
+    // is usable at all.
+    inScopePath: "/auth/user",
     outOfScopePath: "/base/access/all",
     expectedStatus: 403,
   },
