@@ -30,7 +30,6 @@ export interface BugCaseConfigByRunner {
   "upload-path-from-the-client": UploadPathFromTheClientCaseConfig;
   "oauth-scope-not-widened": OauthScopeNotWidenedCaseConfig;
   "hidden-node-still-referenced": HiddenNodeStillReferencedCaseConfig;
-  "delete-all-except": DeleteAllExceptCaseConfig;
   "search-hidden-field-inlined-view": SearchHiddenFieldInlinedViewCaseConfig;
   "rollup-expression-convert": RollupExpressionConvertCaseConfig;
   "share-view-unready-data-db": ShareViewUnreadyDataDbCaseConfig;
@@ -2009,21 +2008,6 @@ export interface LookupMultiplicityVoCaseConfig {
   hostRowName: string;
   // Two linked rows at least - see the runner.
   linkedRowNames: string[];
-}
-
-// A table cleared out with "everything except these".
-export interface DeleteAllExceptCaseConfig {
-  baseId: "seed-base";
-  tableNamePrefix: string;
-  // More rows than one delete batch carries - the batches are 5000 rows, and
-  // the fault only shows when the walk crosses from one to the next.
-  rowCount: number;
-  // Rows per write. The rows are fixture; this keeps each write a reasonable
-  // size.
-  writeBatchSize: number;
-  // Which rows, by position, are unselected before the delete. At least one,
-  // and early rather than trailing - see the runner and the doc.
-  keepPositions: number[];
 }
 
 // A folder holding two tables, one of them withheld from the person reading.

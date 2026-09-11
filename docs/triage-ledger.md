@@ -536,6 +536,34 @@ it in prose is how the two drift apart. To see it:
 pnpm triage:covered
 ```
 
+### T6074's delete-all-except walk, measured but never red
+
+"Everything except these" - select all, click off a few rows, delete - left rows
+behind, because a skipped row did not advance the walk's offset. `87079ae8e`
+repairs it. Four runs on its parent `bf5aa5255` and on `develop` never separated
+the two:
+
+- 8 rows, 2 excluded: correct on both (run 34575930130).
+- 5200 rows, excluded at positions 3 and 1500: correct on both (runs
+  34576375172, 34576678800).
+
+What was measured along the way, which is what a next attempt needs:
+
+- The delete walks in batches of `DEFAULT_DELETE_STREAM_BATCH_SIZE = 5000`, so a
+  table under that size is one batch and cannot show a stalled offset.
+- The public endpoints do not accept a batch size, so the fixture cannot be
+  shrunk to meet the walk; it has to be grown past it.
+- 5200 rows is enough table for the endpoint to answer correctly on both sides,
+  so size alone is not the trigger. The remaining candidates are the stream
+  endpoint (`delete-by-id-stream`, which is what the grid uses for large deletes
+  and reports per-chunk progress) and a failing chunk, which is the other branch
+  the fix touches.
+- Row count was not on v2 when this fix landed: asserting v2 on it turns the
+  pre-fix column into "the lab could not run" (run 34576375172). The runner
+  records the engine instead.
+
+The runner and case are on `attempt/t6074-delete-all-except`.
+
 ### T4966's record history never arrives in this lab's app
 
 A row's history naming the wrong colleague is as good a symptom as this

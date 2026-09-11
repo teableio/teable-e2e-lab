@@ -21,7 +21,6 @@ import pluginSecretInListCase from "./cases/plugin/y891-the-list-of-plugins-and-
 import uploadPathFromTheClientCase from "./cases/attachment/y892-where-an-upload-lands.case";
 import oauthScopeNotWidenedCase from "./cases/authority/y893-an-approved-app-and-everything-else.case";
 import hiddenNodeStillReferencedCase from "./cases/authority/y894-a-withheld-table-named-in-its-folder.case";
-import deleteAllExceptCase from "./cases/selection/y895-delete-everything-except-these.case";
 import searchHiddenFieldInlinedViewCase from "./cases/search/y880-a-search-inside-a-view-that-hides-a-column.case";
 import dateGroupMonthStatisticsCase from "./cases/aggregation/y876-a-month-of-rows-and-one-total.case";
 import rollupExpressionConvertCase from "./cases/lookup/y877-turn-a-list-of-people-into-a-count.case";
@@ -220,7 +219,6 @@ const cases = [
   uploadPathFromTheClientCase,
   oauthScopeNotWidenedCase,
   hiddenNodeStillReferencedCase,
-  deleteAllExceptCase,
   searchHiddenFieldInlinedViewCase,
   dateGroupMonthStatisticsCase,
   rollupExpressionConvertCase,

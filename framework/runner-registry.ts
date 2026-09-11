@@ -118,7 +118,6 @@ import { runPluginSecretInListCase } from "./runners/plugin-secret-in-list.runne
 import { runUploadPathFromTheClientCase } from "./runners/upload-path-from-the-client.runner";
 import { runOauthScopeNotWidenedCase } from "./runners/oauth-scope-not-widened.runner";
 import { runHiddenNodeStillReferencedCase } from "./runners/hidden-node-still-referenced.runner";
-import { runDeleteAllExceptCase } from "./runners/delete-all-except.runner";
 import { runWideWindowSocketLoadCase } from "./runners/wide-window-socket-load.runner";
 import { runSearchHiddenFieldInlinedViewCase } from "./runners/search-hidden-field-inlined-view.runner";
 import { runProjectedGroupHeadersCase } from "./runners/projected-group-headers.runner";
@@ -278,7 +277,6 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "upload-path-from-the-client": runUploadPathFromTheClientCase,
   "oauth-scope-not-widened": runOauthScopeNotWidenedCase,
   "hidden-node-still-referenced": runHiddenNodeStillReferencedCase,
-  "delete-all-except": runDeleteAllExceptCase,
   "wide-window-socket-load": runWideWindowSocketLoadCase,
   "search-hidden-field-inlined-view": runSearchHiddenFieldInlinedViewCase,
   "projected-group-headers": runProjectedGroupHeadersCase,
