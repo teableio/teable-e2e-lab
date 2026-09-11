@@ -14,7 +14,9 @@ of the two ways to publish is the one that worked.
 
 ## What was measured
 
-Pending: to be filled in from the matrix run on the fix's parent and `develop`.
+On the fix's parent `638b5dc8c` the restricted person is refused 403 on the view
+and answered **201** on the whole base — the run carries the share id of the
+link that now exists. On `develop` both are refused 403. Run 34584635843.
 
 ## How the case is built
 
