@@ -9,6 +9,9 @@ import tableDeleteCollaboratorRecoveryCase from "./cases/table/y248-collaborator
 import archiveRecountCase from "./cases/record/y1-archive-the-rows-a-count-was-counting.case";
 import projectedGroupHeadersCase from "./cases/view/y569-a-grouped-view-asked-for-one-column.case";
 import dateGroupDayStatisticsCase from "./cases/aggregation/y875-a-day-of-rows-and-one-total.case";
+import formulaBranchAlertCase from "./cases/formula/y878-a-branch-that-was-not-taken.case";
+import formulaBranchEmptyElseCase from "./cases/formula/y879-a-column-that-is-a-number-or-nothing.case";
+import searchHiddenFieldInlinedViewCase from "./cases/search/y880-a-search-inside-a-view-that-hides-a-column.case";
 import dateGroupMonthStatisticsCase from "./cases/aggregation/y876-a-month-of-rows-and-one-total.case";
 import rollupExpressionConvertCase from "./cases/lookup/y877-turn-a-list-of-people-into-a-count.case";
 import lookupMultiplicityVoCase from "./cases/lookup/y340-a-borrowed-people-column-over-many-rows.case";
@@ -194,6 +197,9 @@ const cases = [
   archiveRecountCase,
   projectedGroupHeadersCase,
   dateGroupDayStatisticsCase,
+  formulaBranchAlertCase,
+  formulaBranchEmptyElseCase,
+  searchHiddenFieldInlinedViewCase,
   dateGroupMonthStatisticsCase,
   rollupExpressionConvertCase,
   lookupMultiplicityVoCase,

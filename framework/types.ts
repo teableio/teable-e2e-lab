@@ -18,6 +18,8 @@ export interface BugCaseConfigByRunner {
   "same-named-fk-base-duplicate": SameNamedFkBaseDuplicateCaseConfig;
   "select-rollup-unique-and-count": SelectRollupUniqueAndCountCaseConfig;
   "date-group-statistics": DateGroupStatisticsCaseConfig;
+  "formula-branch-error-backfill": FormulaBranchErrorBackfillCaseConfig;
+  "search-hidden-field-inlined-view": SearchHiddenFieldInlinedViewCaseConfig;
   "rollup-expression-convert": RollupExpressionConvertCaseConfig;
   "share-view-unready-data-db": ShareViewUnreadyDataDbCaseConfig;
   "shared-form-cover-url": SharedFormCoverUrlCaseConfig;
@@ -1995,6 +1997,43 @@ export interface LookupMultiplicityVoCaseConfig {
   hostRowName: string;
   // Two linked rows at least - see the runner.
   linkedRowNames: string[];
+}
+
+// A worked-out column whose formula chooses between branches, added to a table
+// that already holds rows.
+export interface FormulaBranchErrorBackfillCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Which shape the formula takes. "nested-alert" builds the intermediate
+  // worked-out columns first, so the branch that is not taken divides by a
+  // total that is zero on those rows; "empty-else" is the one-column shape
+  // whose unused branch is an empty string where a number belongs.
+  shape: "nested-alert" | "empty-else";
+  // The rows, written before the column is added. Which numbers a row carries
+  // depends on the shape - see the runner, which refuses rows that do not take
+  // both branches.
+  rows: {
+    name: string;
+    qty?: number;
+    unitCost?: number;
+    baselineUnitCost?: number;
+    amount?: number;
+  }[];
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
+}
+
+// A search inside a view that hides one of the two columns, sent the way a grid
+// sends it.
+export interface SearchHiddenFieldInlinedViewCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  rows: { title: string; note: string }[];
+  // A word that appears only in the hidden column. The runner refuses a term
+  // that also appears in the visible one.
+  hiddenTerm: string;
+  // A word in the visible column, for the control half of the checkpoint.
+  visibleTerm: string;
 }
 
 // A table grouped by a date column, and the per-group totals a grid prints in
