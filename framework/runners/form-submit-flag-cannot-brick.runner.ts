@@ -30,6 +30,7 @@ import type { FormSubmitFlagCannotBrickCaseConfig } from "../types";
 
 const NAME_FIELD = "Name";
 const VIEW_SHARE_META = "/table/{tableId}/view/{viewId}/share-meta";
+const VIEW_COLUMN_META = "/table/{tableId}/view/{viewId}/column-meta";
 const ENABLE_SHARE_VIEW = "/table/{tableId}/view/{viewId}/enable-share";
 const SHARE_VIEW_FORM_SUBMIT = "/share/{shareId}/view/form-submit";
 
@@ -55,6 +56,24 @@ export const runFormSubmitFlagCannotBrickCase = async (
       name: "Shared form",
       type: ViewType.Form,
     });
+    // A form refuses submissions outright while any of its fields are hidden,
+    // so every field is put on the form first. That is setup, not the thing
+    // under test - without it the case cannot even fill the form in once (run
+    // 34579613695).
+    const shownFields = await axios.put(
+      urlBuilder(VIEW_COLUMN_META, { tableId, viewId: form.id }),
+      (table.fields as { id: string }[]).map((field) => ({
+        fieldId: field.id,
+        columnMeta: { visible: true },
+      })),
+      { validateStatus: () => true },
+    );
+    if (shownFields.status < 200 || shownFields.status >= 300) {
+      throw new Error(
+        `putting the fields on the form answered ${shownFields.status}: ${JSON.stringify(shownFields.data)}`,
+      );
+    }
+
     const shared = await axios.post<IEnableShareViewVo>(
       urlBuilder(ENABLE_SHARE_VIEW, { tableId, viewId: form.id }),
       {},

@@ -24,8 +24,11 @@ The fix removes the flag. A form takes submissions because it is a form.
 
 ## How the case is built
 
-A form view, shared, and a submission from somebody with no session at all —
-which is what filling in a public form is. Then the flag is written through the
+A form view with every field put on it, shared, and a submission from somebody
+with no session at all — which is what filling in a public form is. The fields
+have to be on the form: one that still has hidden fields refuses submissions
+outright, which is a different refusal and stopped a first attempt before it
+could observe anything (run 34579613695). Then the flag is written through the
 settings endpoint, and the same stranger fills the form in again.
 
 The first submission is the fixture check, outside the checkpoint: a refusal
