@@ -13,7 +13,14 @@ on how many rows it happens to hold.
 
 ## What was measured
 
-Pending: to be filled in from the matrix run on the fix's parent and `develop`.
+On the fix's parent `03c6490c7` the subscribed page errors with `Request failed
+with status code 431` and never receives a row. On `develop` it receives all
+800, with the ids measuring 20800 bytes as a query string against a 16384-byte
+limit. Run 34563618323.
+
+An earlier attempt asked for no window at all and was green on both sides: the
+subscription answers 100 rows by default, whose ids come to about 3KB, which
+fits. The window the page asks for is the whole point — run 34563307339.
 
 ## Why the socket and not the endpoint
 
