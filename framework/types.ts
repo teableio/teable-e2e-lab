@@ -34,6 +34,7 @@ export interface BugCaseConfigByRunner {
   "form-submit-flag-cannot-brick": FormSubmitFlagCannotBrickCaseConfig;
   "link-picker-foreign-scope": LinkPickerForeignScopeCaseConfig;
   "restricted-cannot-share-a-base": RestrictedCannotShareABaseCaseConfig;
+  "copied-optional-link-delete": CopiedOptionalLinkDeleteCaseConfig;
   "search-hidden-field-inlined-view": SearchHiddenFieldInlinedViewCaseConfig;
   "rollup-expression-convert": RollupExpressionConvertCaseConfig;
   "share-view-unready-data-db": ShareViewUnreadyDataDbCaseConfig;
@@ -2012,6 +2013,17 @@ export interface LookupMultiplicityVoCaseConfig {
   hostRowName: string;
   // Two linked rows at least - see the runner.
   linkedRowNames: string[];
+}
+
+// A base holding an optional link, and what a copy of it allows.
+export interface CopiedOptionalLinkDeleteCaseConfig {
+  namePrefix: string;
+  itemsTableName: string;
+  ordersTableName: string;
+  // Two rows: the first is linked and deleted in the copy, the second is
+  // deleted in the original as the fixture check.
+  itemNames: string[];
+  orderName: string;
 }
 
 // Somebody a role restricts, and the two ways of handing out a link.

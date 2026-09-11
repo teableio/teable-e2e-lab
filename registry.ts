@@ -25,6 +25,7 @@ import tokenReachesItsOwnArtifactCase from "./cases/authority/y896-a-token-reads
 import formSubmitFlagCannotBrickCase from "./cases/base-share/y897-a-shared-form-that-refuses-everybody.case";
 import linkPickerForeignScopeCase from "./cases/authority/y898-a-link-picker-that-offers-nothing.case";
 import restrictedCannotShareABaseCase from "./cases/authority/y900-sharing-a-view-and-sharing-the-base.case";
+import copiedOptionalLinkDeleteCase from "./cases/link/y901-an-optional-link-survives-being-copied.case";
 import searchHiddenFieldInlinedViewCase from "./cases/search/y880-a-search-inside-a-view-that-hides-a-column.case";
 import dateGroupMonthStatisticsCase from "./cases/aggregation/y876-a-month-of-rows-and-one-total.case";
 import rollupExpressionConvertCase from "./cases/lookup/y877-turn-a-list-of-people-into-a-count.case";
@@ -227,6 +228,7 @@ const cases = [
   formSubmitFlagCannotBrickCase,
   linkPickerForeignScopeCase,
   restrictedCannotShareABaseCase,
+  copiedOptionalLinkDeleteCase,
   searchHiddenFieldInlinedViewCase,
   dateGroupMonthStatisticsCase,
   rollupExpressionConvertCase,
