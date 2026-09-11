@@ -14,7 +14,9 @@ who can see that page — including anything embedded in it.
 
 ## What was measured
 
-Pending: to be filled in from the matrix run on the fix's parent and `develop`.
+On the fix's parent `1567bc206` the list carries `$2b$10$…` for the plugin just
+registered — the stored, scrambled copy. On `develop` it carries no secret at
+all. Run 34572502312.
 
 ## How the case is built
 
