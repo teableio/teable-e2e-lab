@@ -11,7 +11,13 @@ read as a broken search rather than a permission.
 
 ## What was measured
 
-Pending: to be filled in from the matrix run on the fix's parent and `develop`.
+On the fix's parent `674ff3d7b` the restricted person's picker offers nothing
+for either customer — not the one outside their narrowing, and not the one
+inside it. On `develop` it offers both, while the owner's picker is unchanged.
+Run 34581833627.
+
+That the picker empties completely, rather than filtering down to the row scope,
+is the shape worth knowing: it is why the case asks for both customers.
 
 ## Why a link column is its own permission
 
