@@ -23,6 +23,7 @@ export interface BugCaseConfigByRunner {
   "provision-window-read-race": ProvisionWindowReadRaceCaseConfig;
   "number-show-as-cleared": NumberShowAsClearedCaseConfig;
   "share-picker-email-oracle": SharePickerEmailOracleCaseConfig;
+  "whole-base-share-replay": WholeBaseShareReplayCaseConfig;
   "search-hidden-field-inlined-view": SearchHiddenFieldInlinedViewCaseConfig;
   "rollup-expression-convert": RollupExpressionConvertCaseConfig;
   "share-view-unready-data-db": ShareViewUnreadyDataDbCaseConfig;
@@ -2001,6 +2002,17 @@ export interface LookupMultiplicityVoCaseConfig {
   hostRowName: string;
   // Two linked rows at least - see the runner.
   linkedRowNames: string[];
+}
+
+// A share link for one whole base, presented against another base.
+export interface WholeBaseShareReplayCaseConfig {
+  namePrefix: string;
+  // The password the freshly signed-up link holder is created with.
+  password: string;
+  // What a refusal should look like. 403 is the fix's own answer; anything
+  // else is reported rather than accepted, because "refused for some other
+  // reason" is worth seeing.
+  expectedStatus: number;
 }
 
 // A shared form with a people column, and what its picker answers to an email

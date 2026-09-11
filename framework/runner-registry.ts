@@ -111,6 +111,7 @@ import { runFormulaBranchErrorBackfillCase } from "./runners/formula-branch-erro
 import { runProvisionWindowReadRaceCase } from "./runners/provision-window-read-race.runner";
 import { runNumberShowAsClearedCase } from "./runners/number-show-as-cleared.runner";
 import { runSharePickerEmailOracleCase } from "./runners/share-picker-email-oracle.runner";
+import { runWholeBaseShareReplayCase } from "./runners/whole-base-share-replay.runner";
 import { runWideWindowSocketLoadCase } from "./runners/wide-window-socket-load.runner";
 import { runSearchHiddenFieldInlinedViewCase } from "./runners/search-hidden-field-inlined-view.runner";
 import { runProjectedGroupHeadersCase } from "./runners/projected-group-headers.runner";
@@ -263,6 +264,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "provision-window-read-race": runProvisionWindowReadRaceCase,
   "number-show-as-cleared": runNumberShowAsClearedCase,
   "share-picker-email-oracle": runSharePickerEmailOracleCase,
+  "whole-base-share-replay": runWholeBaseShareReplayCase,
   "wide-window-socket-load": runWideWindowSocketLoadCase,
   "search-hidden-field-inlined-view": runSearchHiddenFieldInlinedViewCase,
   "projected-group-headers": runProjectedGroupHeadersCase,

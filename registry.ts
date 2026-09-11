@@ -14,6 +14,7 @@ import wideWindowSocketLoadCase from "./cases/realtime/y883-a-long-table-opened-
 import provisionWindowReadRaceCase from "./cases/table/y884-a-table-being-changed-is-still-there.case";
 import numberShowAsClearedCase from "./cases/field/y885-turning-off-a-bar-turns-it-off.case";
 import sharePickerEmailOracleCase from "./cases/base-share/y887-a-shared-picker-and-an-email-address.case";
+import wholeBaseShareReplayCase from "./cases/base-share/y888-a-share-link-and-somebody-elses-base.case";
 import searchHiddenFieldInlinedViewCase from "./cases/search/y880-a-search-inside-a-view-that-hides-a-column.case";
 import dateGroupMonthStatisticsCase from "./cases/aggregation/y876-a-month-of-rows-and-one-total.case";
 import rollupExpressionConvertCase from "./cases/lookup/y877-turn-a-list-of-people-into-a-count.case";
@@ -205,6 +206,7 @@ const cases = [
   provisionWindowReadRaceCase,
   numberShowAsClearedCase,
   sharePickerEmailOracleCase,
+  wholeBaseShareReplayCase,
   searchHiddenFieldInlinedViewCase,
   dateGroupMonthStatisticsCase,
   rollupExpressionConvertCase,
