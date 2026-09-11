@@ -44,6 +44,9 @@ export const runRestrictedCannotShareABaseCase = async (
     person = await withRestrictedPerson({
       namePrefix: config.namePrefix,
       runId: context.runId,
+      // The person joins with a base role that could publish on its own, so a
+      // refusal is the matrix deciding rather than the base role.
+      join: config.join,
       buildTables: async (baseId) => {
         personBaseId = baseId;
         const table = await createTable(baseId, {

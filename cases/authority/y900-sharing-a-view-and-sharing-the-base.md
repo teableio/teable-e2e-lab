@@ -22,6 +22,11 @@ The authority matrix on a base of its own, a table with a view in it, and a
 second signed-in person holding a role. The role leaves the table itself alone:
 this case is about publishing, not about reading.
 
+That person joins the space as a Creator, not as an Editor. An Editor is refused
+both kinds of share by their base role alone — measured on the fix's parent and
+on develop alike (run 34584209084) — which says nothing about what the matrix
+decides. The refusal has to be the matrix's to mean anything.
+
 Before the checkpoint that person reads what is in the base and must succeed. A
 refusal to publish means something only if they are somebody who belongs there.
 

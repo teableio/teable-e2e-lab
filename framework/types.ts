@@ -2018,6 +2018,10 @@ export interface LookupMultiplicityVoCaseConfig {
 export interface RestrictedCannotShareABaseCaseConfig {
   namePrefix: string;
   rowName: string;
+  // The base role the person joins with. It has to be one that could publish
+  // on its own - an Editor is refused both kinds by the base role alone, which
+  // says nothing about the matrix (run 34584209084).
+  join: "editor" | "creator" | "throughTheRoleAlone";
   // What a refusal should look like. Anything else is reported rather than
   // accepted.
   expectedStatus: number;

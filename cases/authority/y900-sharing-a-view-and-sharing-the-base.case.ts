@@ -19,6 +19,7 @@ export default defineBugCase({
   config: {
     namePrefix: "e2e-lab-share-permission",
     rowName: "a row",
+    join: "creator",
     expectedStatus: 403,
   },
 });
