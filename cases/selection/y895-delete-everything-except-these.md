@@ -26,8 +26,13 @@ after it. The runner refuses a fixture that keeps nothing.
 ## How the case is built
 
 Eight rows, two of them unselected — positions 1 and 4 — and one delete request
-that says "all rows, except these two", which is literally what the request
-carries.
+carrying no list of rows at all, only the two to exclude: the rows are then
+whatever the current scope holds minus those, which is what the click sends.
+
+A refusal that is a validation error is reported as the case sending the wrong
+shape rather than as the product deleting the wrong rows. That distinction was
+bought once: an earlier attempt put the excluded ids at the top level instead of
+inside `selection` and both columns went red for it (run 34575590980).
 
 ## What the checkpoint asserts
 

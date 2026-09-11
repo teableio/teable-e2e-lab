@@ -105,17 +105,27 @@ export const runDeleteAllExceptCase = async (
     const probe = await bugCheckpoint(
       "everything-except-these-leaves-exactly-these",
       async () => {
+        // What the click sends: no explicit list of rows, so the rows are
+        // whatever the current view holds, minus the ones clicked off.
         const deleted = await axios.post(
           urlBuilder(DELETE_BY_ID_URL, { tableId }),
-          {
-            allRecords: true,
-            excludedRecordIds: kept.map((row) => row.id),
-          },
+          { selection: { excludeRecordIds: kept.map((row) => row.id) } },
           { validateStatus: () => true },
         );
         if (deleted.status < 200 || deleted.status >= 300) {
+          const body = JSON.stringify(deleted.data ?? "");
+          if (body.includes("validation_error")) {
+            // Not the product: this case sent a shape the endpoint does not
+            // accept, and the run should be read that way. It happened once,
+            // with the excluded ids at the top level instead of inside
+            // `selection` (run 34575590980).
+            throw new Error(
+              `the delete request was refused as malformed (${deleted.status}): ${body} - this is the case sending ` +
+                "the wrong shape, not the product deleting the wrong rows",
+            );
+          }
           throw new Error(
-            `deleting everything except ${keptNames.length} rows answered ${deleted.status}: ${JSON.stringify(deleted.data)}`,
+            `deleting everything except ${keptNames.length} rows answered ${deleted.status}: ${body}`,
           );
         }
 
