@@ -33,7 +33,6 @@ export interface BugCaseConfigByRunner {
   "token-reaches-its-own-artifact": TokenReachesItsOwnArtifactCaseConfig;
   "form-submit-flag-cannot-brick": FormSubmitFlagCannotBrickCaseConfig;
   "link-picker-foreign-scope": LinkPickerForeignScopeCaseConfig;
-  "lookup-of-formula-editable": LookupOfFormulaEditableCaseConfig;
   "search-hidden-field-inlined-view": SearchHiddenFieldInlinedViewCaseConfig;
   "rollup-expression-convert": RollupExpressionConvertCaseConfig;
   "share-view-unready-data-db": ShareViewUnreadyDataDbCaseConfig;
@@ -2012,19 +2011,6 @@ export interface LookupMultiplicityVoCaseConfig {
   hostRowName: string;
   // Two linked rows at least - see the runner.
   linkedRowNames: string[];
-}
-
-// A column borrowing a worked-out column from another table, and whether its
-// own settings can be saved.
-export interface LookupOfFormulaEditableCaseConfig {
-  baseId: "seed-base";
-  tableNamePrefix: string;
-  hostRowName: string;
-  // The number the leaf table holds. The formula that gets borrowed is worked
-  // out from a borrowed copy of it - see the runner.
-  amount: number;
-  newName: string;
-  newPrecision: number;
 }
 
 // A link column whose target table the reader's role narrows.

@@ -84,17 +84,25 @@ columns.
 persistence; a lookup of a formula built through the public API may simply never
 carry the copied expression that the blocking depends on.
 
-The fourth row is this file working as intended: the note used to end by naming
-what to try next - "a foreign formula whose expression cannot be parsed outside
-its own table - one referencing several fields, or a formula over a lookup" -
-and on 2026-09-11 the first of those two was tried. A lookup of
-`{amount} * 2 + {bonus}`, renamed and reformatted in one save, is accepted on
-the fix's parent exactly as on develop, value intact (47 both sides).
+The last two rows close this out. The note used to end by naming what to try
+next - "a foreign formula whose expression cannot be parsed outside its own
+table - one referencing several fields, or a formula over a lookup" - and on
+2026-09-11 both were tried:
 
-So the remaining candidate is the second one: a foreign formula **over a
-lookup**, which needs a third table so the source formula's own instruction
-reaches outside its table before it is copied anywhere. That is the only shape
-of the four named that has not been measured.
+- a lookup of `{amount} * 2 + {bonus}`, renamed and reformatted in one save:
+  accepted on the fix's parent exactly as on develop, value intact (47 both
+  sides);
+- three tables, so the borrowed formula is itself worked out from a borrowed
+  column - the instruction already names another table before anything copies
+  it - and the same save: accepted on both, value 42 both sides.
+
+**All four named shapes are measured and none separates the columns.** Whatever
+carries the copied expression into the blocking state is not something the
+public API produces when a lookup of a formula is built this way. A next attempt
+should not spend another run on a shape: it should first probe what the borrowed
+column's stored options actually contain on the fix's parent - if no foreign
+expression is there, there is nothing to reproduce from outside, and this row
+becomes a permanent rejection rather than an open lead.
 
 The shapes are gone; the runner is not kept.
 | `6421635ca` | T6106 | Written and run: a pasted link cell reaches a watching client carrying the linked record's name on the fix's parent, so both columns look the same. See the note below the table. |
