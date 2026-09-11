@@ -537,6 +537,31 @@ it in prose is how the two drift apart. To see it:
 pnpm triage:covered
 ```
 
+### The older public-API window, read on 2026-09-11
+
+Widening the scan to 800 commits turned up seven more uncovered fixes with
+public-API specs. None of them is a case:
+
+- **T6479** (`7de765bf8a`, socket snapshot-bulk moved from GET query to POST
+  body). The parent has no POST route, so a case cannot send the same request to
+  both sides. The symptom — a wide table's grid window exceeding Node's 16KB
+  header limit and being refused with 431 — is only transport-agnostic when
+  watched over the socket, which is worth trying one day: a 300-field table,
+  300 rows, and a query subscription that carries a projection of every field.
+  What has to be checked first is whether this repository's query subscription
+  makes the server fetch snapshots at all, or only ids.
+- **T6392** (`04d39d97e8`, invite mail and notification converged). The shape
+  that changed is an invitation to an address with no account yet: that account
+  now has an unread invite notification waiting at first login. The lab cannot
+  sign in as an account the invitation itself created, and for an address that
+  already has an account the old path notified correctly — so what is reachable
+  is the half that was never broken.
+- **T6420, T6411, T6386, T6382** — v2 migrations and pool sharing. Same shape as
+  T6479: what changed is which engine or which connection answers, not the
+  answer.
+- **T6618, T6449** — byodb settings and PgBouncer switching, which need a base
+  whose storage really is another database. Same blocker as T7247.
+
 ### The compute-activity and contention family, read on 2026-09-11
 
 Everything left uncovered in the last 400 commits that is not already named
