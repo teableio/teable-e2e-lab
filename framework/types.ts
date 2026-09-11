@@ -2019,6 +2019,9 @@ export interface TokenReachesItsOwnArtifactCaseConfig {
   scopes: string[];
   tokenLifetimeMs: number;
   artifactName: string;
+  // What kind of page it is. The endpoint takes "html" or "markdown" and
+  // refuses a request without it.
+  artifactType: string;
   artifactContent: string;
 }
 

@@ -80,6 +80,7 @@ export const runTokenReachesItsOwnArtifactCase = async (
         method: "POST",
         body: JSON.stringify({
           name: `${config.artifactName}-${context.runId}`.slice(0, 60),
+          type: config.artifactType,
           content: config.artifactContent,
         }),
       },

@@ -21,6 +21,7 @@ export default defineBugCase({
     scopes: ["base|read", "base|update"],
     tokenLifetimeMs: 7 * 24 * 60 * 60 * 1000,
     artifactName: "e2e-lab-page",
+    artifactType: "html",
     artifactContent: "<!doctype html><title>e2e-lab</title><p>made by a token",
   },
 });
