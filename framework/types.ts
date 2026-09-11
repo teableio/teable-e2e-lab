@@ -19,7 +19,6 @@ export interface BugCaseConfigByRunner {
   "select-rollup-unique-and-count": SelectRollupUniqueAndCountCaseConfig;
   "date-group-statistics": DateGroupStatisticsCaseConfig;
   "formula-branch-error-backfill": FormulaBranchErrorBackfillCaseConfig;
-  "filtered-rollup-cross-base-refresh": FilteredRollupCrossBaseRefreshCaseConfig;
   "search-hidden-field-inlined-view": SearchHiddenFieldInlinedViewCaseConfig;
   "rollup-expression-convert": RollupExpressionConvertCaseConfig;
   "share-view-unready-data-db": ShareViewUnreadyDataDbCaseConfig;
@@ -1998,31 +1997,6 @@ export interface LookupMultiplicityVoCaseConfig {
   hostRowName: string;
   // Two linked rows at least - see the runner.
   linkedRowNames: string[];
-}
-
-// A narrowed total over linked rows, a column reading it, and two columns in
-// another base reading those.
-export interface FilteredRollupCrossBaseRefreshCaseConfig {
-  baseId: "seed-base";
-  namePrefix: string;
-  // The value the host row and the mirror row both carry, and what the columns
-  // in the other base match on.
-  hostKey: string;
-  // The kind the total counts, and a second kind it must not count - without
-  // the second one, a condition that was dropped would give the same number.
-  countedKind: string;
-  ignoredKind: string;
-  countedLineName: string;
-  ignoredLineName: string;
-  // How many narrowed totals sit on the same link. One is enough to watch the
-  // change travel; the report it came from carried about ten, and it is the
-  // number of them together that ran past the time a statement is allowed.
-  narrowedTotalsOnTheLink: number;
-  amountBefore: number;
-  amountAfter: number;
-  ignoredAmount: number;
-  settleTimeoutMs: number;
-  pollIntervalMs: number;
 }
 
 // A worked-out column whose formula chooses between branches, added to a table

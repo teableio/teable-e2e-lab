@@ -107,7 +107,6 @@ import { runLookupSelectChoicesKeptCase } from "./runners/lookup-select-choices-
 import { runShareCopyOutsidePanelCase } from "./runners/share-copy-outside-panel.runner";
 import { runLookupMultiplicityVoCase } from "./runners/lookup-multiplicity-vo.runner";
 import { runDateGroupStatisticsCase } from "./runners/date-group-statistics.runner";
-import { runFilteredRollupCrossBaseRefreshCase } from "./runners/filtered-rollup-cross-base-refresh.runner";
 import { runFormulaBranchErrorBackfillCase } from "./runners/formula-branch-error-backfill.runner";
 import { runSearchHiddenFieldInlinedViewCase } from "./runners/search-hidden-field-inlined-view.runner";
 import { runProjectedGroupHeadersCase } from "./runners/projected-group-headers.runner";
@@ -256,7 +255,6 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "table-delete-realtime": runTableDeleteRealtimeCase,
   "archive-recount": runArchiveRecountCase,
   "date-group-statistics": runDateGroupStatisticsCase,
-  "filtered-rollup-cross-base-refresh": runFilteredRollupCrossBaseRefreshCase,
   "formula-branch-error-backfill": runFormulaBranchErrorBackfillCase,
   "search-hidden-field-inlined-view": runSearchHiddenFieldInlinedViewCase,
   "projected-group-headers": runProjectedGroupHeadersCase,

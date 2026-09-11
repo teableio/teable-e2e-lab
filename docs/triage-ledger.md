@@ -537,6 +537,26 @@ it in prose is how the two drift apart. To see it:
 pnpm triage:covered
 ```
 
+### T7075's cross-base chain refreshes fine, at one total and at ten
+
+A narrowed total over a link, a formula reading it, and two conditional rollups
+in a second base reading both. Change the counted line's amount and every one
+of the four follows, on the fix's parent `0ad204535` as well as on `develop` —
+with one narrowed total on the link (run 34560984928) and with ten (run
+34561258087), ten being the number the commit message names as enough to run
+past `statement_timeout`.
+
+So the correctness half of that fix is not reachable by adding totals. What the
+fix changes is how each one is worked out during a dirty-host update — one
+correlated LATERAL per filter, instead of a set-based join — and the lab's CI
+database gets through ten of them well inside whatever its statement limit is.
+A reproduction would need the cost per total to be much higher (many more
+linked rows per host, or a much larger source table), not merely more of them.
+
+The runner and case are kept on the unmerged branch
+`attempt/t7075-filtered-rollup-cross-base`; they are not on main, because a
+case green on every column reads as coverage and never gets looked at again.
+
 ### Four recent fixes that have no lab shape at all
 
 Read on 2026-09-11 while scanning the last 120 commits, and dropped before any
