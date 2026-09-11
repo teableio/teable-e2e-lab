@@ -16,7 +16,7 @@ import {
   permanentDeleteTable,
 } from "../../../utils/init-app";
 import { bugCheckpoint } from "../checkpoint";
-import { assertServedByV2 } from "../engine";
+import { pickRoutingHeaders } from "../engine";
 import type { BugCaseFor, BugProbeResult, BugRunContext } from "../types";
 import type { SharePickerEmailOracleCaseConfig } from "../types";
 
@@ -97,10 +97,13 @@ export const runSharePickerEmailOracleCase = async (
         `the shared picker answered ${byName.status}: ${JSON.stringify(byName.data)}`,
       );
     }
-    assertServedByV2(byName.headers, {
-      operation: "GET /share/{shareId}/view/collaborators",
-      feature: "getShareViewCollaborators",
-    });
+    // Which engine answered is recorded rather than asserted. This endpoint
+    // was not on v2 at all when the leak was fixed - the fix's parent answers
+    // with no routing header - so requiring v2 would turn that column from "the
+    // leak reproduced" into "the lab could not run" (run 34566742572). The
+    // answer is the same shape either way, and the answer is what this case is
+    // about.
+    const routing = pickRoutingHeaders(byName.headers);
     if (
       !byName.data.some(
         (candidate: { userId?: string }) => candidate.userId === owner.id,
@@ -146,6 +149,7 @@ export const runSharePickerEmailOracleCase = async (
       details: {
         tableId,
         shareId,
+        routing,
         matchesForName: byName.data.length,
         matchesForEmail: probe.matchesForEmail,
       },

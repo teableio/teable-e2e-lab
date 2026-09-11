@@ -28,6 +28,14 @@ The name search is taken first and outside the checkpoint, as the control. If
 the picker cannot find them by name, an empty answer to the email search says
 nothing at all about addresses.
 
+## Which engine answers
+
+Recorded, not asserted. This endpoint was not on v2 at all when the leak was
+fixed — the fix's parent answers with no routing header — so requiring v2 would
+turn that column from "the leak reproduced" into "the lab could not run" (run
+34566742572). The answer has the same shape either way, and the answer is what
+this case is about.
+
 ## What the checkpoint asserts
 
 Two things, both halves of the same leak: an email search returns nobody, and
