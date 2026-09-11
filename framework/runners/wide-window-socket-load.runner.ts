@@ -109,7 +109,11 @@ export const runWideWindowSocketLoadCase = async (
         // What a page does when somebody opens the table.
         subscription = await client!.subscribeQuery(
           `${IdPrefix.Record}_${tableId}`,
-          { viewId, type: IdPrefix.Record },
+          // The window the page asks for. A page that scrolls a long table
+          // asks for its rows in one window; how many is the page's own
+          // choice, and it is the size of that answer - every id in one
+          // request - that the server had to be able to carry.
+          { viewId, type: IdPrefix.Record, take: config.recordCount },
           { timeoutMs: config.subscribeTimeoutMs },
         );
         await subscription.waitFor((ids) => ids.length === config.recordCount, {
