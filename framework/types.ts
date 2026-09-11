@@ -2009,6 +2009,10 @@ export interface WholeBaseShareReplayCaseConfig {
   namePrefix: string;
   // The password the freshly signed-up link holder is created with.
   password: string;
+  // A table in the base nobody shared, so an unauthorised answer names
+  // something rather than coming back empty.
+  victimTableName: string;
+  victimRowTitle: string;
   // What a refusal should look like. 403 is the fix's own answer; anything
   // else is reported rather than accepted, because "refused for some other
   // reason" is worth seeing.

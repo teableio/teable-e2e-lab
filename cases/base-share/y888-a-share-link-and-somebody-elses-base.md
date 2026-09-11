@@ -14,12 +14,19 @@ of their own.
 
 ## What was measured
 
-Pending: to be filled in from the matrix run on the fix's parent and `develop`.
+On the fix's parent `c488c5ed2` the link holder asking for the other base's
+node list is answered 200. On `develop` the same request is refused with 403,
+for the node list and for the export. Run 34567517303.
+
+That first run had an empty base as the victim, so the unauthorised answer came
+back as `[]` — the same leak, reading like nothing happened. The victim base now
+holds a table, so the answer names something that belongs to somebody else.
 
 ## How the case is built
 
 Two bases. One is shared as a whole and the share is set to allow editing; the
-other is never shared with anybody. The link holder is a freshly signed-up
+other is never shared with anybody and holds a table with a row in it, so an
+unauthorised answer names something rather than coming back empty. The link holder is a freshly signed-up
 account, created per run — a shared identity would eventually become a
 collaborator somewhere by accident, and a legitimate answer would then read as
 the leak.

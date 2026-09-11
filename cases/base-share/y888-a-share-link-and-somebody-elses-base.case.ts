@@ -20,6 +20,8 @@ export default defineBugCase({
   config: {
     namePrefix: "e2e-lab-whole-base-share",
     password: "12345678a",
+    victimTableName: "Payroll",
+    victimRowTitle: "a row nobody shared",
     expectedStatus: 403,
   },
 });

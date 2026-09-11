@@ -1,6 +1,7 @@
+import { FieldType } from "@teable/core";
 import { axios, createBase, urlBuilder } from "@teable/openapi";
 import { createNewUserAxios } from "../../../utils/axios-instance/new-user";
-import { permanentDeleteBase } from "../../../utils/init-app";
+import { createTable, permanentDeleteBase } from "../../../utils/init-app";
 import { bugCheckpoint } from "../checkpoint";
 import { pickRoutingHeaders } from "../engine";
 import type { BugCaseFor, BugProbeResult, BugRunContext } from "../types";
@@ -48,6 +49,17 @@ export const runWholeBaseShareReplayCase = async (
     sharedBaseId = shared.data.id;
     const victim = await createBase({ spaceId, name: `${suffix}-victim` });
     victimBaseId = victim.data.id;
+    // Something to find in it. An empty base answers an unauthorised request
+    // with an empty list, which is the same leak and reads like nothing
+    // happened; a table means the answer names something that belongs to
+    // somebody else.
+    await createTable(victimBaseId, {
+      name: config.victimTableName,
+      fields: [
+        { name: "Title", type: FieldType.SingleLineText, isPrimary: true },
+      ],
+      records: [{ fields: { Title: config.victimRowTitle } }],
+    });
 
     const share = await axios.post<{ shareId: string }>(
       urlBuilder(CREATE_BASE_SHARE, { baseId: sharedBaseId }),
