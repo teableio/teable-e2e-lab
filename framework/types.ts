@@ -24,6 +24,7 @@ export interface BugCaseConfigByRunner {
   "number-show-as-cleared": NumberShowAsClearedCaseConfig;
   "share-picker-email-oracle": SharePickerEmailOracleCaseConfig;
   "whole-base-share-replay": WholeBaseShareReplayCaseConfig;
+  "sideways-photo-dimensions": SidewaysPhotoDimensionsCaseConfig;
   "search-hidden-field-inlined-view": SearchHiddenFieldInlinedViewCaseConfig;
   "rollup-expression-convert": RollupExpressionConvertCaseConfig;
   "share-view-unready-data-db": ShareViewUnreadyDataDbCaseConfig;
@@ -2002,6 +2003,17 @@ export interface LookupMultiplicityVoCaseConfig {
   hostRowName: string;
   // Two linked rows at least - see the runner.
   linkedRowNames: string[];
+}
+
+// A photo whose pixels are landscape and whose rotation note makes it
+// portrait.
+export interface SidewaysPhotoDimensionsCaseConfig {
+  fileName: string;
+  // The size the photo is displayed at, which is its stored size turned a
+  // quarter turn. The fixture photo is 64x16 pixels with a quarter-turn note,
+  // so these are 16 and 64.
+  displayedWidth: number;
+  displayedHeight: number;
 }
 
 // A share link for one whole base, presented against another base.
