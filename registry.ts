@@ -11,6 +11,7 @@ import projectedGroupHeadersCase from "./cases/view/y569-a-grouped-view-asked-fo
 import dateGroupDayStatisticsCase from "./cases/aggregation/y875-a-day-of-rows-and-one-total.case";
 import formulaBranchAlertCase from "./cases/formula/y878-a-branch-that-was-not-taken.case";
 import wideWindowSocketLoadCase from "./cases/realtime/y883-a-long-table-opened-on-a-page.case";
+import provisionWindowReadRaceCase from "./cases/table/y884-a-table-being-changed-is-still-there.case";
 import searchHiddenFieldInlinedViewCase from "./cases/search/y880-a-search-inside-a-view-that-hides-a-column.case";
 import dateGroupMonthStatisticsCase from "./cases/aggregation/y876-a-month-of-rows-and-one-total.case";
 import rollupExpressionConvertCase from "./cases/lookup/y877-turn-a-list-of-people-into-a-count.case";
@@ -199,6 +200,7 @@ const cases = [
   dateGroupDayStatisticsCase,
   formulaBranchAlertCase,
   wideWindowSocketLoadCase,
+  provisionWindowReadRaceCase,
   searchHiddenFieldInlinedViewCase,
   dateGroupMonthStatisticsCase,
   rollupExpressionConvertCase,

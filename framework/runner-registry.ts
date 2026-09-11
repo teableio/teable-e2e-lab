@@ -108,6 +108,7 @@ import { runShareCopyOutsidePanelCase } from "./runners/share-copy-outside-panel
 import { runLookupMultiplicityVoCase } from "./runners/lookup-multiplicity-vo.runner";
 import { runDateGroupStatisticsCase } from "./runners/date-group-statistics.runner";
 import { runFormulaBranchErrorBackfillCase } from "./runners/formula-branch-error-backfill.runner";
+import { runProvisionWindowReadRaceCase } from "./runners/provision-window-read-race.runner";
 import { runWideWindowSocketLoadCase } from "./runners/wide-window-socket-load.runner";
 import { runSearchHiddenFieldInlinedViewCase } from "./runners/search-hidden-field-inlined-view.runner";
 import { runProjectedGroupHeadersCase } from "./runners/projected-group-headers.runner";
@@ -257,6 +258,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "archive-recount": runArchiveRecountCase,
   "date-group-statistics": runDateGroupStatisticsCase,
   "formula-branch-error-backfill": runFormulaBranchErrorBackfillCase,
+  "provision-window-read-race": runProvisionWindowReadRaceCase,
   "wide-window-socket-load": runWideWindowSocketLoadCase,
   "search-hidden-field-inlined-view": runSearchHiddenFieldInlinedViewCase,
   "projected-group-headers": runProjectedGroupHeadersCase,

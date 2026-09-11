@@ -20,6 +20,7 @@ export interface BugCaseConfigByRunner {
   "date-group-statistics": DateGroupStatisticsCaseConfig;
   "formula-branch-error-backfill": FormulaBranchErrorBackfillCaseConfig;
   "wide-window-socket-load": WideWindowSocketLoadCaseConfig;
+  "provision-window-read-race": ProvisionWindowReadRaceCaseConfig;
   "search-hidden-field-inlined-view": SearchHiddenFieldInlinedViewCaseConfig;
   "rollup-expression-convert": RollupExpressionConvertCaseConfig;
   "share-view-unready-data-db": ShareViewUnreadyDataDbCaseConfig;
@@ -1998,6 +1999,19 @@ export interface LookupMultiplicityVoCaseConfig {
   hostRowName: string;
   // Two linked rows at least - see the runner.
   linkedRowNames: string[];
+}
+
+// A table being read while columns are added to it.
+export interface ProvisionWindowReadRaceCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  rowCount: number;
+  // How many columns are added, one after another. At least two - see the
+  // runner: one window is a coin flip, a burst is the reported shape.
+  columnsToAdd: number;
+  // How many ordinary reads are in flight at a time while a column is being
+  // added.
+  concurrentReads: number;
 }
 
 // A table long enough that the page asks for every row in one request.
