@@ -31,6 +31,7 @@ export interface BugCaseConfigByRunner {
   "oauth-scope-not-widened": OauthScopeNotWidenedCaseConfig;
   "hidden-node-still-referenced": HiddenNodeStillReferencedCaseConfig;
   "token-reaches-its-own-artifact": TokenReachesItsOwnArtifactCaseConfig;
+  "form-submit-flag-cannot-brick": FormSubmitFlagCannotBrickCaseConfig;
   "search-hidden-field-inlined-view": SearchHiddenFieldInlinedViewCaseConfig;
   "rollup-expression-convert": RollupExpressionConvertCaseConfig;
   "share-view-unready-data-db": ShareViewUnreadyDataDbCaseConfig;
@@ -2009,6 +2010,15 @@ export interface LookupMultiplicityVoCaseConfig {
   hostRowName: string;
   // Two linked rows at least - see the runner.
   linkedRowNames: string[];
+}
+
+// A shared form whose share settings are given a flag no screen offers.
+export interface FormSubmitFlagCannotBrickCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // What a stranger fills in before the flag is written, and after.
+  beforeValue: string;
+  afterValue: string;
 }
 
 // A page made with an API token, and whether the same token can read it back.
