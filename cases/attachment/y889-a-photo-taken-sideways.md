@@ -10,7 +10,9 @@ itself is fine — it opens upright everywhere else.
 
 ## What was measured
 
-Pending: to be filled in from the matrix run on the fix's parent and `develop`.
+On the fix's parent `92419b458` the photo is recorded as 64×16 — exactly the
+numbers it was given, with the rotation note ignored. On `develop` it is
+recorded as 16×64, the size it is displayed at. Run 34568518389.
 
 ## Why the size is the thing to ask about
 
