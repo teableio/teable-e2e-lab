@@ -10,6 +10,7 @@ import archiveRecountCase from "./cases/record/y1-archive-the-rows-a-count-was-c
 import projectedGroupHeadersCase from "./cases/view/y569-a-grouped-view-asked-for-one-column.case";
 import dateGroupDayStatisticsCase from "./cases/aggregation/y875-a-day-of-rows-and-one-total.case";
 import formulaBranchAlertCase from "./cases/formula/y878-a-branch-that-was-not-taken.case";
+import authorityComputedActivityCapabilityCase from "./cases/authority/y882-a-column-that-says-whether-progress-may-be-watched.case";
 import searchHiddenFieldInlinedViewCase from "./cases/search/y880-a-search-inside-a-view-that-hides-a-column.case";
 import dateGroupMonthStatisticsCase from "./cases/aggregation/y876-a-month-of-rows-and-one-total.case";
 import rollupExpressionConvertCase from "./cases/lookup/y877-turn-a-list-of-people-into-a-count.case";
@@ -197,6 +198,7 @@ const cases = [
   projectedGroupHeadersCase,
   dateGroupDayStatisticsCase,
   formulaBranchAlertCase,
+  authorityComputedActivityCapabilityCase,
   searchHiddenFieldInlinedViewCase,
   dateGroupMonthStatisticsCase,
   rollupExpressionConvertCase,

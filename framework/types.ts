@@ -19,6 +19,7 @@ export interface BugCaseConfigByRunner {
   "select-rollup-unique-and-count": SelectRollupUniqueAndCountCaseConfig;
   "date-group-statistics": DateGroupStatisticsCaseConfig;
   "formula-branch-error-backfill": FormulaBranchErrorBackfillCaseConfig;
+  "authority-computed-activity-capability": AuthorityComputedActivityCapabilityCaseConfig;
   "search-hidden-field-inlined-view": SearchHiddenFieldInlinedViewCaseConfig;
   "rollup-expression-convert": RollupExpressionConvertCaseConfig;
   "share-view-unready-data-db": ShareViewUnreadyDataDbCaseConfig;
@@ -1997,6 +1998,17 @@ export interface LookupMultiplicityVoCaseConfig {
   hostRowName: string;
   // Two linked rows at least - see the runner.
   linkedRowNames: string[];
+}
+
+// A worked-out column in a table whose rows a role filters, read by the person
+// that role restricts.
+export interface AuthorityComputedActivityCapabilityCaseConfig {
+  tableNamePrefix: string;
+  // The rows, which must straddle the role's filter - see the runner.
+  rows: { scope: string }[];
+  // The value the role's filter allows. Rows carrying anything else are kept
+  // from the restricted person.
+  visibleScope: string;
 }
 
 // A worked-out column whose formula chooses between branches, added to a table
