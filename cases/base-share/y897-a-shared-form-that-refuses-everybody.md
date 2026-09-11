@@ -10,7 +10,10 @@ it, because the setting that causes it has no screen.
 
 ## What was measured
 
-Pending: to be filled in from the matrix run on the fix's parent and `develop`.
+On the fix's parent `ff241c5d9` the settings write is accepted (200) and the
+next submission answers `403 not allowed to submit` — the form is shared, the
+link opens, and nobody can fill it in. On `develop` the same write is accepted
+and the submission answers 201. Run 34580338734.
 
 ## Where the flag comes from
 
