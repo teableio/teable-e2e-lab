@@ -62,6 +62,6 @@ as "v1 was affected too".
 
 Reported, not enforced — the v1 column is a reference and never gates a run. It
 is the fourth case here to find a v2-only fix leaving the older engine as it was;
-the others are `lookup/distinct-choices-in-the-order-they-appear`,
+the others are `lookup/y1279-distinct-choices-in-the-order-they-appear`,
 `lookup/two-records-with-one-name-are-two-records` and
 `formula/a-column-that-picks-by-case`.

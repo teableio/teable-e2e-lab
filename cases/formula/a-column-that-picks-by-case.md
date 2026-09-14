@@ -58,5 +58,5 @@ cannot be made. Reported rather than enforced — the v1 column is a reference a
 never gates a run.
 
 That is the third case here to say the same thing about v1; the others are
-`lookup/distinct-choices-in-the-order-they-appear` and
+`lookup/y1279-distinct-choices-in-the-order-they-appear` and
 `lookup/two-records-with-one-name-are-two-records`.
