@@ -1,8 +1,11 @@
 # lookup/y555-a-burst-of-new-rows-reaches-every-lookup
 
-**T7002** — open. Fix candidate teable-ee#3207 (`98f225c53`, "bound inline
-computed updates") shipped for this incident and does **not** close this
-path: the case reproduces identically on the commit before it and on it.
+**T7002** incident regression — fixed by **T7152**,
+[teable-ee#3337](https://github.com/teableio/teable-ee/pull/3337)
+(`3c98735f5`, "preserve continuation progress and gate convergence").
+The original incident fix, teable-ee#3207 (`98f225c53`, "bound inline
+computed updates"), bounded target scans but did not close this propagation
+path. The case keeps T7002 as its incident identity and records #3337 as its fix.
 
 ## What the user sees
 
@@ -13,17 +16,19 @@ formulas stuck on their no-value branch ("NO-…" where the data says
 failed, nothing was reported, nothing is queued: the propagation for one
 batch simply never happened.
 
-This is the silent-data-loss face of the 2026-08-27 CN production
-incident: the same base shape, the same write burst. The forensic
-fingerprint is an empty `computed_update_outbox` next to
-`computed:run:failed` / `computed_update.lock_unavailable` in the logs —
-under the hybrid strategy (the production default) each batch's write
-dispatches part of its computed propagation to the outbox ~50 ms later,
-the dispatched task runs with `lockWait: false`, the NEXT batch's inline
-run is already holding the per-table computed advisory lock
-(`v2:computed:{tableId}`), and the loser's steps are dropped without a
-surviving outbox row. Deterministic at this scale: the same burst loses
-propagation every run.
+The fixture preserves the dependency shape and write burst from the
+2026-08-27 CN incident. Earlier investigation associated stale hosts with
+`computed_update.lock_unavailable`, but lock contention alone does not prove
+that an outbox task was discarded: lock-miss retry handling predates the
+failing revisions below.
+
+The verified fix boundary is #3337's continuation-integrity change. It
+normalizes deferred INSERT work to UPDATE semantics, preserves ledger inputs
+for deferred same-record steps as well as edges, and carries partial-stage
+boundaries through persisted tasks. These prevent a completed sibling stage
+from losing the inputs or execution boundary needed by later host computation.
+The API comparison identifies the fixing commit; it does not isolate which
+individual hunk is sufficient for this fixture.
 
 ## Why the case runs in a hybrid invocation
 
@@ -81,14 +86,42 @@ failure message names the stale rows with expected versus actual values.
 Hosts start verified purification-free, so "the lookup arrived" cannot be
 a leftover.
 
+## Verified fix boundary
+
+On 2026-09-14, [run 34793682836](https://github.com/teableio/teable-e2e-lab/actions/runs/34793682836)
+ran the unchanged case using lab `877a500f` against four EE revisions:
+
+| EE revision                 | Observation                                                 |
+| --------------------------- | ----------------------------------------------------------- |
+| `df17b760b5`                | Bug present: 300 of 400 hosts still stale after 300 seconds |
+| `ffa4023023` (#3337 parent) | Same 300 stale hosts after 300 seconds                      |
+| `3c98735f5f` (#3337)        | All hosts and appended rows converged in 17.593 seconds     |
+| `2d637d0677`                | All hosts and appended rows converged in 18.184 seconds     |
+
+[Independent repeat 34793743881](https://github.com/teableio/teable-e2e-lab/actions/runs/34793743881)
+on `2d637d0677` converged in 12.588 seconds. These artifacts still declare
+`open`, so successful observations are labeled `unexpected-pass`; this
+metadata correction makes the same absent observation a `pass` and a future
+reproduction on the gating revision a `regression`.
+
+To repeat the boundary check with authenticated GitHub CLI access:
+
+```bash
+gh workflow run e2e-lab.yml --repo teableio/teable-e2e-lab --ref main \
+  -f teable_ee_commits=ffa4023023e122fed546181968840b02fa4941e6,3c98735f5f5a63ab0d20d5f8012e514fdae58093 \
+  -f case_filter=lookup/y555-a-burst-of-new-rows-reaches-every-lookup
+```
+
+Acceptance requires `observed=present` at
+`every-appended-rows-host-converges` on the parent and `observed=absent`
+on the fix, with no setup errors or missing payloads. A timeout on the fix
+is a failure. This verifies isolated synthetic fixtures, not deployed
+customer data or repair of historical stale values.
+
 ## Why the data is shaped this way
 
-The loss needs three things at once, all from the incident: a computed
-cascade per batch heavy enough that the inline run is still bounded and
-work is dispatched (the 41-computed-field table with 18 reverse lookups
-and the duplicate link doubling the edges), batches arriving while the
-previous dispatch is in flight (back-to-back POSTs of 100), and cross-table
-hosts whose staleness is observable as missing values rather than a value
-diff (appending onto purification-free hosts). Shrinking the field families
-or spacing the batches removes the race window and the case observes
-nothing.
+Keep the wide computed cascade, duplicate links, back-to-back batches and
+previously purification-free hosts together. They exercise staged cross-table
+propagation and make missing results observable independently of queue state.
+Do not shrink the fixture or pace the append burst when maintaining this case:
+the before/after evidence above applies to the full operation.
