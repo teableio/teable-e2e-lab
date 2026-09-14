@@ -706,7 +706,7 @@ elsewhere in this file, read and dropped without a run:
   What is missing is a share-link socket client — `framework/realtime.ts`
   connects with the seed user's session cookie, and the bug only exists for a
   client that has no session and is holding a cached document id.
-- **T7145, T7147, T7148, T7180, T7181, T7158, T7139, T7152, T7209, T7251** —
+- **T7145, T7147, T7148, T7180, T7181, T7158, T7139, T7209, T7251** —
   contention, budgeting, log shape, and lock-ordering fixes. Each one's own test
   measures work done or queries issued, not an answer a person reads. T7075 in
   this file is the measured example of what happens when one of these is tried
@@ -730,6 +730,16 @@ elsewhere in this file, read and dropped without a run:
   whoever picks them up should start from it rather than from scratch.
 
   Do not re-derive any of these; read that file first.
+
+Correction on 2026-09-14: **T7152** (`3c98735f5`, teable-ee#3337) was
+incorrectly grouped with performance-only changes above. It fixes observable
+stale computed values and is covered by the existing
+`lookup/y555-a-burst-of-new-rows-reaches-every-lookup` incident regression
+(T7002). [Run 34793682836](https://github.com/teableio/teable-e2e-lab/actions/runs/34793682836)
+reproduces 300 stale hosts on parent `ffa4023023` and converges on `3c98735f5f`
+with the same hybrid fixture and checkpoint. See the case doc for the exact
+boundary and independent repeat; do not create a duplicate case or treat this
+commit as an uncovered performance-only candidate.
 
 ### T7159's computed-activity capability is not on the field list the lab gets
 

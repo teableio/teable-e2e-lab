@@ -1,15 +1,10 @@
 import { defineBugCase } from "../../framework/types";
 
-// T7002: under the production-default hybrid computed-update strategy,
-// sequential bulk INSERT batches into a circular cross-table lookup graph
-// race each other on the per-table computed advisory lock: the previous
-// batch's dispatched outbox task loses (computed:run:failed
-// lock_unavailable) and its propagation is silently dropped — every write
-// answered 201, computed_update_outbox is empty, and the host rows' lookups
-// and formulas never converge. This is the silent-data-loss face of the
-// 2026-08-27 CN production incident, on the very fixture shape that
-// triggered it, and a path the teable-ee#3207 inline bounding (98f225c53)
-// does not close: the case reproduces identically before and after that fix.
+// T7002 incident regression, fixed by T7152 (teable-ee#3337): staged INSERT
+// continuations must preserve host computation inputs and committed stage
+// boundaries. Appended rows could converge while existing hosts stayed stale.
+// The original teable-ee#3207 inline bound did not close this path; the same
+// workload reproduces on #3337's parent and converges on its fix commit.
 export default defineBugCase({
   id: "lookup/y555-a-burst-of-new-rows-reaches-every-lookup",
   title: "A burst of appended linked rows reaches every lookup watching them",
@@ -21,11 +16,9 @@ export default defineBugCase({
   computedUpdateMode: "hybrid",
   bug: {
     issue: "T7002",
-    status: "open",
-    link: "https://github.com/teableio/teable-ee/pull/3207",
-    // The #3207 fix commit: this case settles it by reproducing on it — the
-    // inline bounding it added does not cover the dispatched-task loss path.
-    sourceCommits: ["98f225c53"],
+    status: "fixed",
+    link: "https://github.com/teableio/teable-ee/pull/3337",
+    sourceCommits: ["3c98735f5"],
   },
   config: {
     baseId: "seed-base",
