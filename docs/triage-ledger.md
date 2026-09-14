@@ -826,7 +826,7 @@ row and an empty one, is green on the fix's parent `b6b577618` — the positive
 row reads 12.5, the other two read nothing, exactly as it should. Run 34560377621.
 
 The nested shape from the same fix reproduces on that same commit
-(`formula/y878-a-branch-that-was-not-taken`), so this is not the fix being
+(`formula/y1282-a-branch-that-was-not-taken`), so this is not the fix being
 absent: whatever the empty-string branch did to the fill-in inside the v2
 package's own harness, the public field-create path does not do. The shape is
 kept reachable — the `formula-branch-error-backfill` runner still takes
@@ -874,7 +874,7 @@ not readable").
 Three of the four are now written — T6944 as
 `authority/y402`-era coverage, T7025 as
 `authority/y402-archive-authorized-grouped-record`, and T7027 as
-`authority/y894-a-withheld-table-named-in-its-folder` — on the fixture that
+`authority/y1296-a-withheld-table-named-in-its-folder` — on the fixture that
 this section asked for and that now exists as `framework/authority-matrix.ts`.
 T6997 is the one still waiting.
 
