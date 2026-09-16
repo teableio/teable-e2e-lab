@@ -70,6 +70,7 @@ export type BrowserPage = {
     url: string,
     handler: (route: BrowserRoute) => Promise<void>,
   ): Promise<void>;
+  unrouteAll(options: { behavior: "wait" }): Promise<void>;
   url(): string;
   waitForResponse(
     predicate: (response: BrowserResponse) => boolean,
@@ -381,7 +382,14 @@ export const openBrowserPage = async (
   return {
     page,
     frontendUrl: state.frontendUrl,
-    close: () => browserContext.close(),
+    close: async () => {
+      try {
+        // Route handlers may still be fetching or delaying a response after the probe ends.
+        await page.unrouteAll({ behavior: "wait" });
+      } finally {
+        await browserContext.close();
+      }
+    },
   };
 };
 
