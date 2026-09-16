@@ -47,6 +47,8 @@ export const runLinkPickerTabSelectionBrowserCase = async (
   const suffix = `${config.tableNamePrefix}-${context.runId}`;
   const tableIds: string[] = [];
   let browser: Awaited<ReturnType<typeof openBrowserPage>> | undefined;
+  const pendingRoutes = new Set<Promise<void>>();
+  let closing = false;
 
   if (config.otherRowNames.length < 1) {
     throw new Error("the picker needs an unselected row as a control");
@@ -129,15 +131,27 @@ export const runLinkPickerTabSelectionBrowserCase = async (
     await browser.page.route(
       `**/api/{table/${foreign.id}/record,share/${link.id}/view/records}**`,
       async (route) => {
-        const response = await route.fetch();
-        const isSelectedQuery = route
-          .request()
-          .url()
-          .includes("filterLinkCellSelected");
-        await new Promise((resolve) =>
-          setTimeout(resolve, isSelectedQuery ? 300 : 50),
-        );
-        await route.fulfill({ response });
+        const pending = (async () => {
+          if (closing) {
+            await route.abort();
+            return;
+          }
+          const response = await route.fetch();
+          const isSelectedQuery = route
+            .request()
+            .url()
+            .includes("filterLinkCellSelected");
+          await new Promise((resolve) =>
+            setTimeout(resolve, isSelectedQuery ? 300 : 50),
+          );
+          await route.fulfill({ response });
+        })();
+        pendingRoutes.add(pending);
+        try {
+          await pending;
+        } finally {
+          pendingRoutes.delete(pending);
+        }
       },
     );
     const pageErrors: string[] = [];
@@ -365,9 +379,16 @@ export const runLinkPickerTabSelectionBrowserCase = async (
       },
     };
   } finally {
+    closing = true;
+    // Playwright 1.57 can unregister interception after the first handler finishes
+    // during unrouteAll. Drain delayed responses while interception is still active.
+    const settledRoutes = await Promise.allSettled(pendingRoutes);
     await browser?.close().catch(() => undefined);
     for (const tableId of tableIds) {
       await permanentDeleteTable(baseId, tableId).catch(() => undefined);
+    }
+    for (const result of settledRoutes) {
+      if (result.status === "rejected") throw result.reason;
     }
   }
 };
