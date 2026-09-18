@@ -35,6 +35,12 @@ public API and asserts the expected user-visible recovery:
   fallback;
 - the page raises no unhandled JavaScript errors.
 
+After the grid subscribes, stale requests mentioning the deleted table are
+aborted, except the table-detail GET used to confirm deletion. A ready-only
+list may omit a provisioning table, so that confirmation must remain able to
+return an authoritative 404; aborting it would instead simulate a network
+outage in which retaining the current page is correct.
+
 Once the recovery URL is observed, the runner closes that collaborator's
 browser session before checking the public table list. The case does not keep
 a stale record subscription alive after the user-visible recovery has already

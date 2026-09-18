@@ -135,7 +135,19 @@ export const runDeletedTableCollaboratorRecoveryCase = async (
     // The grid is fully subscribed now. Let the table-list event drive the
     // recovery while preventing already-scheduled stale snapshot reads from
     // reaching the in-process backend after the table disappears.
-    await browser.page.route(`**/*${targetTableId}*`, (route) => route.abort());
+    await browser.page.route(`**/*${targetTableId}*`, async (route) => {
+      // A ready-only list can omit a table during DDL. Let the UI confirm
+      // deletion through table metadata while still suppressing stale reads.
+      const path = new URL(route.request().url()).pathname;
+      if (
+        route.request().method() === "GET" &&
+        path === `/api/base/${baseId}/table/${targetTableId}`
+      ) {
+        await route.fulfill({ response: await route.fetch() });
+        return;
+      }
+      await route.abort();
+    });
 
     let deleteHeaders: Record<string, unknown> | undefined;
     const probe = await bugCheckpoint(
