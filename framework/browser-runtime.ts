@@ -195,6 +195,32 @@ const waitForFrontend = async (
   );
 };
 
+/**
+ * `next dev` compiles a route the first time it is requested, per route pattern rather than per
+ * URL, and a case's own settle budget (30s) is far shorter than that first compile: the document
+ * answers, the client bundle is still building, and the case reports the page as never mounted.
+ * Requesting one URL of each pattern the browser cases use pays that cost once, up front, where a
+ * slow compile shows up as run setup rather than as a bug reproducing. The ids are deliberately
+ * fake — a 4xx/5xx answer compiles the route just as well as a real one.
+ */
+const warmRoutes = async (frontendUrl: string, log: (line: string) => void) => {
+  const routes = [
+    "/space",
+    "/base/bseWarmUpNotARealBase/table/tblWarmUpNotAReal/viwWarmUpNotAReal",
+  ];
+  for (const route of routes) {
+    const started = Date.now();
+    try {
+      await fetch(`${frontendUrl}${route}`, {
+        signal: AbortSignal.timeout(180_000),
+      });
+    } catch {
+      // A failed warm-up only means the next case pays the compile itself.
+    }
+    log(`[e2e-lab] route:warm ${route} ${Date.now() - started}ms`);
+  }
+};
+
 const startRuntime = async (context: BugRunContext): Promise<RuntimeState> => {
   const root = findTeableRoot();
   const backendPort = new URL(context.appUrl).port;
@@ -240,6 +266,7 @@ const startRuntime = async (context: BugRunContext): Promise<RuntimeState> => {
 
   try {
     await waitForFrontend(frontendUrl, frontend, output);
+    await warmRoutes(frontendUrl, (line) => console.log(line));
     const requireFromApp = createRequire(
       join(root, "enterprise/app-ee/package.json"),
     );
