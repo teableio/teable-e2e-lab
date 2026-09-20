@@ -195,6 +195,42 @@ const waitForFrontend = async (
   );
 };
 
+/**
+ * `next dev` compiles a route the first time it is requested, per route pattern rather than per
+ * URL, and a case's own settle budget (30s) is far shorter than that first compile: the document
+ * answers, the client bundle is still building, and the case reports the page as never mounted.
+ * Requesting one URL of each pattern the browser cases use pays that cost once, up front, where a
+ * slow compile shows up as run setup rather than as a bug reproducing. The ids are deliberately
+ * fake — a 4xx/5xx answer compiles the route just as well as a real one.
+ *
+ * The runtime starts inside the first browser case, so this spends that case's timeout: the
+ * requests go out together and are capped well below it, and a warm-up that does not finish in
+ * time costs nothing beyond the case paying its own compile, exactly as it does today.
+ */
+const WARM_UP_TIMEOUT_MS = 90_000;
+
+const warmRoutes = async (frontendUrl: string, log: (line: string) => void) => {
+  const routes = [
+    "/space",
+    "/base/bseWarmUpNotARealBase/table/tblWarmUpNotAReal/viwWarmUpNotAReal",
+  ];
+  const started = Date.now();
+  await Promise.all(
+    routes.map(async (route) => {
+      const routeStarted = Date.now();
+      try {
+        await fetch(`${frontendUrl}${route}`, {
+          signal: AbortSignal.timeout(WARM_UP_TIMEOUT_MS),
+        });
+      } catch {
+        // A failed warm-up only means the next case pays the compile itself.
+      }
+      log(`[e2e-lab] route:warm ${route} ${Date.now() - routeStarted}ms`);
+    }),
+  );
+  log(`[e2e-lab] route:warm total ${Date.now() - started}ms`);
+};
+
 const startRuntime = async (context: BugRunContext): Promise<RuntimeState> => {
   const root = findTeableRoot();
   const backendPort = new URL(context.appUrl).port;
@@ -240,6 +276,7 @@ const startRuntime = async (context: BugRunContext): Promise<RuntimeState> => {
 
   try {
     await waitForFrontend(frontendUrl, frontend, output);
+    await warmRoutes(frontendUrl, (line) => console.log(line));
     const requireFromApp = createRequire(
       join(root, "enterprise/app-ee/package.json"),
     );
