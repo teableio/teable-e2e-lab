@@ -554,6 +554,19 @@ export const runConditionalRollupEditorBrowserCase = async (
           config.settleTimeoutMs,
         );
         const group = dialog.locator("div.rounded-lg.border-input").last();
+        // The sheet slides in over 500ms and the dialog zooms over 200ms, so a box read while that
+        // runs describes whichever frame it landed on. Comparing one element's box against another
+        // read a moment later then reports a sub-pixel overflow no user could see — T7100 failed
+        // that way by 1.8px on d79a1c3a44. Wait for the entrance, then read the boxes that must
+        // agree within one frame.
+        await browser!.page.evaluate<void>(
+          `Promise.all(
+             [...(document.querySelectorAll('[role="dialog"]'))]
+               .slice(-1)
+               .flatMap((element) => element.getAnimations({ subtree: true }))
+               .map((animation) => animation.finished),
+           ).then(() => undefined, () => undefined)`,
+        );
         const [dialogBox, groupBox] = await Promise.all([
           dialog.boundingBox(),
           group.boundingBox(),
@@ -572,15 +585,34 @@ export const runConditionalRollupEditorBrowserCase = async (
               `the nested OR rendered only ${count} condition rows`,
             );
           }
-          for (let index = 0; index < count; index += 1) {
-            const box = await controls.nth(index).boundingBox();
+          // The group and its rows are measured together: the rows sit inside the group, so a row
+          // leaving it is a real layout fault, while boxes from two frames only prove the sheet moved.
+          const geometry = await browser!.page.evaluate<{
+            group: { x: number; width: number };
+            rows: { x: number; width: number }[];
+          }>(
+            `(() => {
+               const measure = (element) => {
+                 const rect = element.getBoundingClientRect();
+                 return { x: rect.x, width: rect.width };
+               };
+               const dialogs = document.querySelectorAll('[role="dialog"]');
+               const dialog = dialogs[dialogs.length - 1];
+               const groups = dialog.querySelectorAll('div.rounded-lg.border-input');
+               const group = groups[groups.length - 1];
+               return {
+                 group: measure(group),
+                 rows: [...group.querySelectorAll('[data-filter-condition-controls]')].map(measure),
+               };
+             })()`,
+          );
+          for (const [index, row] of geometry.rows.entries()) {
             if (
-              !box ||
-              box.x < groupBox.x ||
-              box.x + box.width > groupBox.x + groupBox.width
+              row.x < geometry.group.x ||
+              row.x + row.width > geometry.group.x + geometry.group.width
             ) {
               throw new Error(
-                `condition row ${index + 1} overflows the nested group; group=${JSON.stringify(groupBox)} row=${JSON.stringify(box)}`,
+                `condition row ${index + 1} overflows the nested group; group=${JSON.stringify(geometry.group)} row=${JSON.stringify(row)}`,
               );
             }
           }
