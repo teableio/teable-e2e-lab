@@ -461,11 +461,41 @@ const openPreparedEditor = async (
   if (!stageBox) throw new Error("the grid stage has no visible bounds");
 
   const dialog = page.locator('[role="dialog"]').last();
+  const paintedHeaders = async () =>
+    page.evaluate<CanvasTextEntry[]>(`(() =>
+      (globalThis.__e2eLabCanvasText || []).filter((entry) => entry.y < 80).slice(-80)
+    )()`);
+
+  // The grid is a canvas, so a column can only be opened by clicking where its header was
+  // painted. Header text is truncated with an ellipsis when the column is narrow, hence the
+  // prefix match: "Lookup Text C..." is the "Lookup Text Count" column.
+  const headerX = (painted: CanvasTextEntry[], fieldName: string) => {
+    const label = (entry: CanvasTextEntry) =>
+      entry.text.replace(/(\u2026|\.\.\.)$/, "").trim();
+    const match = painted
+      .filter((entry) => {
+        const text = label(entry);
+        return text.length > 0 && fieldName.startsWith(text);
+      })
+      .sort((a, b) => label(b).length - label(a).length)[0];
+    return match ? match.x + 4 : undefined;
+  };
+
+  const dialogAppeared = async (timeoutMs: number) => {
+    const deadline = Date.now() + timeoutMs;
+    while (Date.now() < deadline) {
+      if ((await dialog.count()) > 0) return true;
+      await sleep(100);
+    }
+    return false;
+  };
+
   const attempted: { x: number; fieldName?: string }[] = [];
-  for (let x = 100; x < Math.min(stageBox.width - 20, 1_360); x += 150) {
+  const openAt = async (x: number) => {
     await stage.click({ position: { x, y: 18 }, clickCount: 2 });
-    await sleep(300);
-    if ((await dialog.count()) === 0) continue;
+    // A fixed sleep swallowed every other attempt: the previous sheet was still closing, so the
+    // click landed on the overlay and the next probe saw no dialog at all.
+    if (!(await dialogAppeared(5_000))) return undefined;
     const fieldName = await page.evaluate<string | undefined>(`(() => {
       const input = document.querySelector('[role="dialog"] input');
       return input instanceof HTMLInputElement ? input.value : undefined;
@@ -482,10 +512,21 @@ const openPreparedEditor = async (
         `the ${fieldName ?? "unknown"} field sheet did not close`,
       );
     }
+    return undefined;
+  };
+
+  const targetX = headerX(await paintedHeaders(), fixture.editorFieldName);
+  if (targetX !== undefined) {
+    const opened = await openAt(targetX);
+    if (opened) return opened;
   }
-  const painted = await page.evaluate<CanvasTextEntry[]>(`(() =>
-    (globalThis.__e2eLabCanvasText || []).filter((entry) => entry.y < 80).slice(-80)
-  )()`);
+
+  // Fallback: the header may not have been painted yet (or its text differs), so sweep the row.
+  for (let x = 100; x < Math.min(stageBox.width - 20, 1_360); x += 150) {
+    const opened = await openAt(x);
+    if (opened) return opened;
+  }
+  const painted = await paintedHeaders();
   throw new Error(
     `could not open the ${fixture.editorFieldName} field sheet; attempted=${JSON.stringify(attempted)} painted=${JSON.stringify(painted)} body=${JSON.stringify(await page.locator("body").textContent())}`,
   );
