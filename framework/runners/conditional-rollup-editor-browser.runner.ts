@@ -472,7 +472,8 @@ const openPreparedEditor = async (
   const headerX = (painted: CanvasTextEntry[], fieldName: string) => {
     const label = (entry: CanvasTextEntry) =>
       entry.text.replace(/(\u2026|\.\.\.)$/, "").trim();
-    const match = painted
+    const match = [...painted]
+      .reverse()
       .filter((entry) => {
         const text = label(entry);
         return text.length > 0 && fieldName.startsWith(text);
@@ -492,10 +493,20 @@ const openPreparedEditor = async (
 
   const attempted: { x: number; fieldName?: string }[] = [];
   const openAt = async (x: number) => {
-    await stage.click({ position: { x, y: 18 }, clickCount: 2 });
-    // A fixed sleep swallowed every other attempt: the previous sheet was still closing, so the
-    // click landed on the overlay and the next probe saw no dialog at all.
+    const position = { x, y: 18 };
+    // The canvas hit test reads react-use's RAF-backed mouse position, not the
+    // click event coordinates. Settle that state before clicking a new column.
+    await stage.hover({ position });
+    await page.evaluate<void>(`new Promise((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+    )`);
+    await stage.click({ position, clickCount: 2, delay: 100 });
     if (!(await dialogAppeared(5_000))) return undefined;
+    await page.evaluate<void>(`Promise.all(
+      [...document.querySelectorAll('[role="dialog"]')]
+        .flatMap((element) => element.getAnimations({ subtree: true }))
+        .map((animation) => animation.finished.catch(() => undefined))
+    ).then(() => undefined)`);
     const fieldName = await page.evaluate<string | undefined>(`(() => {
       const input = document.querySelector('[role="dialog"] input');
       return input instanceof HTMLInputElement ? input.value : undefined;
@@ -515,17 +526,19 @@ const openPreparedEditor = async (
     return undefined;
   };
 
-  const targetX = headerX(await paintedHeaders(), fixture.editorFieldName);
-  if (targetX !== undefined) {
-    const opened = await openAt(targetX);
-    if (opened) return opened;
-  }
-
-  // Fallback: the header may not have been painted yet (or its text differs), so sweep the row.
-  for (let x = 100; x < Math.min(stageBox.width - 20, 1_360); x += 150) {
-    const opened = await openAt(x);
-    if (opened) return opened;
-  }
+  // A mounted canvas is not proof that the field headers have painted. Guessing a
+  // column before the first paint opens unrelated sheets and races their transitions.
+  let targetX: number | undefined;
+  await waitUntil(
+    async () => {
+      targetX = headerX(await paintedHeaders(), fixture.editorFieldName);
+      return targetX !== undefined && targetX > 0 && targetX < stageBox.width;
+    },
+    timeoutMs,
+    `the ${fixture.editorFieldName} header did not paint`,
+  );
+  const opened = await openAt(targetX!);
+  if (opened) return opened;
   const painted = await paintedHeaders();
   throw new Error(
     `could not open the ${fixture.editorFieldName} field sheet; attempted=${JSON.stringify(attempted)} painted=${JSON.stringify(painted)} body=${JSON.stringify(await page.locator("body").textContent())}`,
