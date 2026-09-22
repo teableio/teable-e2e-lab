@@ -21,6 +21,9 @@ const MAX_ATTEMPTS = 4;
 // truncated at capture time, so a conservative per-request batch keeps every
 // request well under the API limit without a byte-accounting model.
 const WRITE_BATCH_SIZE = 50;
+// Leave headroom below common 8 KiB proxy request-line limits. Count the
+// percent-encoded path and query, including the request wrapper's /api prefix.
+const LOOKUP_REQUEST_TARGET_MAX_BYTES = 6000;
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -70,36 +73,45 @@ export const upsertRecordsByKey = async ({
   let updated = 0;
   for (let index = 0; index < records.length; index += WRITE_BATCH_SIZE) {
     const batch = records.slice(index, index + WRITE_BATCH_SIZE);
-    const params = new URLSearchParams({
-      fieldKeyType: "name",
-      take: String(batch.length),
-      // One OR across the batch keys — a single bounded read instead of a
-      // request per record.
-      filter: JSON.stringify({
-        conjunction: "or",
-        filterSet: batch.map((record) => ({
-          fieldId: keyFieldId,
-          operator: "is",
-          value: record.fields[keyFieldName],
-        })),
-      }),
-    });
-    // Repeated `projection[]` params, NOT a JSON-encoded array. Measured on
-    // 2026-08-19: `projection=["fldXXX"]` gets a 200 whose every record has
-    // `fields: {}` — the degraded read that made the first sync create
-    // duplicates instead of updating. Same silent-degradation family as
-    // filters naming a missing field.
-    params.append("projection[]", keyFieldId);
-    const found = await request({
-      method: "GET",
-      path: `/table/${tableId}/record?${params.toString()}`,
-    });
-    const existingByKey = new Map(
-      (found?.records ?? []).map((record) => [
-        record.fields[keyFieldName],
-        record.id,
-      ]),
-    );
+    const existingByKey = new Map();
+    const findExisting = async (lookupBatch) => {
+      const params = new URLSearchParams({
+        fieldKeyType: "name",
+        take: String(lookupBatch.length),
+        filter: JSON.stringify({
+          conjunction: "or",
+          filterSet: lookupBatch.map((record) => ({
+            fieldId: keyFieldId,
+            operator: "is",
+            value: record.fields[keyFieldName],
+          })),
+        }),
+      });
+      // Repeated `projection[]` params, NOT a JSON-encoded array. Measured on
+      // 2026-08-19: `projection=["fldXXX"]` gets a 200 whose every record has
+      // `fields: {}` — the degraded read that made the first sync create
+      // duplicates instead of updating. Same silent-degradation family as
+      // filters naming a missing field.
+      params.append("projection[]", keyFieldId);
+      const path = `/table/${tableId}/record?${params.toString()}`;
+      const targetBytes = Buffer.byteLength(`/api${path}`);
+      if (targetBytes > LOOKUP_REQUEST_TARGET_MAX_BYTES) {
+        if (lookupBatch.length === 1) {
+          throw new Error(
+            `Teable upsert lookup for a single key in ${tableId}/${keyFieldId} requires ${targetBytes} bytes, exceeding the ${LOOKUP_REQUEST_TARGET_MAX_BYTES}-byte request-target limit`,
+          );
+        }
+        const middle = Math.floor(lookupBatch.length / 2);
+        await findExisting(lookupBatch.slice(0, middle));
+        await findExisting(lookupBatch.slice(middle));
+        return;
+      }
+      const found = await request({ method: "GET", path });
+      for (const record of found?.records ?? []) {
+        existingByKey.set(record.fields[keyFieldName], record.id);
+      }
+    };
+    await findExisting(batch);
 
     const updates = [];
     const creates = [];

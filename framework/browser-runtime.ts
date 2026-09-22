@@ -42,7 +42,7 @@ export type BrowserRoute = {
 export type BrowserLocator = {
   count(): Promise<number>;
   click(options?: Record<string, unknown>): Promise<void>;
-  hover(): Promise<void>;
+  hover(options?: { position?: { x: number; y: number } }): Promise<void>;
   isVisible(): Promise<boolean>;
   textContent(): Promise<string | null>;
   boundingBox(): Promise<{
