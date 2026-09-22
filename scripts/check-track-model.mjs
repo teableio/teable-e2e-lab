@@ -133,7 +133,7 @@ const planEntry = {
       [keyFieldName]:
         index === 124
           ? `large-${"a".repeat(5500)}`
-          : `123-1-record/${index}-${"路径 /?&%=+".repeat(2 + (index % 7))}-${sha("a")}`,
+          : `123-1-record/${index}-${"\u8def\u5f84 /?&%=+".repeat(2 + (index % 7))}-${sha("a")}`,
       Verdict: "regression",
     },
   }));
@@ -241,7 +241,7 @@ const planEntry = {
   lookupKeys.length = 0;
   writes.length = 0;
   await assert.rejects(
-    upsert([{ fields: { [keyFieldName]: "路径".repeat(1000) } }]),
+    upsert([{ fields: { [keyFieldName]: "\u8def\u5f84".repeat(1000) } }]),
     /single key.*6000-byte request-target limit/i,
   );
   assert.deepEqual(lookupKeys, []);
