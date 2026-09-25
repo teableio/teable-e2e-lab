@@ -151,21 +151,18 @@ export const runLinkTitleRealtimeCase = async (
           await subscription.waitFor(
             (data) =>
               linkOf(data)?.id === expectedLink.id &&
-              linkOf(data)?.title === expectedLink.title &&
-              JSON.stringify(data?.fields?.[borrowedBody.id]).includes(
-                "Body 0",
-              ),
+              linkOf(data)?.title === expectedLink.title,
             {
               timeoutMs: config.settleTimeoutMs,
-              describe: "the link with its title, and the borrowed body",
+              describe: "the link with its title",
             },
           );
         } catch {
           const fields = subscription.data()?.fields ?? {};
           throw new Error(
-            `after the batch, the watched row shows the link as ${JSON.stringify(fields[link.id] ?? null)} ` +
-              `and the borrowed body as ${JSON.stringify(fields[borrowedBody.id] ?? null)}, expected the link ` +
-              `${JSON.stringify(expectedLink)} - ` +
+            `after the batch, the watched row shows the link as ${JSON.stringify(fields[link.id] ?? null)}, ` +
+              `expected ${JSON.stringify(expectedLink)} (the borrowed body beside it reads ` +
+              `${JSON.stringify(fields[borrowedBody.id] ?? null)}) - ` +
               (linkOf(subscription.data())?.id === expectedLink.id
                 ? 'the link arrived without its title, which a grid draws as "Untitled"'
                 : "the link never arrived") +
@@ -174,7 +171,13 @@ export const runLinkTitleRealtimeCase = async (
                 : ""),
           );
         }
-        return { link: linkOf(subscription.data()) };
+        // The borrowed body is recorded, not asserted: it is the column the
+        // report says was right, and when it reaches the watcher is a
+        // separate question from whether the link carries its title.
+        return {
+          link: linkOf(subscription.data()),
+          borrowedBody: subscription.data()?.fields?.[borrowedBody.id] ?? null,
+        };
       },
     );
 
@@ -184,6 +187,7 @@ export const runLinkTitleRealtimeCase = async (
         routing,
         relationship: config.relationship,
         watchedLink: probe.link,
+        watchedBorrowedBody: probe.borrowedBody,
       },
     };
   } finally {

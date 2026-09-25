@@ -28,6 +28,7 @@ export interface BugCaseConfigByRunner {
   "contains-filter-quote": ContainsFilterQuoteCaseConfig;
   "signup-token-carries-no-code": SignupTokenCarriesNoCodeCaseConfig;
   "link-title-realtime": LinkTitleRealtimeCaseConfig;
+  "conditional-lookup-return-chain": ConditionalLookupReturnChainCaseConfig;
   "date-group-statistics": DateGroupStatisticsCaseConfig;
   "formula-branch-error-backfill": FormulaBranchErrorBackfillCaseConfig;
   "wide-window-socket-load": WideWindowSocketLoadCaseConfig;
@@ -2734,4 +2735,22 @@ export interface LinkTitleRealtimeCaseConfig {
   subscribeTimeoutMs: number;
   // How long the watched row has to show the titled link after the batch.
   settleTimeoutMs: number;
+}
+
+export interface ConditionalLookupReturnChainCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Every detail row carries this key; the summary row carries it too.
+  key: string;
+  // Detail rows, seeded in batches. The report held about 2000.
+  detailCount: number;
+  seedBatchSize: number;
+  // How many detail rows the summary links - one per draw at least.
+  linkedCount: number;
+  total: number;
+  // The amounts drawn in turn, one per linked detail row.
+  draws: number[];
+  readPageSize: number;
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
 }
