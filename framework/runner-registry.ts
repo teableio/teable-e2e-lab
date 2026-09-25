@@ -158,6 +158,8 @@ import { runDateSortHiddenTimeCase } from "./runners/date-sort-hidden-time.runne
 import { runLookupNumberSortCase } from "./runners/lookup-number-sort.runner";
 import { runRollupOverLookupValuesCase } from "./runners/rollup-over-lookup-values.runner";
 import { runNewFieldInCustomizedViewCase } from "./runners/new-field-in-customized-view.runner";
+import { runFormulaCascadeBlankNumberCase } from "./runners/formula-cascade-blank-number.runner";
+import { runTrashBehindALookupOfLinkCase } from "./runners/trash-behind-a-lookup-of-link.runner";
 import { runShareViewUnreadyDataDbCase } from "./runners/share-view-unready-data-db.runner";
 import { runSharedFormCoverUrlCase } from "./runners/shared-form-cover-url.runner";
 import { runSwitchMixedBranchStorageCase } from "./runners/switch-mixed-branch-storage.runner";
@@ -340,6 +342,8 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "lookup-number-sort": runLookupNumberSortCase,
   "rollup-over-lookup-values": runRollupOverLookupValuesCase,
   "new-field-in-customized-view": runNewFieldInCustomizedViewCase,
+  "formula-cascade-blank-number": runFormulaCascadeBlankNumberCase,
+  "trash-behind-a-lookup-of-link": runTrashBehindALookupOfLinkCase,
   "share-view-unready-data-db": runShareViewUnreadyDataDbCase,
   "shared-form-cover-url": runSharedFormCoverUrlCase,
   "switch-mixed-branch-storage": runSwitchMixedBranchStorageCase,
