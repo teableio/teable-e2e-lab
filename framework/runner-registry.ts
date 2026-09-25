@@ -162,6 +162,7 @@ import { runFormulaCascadeBlankNumberCase } from "./runners/formula-cascade-blan
 import { runTrashBehindALookupOfLinkCase } from "./runners/trash-behind-a-lookup-of-link.runner";
 import { runLinkNarrowedRollupRefreshCase } from "./runners/link-narrowed-rollup-refresh.runner";
 import { runMultiRoleSearchScopeCase } from "./runners/multi-role-search-scope.runner";
+import { runContainsFilterQuoteCase } from "./runners/contains-filter-quote.runner";
 import { runShareViewUnreadyDataDbCase } from "./runners/share-view-unready-data-db.runner";
 import { runSharedFormCoverUrlCase } from "./runners/shared-form-cover-url.runner";
 import { runSwitchMixedBranchStorageCase } from "./runners/switch-mixed-branch-storage.runner";
@@ -348,6 +349,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "trash-behind-a-lookup-of-link": runTrashBehindALookupOfLinkCase,
   "link-narrowed-rollup-refresh": runLinkNarrowedRollupRefreshCase,
   "multi-role-search-scope": runMultiRoleSearchScopeCase,
+  "contains-filter-quote": runContainsFilterQuoteCase,
   "share-view-unready-data-db": runShareViewUnreadyDataDbCase,
   "shared-form-cover-url": runSharedFormCoverUrlCase,
   "switch-mixed-branch-storage": runSwitchMixedBranchStorageCase,

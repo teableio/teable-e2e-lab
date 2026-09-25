@@ -25,6 +25,7 @@ export interface BugCaseConfigByRunner {
   "trash-behind-a-lookup-of-link": TrashBehindALookupOfLinkCaseConfig;
   "link-narrowed-rollup-refresh": LinkNarrowedRollupRefreshCaseConfig;
   "multi-role-search-scope": MultiRoleSearchScopeCaseConfig;
+  "contains-filter-quote": ContainsFilterQuoteCaseConfig;
   "date-group-statistics": DateGroupStatisticsCaseConfig;
   "formula-branch-error-backfill": FormulaBranchErrorBackfillCaseConfig;
   "wide-window-socket-load": WideWindowSocketLoadCaseConfig;
@@ -2702,4 +2703,17 @@ export interface MultiRoleSearchScopeCaseConfig {
   // One row filter per role, all held by the same person. An "isNot" role's
   // column is filled with "ok" on every row, so it sees them all.
   roles: { fieldIndex: number; operator: "is" | "isNot"; value: string }[];
+}
+
+export interface ContainsFilterQuoteCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // The linked rows' titles, one host row linking each.
+  titles: string[];
+  // A value without an apostrophe that matches at least one title - the
+  // control, filtered outside the checkpoint.
+  control: string;
+  // Values holding an apostrophe, filtered in turn inside the checkpoint. The
+  // expected row count is worked out from the titles.
+  probes: string[];
 }
