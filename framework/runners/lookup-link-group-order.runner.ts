@@ -3,6 +3,7 @@ import {
   createRecords as apiCreateRecords,
   getRecords as apiGetRecords,
   updateRecord as apiUpdateRecord,
+  updateViewGroup as apiUpdateViewGroup,
   GroupPointType,
 } from "@teable/openapi";
 import {
@@ -28,6 +29,11 @@ import type { LookupLinkGroupOrderCaseConfig } from "../types";
 // Record ids are random, so the case gives the titles out after the labels
 // exist: the label with the smaller id gets the title that sorts later. An
 // order by id and an order by title then disagree on every run.
+//
+// The grouping is saved on the view, as in the report, and the page reads the
+// view with no sort of its own - the grouping is the only thing ordering the
+// rows. Two rows per label, added interleaved, so rows that are not gathered
+// under their heading cannot pass on the order they were added in.
 
 const TITLE_FIELD = "Title";
 const NAME_FIELD = "Name";
@@ -158,28 +164,40 @@ export const runLookupLinkGroupOrderCase = async (
         lookupFieldId: labelsLink.id,
       },
     });
-    // Added late-titled first, so the order rows were added agrees with the
-    // wrong answer too.
+    // Late, early, late, early.
+    const [lateSource, earlySource] = sourceIds;
     await apiCreateRecords(main.id, {
       fieldKeyType: FieldKeyType.Name,
       typecast: false,
-      records: sourceIds.map((id, index) => ({
+      records: [
+        { name: "late-1", source: lateSource },
+        { name: "early-1", source: earlySource },
+        { name: "late-2", source: lateSource },
+        { name: "early-2", source: earlySource },
+      ].map((row) => ({
         fields: {
-          [NAME_FIELD]: `main-${index}`,
-          [SOURCES_LINK_FIELD]: [{ id }],
+          [NAME_FIELD]: row.name,
+          [SOURCES_LINK_FIELD]: [{ id: row.source }],
         },
       })),
+    });
+    const nameFieldId = main.fields.find(
+      (field: { name: string }) => field.name === NAME_FIELD,
+    )?.id as string;
+    const viewId = main.views?.[0]?.id as string;
+    await apiUpdateViewGroup(main.id, viewId, {
+      group: [{ fieldId: borrowed.id, order: SortFunc.Asc }],
     });
 
     const readGrouped = async () =>
       apiGetRecords(main.id, {
         fieldKeyType: FieldKeyType.Id,
         take: 10,
-        groupBy: [{ fieldId: borrowed.id, order: SortFunc.Asc }],
+        viewId,
       });
 
     // Fixture verification, outside the checkpoint: every main row borrowed
-    // one label, and there are two headings, one per title.
+    // its label, and there are two headings, one per title.
     const first = await readGrouped();
     const routing = assertServedByV2(first.headers, {
       operation: "GET /table/{tableId}/record",
@@ -192,10 +210,10 @@ export const runLookupLinkGroupOrderCase = async (
       .sort();
     if (
       JSON.stringify(borrowedTitles) !==
-      JSON.stringify([earlyTitle, lateTitle].sort())
+      JSON.stringify([earlyTitle, earlyTitle, lateTitle, lateTitle].sort())
     ) {
       throw new Error(
-        `the main rows borrowed ${JSON.stringify(borrowedTitles)}, expected one each of ` +
+        `the main rows borrowed ${JSON.stringify(borrowedTitles)}, expected two each of ` +
           `${JSON.stringify([earlyTitle, lateTitle])} - the fixture is not in place`,
       );
     }
@@ -215,19 +233,33 @@ export const runLookupLinkGroupOrderCase = async (
       async () => {
         const grouped = await readGrouped();
         const order = headersOf(grouped).map((header) => titleOf(header.value));
-        if (JSON.stringify(order) !== JSON.stringify([earlyTitle, lateTitle])) {
+        const rows = grouped.data.records.map(
+          (record: { fields: Record<string, unknown> }) =>
+            String(record.fields[nameFieldId]),
+        );
+        const expectedRows = ["early-1", "early-2", "late-1", "late-2"];
+        if (
+          JSON.stringify(order) !== JSON.stringify([earlyTitle, lateTitle]) ||
+          JSON.stringify(rows) !== JSON.stringify(expectedRows)
+        ) {
           throw new Error(
             `grouped ascending by the borrowed link, the headings read ${JSON.stringify(order)}, ` +
-              `expected ${JSON.stringify([earlyTitle, lateTitle])} - the headings are not ordered by the ` +
+              `expected ${JSON.stringify([earlyTitle, lateTitle])}; the rows came back ${JSON.stringify(rows)}, ` +
+              `expected ${JSON.stringify(expectedRows)} - the view is not ordered by the ` +
               `titles they show (the label titled ${JSON.stringify(lateTitle)} has the smaller record id)`,
           );
         }
-        return { order };
+        return { order, rows };
       },
     );
 
     return {
-      details: { tableIds: createdTableIds, routing, headings: probe.order },
+      details: {
+        tableIds: createdTableIds,
+        routing,
+        headings: probe.order,
+        rows: probe.rows,
+      },
     };
   } finally {
     for (const tableId of createdTableIds) {
