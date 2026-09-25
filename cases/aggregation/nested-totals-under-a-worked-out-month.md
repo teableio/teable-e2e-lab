@@ -38,7 +38,11 @@ column, the month count stays outside: there it was always right.)
 
 ## Evidence
 
-Runs 36121868574 and 36122313679, while the counts were still checked outside
-the checkpoint: on `b4908f0a4d` (the fix's parent) the list showed 4 month
-headings where 2 belong and 4 second-level headings where 3 belong; absent on
-every later column.
+Run 36122707912: on `b4908f0a4d` (the fix's parent) the list split April by
+raw time - 4 month headings where 2 belong, and 4 second-level headings
+totalling `[40, 70, 100, 100]` where 3 totalling `[40, 70, 200]` belong. Every
+heading carried a total there; what the case caught on that commit is the
+split, not the blank headings the customer reported, which the fix's own
+description ties to the same keying mismatch. Absent on `e14c3f4b10` and
+`develop` (`37830698a4`). The two plain-column cases on the same runner
+(`y1281`, `y1284`) stayed green on all three columns.
