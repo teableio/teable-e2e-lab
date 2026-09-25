@@ -26,6 +26,8 @@ export interface BugCaseConfigByRunner {
   "link-narrowed-rollup-refresh": LinkNarrowedRollupRefreshCaseConfig;
   "multi-role-search-scope": MultiRoleSearchScopeCaseConfig;
   "contains-filter-quote": ContainsFilterQuoteCaseConfig;
+  "signup-token-carries-no-code": SignupTokenCarriesNoCodeCaseConfig;
+  "cursor-after-deleted-anchor": CursorAfterDeletedAnchorCaseConfig;
   "date-group-statistics": DateGroupStatisticsCaseConfig;
   "formula-branch-error-backfill": FormulaBranchErrorBackfillCaseConfig;
   "wide-window-socket-load": WideWindowSocketLoadCaseConfig;
@@ -2716,4 +2718,17 @@ export interface ContainsFilterQuoteCaseConfig {
   // Values holding an apostrophe, filtered in turn inside the checkpoint. The
   // expected row count is worked out from the titles.
   probes: string[];
+}
+
+export interface SignupTokenCarriesNoCodeCaseConfig {
+  // The address asked for is <emailPrefix>-<runId>@example.com, new each run.
+  emailPrefix: string;
+}
+
+export interface CursorAfterDeletedAnchorCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // More than two pages' worth - see the runner.
+  rowCount: number;
+  pageSize: number;
 }

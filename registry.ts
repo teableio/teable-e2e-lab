@@ -55,6 +55,8 @@ import formulaMonthNestedTotalsCase from "./cases/aggregation/nested-totals-unde
 import linkNarrowedRollupRefreshCase from "./cases/lookup/a-total-after-a-link-is-narrowed.case";
 import multiRoleSearchScopeCase from "./cases/authority/a-search-across-several-roles.case";
 import containsFilterQuoteCase from "./cases/filter/filter-a-link-for-a-name-with-an-apostrophe.case";
+import signupTokenCarriesNoCodeCase from "./cases/authority/a-signup-token-that-holds-its-code.case";
+import cursorAfterDeletedAnchorCase from "./cases/record/page-on-after-the-row-a-cursor-names-is-deleted.case";
 import lookupOfLinkContainsCase from "./cases/filter/y173-search-a-borrowed-link-column.case";
 import deleteWithoutUndoCaptureCase from "./cases/record/y567-delete-a-row-whose-undo-bookkeeping-is-missing.case";
 import singleFieldPendingStateCase from "./cases/field/y337-a-settled-column-read-on-its-own.case";
@@ -267,6 +269,8 @@ const cases = [
   linkNarrowedRollupRefreshCase,
   multiRoleSearchScopeCase,
   containsFilterQuoteCase,
+  signupTokenCarriesNoCodeCase,
+  cursorAfterDeletedAnchorCase,
   lookupOfLinkContainsCase,
   deleteWithoutUndoCaptureCase,
   singleFieldPendingStateCase,

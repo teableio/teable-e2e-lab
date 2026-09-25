@@ -163,6 +163,8 @@ import { runTrashBehindALookupOfLinkCase } from "./runners/trash-behind-a-lookup
 import { runLinkNarrowedRollupRefreshCase } from "./runners/link-narrowed-rollup-refresh.runner";
 import { runMultiRoleSearchScopeCase } from "./runners/multi-role-search-scope.runner";
 import { runContainsFilterQuoteCase } from "./runners/contains-filter-quote.runner";
+import { runSignupTokenCarriesNoCodeCase } from "./runners/signup-token-carries-no-code.runner";
+import { runCursorAfterDeletedAnchorCase } from "./runners/cursor-after-deleted-anchor.runner";
 import { runShareViewUnreadyDataDbCase } from "./runners/share-view-unready-data-db.runner";
 import { runSharedFormCoverUrlCase } from "./runners/shared-form-cover-url.runner";
 import { runSwitchMixedBranchStorageCase } from "./runners/switch-mixed-branch-storage.runner";
@@ -350,6 +352,8 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "link-narrowed-rollup-refresh": runLinkNarrowedRollupRefreshCase,
   "multi-role-search-scope": runMultiRoleSearchScopeCase,
   "contains-filter-quote": runContainsFilterQuoteCase,
+  "signup-token-carries-no-code": runSignupTokenCarriesNoCodeCase,
+  "cursor-after-deleted-anchor": runCursorAfterDeletedAnchorCase,
   "share-view-unready-data-db": runShareViewUnreadyDataDbCase,
   "shared-form-cover-url": runSharedFormCoverUrlCase,
   "switch-mixed-branch-storage": runSwitchMixedBranchStorageCase,
