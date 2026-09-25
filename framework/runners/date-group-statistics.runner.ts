@@ -1,4 +1,5 @@
 import {
+  Colors,
   DateFormattingPreset,
   FieldKeyType,
   FieldType,
@@ -11,7 +12,11 @@ import {
   getRecords as apiGetRecords,
   GroupPointType,
 } from "@teable/openapi";
-import { createTable, permanentDeleteTable } from "../../../utils/init-app";
+import {
+  createField,
+  createTable,
+  permanentDeleteTable,
+} from "../../../utils/init-app";
 import { bugCheckpoint } from "../checkpoint";
 import { assertServedByV2 } from "../engine";
 import type { BugCaseFor, BugProbeResult, BugRunContext } from "../types";
@@ -38,10 +43,17 @@ import type { DateGroupStatisticsCaseConfig } from "../types";
 // column, days that differ inside one month for a month column. Rows that
 // share their raw timestamp would group the same either way and the case would
 // be green on both sides. The runner refuses a fixture that does not straddle.
+//
+// `groupOn: "formula"` groups on a formula that copies the date instead of the
+// date itself, and `nestBySubject` adds a second level under it - the shape
+// T7561 was reported in, fixed after the plain column was. With a second
+// level every heading at both depths has to carry its total.
 
 const NAME_FIELD = "Title";
 const AMOUNT_FIELD = "Amount";
 const DATE_FIELD = "When";
+const FORMULA_FIELD = "When (copied)";
+const SUBJECT_FIELD = "Subject";
 
 // The bucket a row falls into, in the field's own timezone - which is how the
 // list groups it. Derived locally so a rerun compares byte for byte.
@@ -110,6 +122,27 @@ export const runDateGroupStatisticsCase = async (
     (left, right) => left - right,
   );
   const expectedTotal = config.rows.reduce((sum, row) => sum + row.amount, 0);
+  // With a second level: one heading per (bucket, subject) pair that has rows,
+  // and the multiset of their totals.
+  const expectedNestedSums = config.nestBySubject
+    ? [
+        ...config.rows
+          .reduce((sums, row, index) => {
+            const key = `${buckets[index]}|${row.subject ?? ""}`;
+            return sums.set(key, (sums.get(key) ?? 0) + row.amount);
+          }, new Map<string, number>())
+          .values(),
+      ].sort((left, right) => left - right)
+    : [];
+
+  const formatting = {
+    date:
+      config.unit === "month"
+        ? DateFormattingPreset.YM
+        : DateFormattingPreset.ISO,
+    time: TimeFormatting.None,
+    timeZone: config.timeZone,
+  };
 
   try {
     const table = await createTable(baseId, {
@@ -120,23 +153,31 @@ export const runDateGroupStatisticsCase = async (
         {
           name: DATE_FIELD,
           type: FieldType.Date,
-          options: {
-            formatting: {
-              date:
-                config.unit === "month"
-                  ? DateFormattingPreset.YM
-                  : DateFormattingPreset.ISO,
-              time: TimeFormatting.None,
-              timeZone: config.timeZone,
-            },
-          },
+          options: { formatting },
         },
+        ...(config.nestBySubject
+          ? [
+              {
+                name: SUBJECT_FIELD,
+                type: FieldType.SingleSelect,
+                options: {
+                  choices: config.nestBySubject.choices.map((name) => ({
+                    name,
+                    color: Colors.Blue,
+                  })),
+                },
+              },
+            ]
+          : []),
       ],
       records: config.rows.map((row) => ({
         fields: {
           [NAME_FIELD]: row.title,
           [AMOUNT_FIELD]: row.amount,
           [DATE_FIELD]: row.at,
+          ...(config.nestBySubject && row.subject
+            ? { [SUBJECT_FIELD]: row.subject }
+            : {}),
         },
       })),
     });
@@ -151,7 +192,32 @@ export const runDateGroupStatisticsCase = async (
     if (!viewId || !amountFieldId || !dateFieldId) {
       throw new Error(`Table ${tableId} is not in place`);
     }
-    const groupBy = [{ fieldId: dateFieldId, order: SortFunc.Asc }];
+    const groupFieldId =
+      config.groupOn === "formula"
+        ? (
+            await createField(tableId, {
+              name: FORMULA_FIELD,
+              type: FieldType.Formula,
+              options: {
+                expression: `{${dateFieldId}}`,
+                timeZone: config.timeZone,
+                formatting,
+              },
+            })
+          ).id
+        : dateFieldId;
+    const subjectFieldId = table.fields.find(
+      (field: { name: string }) => field.name === SUBJECT_FIELD,
+    )?.id;
+    if (config.nestBySubject && !subjectFieldId) {
+      throw new Error(`Table ${tableId} has no ${SUBJECT_FIELD} column`);
+    }
+    const groupBy = [
+      { fieldId: groupFieldId, order: SortFunc.Asc },
+      ...(config.nestBySubject && subjectFieldId
+        ? [{ fieldId: subjectFieldId, order: SortFunc.Asc }]
+        : []),
+    ];
 
     // Fixture verification, outside the checkpoint: the list really groups the
     // rows the way the column is formatted, so there are headings for the
@@ -166,14 +232,21 @@ export const runDateGroupStatisticsCase = async (
       operation: "GET /table/{tableId}/record",
       feature: "getRecords",
     });
-    const headers = (
+    const allHeaders = (
       ((grouped.data.extra as { groupPoints?: { type: number }[] })
         ?.groupPoints ?? []) as { type: number; id: string; depth?: number }[]
-    ).filter(
-      (point) =>
-        point.type === GroupPointType.Header && (point.depth ?? 0) === 0,
+    ).filter((point) => point.type === GroupPointType.Header);
+    const headers = allHeaders.filter((point) => (point.depth ?? 0) === 0);
+    const nestedHeaders = allHeaders.filter(
+      (point) => (point.depth ?? 0) === 1,
     );
-    if (headers.length !== expectedGroups) {
+    // Grouped on the date column, the headings were always right, so their
+    // count is fixture verification. Grouped on a formula copy it is not: on
+    // the pre-fix side the list itself split each month by raw time (T7561,
+    // 4 headings where 2 belong), so the count is part of what the bug breaks
+    // and is asserted inside the checkpoint, through the per-heading totals.
+    // The second-level count is always asserted there, for the same reason.
+    if (config.groupOn !== "formula" && headers.length !== expectedGroups) {
       throw new Error(
         `the grouped list shows ${headers.length} headings, expected ${expectedGroups} for a column formatted as a ` +
           `${config.unit} in ${config.timeZone} - the fixture is not grouped as declared`,
@@ -223,6 +296,29 @@ export const runDateGroupStatisticsCase = async (
               "so the grid draws a blank where each group's number belongs",
           );
         }
+        const nestedPerHeading = nestedHeaders.map((header) => ({
+          id: header.id,
+          value: aggregation?.group?.[header.id]?.value ?? null,
+        }));
+        const nestedMissing = nestedPerHeading.filter(
+          (entry) => entry.value == null,
+        );
+        if (nestedMissing.length > 0) {
+          throw new Error(
+            `${nestedMissing.length} of ${nestedHeaders.length} second-level headings came back with no total ` +
+              `(${JSON.stringify(nestedMissing.map((entry) => entry.id))}), while the foot of the table says ${total} ` +
+              `and the ${config.unit} headings read ${JSON.stringify(perHeading.map((entry) => entry.value))}`,
+          );
+        }
+        const nestedSeen = nestedPerHeading
+          .map((entry) => Number(entry.value))
+          .sort((left, right) => left - right);
+        if (JSON.stringify(nestedSeen) !== JSON.stringify(expectedNestedSums)) {
+          throw new Error(
+            `the ${nestedHeaders.length} second-level headings total ${JSON.stringify(nestedSeen)}, expected ` +
+              `${expectedNestedSums.length} headings totalling ${JSON.stringify(expectedNestedSums)}`,
+          );
+        }
         const seen = perHeading
           .map((entry) => Number(entry.value))
           .sort((left, right) => left - right);
@@ -232,7 +328,7 @@ export const runDateGroupStatisticsCase = async (
               `the rows under one ${config.unit} heading are not all counted into it`,
           );
         }
-        return { routing, total, perHeading };
+        return { routing, total, perHeading, nestedPerHeading };
       },
     );
 
@@ -246,6 +342,8 @@ export const runDateGroupStatisticsCase = async (
         expectedGroupSums,
         total: probe.total,
         perHeading: probe.perHeading,
+        nestedPerHeading: probe.nestedPerHeading,
+        groupOn: config.groupOn ?? "column",
         routing: probe.routing,
       },
     };

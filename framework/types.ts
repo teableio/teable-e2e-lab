@@ -21,6 +21,8 @@ export interface BugCaseConfigByRunner {
   "lookup-number-sort": LookupNumberSortCaseConfig;
   "rollup-over-lookup-values": RollupOverLookupValuesCaseConfig;
   "new-field-in-customized-view": NewFieldInCustomizedViewCaseConfig;
+  "formula-cascade-blank-number": FormulaCascadeBlankNumberCaseConfig;
+  "trash-behind-a-lookup-of-link": TrashBehindALookupOfLinkCaseConfig;
   "date-group-statistics": DateGroupStatisticsCaseConfig;
   "formula-branch-error-backfill": FormulaBranchErrorBackfillCaseConfig;
   "wide-window-socket-load": WideWindowSocketLoadCaseConfig;
@@ -2240,7 +2242,15 @@ export interface DateGroupStatisticsCaseConfig {
   // The rows. At least one bucket must hold two rows written at different
   // instants - see the runner, which refuses a fixture that does not straddle
   // the unit.
-  rows: { title: string; amount: number; at: string }[];
+  rows: { title: string; amount: number; at: string; subject?: string }[];
+  // What the list is grouped on. "column" (the default) groups on the date
+  // column itself; "formula" groups on a formula that copies it, formatted the
+  // same way. The two were fixed separately (T7060, then T7561).
+  groupOn?: "column" | "formula";
+  // A second grouping level under the date, on a single-select column holding
+  // each row's `subject` (rows without one sit in its empty group). Absent
+  // means one level.
+  nestBySubject?: { choices: string[] };
 }
 
 // A summary column over a linked people column, changed from listing values to
@@ -2643,4 +2653,28 @@ export interface NewFieldInCustomizedViewCaseConfig {
   baseId: "seed-base";
   tableNamePrefix: string;
   newFieldName: string;
+}
+
+export interface FormulaCascadeBlankNumberCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // The two numbers the first formula rounds its difference from.
+  previous: number;
+  current: number;
+  // What the second formula answers when the first is blank.
+  sentinel: number;
+  // The interval values written in turn, starting from 0. A positive value
+  // turns the first formula into a number, 0 turns it back into a blank.
+  intervals: number[];
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
+}
+
+export interface TrashBehindALookupOfLinkCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  farRowTitle: string;
+  // How long to wait for the trashed table to show up in the trash.
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
 }
