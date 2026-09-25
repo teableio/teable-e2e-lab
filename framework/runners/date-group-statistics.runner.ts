@@ -240,11 +240,13 @@ export const runDateGroupStatisticsCase = async (
     const nestedHeaders = allHeaders.filter(
       (point) => (point.depth ?? 0) === 1,
     );
-    // The second-level heading count is NOT checked here: on the pre-fix
-    // side the list itself split one month's subject group by raw time, so
-    // the count is part of what the bug breaks. It is asserted inside the
-    // checkpoint, through the per-heading totals.
-    if (headers.length !== expectedGroups) {
+    // Grouped on the date column, the headings were always right, so their
+    // count is fixture verification. Grouped on a formula copy it is not: on
+    // the pre-fix side the list itself split each month by raw time (T7561,
+    // 4 headings where 2 belong), so the count is part of what the bug breaks
+    // and is asserted inside the checkpoint, through the per-heading totals.
+    // The second-level count is always asserted there, for the same reason.
+    if (config.groupOn !== "formula" && headers.length !== expectedGroups) {
       throw new Error(
         `the grouped list shows ${headers.length} headings, expected ${expectedGroups} for a column formatted as a ` +
           `${config.unit} in ${config.timeZone} - the fixture is not grouped as declared`,

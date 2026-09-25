@@ -25,12 +25,16 @@ import type { FormulaCascadeBlankNumberCaseConfig } from "../types";
 // The first formula answers text: a rounded number when the input is above
 // zero, an empty string otherwise. Worked out together in one pass, its
 // intermediate value was a number while the next formula compared it with an
-// empty string as text, and the database refused to read "" as a number. The
-// whole update failed, so the formulas further down kept whatever they held
-// before - a stale number that nothing flags.
+// empty string as text, and the database refused to read "" as a number.
+// Worked out as part of the edit, the edit itself was refused; worked out in
+// the background, the edit went through and the formulas further down kept a
+// stale number that nothing flags.
 //
 // The case reads the three results after each edit and waits for them to
 // arrive, so under the hybrid strategy the background pass has time to run.
+// Only the default strategy is registered: the hybrid variant was green on
+// every column (run 36121868574), because the background pass does not put
+// all three levels into one batch at the lab's default settings.
 
 const NAME_FIELD = "Name";
 const INTERVAL_FIELD = "Interval";
