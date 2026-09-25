@@ -77,6 +77,8 @@ export interface RestrictedPerson {
   spaceId: string;
   baseId: string;
   roleId: string;
+  // The ids of any further roles the person holds, in the order given.
+  additionalRoleIds: string[];
   // Tears down the space, the base and everything in them.
   cleanUp: () => Promise<void>;
 }
@@ -110,6 +112,10 @@ export const withRestrictedPerson = async (options: {
   // things a role may grant, and bugs have lived exactly in the gap between the
   // two.
   join?: "editor" | "creator" | "throughTheRoleAlone";
+  // Further roles the same person also holds, each its own rule set. Called
+  // after `buildTables`, so the rules can name the tables it built. Holding
+  // several roles merges their row scopes, and bugs have lived in the merge.
+  additionalRoles?: () => RestrictedTableRule[][];
 }): Promise<RestrictedPerson> => {
   if (isInsideCheckpoint()) {
     throw new Error(
@@ -162,40 +168,52 @@ export const withRestrictedPerson = async (options: {
     });
 
     const tables = await options.buildTables(baseId);
-    if (tables.length === 0) {
-      throw new Error(
-        "a role that withholds nothing restricts nobody - build at least one table rule",
-      );
-    }
 
-    const role = await axios.post(
-      urlBuilder(ADD_AUTHORITY_MATRIX_ROLE, { baseId }),
-      {
-        name: `${suffix}-role`,
-        enabled: true,
-        tables: tables.map((rule) => ({
+    const addRole = async (name: string, rules: RestrictedTableRule[]) => {
+      if (rules.length === 0) {
+        throw new Error(
+          "a role that withholds nothing restricts nobody - build at least one table rule",
+        );
+      }
+      const role = await axios.post(
+        urlBuilder(ADD_AUTHORITY_MATRIX_ROLE, { baseId }),
+        {
+          name,
           enabled: true,
-          tableId: rule.tableId,
-          disabledActions: rule.disabledActions ?? [],
-          ...(rule.recordFilter ? { recordFilter: rule.recordFilter } : {}),
-          fieldRecordPermission: rule.fieldRecordPermission ?? [],
-        })),
-      },
-    );
-    const roleId = (role.data as { id?: string })?.id;
-    if (!roleId) {
-      throw new Error(
-        `adding the role returned no role: ${JSON.stringify(role.data)}`,
+          tables: rules.map((rule) => ({
+            enabled: true,
+            tableId: rule.tableId,
+            disabledActions: rule.disabledActions ?? [],
+            ...(rule.recordFilter ? { recordFilter: rule.recordFilter } : {}),
+            fieldRecordPermission: rule.fieldRecordPermission ?? [],
+          })),
+        },
+      );
+      const id = (role.data as { id?: string })?.id;
+      if (!id) {
+        throw new Error(
+          `adding the role returned no role: ${JSON.stringify(role.data)}`,
+        );
+      }
+      await axios.patch(
+        urlBuilder(UPDATE_AUTHORITY_MATRIX_ROLE_USER, {
+          baseId,
+          authorityMatrixRoleId: id,
+        }),
+        { userIds: [userId] },
+      );
+      return id;
+    };
+
+    const roleId = await addRole(`${suffix}-role`, tables);
+    const additionalRoleIds: string[] = [];
+    for (const [index, rules] of (
+      options.additionalRoles?.() ?? []
+    ).entries()) {
+      additionalRoleIds.push(
+        await addRole(`${suffix}-role-${index + 2}`, rules),
       );
     }
-
-    await axios.patch(
-      urlBuilder(UPDATE_AUTHORITY_MATRIX_ROLE_USER, {
-        baseId,
-        authorityMatrixRoleId: roleId,
-      }),
-      { userIds: [userId] },
-    );
 
     return {
       axios: personAxios,
@@ -205,6 +223,7 @@ export const withRestrictedPerson = async (options: {
       spaceId,
       baseId,
       roleId,
+      additionalRoleIds,
       cleanUp,
     };
   } catch (error) {
