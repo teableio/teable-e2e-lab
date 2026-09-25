@@ -160,6 +160,8 @@ import { runRollupOverLookupValuesCase } from "./runners/rollup-over-lookup-valu
 import { runNewFieldInCustomizedViewCase } from "./runners/new-field-in-customized-view.runner";
 import { runFormulaCascadeBlankNumberCase } from "./runners/formula-cascade-blank-number.runner";
 import { runTrashBehindALookupOfLinkCase } from "./runners/trash-behind-a-lookup-of-link.runner";
+import { runLinkNarrowedRollupRefreshCase } from "./runners/link-narrowed-rollup-refresh.runner";
+import { runMultiRoleSearchScopeCase } from "./runners/multi-role-search-scope.runner";
 import { runShareViewUnreadyDataDbCase } from "./runners/share-view-unready-data-db.runner";
 import { runSharedFormCoverUrlCase } from "./runners/shared-form-cover-url.runner";
 import { runSwitchMixedBranchStorageCase } from "./runners/switch-mixed-branch-storage.runner";
@@ -344,6 +346,8 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "new-field-in-customized-view": runNewFieldInCustomizedViewCase,
   "formula-cascade-blank-number": runFormulaCascadeBlankNumberCase,
   "trash-behind-a-lookup-of-link": runTrashBehindALookupOfLinkCase,
+  "link-narrowed-rollup-refresh": runLinkNarrowedRollupRefreshCase,
+  "multi-role-search-scope": runMultiRoleSearchScopeCase,
   "share-view-unready-data-db": runShareViewUnreadyDataDbCase,
   "shared-form-cover-url": runSharedFormCoverUrlCase,
   "switch-mixed-branch-storage": runSwitchMixedBranchStorageCase,

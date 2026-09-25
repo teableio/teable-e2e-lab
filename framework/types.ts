@@ -23,6 +23,8 @@ export interface BugCaseConfigByRunner {
   "new-field-in-customized-view": NewFieldInCustomizedViewCaseConfig;
   "formula-cascade-blank-number": FormulaCascadeBlankNumberCaseConfig;
   "trash-behind-a-lookup-of-link": TrashBehindALookupOfLinkCaseConfig;
+  "link-narrowed-rollup-refresh": LinkNarrowedRollupRefreshCaseConfig;
+  "multi-role-search-scope": MultiRoleSearchScopeCaseConfig;
   "date-group-statistics": DateGroupStatisticsCaseConfig;
   "formula-branch-error-backfill": FormulaBranchErrorBackfillCaseConfig;
   "wide-window-socket-load": WideWindowSocketLoadCaseConfig;
@@ -2677,4 +2679,27 @@ export interface TrashBehindALookupOfLinkCaseConfig {
   // How long to wait for the trashed table to show up in the trash.
   settleTimeoutMs: number;
   pollIntervalMs: number;
+}
+
+export interface LinkNarrowedRollupRefreshCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // The order that is linked to both customers and then keeps only the first,
+  // and the order that stays with the second customer throughout. Different,
+  // so a total that kept the dropped order cannot pass for the right one.
+  movedAmount: number;
+  stayingAmount: number;
+}
+
+export interface MultiRoleSearchScopeCaseConfig {
+  tableNamePrefix: string;
+  // Text columns F1..F<fieldCount>. The keyword goes in F5, and F2 holds
+  // b<row>, so a role on F2 can pick out one row.
+  fieldCount: number;
+  keyword: string;
+  // Rows holding the keyword. One more row is added that does not.
+  matchingRows: number;
+  // One row filter per role, all held by the same person. An "isNot" role's
+  // column is filled with "ok" on every row, so it sees them all.
+  roles: { fieldIndex: number; operator: "is" | "isNot"; value: string }[];
 }

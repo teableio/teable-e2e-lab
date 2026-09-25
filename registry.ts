@@ -52,6 +52,8 @@ import newFieldInCustomizedViewCase from "./cases/view/a-new-column-stays-off-a-
 import trashBehindALookupOfLinkCase from "./cases/table/trash-a-table-behind-a-borrowed-link.case";
 import formulaCascadeBlankNumberCase from "./cases/formula/a-blank-that-becomes-a-number-and-back.case";
 import formulaMonthNestedTotalsCase from "./cases/aggregation/nested-totals-under-a-worked-out-month.case";
+import linkNarrowedRollupRefreshCase from "./cases/lookup/a-total-after-a-link-is-narrowed.case";
+import multiRoleSearchScopeCase from "./cases/authority/a-search-across-several-roles.case";
 import lookupOfLinkContainsCase from "./cases/filter/y173-search-a-borrowed-link-column.case";
 import deleteWithoutUndoCaptureCase from "./cases/record/y567-delete-a-row-whose-undo-bookkeeping-is-missing.case";
 import singleFieldPendingStateCase from "./cases/field/y337-a-settled-column-read-on-its-own.case";
@@ -261,6 +263,8 @@ const cases = [
   trashBehindALookupOfLinkCase,
   formulaCascadeBlankNumberCase,
   formulaMonthNestedTotalsCase,
+  linkNarrowedRollupRefreshCase,
+  multiRoleSearchScopeCase,
   lookupOfLinkContainsCase,
   deleteWithoutUndoCaptureCase,
   singleFieldPendingStateCase,
