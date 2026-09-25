@@ -240,15 +240,10 @@ export const runDateGroupStatisticsCase = async (
     const nestedHeaders = allHeaders.filter(
       (point) => (point.depth ?? 0) === 1,
     );
-    if (
-      config.nestBySubject &&
-      nestedHeaders.length !== expectedNestedSums.length
-    ) {
-      throw new Error(
-        `the grouped list shows ${nestedHeaders.length} second-level headings, expected ${expectedNestedSums.length} - ` +
-          "the fixture is not grouped as declared",
-      );
-    }
+    // The second-level heading count is NOT checked here: on the pre-fix
+    // side the list itself split one month's subject group by raw time, so
+    // the count is part of what the bug breaks. It is asserted inside the
+    // checkpoint, through the per-heading totals.
     if (headers.length !== expectedGroups) {
       throw new Error(
         `the grouped list shows ${headers.length} headings, expected ${expectedGroups} for a column formatted as a ` +
@@ -318,7 +313,8 @@ export const runDateGroupStatisticsCase = async (
           .sort((left, right) => left - right);
         if (JSON.stringify(nestedSeen) !== JSON.stringify(expectedNestedSums)) {
           throw new Error(
-            `the second-level headings total ${JSON.stringify(nestedSeen)}, expected ${JSON.stringify(expectedNestedSums)}`,
+            `the ${nestedHeaders.length} second-level headings total ${JSON.stringify(nestedSeen)}, expected ` +
+              `${expectedNestedSums.length} headings totalling ${JSON.stringify(expectedNestedSums)}`,
           );
         }
         const seen = perHeading
