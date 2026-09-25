@@ -197,7 +197,7 @@ export const runLookupLinkGroupOrderCase = async (
       });
 
     // Fixture verification, outside the checkpoint: every main row borrowed
-    // its label, and there are two headings, one per title.
+    // its label.
     const first = await readGrouped();
     const routing = assertServedByV2(first.headers, {
       operation: "GET /table/{tableId}/record",
@@ -222,11 +222,9 @@ export const runLookupLinkGroupOrderCase = async (
         ((response.data.extra as { groupPoints?: HeaderPoint[] })
           ?.groupPoints ?? []) as HeaderPoint[]
       ).filter((point) => point.type === GroupPointType.Header);
-    if (headersOf(first).length !== 2) {
-      throw new Error(
-        `grouping by the borrowed link gave ${headersOf(first).length} headings, expected 2`,
-      );
-    }
+    // The heading count is not checked here: rows out of their blocks would
+    // repeat headings, so the count is part of what the bug can break. It is
+    // asserted inside the checkpoint through the heading order.
 
     const probe = await bugCheckpoint(
       "groups-on-a-borrowed-link-follow-their-titles",
