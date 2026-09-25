@@ -154,6 +154,10 @@ import { runNestedUserArrayJoinCreateCase } from "./runners/nested-user-array-jo
 import { runOrFilteredRollupScopeCase } from "./runners/or-filtered-rollup-scope.runner";
 import { runSameNamedFkBaseDuplicateCase } from "./runners/same-named-fk-base-duplicate.runner";
 import { runSelectRollupUniqueAndCountCase } from "./runners/select-rollup-unique-and-count.runner";
+import { runDateSortHiddenTimeCase } from "./runners/date-sort-hidden-time.runner";
+import { runLookupNumberSortCase } from "./runners/lookup-number-sort.runner";
+import { runRollupOverLookupValuesCase } from "./runners/rollup-over-lookup-values.runner";
+import { runNewFieldInCustomizedViewCase } from "./runners/new-field-in-customized-view.runner";
 import { runShareViewUnreadyDataDbCase } from "./runners/share-view-unready-data-db.runner";
 import { runSharedFormCoverUrlCase } from "./runners/shared-form-cover-url.runner";
 import { runSwitchMixedBranchStorageCase } from "./runners/switch-mixed-branch-storage.runner";
@@ -332,6 +336,10 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "or-filtered-rollup-scope": runOrFilteredRollupScopeCase,
   "same-named-fk-base-duplicate": runSameNamedFkBaseDuplicateCase,
   "select-rollup-unique-and-count": runSelectRollupUniqueAndCountCase,
+  "date-sort-hidden-time": runDateSortHiddenTimeCase,
+  "lookup-number-sort": runLookupNumberSortCase,
+  "rollup-over-lookup-values": runRollupOverLookupValuesCase,
+  "new-field-in-customized-view": runNewFieldInCustomizedViewCase,
   "share-view-unready-data-db": runShareViewUnreadyDataDbCase,
   "shared-form-cover-url": runSharedFormCoverUrlCase,
   "switch-mixed-branch-storage": runSwitchMixedBranchStorageCase,

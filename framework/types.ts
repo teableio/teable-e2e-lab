@@ -17,6 +17,10 @@ export interface BugCaseConfigByRunner {
   "or-filtered-rollup-scope": OrFilteredRollupScopeCaseConfig;
   "same-named-fk-base-duplicate": SameNamedFkBaseDuplicateCaseConfig;
   "select-rollup-unique-and-count": SelectRollupUniqueAndCountCaseConfig;
+  "date-sort-hidden-time": DateSortHiddenTimeCaseConfig;
+  "lookup-number-sort": LookupNumberSortCaseConfig;
+  "rollup-over-lookup-values": RollupOverLookupValuesCaseConfig;
+  "new-field-in-customized-view": NewFieldInCustomizedViewCaseConfig;
   "date-group-statistics": DateGroupStatisticsCaseConfig;
   "formula-branch-error-backfill": FormulaBranchErrorBackfillCaseConfig;
   "wide-window-socket-load": WideWindowSocketLoadCaseConfig;
@@ -2606,4 +2610,37 @@ export interface UndoCursorAfterAFailedUndoCaseConfig {
   // differ, or there is nothing for undo to put back.
   originalCode: string;
   changedCode: string;
+}
+
+export interface DateSortHiddenTimeCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // The time zone the column is formatted in. The rows sharing a day must
+  // share it in this zone.
+  timeZone: string;
+  // Added in this order, which must not be time order - see the runner.
+  rows: { name: string; at: string }[];
+}
+
+export interface LookupNumberSortCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // One source row per amount, one host row linking each. They must sort
+  // differently as numbers and as text - the runner refuses otherwise.
+  amounts: number[];
+}
+
+export interface RollupOverLookupValuesCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // One source row and one middle row per item, all summarised by one top row
+  // in this order. Two at least, with different amounts.
+  items: { label: string; amount: number }[];
+  topRowName: string;
+}
+
+export interface NewFieldInCustomizedViewCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  newFieldName: string;
 }

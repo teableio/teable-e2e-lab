@@ -45,6 +45,10 @@ import weekdayStartDayCase from "./cases/formula/y563-a-day-number-when-weeks-st
 import fromnowUnitCase from "./cases/formula/y556-how-long-ago-in-days.case";
 import formulaOverSystemColumnsCase from "./cases/formula/y564-columns-worked-out-from-a-new-row.case";
 import trackedModifiedSortCase from "./cases/view/y568-sort-by-a-narrowed-last-changed-column.case";
+import dateSortHiddenTimeCase from "./cases/view/sort-a-date-that-hides-the-hour.case";
+import lookupNumberSortCase from "./cases/lookup/sort-by-a-borrowed-number.case";
+import rollupOverLookupValuesCase from "./cases/lookup/summarise-a-borrowed-column.case";
+import newFieldInCustomizedViewCase from "./cases/view/a-new-column-stays-off-a-trimmed-form.case";
 import lookupOfLinkContainsCase from "./cases/filter/y173-search-a-borrowed-link-column.case";
 import deleteWithoutUndoCaptureCase from "./cases/record/y567-delete-a-row-whose-undo-bookkeeping-is-missing.case";
 import singleFieldPendingStateCase from "./cases/field/y337-a-settled-column-read-on-its-own.case";
@@ -247,6 +251,10 @@ const cases = [
   fromnowUnitCase,
   formulaOverSystemColumnsCase,
   trackedModifiedSortCase,
+  dateSortHiddenTimeCase,
+  lookupNumberSortCase,
+  rollupOverLookupValuesCase,
+  newFieldInCustomizedViewCase,
   lookupOfLinkContainsCase,
   deleteWithoutUndoCaptureCase,
   singleFieldPendingStateCase,
