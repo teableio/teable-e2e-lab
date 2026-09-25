@@ -25,11 +25,12 @@ link, as in the report. The case runs under the hybrid strategy: the lab's
 default deterministic one sends a full snapshot that hides the missing
 titles. The batch update's routing headers prove v2 served it.
 
-The borrowed column is recorded, not asserted. On the fix's parent it reached
-the watcher; on the fix and on `develop` it had not reached the watcher by the
-time the titled link did (runs 36125870798 and 36126294212, each within a
-15 s wait). Whether that is slow or missing is a separate question from this
-bug and was not investigated here.
+The borrowed column is recorded, not asserted. On the fix and on `develop` it
+reaches the watcher a moment after the titled link, not with it, so a read
+taken the instant the link arrives shows it empty. Probed in run 36139130882:
+it arrived within 0.5 s of the link (the first poll), the API held the right
+value on the watched row and on the last of the 153 rows, a fresh subscriber
+saw it at once, and the socket reported no errors. It is not missing.
 
 ## Evidence
 
