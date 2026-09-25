@@ -28,6 +28,7 @@ export interface BugCaseConfigByRunner {
   "contains-filter-quote": ContainsFilterQuoteCaseConfig;
   "signup-token-carries-no-code": SignupTokenCarriesNoCodeCaseConfig;
   "cursor-after-deleted-anchor": CursorAfterDeletedAnchorCaseConfig;
+  "link-title-realtime": LinkTitleRealtimeCaseConfig;
   "date-group-statistics": DateGroupStatisticsCaseConfig;
   "formula-branch-error-backfill": FormulaBranchErrorBackfillCaseConfig;
   "wide-window-socket-load": WideWindowSocketLoadCaseConfig;
@@ -2731,4 +2732,15 @@ export interface CursorAfterDeletedAnchorCaseConfig {
   // More than two pages' worth - see the runner.
   rowCount: number;
   pageSize: number;
+}
+
+export interface LinkTitleRealtimeCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Posts and engagement rows, one each per index, linked in one batch.
+  rowCount: number;
+  relationship: "manyOne" | "manyMany";
+  subscribeTimeoutMs: number;
+  // How long the watched row has to show the titled link after the batch.
+  settleTimeoutMs: number;
 }
