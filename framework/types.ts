@@ -25,6 +25,7 @@ export interface BugCaseConfigByRunner {
   "trash-behind-a-lookup-of-link": TrashBehindALookupOfLinkCaseConfig;
   "link-narrowed-rollup-refresh": LinkNarrowedRollupRefreshCaseConfig;
   "multi-role-search-scope": MultiRoleSearchScopeCaseConfig;
+  "lookup-link-group-order": LookupLinkGroupOrderCaseConfig;
   "date-group-statistics": DateGroupStatisticsCaseConfig;
   "formula-branch-error-backfill": FormulaBranchErrorBackfillCaseConfig;
   "wide-window-socket-load": WideWindowSocketLoadCaseConfig;
@@ -2702,4 +2703,12 @@ export interface MultiRoleSearchScopeCaseConfig {
   // One row filter per role, all held by the same person. An "isNot" role's
   // column is filled with "ok" on every row, so it sees them all.
   roles: { fieldIndex: number; operator: "is" | "isNot"; value: string }[];
+}
+
+export interface LookupLinkGroupOrderCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Two different titles. The one that sorts later goes to the label with the
+  // smaller record id - see the runner.
+  titles: string[];
 }
