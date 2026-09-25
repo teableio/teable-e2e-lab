@@ -27,7 +27,6 @@ export interface BugCaseConfigByRunner {
   "multi-role-search-scope": MultiRoleSearchScopeCaseConfig;
   "contains-filter-quote": ContainsFilterQuoteCaseConfig;
   "signup-token-carries-no-code": SignupTokenCarriesNoCodeCaseConfig;
-  "cursor-after-deleted-anchor": CursorAfterDeletedAnchorCaseConfig;
   "link-title-realtime": LinkTitleRealtimeCaseConfig;
   "date-group-statistics": DateGroupStatisticsCaseConfig;
   "formula-branch-error-backfill": FormulaBranchErrorBackfillCaseConfig;
@@ -2724,14 +2723,6 @@ export interface ContainsFilterQuoteCaseConfig {
 export interface SignupTokenCarriesNoCodeCaseConfig {
   // The address asked for is <emailPrefix>-<runId>@example.com, new each run.
   emailPrefix: string;
-}
-
-export interface CursorAfterDeletedAnchorCaseConfig {
-  baseId: "seed-base";
-  tableNamePrefix: string;
-  // More than two pages' worth - see the runner.
-  rowCount: number;
-  pageSize: number;
 }
 
 export interface LinkTitleRealtimeCaseConfig {

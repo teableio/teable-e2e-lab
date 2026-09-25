@@ -819,6 +819,23 @@ run — each for a reason visible in the fix itself:
   reproduce the damage on both sides: the fix stops the state being created, it
   does not change what a leftover pending does.
 
+### T7311's deleted cursor anchor, green on the default view order
+
+`cb1d86bff` replaced a list cursor that found its place by looking the
+previous page's last row up again, so deleting that row emptied the next page.
+Tried once, on runner `cursor-after-deleted-anchor` (unmerged branch
+`attempt/t7311-cursor-deleted-anchor`): 12 rows, `GET /table/{id}/record`
+with the default view and `take: 4`, delete row 4, then the next page with the
+first page's `nextCursor`. It returned rows 5-8 on the parent `c7b760ecf5`, on
+`ea3d6264aa` and on `develop` (run 36125707623).
+
+The likely reason: a view that has never been reordered pages by row number,
+and a row-number cursor never looks the deleted row up. The looked-up-row seek
+belongs to an order with more than one key. The next step is to record what
+`nextCursor` looks like on the parent (a bare number or an opaque token), then
+give the view a row order of its own - move a row - or sort by a field, and
+repeat. Not taken until that probe says which order takes the seek.
+
 ### T7536's grouping half, green in two shapes
 
 `5970fbe7f` fixed two symptoms. The sort half is covered
