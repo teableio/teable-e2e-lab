@@ -26,6 +26,9 @@ export interface BugCaseConfigByRunner {
   "link-narrowed-rollup-refresh": LinkNarrowedRollupRefreshCaseConfig;
   "multi-role-search-scope": MultiRoleSearchScopeCaseConfig;
   "contains-filter-quote": ContainsFilterQuoteCaseConfig;
+  "signup-token-carries-no-code": SignupTokenCarriesNoCodeCaseConfig;
+  "link-title-realtime": LinkTitleRealtimeCaseConfig;
+  "conditional-lookup-return-chain": ConditionalLookupReturnChainCaseConfig;
   "date-group-statistics": DateGroupStatisticsCaseConfig;
   "formula-branch-error-backfill": FormulaBranchErrorBackfillCaseConfig;
   "wide-window-socket-load": WideWindowSocketLoadCaseConfig;
@@ -2716,4 +2719,38 @@ export interface ContainsFilterQuoteCaseConfig {
   // Values holding an apostrophe, filtered in turn inside the checkpoint. The
   // expected row count is worked out from the titles.
   probes: string[];
+}
+
+export interface SignupTokenCarriesNoCodeCaseConfig {
+  // The address asked for is <emailPrefix>-<runId>@example.com, new each run.
+  emailPrefix: string;
+}
+
+export interface LinkTitleRealtimeCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Posts and engagement rows, one each per index, linked in one batch.
+  rowCount: number;
+  relationship: "manyOne" | "manyMany";
+  subscribeTimeoutMs: number;
+  // How long the watched row has to show the titled link after the batch.
+  settleTimeoutMs: number;
+}
+
+export interface ConditionalLookupReturnChainCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Every detail row carries this key; the summary row carries it too.
+  key: string;
+  // Detail rows, seeded in batches. The report held about 2000.
+  detailCount: number;
+  seedBatchSize: number;
+  // How many detail rows the summary links - one per draw at least.
+  linkedCount: number;
+  total: number;
+  // The amounts drawn in turn, one per linked detail row.
+  draws: number[];
+  readPageSize: number;
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
 }
