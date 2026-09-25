@@ -819,6 +819,30 @@ run — each for a reason visible in the fix itself:
   reproduce the damage on both sides: the fix stops the state being created, it
   does not change what a leftover pending does.
 
+### T7536's grouping half, green in two shapes
+
+`5970fbe7f` fixed two symptoms. The sort half is covered
+(`lookup/sort-by-a-borrowed-number`). The grouping half - grouped by a link
+borrowed through another link, "kids" came before "0kids HQ" - was tried and
+not taken, on runner `lookup-link-group-order`, kept on the unmerged branch
+`attempt/t7536-borrowed-link-grouping`:
+
+1. Grouping per request (`groupBy` on `GET /table/{id}/record`), two main rows,
+   the label with the smaller record id given the later title: headings came
+   back `["0Alpha", "Beta"]` on the parent `5d9c3547b3`, the fix and
+   `develop`. Run 36123921521.
+2. Grouping saved on the view, as the report and the fix's own test do, four
+   rows added interleaved: rows came back in title blocks on all three
+   columns. Run 36124410082. (That run's headings read empty on every column -
+   a view read does not return group points through this client - so only the
+   row order was observed; that is the case's gap, not the product's.)
+
+Not tried: the fix's test also carries two labels sharing one title and a
+blank row, and asserts the per-group counts and the descending order. The next
+step is to read the group points the grid actually requests for a saved view
+(the lab reads them per request only), then try the shared-title shape, where
+"group identity" - the other half of the fix's title - is what differs.
+
 ### T7122's simpler shape: a column that is a number or nothing
 
 `IF({amount}<=0,"",{amount})`, added to a table holding a zero row, a positive
