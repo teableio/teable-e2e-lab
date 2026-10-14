@@ -127,6 +127,15 @@ not keep. That is a question for whoever owns the behavior, not something this
 lab should encode as a requirement on its own, so the case is not shipped. It
 is one commit away if the answer is that duplicates should be silent.
 
+**The answer came back the other way (T7798, Q2-15).** A copy is an ordinary
+create and must notify the copied assignee, and
+[teable-ee#3929](https://github.com/teableio/teable-ee/pull/3929) narrowed the
+whitelist accordingly. `user-field/y573-record-duplicate-does-not-notify-assignee`
+— shipped under T6905 asserting that silence, on the bulk-action runner rather
+than this one — now asserts the delivery. The silence variant described above
+stays dropped: it was the only shape some commits could not tell apart, and a
+copy that notifies is what the requirement asks for.
+
 ## This variant
 
 Delete the assigned row, then undo. The undo replays the create, and a replay

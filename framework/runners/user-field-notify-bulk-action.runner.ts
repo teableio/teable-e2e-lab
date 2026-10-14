@@ -40,9 +40,9 @@ import type { BugCaseFor, BugProbeResult, BugRunContext } from "../types";
 import type { UserFieldNotifyBulkActionCaseConfig } from "../types";
 
 // A second person assigned in a user field -> move that assignment without
-// making it again (a CSV import into an existing table, duplicating the whole
-// table, or copying one row) -> checkpoint: nothing lands in that person's
-// notification list.
+// making it again -> checkpoint: either nothing lands in that person's
+// notification list or, on the one-row copy, the copy's own notification
+// does. Which direction is asserted follows from `action`.
 //
 // A user-field notification means "someone just put you on this". v1 only
 // ever sent it for that. v2 sent it for any record whose user cell arrived
@@ -51,25 +51,32 @@ import type { UserFieldNotifyBulkActionCaseConfig } from "../types";
 // re-delivers every assignment in it. A table of a few hundred rows is a few
 // hundred notifications and the matching pile of email, for an assignment the
 // person already had and nobody just made. The fix reads the create's source
-// and stays silent for these paths (T6662).
+// and stays silent for these paths (T6662). An import and a table duplicate
+// only ever move a whole table's worth of assignments around, so they stay
+// silent.
+//
+// Copying one row is the opposite case, and the decision was reversed after
+// it shipped once. T6905 silenced it on the bulk paths' reasoning applied to a
+// single row; Q2-15 then settled that a copy is an ordinary create, so the
+// person it names in the user field is told, exactly as if someone had typed
+// their name in (T7798). teable-ee#3929 carries that change, and this case
+// asserts the delivery rather than the silence.
 //
 // Observation is the assignee's own notification list, through the public
 // endpoint the bell icon calls, on a real second session. Reading the table
 // behind it would prove the row exists; it would not prove the person is
 // looking at it.
 //
-// Silence is the assertion, so it has to be silence rather than slowness.
-// Every run first assigns the same person on a throwaway CONTROL table and
-// waits for that notification to arrive, which establishes two things: the
-// notification path is alive on this commit at all, and how long it takes
-// here. If the quiet budget is not comfortably longer than the control took,
-// the case refuses to run rather than report a green it has not earned.
+// Neither assertion is worth much without the pipeline being known to work,
+// so every run first assigns the same person on a throwaway CONTROL table and
+// waits for that notification to arrive. That establishes the notification
+// path is alive on this commit at all, and how long it takes here. If the
+// observation budget is not comfortably longer than the control took, the case
+// refuses to run rather than report a result it has not earned - on the copy
+// that is what keeps a broken pipeline from reading as the bug.
 //
 // The variants share everything but the operation itself, so they share a
-// runner. Which one runs is `action`. Copying a single row is the smallest of
-// them and arrived last (T6905): the earlier fix covered the bulk paths and
-// left the one-row copy sending, which is the version a person meets by
-// hand rather than through an import.
+// runner. Which one runs is `action`.
 
 const TITLE_FIELD = "Title";
 const USER_FIELD = "Assignee";
@@ -134,14 +141,19 @@ export const runUserFieldNotifyBulkActionCase = async (
       }
     }
 
-    const listNotifications = async (tableId: string) => {
+    // Notifications the assignee has not been shown yet whose url names the
+    // marker given - the table under test, or one specific record. The url the
+    // bell icon follows carries both ids; the copy's notification is found by
+    // its record id rather than by the table, because the assignment's own
+    // notification was banked before it.
+    const listNotifications = async (urlContains: string) => {
       const response = await assigneeAxios.get<INotificationVo>(
         NOTIFICATION_LIST,
         { params: { notifyStates: NotificationStatesEnum.Unread } },
       );
       return (response.data.notifications ?? []).filter(
         (notification: INotification) =>
-          notification.url.includes(tableId) &&
+          notification.url.includes(urlContains) &&
           !alreadyDelivered.has(notification.id),
       );
     };
@@ -216,14 +228,14 @@ export const runUserFieldNotifyBulkActionCase = async (
     if (controlLatencyMs < 0) {
       throw new Error(
         `assigning ${assignee.email} on a plain record create produced no notification within ${config.notifyTimeoutMs}ms - ` +
-          "user-field notifications are not working here at all, so this case cannot tell silence from a broken pipeline",
+          "user-field notifications are not working here at all, so nothing this case observes afterwards would mean anything",
       );
     }
-    const requiredQuietMs = controlLatencyMs * CONTROL_LATENCY_HEADROOM;
-    if (config.quietTimeoutMs < requiredQuietMs) {
+    const requiredObservationMs = controlLatencyMs * CONTROL_LATENCY_HEADROOM;
+    if (config.observationTimeoutMs < requiredObservationMs) {
       throw new Error(
-        `a real notification took ${controlLatencyMs}ms here, and the quiet budget is only ${config.quietTimeoutMs}ms - ` +
-          `it needs at least ${requiredQuietMs}ms of headroom, or "nothing arrived" would just mean "not yet"`,
+        `a real notification took ${controlLatencyMs}ms here, and the observation budget is only ${config.observationTimeoutMs}ms - ` +
+          `it needs at least ${requiredObservationMs}ms of headroom, or nothing arriving would just mean "not yet"`,
       );
     }
 
@@ -231,6 +243,9 @@ export const runUserFieldNotifyBulkActionCase = async (
     const subject = await createAssigneeTable(`${suffix}-subject`);
     let observedTableId = subject.tableId;
     let observedUserFieldId = subject.userFieldId;
+    // The row the one-row copy produced. Its id is what makes the copy's
+    // notification findable after the assignment's has been banked.
+    let copiedRecordId = "";
     let actionRouting;
 
     if (config.action === "import") {
@@ -293,8 +308,9 @@ export const runUserFieldNotifyBulkActionCase = async (
       });
     } else if (config.action === "recordDuplicate") {
       // The row is assigned first, then copied. Copying one row is the
-      // smallest version of the same move: the copy carries a user cell that
-      // was already populated, and nobody is being assigned anything new.
+      // smallest version of the same move - the copy carries a user cell that
+      // was already populated - but Q2-15 makes it a notifying one: a copy is
+      // an ordinary create, so the person it names has to be told.
       await assignOnCreate(subject, config.actionRowTitle);
       const sourceRows = await apiGetRecords(subject.tableId, {
         fieldKeyType: FieldKeyType.Id,
@@ -310,7 +326,7 @@ export const runUserFieldNotifyBulkActionCase = async (
       }
       // The assignment just made is a real one and does notify. It lands on
       // this same table, so it is waited for and banked before the copy -
-      // otherwise the copy would be blamed for it. Waiting also proves the
+      // otherwise it would be counted as the copy's. Waiting also proves the
       // notification path reaches this table, not only the control one.
       const assignedDeadline = Date.now() + config.notifyTimeoutMs;
       for (;;) {
@@ -324,7 +340,7 @@ export const runUserFieldNotifyBulkActionCase = async (
         if (Date.now() >= assignedDeadline) {
           throw new Error(
             `assigning ${assignee.email} on ${subject.tableId} produced no notification within ${config.notifyTimeoutMs}ms - ` +
-              "the case could not tell the copy's silence from a table nothing reaches",
+              "the case could not tell the copy's notification from a table nothing reaches",
           );
         }
         await sleep(config.pollIntervalMs);
@@ -332,13 +348,15 @@ export const runUserFieldNotifyBulkActionCase = async (
 
       // Assignments to the same person are folded together for a short while,
       // so a copy made immediately after the assignment would have its
-      // notification merged into the one just banked and disappear without
-      // ever having been suppressed. Waiting out that window is what makes the
-      // silence afterwards mean something. Copying immediately is green on
-      // both columns, run 32855242590.
+      // notification merged into the one just banked and never appear as its
+      // own. Waiting out that window is what makes the notification afterwards
+      // the copy's. Copying immediately is green on both columns under the old
+      // silence assertion - measured, run 32855242590 - because the copy's
+      // notification had folded into the assignment's; under a delivery
+      // assertion it would be red on both, for that same merge.
       if (config.coalescingWindowMs === undefined) {
         throw new Error(
-          "the one-row copy needs a coalescingWindowMs: without waiting out the folding window, silence proves nothing",
+          "the one-row copy needs a coalescingWindowMs: without waiting out the folding window, the copy's notification merges into the assignment's and is never seen on its own",
         );
       }
       await sleep(config.coalescingWindowMs);
@@ -356,6 +374,7 @@ export const runUserFieldNotifyBulkActionCase = async (
           `duplicating ${sourceRow.id} returned no row: ${JSON.stringify(duplicated.data)}`,
         );
       }
+      copiedRecordId = duplicated.data.id;
     } else {
       // A two-way oneMany link hosts its foreign key on the other table, which
       // the duplicate's physical row-copy plan cannot map. Without it the copy
@@ -438,22 +457,51 @@ export const runUserFieldNotifyBulkActionCase = async (
 
     // The bulk action's own notifications, if any, are scheduled after its
     // response, so the clock starts here.
-    const quietStartedAt = Date.now();
+    const observedStartedAt = Date.now();
     const probe = await bugCheckpoint(
-      "bulk-assignment-move-notifies-nobody",
+      config.action === "recordDuplicate"
+        ? "record-duplicate-notifies-assignee"
+        : "bulk-assignment-move-notifies-nobody",
       async () => {
+        // A copy is an ordinary create, so the assignee has to be told about
+        // the row it produced (Q2-15, T7798). The copy's notification names
+        // the copied record in its url, which is what is waited for here - the
+        // assignment's own notification was banked before the copy.
+        if (config.action === "recordDuplicate") {
+          for (;;) {
+            const seen = await listNotifications(copiedRecordId);
+            if (seen.length > 0) {
+              return {
+                deliveredMs: Date.now() - observedStartedAt,
+                notifications: seen.length,
+              };
+            }
+            if (Date.now() - observedStartedAt >= config.observationTimeoutMs) {
+              throw new Error(
+                `${config.action} told ${assignee.email} nothing about the copy ${copiedRecordId} within ${config.observationTimeoutMs}ms - ` +
+                  `the copy names them in "${USER_FIELD}" and an ordinary create notifies, so this one left them without a way to know`,
+              );
+            }
+            await sleep(config.pollIntervalMs);
+          }
+        }
+
+        // Every other action only moves an assignment around, so the
+        // checkpoint is the silence that follows: the first notification to
+        // land on the observed table is the bug, and the message carries how
+        // long after the request it showed up.
         let seen: INotification[] = [];
         for (;;) {
           seen = await listNotifications(observedTableId);
           if (seen.length > 0) {
             throw new Error(
-              `${config.action} sent ${assignee.email} ${seen.length} notification(s) ${Date.now() - quietStartedAt}ms after the request: ` +
+              `${config.action} sent ${assignee.email} ${seen.length} notification(s) ${Date.now() - observedStartedAt}ms after the request: ` +
                 `${JSON.stringify(seen.map((notification) => notification.message))} - ` +
                 "nobody assigned them anything, the assignment was only copied",
             );
           }
-          if (Date.now() - quietStartedAt >= config.quietTimeoutMs) {
-            return { quietForMs: Date.now() - quietStartedAt };
+          if (Date.now() - observedStartedAt >= config.observationTimeoutMs) {
+            return { quietForMs: Date.now() - observedStartedAt };
           }
           await sleep(config.pollIntervalMs);
         }
@@ -471,7 +519,7 @@ export const runUserFieldNotifyBulkActionCase = async (
         actionRowTitle: config.actionRowTitle,
         assignedRecordId: assignedRow.id,
         actionRouting,
-        quietForMs: probe.quietForMs,
+        ...probe,
       },
     };
   } finally {
