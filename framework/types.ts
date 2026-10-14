@@ -827,17 +827,20 @@ export interface MixedFieldSearchViewFilterCaseConfig {
   otherDateRowTitle: string;
 }
 
-// A second person assigned in a user field -> move that assignment in bulk ->
-// checkpoint: their notification list stays empty for the whole quiet budget.
-// The budget is the assertion, and it is only trusted because the same run
-// first measured how long a real notification takes on this commit.
+// A second person assigned in a user field -> move that assignment without
+// making it again -> checkpoint: either the assignee's notification list stays
+// empty for the whole observation budget (the bulk paths, T6662) or it
+// receives the copy's own notification inside it (the one-row copy, T7798).
+// Which direction is asserted follows from `action`, and the budget is only
+// trusted because the same run first measured how long a real notification
+// takes on this commit.
 export interface UserFieldNotifyBulkActionCaseConfig {
   baseId: "seed-base";
   tableNamePrefix: string;
-  // Which bulk path moves the assignment. Both re-deliver a user cell that
-  // was already populated; they differ only in how the runner produces it,
-  // which is why they share a runner rather than duplicating the control
-  // measurement and the quiet loop.
+  // Which path moves the assignment. All three re-deliver a user cell that was
+  // already populated; they differ only in how the runner produces it and in
+  // what has to be observed afterwards, which is why they share a runner
+  // rather than duplicating the control measurement and the observation loop.
   action: "import" | "tableDuplicate" | "recordDuplicate";
   // Only the one-row copy reads this: how long to wait after the assignment
   // before copying, so the copy's notification cannot be folded into the
@@ -852,9 +855,12 @@ export interface UserFieldNotifyBulkActionCaseConfig {
   // How long the control notification may take before the case gives up and
   // calls the pipeline broken.
   notifyTimeoutMs: number;
-  // How long silence has to hold. Refused at runtime if it is not at least
-  // three times the control latency actually observed.
-  quietTimeoutMs: number;
+  // How long the checkpoint observes. Silence has to hold for the whole budget
+  // on the bulk paths; the copy's notification has to arrive inside it on the
+  // one-row copy. Refused at runtime if it is not at least three times the
+  // control latency actually observed, so a slow pipeline cannot be read as
+  // either a silent or a notifying one.
+  observationTimeoutMs: number;
   // How long the moved row may take to become readable with the user in it.
   // Import lands asynchronously, so this is not the same clock as the others.
   rowVisibleTimeoutMs: number;
@@ -863,11 +869,12 @@ export interface UserFieldNotifyBulkActionCaseConfig {
 
 // An assignment the person was already told about -> put it back through a
 // path that only replays it -> checkpoint: they hear nothing the second time.
-// Same control-then-quiet skeleton as UserFieldNotifyBulkActionCaseConfig, but
-// the control is the first assignment on the table under test rather than a
-// separate table, because the record has to be assigned before it can be
-// replayed. The unread list is marked read in between, which is what makes
-// "no unread notification" mean "nothing new".
+// Same control-then-observation skeleton as
+// UserFieldNotifyBulkActionCaseConfig, but the control is the first
+// assignment on the table under test rather than a separate table, because the
+// record has to be assigned before it can be replayed. The unread list is
+// marked read in between, which is what makes "no unread notification" mean
+// "nothing new".
 export interface UserFieldNotifyReplayCaseConfig {
   baseId: "seed-base";
   tableNamePrefix: string;
