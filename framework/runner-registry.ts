@@ -1,3 +1,16 @@
+import { runDuplicateTableSystemFieldsCase } from "./runners/duplicate-table-system-fields.runner";
+import { runCreatedTimeConversionCase } from "./runners/created-time-conversion.runner";
+import { runDeletedLinkErrorChainCase } from "./runners/deleted-link-error-chain.runner";
+import { runConditionalRollupUndoCase } from "./runners/conditional-rollup-undo.runner";
+import { runComputedTypeChangeResetCase } from "./runners/computed-type-change-reset.runner";
+import { runFormulaPatchExpressionCase } from "./runners/formula-patch-expression.runner";
+import { runConditionalRollupCreateOptionsCase } from "./runners/conditional-rollup-create-options.runner";
+import { runWorkdayDiffMatrixCase } from "./runners/workday-diff-matrix.runner";
+import { runAuditFieldTrackingCase } from "./runners/audit-field-tracking.runner";
+import { runButtonCountWritesCase } from "./runners/button-count-writes.runner";
+import { runButtonClickCapCase } from "./runners/button-click-cap.runner";
+import { runLookupInheritedDisplayCase } from "./runners/lookup-inherited-display.runner";
+import { runLinkPasteAutocreateCase } from "./runners/link-paste-autocreate.runner";
 import { runAuditUserNameResolvesCase } from "./runners/audit-user-name-resolves.runner";
 import { runComputedValueLandsCase } from "./runners/computed-value-lands.runner";
 import { runDeleteUndoRestoresCase } from "./runners/delete-undo-restores.runner";
@@ -360,6 +373,19 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "shared-form-cover-url": runSharedFormCoverUrlCase,
   "switch-mixed-branch-storage": runSwitchMixedBranchStorageCase,
   "undo-cursor-after-a-failed-undo": runUndoCursorAfterAFailedUndoCase,
+  "duplicate-table-system-fields": runDuplicateTableSystemFieldsCase,
+  "created-time-conversion": runCreatedTimeConversionCase,
+  "deleted-link-error-chain": runDeletedLinkErrorChainCase,
+  "conditional-rollup-undo": runConditionalRollupUndoCase,
+  "computed-type-change-reset": runComputedTypeChangeResetCase,
+  "formula-patch-expression": runFormulaPatchExpressionCase,
+  "conditional-rollup-create-options": runConditionalRollupCreateOptionsCase,
+  "workday-diff-matrix": runWorkdayDiffMatrixCase,
+  "audit-field-tracking": runAuditFieldTrackingCase,
+  "button-count-writes": runButtonCountWritesCase,
+  "button-click-cap": runButtonClickCapCase,
+  "lookup-inherited-display": runLookupInheritedDisplayCase,
+  "link-paste-autocreate": runLinkPasteAutocreateCase,
 };
 
 export const executeRegisteredRunner = (
