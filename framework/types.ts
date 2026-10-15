@@ -179,6 +179,19 @@ export interface BugCaseConfigByRunner {
   "rollup-link-identity-matrix": RollupLinkIdentityMatrixCaseConfig;
   "conditional-rollup-editor-browser": ConditionalRollupEditorBrowserCaseConfig;
   "link-picker-tab-selection-browser": LinkPickerTabSelectionBrowserCaseConfig;
+  "duplicate-table-system-fields": DuplicateTableSystemFieldsCaseConfig;
+  "created-time-conversion": CreatedTimeConversionCaseConfig;
+  "deleted-link-error-chain": DeletedLinkErrorChainCaseConfig;
+  "conditional-rollup-undo": ConditionalRollupUndoCaseConfig;
+  "computed-type-change-reset": ComputedTypeChangeResetCaseConfig;
+  "formula-patch-expression": FormulaPatchExpressionCaseConfig;
+  "conditional-rollup-create-options": ConditionalRollupCreateOptionsCaseConfig;
+  "workday-diff-matrix": WorkdayDiffMatrixCaseConfig;
+  "audit-field-tracking": AuditFieldTrackingCaseConfig;
+  "button-count-writes": ButtonCountWritesCaseConfig;
+  "button-click-cap": ButtonClickCapCaseConfig;
+  "lookup-inherited-display": LookupInheritedDisplayCaseConfig;
+  "link-paste-autocreate": LinkPasteAutocreateCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -2760,4 +2773,145 @@ export interface ConditionalLookupReturnChainCaseConfig {
   readPageSize: number;
   settleTimeoutMs: number;
   pollIntervalMs: number;
+}
+
+// A table with system-filled columns and a gap in its row numbers, duplicated
+// with its rows. The deleted row has to sit in the middle.
+export interface DuplicateTableSystemFieldsCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  rows: string[];
+  deletedRow: string;
+  // How long the source rows exist before the copy, so "created at copy
+  // time" and "created at source time" are different instants.
+  ageSourceMs: number;
+}
+
+// A created-time column converted to each target type, one table per target.
+export interface CreatedTimeConversionCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  rowTitle: string;
+  targets: ("singleLineText" | "date")[];
+  // Far from UTC, so a conversion that ignores the column's zone reads a
+  // different hour.
+  timeZone: string;
+  writtenDate: string;
+}
+
+// Orders linked to products with a lookup, a rollup and a formula over the
+// rollup; the link is deleted.
+export interface DeletedLinkErrorChainCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  products: { name: string; price: number }[];
+  linkedProducts: string[];
+  orderTitle: string;
+}
+
+// A lookup and a conditional rollup over one source column, which is deleted
+// and the delete undone. The first amount is the one the host row links to.
+export interface ConditionalRollupUndoCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  amounts: number[];
+  hostTitle: string;
+  settleAttempts: number;
+  settleIntervalMs: number;
+}
+
+// A numeric column rolled up with number display options, then converted to
+// a date.
+export interface ComputedTypeChangeResetCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  values: number[];
+  orderTitle: string;
+}
+
+// A numeric formula whose expression is patched to one producing text.
+export interface FormulaPatchExpressionCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  rowTitle: string;
+  amount: number;
+  prefix: string;
+  timeZone: string;
+}
+
+// A conditional rollup created through the API with the given request
+// options; the expected value is worked out from `amounts` and `threshold`.
+export interface ConditionalRollupCreateOptionsCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  hostTitle: string;
+  fieldName: string;
+  amounts: number[];
+  threshold: number;
+  request: {
+    expression?: string;
+    sortOrder?: "asc" | "desc";
+    limit?: number;
+  };
+  expect: {
+    expression: string;
+    aggregation: "count" | "sum";
+    absentOptions: string[];
+  };
+}
+
+// Date pairs (YYYY-MM-DD) for a WORKDAY_DIFF formula; expected counts are
+// worked out by the runner.
+export interface WorkdayDiffMatrixCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  pairs: [string, string][];
+  timeZone: string;
+}
+
+export interface AuditFieldTrackingCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  scenario:
+    | "created-without-a-list"
+    | "watched-column-deleted"
+    | "patched-back-to-everything";
+  rowTitle: string;
+  // Between creating the row and the edit that has to register, so a frozen
+  // value and an updated one are different instants.
+  editDelayMs: number;
+}
+
+export interface ButtonCountWritesCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  scenario: "api-write" | "duplicate-record";
+  rowTitle: string;
+  count: number;
+}
+
+export interface ButtonClickCapCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  scenario: "non-positive-cap" | "cap-turned-off";
+  startingCap: number;
+  rejectedCaps: number[];
+}
+
+// A currency number column with a ring display, looked up through a single
+// and a multiple link.
+export interface LookupInheritedDisplayCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  currencySymbol: string;
+  precision: number;
+}
+
+export interface LinkPasteAutocreateCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  scenario: "non-primary-title" | "computed-primary";
+  targetNames: string[];
+  pastedName: string;
+  expectedCode: string;
 }

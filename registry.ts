@@ -194,11 +194,49 @@ import legacyColumnNoPositionCase from "./cases/view/a-column-the-view-does-not-
 import groupOnAnUnreadableColumnCase from "./cases/view/a-grid-grouped-by-a-column-you-cannot-read.case";
 import legacyColumnVisibilityMetadataCase from "./cases/view/a-view-that-says-both-things-about-a-column.case";
 import type { BugCase } from "./framework/types";
+import tableY2839Case from "./cases/table/y2839-a-duplicated-table-keeps-its-rows.case";
+import fieldY2854Case from "./cases/field/y2854-a-converted-created-time-keeps-its-dates.case";
+import fieldY2897Case from "./cases/field/y2897-a-formula-past-a-deleted-link-turns-red.case";
+import undoY2917Case from "./cases/undo/y2917-undo-brings-back-a-conditional-total.case";
+import fieldY2932Case from "./cases/field/y2932-a-total-follows-its-source-to-a-date.case";
+import fieldY2940Case from "./cases/field/y2940-patch-a-formula-expression.case";
+import lookupY2934Case from "./cases/lookup/y2934-a-conditional-total-with-no-function-counts.case";
+import lookupY2935Case from "./cases/lookup/y2935-a-conditional-sum-drops-sort-and-limit.case";
+import formulaY2401Case from "./cases/formula/y2401-working-days-count-both-ends.case";
+import auditY2855Case from "./cases/audit-fields/y2855-a-new-audit-column-watches-everything.case";
+import auditY2857Case from "./cases/audit-fields/y2857-deleting-the-watched-column.case";
+import auditY2865Case from "./cases/audit-fields/y2865-patch-back-to-watching-everything.case";
+import recordY2961Case from "./cases/record/y2961-write-a-click-count-through-the-api.case";
+import recordY2803Case from "./cases/record/y2803-a-duplicated-row-starts-unpressed.case";
+import fieldY2805Case from "./cases/field/y2805-a-click-cap-is-a-positive-whole-number.case";
+import fieldY2804Case from "./cases/field/y2804-turning-off-the-click-cap.case";
+import lookupY2905Case from "./cases/lookup/y2905-a-multiple-lookup-drops-the-ring.case";
+import selectionY2876Case from "./cases/selection/y2876-paste-into-a-link-to-numbered-rows.case";
+import selectionY2900Case from "./cases/selection/y2900-paste-into-a-link-showing-another-column.case";
 
 // Every runnable case, registered explicitly. scripts/case-catalog.mjs parses
 // this file statically (imports + the array below), so the planner and the
 // checks can enumerate cases without resolving @teable/* packages.
 const cases = [
+  tableY2839Case,
+  fieldY2854Case,
+  fieldY2897Case,
+  undoY2917Case,
+  fieldY2932Case,
+  fieldY2940Case,
+  lookupY2934Case,
+  lookupY2935Case,
+  formulaY2401Case,
+  auditY2855Case,
+  auditY2857Case,
+  auditY2865Case,
+  recordY2961Case,
+  recordY2803Case,
+  fieldY2805Case,
+  fieldY2804Case,
+  lookupY2905Case,
+  selectionY2876Case,
+  selectionY2900Case,
   userModeValuesCase,
   userModeFiltersCase,
   lookupY483ConditionalRollupEditorWrapsLookupConditionsCase,
