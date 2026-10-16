@@ -213,11 +213,33 @@ import fieldY2804Case from "./cases/field/y2804-turning-off-the-click-cap.case";
 import lookupY2905Case from "./cases/lookup/y2905-a-multiple-lookup-drops-the-ring.case";
 import selectionY2876Case from "./cases/selection/y2876-paste-into-a-link-to-numbered-rows.case";
 import selectionY2900Case from "./cases/selection/y2900-paste-into-a-link-showing-another-column.case";
+import fieldY2697Case from "./cases/field/y2697-zero-converted-to-a-checkbox-is-checked.case";
+import fieldY2699Case from "./cases/field/y2699-a-tick-converted-to-a-rating-is-one-star.case";
+import fieldY2713Case from "./cases/field/y2713-a-multi-select-converted-to-text-quotes-commas.case";
+import fieldY2751Case from "./cases/field/y2751-a-date-converted-to-text-uses-its-own-zone.case";
+import fieldY2752Case from "./cases/field/y2752-text-converted-to-a-date-lands-on-local-midnight.case";
+import recordY2747Case from "./cases/record/y2747-a-day-first-date-is-read-day-first.case";
+import recordY2731Case from "./cases/record/y2731-a-typecast-option-keeps-its-quoted-comma.case";
+import lookupY2615Case from "./cases/lookup/y2615-rollups-of-an-empty-link.case";
+import formulaY2547Case from "./cases/formula/y2547-a-formula-over-a-button-is-empty.case";
+import fieldY2561Case from "./cases/field/y2561-a-select-default-follows-its-options.case";
+import fieldY2870Case from "./cases/field/y2870-a-creator-converted-to-text-keeps-commas-quoted.case";
 
 // Every runnable case, registered explicitly. scripts/case-catalog.mjs parses
 // this file statically (imports + the array below), so the planner and the
 // checks can enumerate cases without resolving @teable/* packages.
 const cases = [
+  fieldY2697Case,
+  fieldY2699Case,
+  fieldY2713Case,
+  fieldY2751Case,
+  fieldY2752Case,
+  recordY2747Case,
+  recordY2731Case,
+  lookupY2615Case,
+  formulaY2547Case,
+  fieldY2561Case,
+  fieldY2870Case,
   tableY2839Case,
   fieldY2854Case,
   fieldY2897Case,
