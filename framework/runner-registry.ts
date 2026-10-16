@@ -1,3 +1,9 @@
+import { runSelectChoiceIdWriteCase } from "./runners/select-choice-id-write.runner";
+import { runEditorSelectAutocreateCase } from "./runners/editor-select-autocreate.runner";
+import { runUserFieldNotifyDefaultCase } from "./runners/user-field-notify-default.runner";
+import { runViewerButtonClickCase } from "./runners/viewer-button-click.runner";
+import { runUnsupportedPrimaryCreateCase } from "./runners/unsupported-primary-create.runner";
+import { runComputedDefaultNamesCase } from "./runners/computed-default-names.runner";
 import { runFieldConversionValuesCase } from "./runners/field-conversion-values.runner";
 import { runTypecastWriteValuesCase } from "./runners/typecast-write-values.runner";
 import { runEmptyLinkRollupsCase } from "./runners/empty-link-rollups.runner";
@@ -398,6 +404,12 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "button-formula-reference": runButtonFormulaReferenceCase,
   "select-default-follows-options": runSelectDefaultFollowsOptionsCase,
   "created-by-to-text": runCreatedByToTextCase,
+  "select-choice-id-write": runSelectChoiceIdWriteCase,
+  "editor-select-autocreate": runEditorSelectAutocreateCase,
+  "user-field-notify-default": runUserFieldNotifyDefaultCase,
+  "viewer-button-click": runViewerButtonClickCase,
+  "unsupported-primary-create": runUnsupportedPrimaryCreateCase,
+  "computed-default-names": runComputedDefaultNamesCase,
 };
 
 export const executeRegisteredRunner = (
