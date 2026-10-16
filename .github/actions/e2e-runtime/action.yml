@@ -44,7 +44,7 @@ runs:
       if: inputs.operation == 'bootstrap'
       uses: actions/setup-node@v5
       with:
-        node-version: 22.18.0
+        node-version: 24.19.0
 
     # setup-node's own `cache: pnpm` keys the store on the lockfile alone, so
     # this job restored a 749MB store built by whoever installed the whole
