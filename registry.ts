@@ -224,11 +224,27 @@ import lookupY2615Case from "./cases/lookup/y2615-rollups-of-an-empty-link.case"
 import formulaY2547Case from "./cases/formula/y2547-a-formula-over-a-button-is-empty.case";
 import fieldY2561Case from "./cases/field/y2561-a-select-default-follows-its-options.case";
 import fieldY2870Case from "./cases/field/y2870-a-creator-converted-to-text-keeps-commas-quoted.case";
+import recordY2748Case from "./cases/record/y2748-a-day-first-date-without-typecast.case";
+import recordY2727Case from "./cases/record/y2727-an-option-id-is-only-text.case";
+import recordY2729Case from "./cases/record/y2729-an-editor-cannot-add-an-option-through-typecast.case";
+import selectionY2730Case from "./cases/selection/y2730-an-editor-cannot-add-an-option-by-pasting.case";
+import userFieldY2766Case from "./cases/user-field/y2766-an-api-member-column-stays-quiet.case";
+import authorityY2800Case from "./cases/authority/y2800-a-viewer-can-press-a-button.case";
+import tableY2814Case from "./cases/table/y2814-a-table-cannot-start-with-a-checkbox.case";
+import fieldY2903Case from "./cases/field/y2903-unnamed-computed-columns-keep-their-names.case";
 
 // Every runnable case, registered explicitly. scripts/case-catalog.mjs parses
 // this file statically (imports + the array below), so the planner and the
 // checks can enumerate cases without resolving @teable/* packages.
 const cases = [
+  recordY2748Case,
+  recordY2727Case,
+  recordY2729Case,
+  selectionY2730Case,
+  userFieldY2766Case,
+  authorityY2800Case,
+  tableY2814Case,
+  fieldY2903Case,
   fieldY2697Case,
   fieldY2699Case,
   fieldY2713Case,

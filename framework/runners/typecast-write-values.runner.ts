@@ -27,6 +27,8 @@ import { describeResponse, dropTables, isSuccess, rawRequest } from "./raw-api";
 // March lands in April; and a multi-select value whose option names contain a
 // comma ("\"A, B\", C") split on every comma, so the row gets three options
 // where two were sent and the column is littered with fragments nobody named.
+// The same column rules apply with typecast off: a value in the column's own
+// date format is a valid date, not a validation error.
 
 const NAME_FIELD = "Name";
 const TARGET_FIELD = "Target";
@@ -79,14 +81,14 @@ export const runTypecastWriteValuesCase = async (
           `/table/${table.id}/record`,
           {
             fieldKeyType: FieldKeyType.Id,
-            typecast: true,
+            typecast: config.typecast ?? true,
             records: [{ fields: { [targetId]: config.input } }],
           },
         );
         const recordId = created.data?.records?.[0]?.id;
         if (!isSuccess(created) || !recordId) {
           throw new Error(
-            `writing ${JSON.stringify(config.input)} with typecast answered ${describeResponse(created)}`,
+            `writing ${JSON.stringify(config.input)} ${config.typecast === false ? "without" : "with"} typecast answered ${describeResponse(created)}`,
           );
         }
         const routing = assertServedByV2(created.headers, {

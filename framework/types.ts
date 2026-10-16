@@ -198,6 +198,12 @@ export interface BugCaseConfigByRunner {
   "button-formula-reference": ButtonFormulaReferenceCaseConfig;
   "select-default-follows-options": SelectDefaultFollowsOptionsCaseConfig;
   "created-by-to-text": CreatedByToTextCaseConfig;
+  "select-choice-id-write": SelectChoiceIdWriteCaseConfig;
+  "editor-select-autocreate": EditorSelectAutocreateCaseConfig;
+  "user-field-notify-default": UserFieldNotifyDefaultCaseConfig;
+  "viewer-button-click": ViewerButtonClickCaseConfig;
+  "unsupported-primary-create": UnsupportedPrimaryCreateCaseConfig;
+  "computed-default-names": ComputedDefaultNamesCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -2937,6 +2943,9 @@ export interface TypecastWriteValuesCaseConfig {
   baseId: "seed-base";
   tableNamePrefix: string;
   field: { type: string; options?: Record<string, unknown> };
+  // Defaults to true; false sends the value as a client that never asks for
+  // conversion would.
+  typecast?: boolean;
   input: unknown;
   expectedValue: unknown;
   // When set, the column must gain exactly these options.
@@ -2974,4 +2983,45 @@ export interface CreatedByToTextCaseConfig {
   tableNamePrefix: string;
   // Must contain a comma.
   secondCreatorName: string;
+}
+
+export interface SelectChoiceIdWriteCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // The first option's id is the value written.
+  choices: string[];
+}
+
+export interface EditorSelectAutocreateCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  scenario: "typecast" | "paste";
+  choices: string[];
+  newValue: string;
+}
+
+export interface UserFieldNotifyDefaultCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // How long after the assignment the assignee's inbox must stay empty.
+  quietWindowMs: number;
+}
+
+export interface ViewerButtonClickCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+}
+
+export interface UnsupportedPrimaryCreateCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  types: string[];
+  // The public error code the refusal must carry, exactly.
+  expectedCode: string;
+}
+
+export interface ComputedDefaultNamesCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  formulaName: string;
 }
