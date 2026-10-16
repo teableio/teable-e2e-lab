@@ -1,3 +1,9 @@
+import { runFieldConversionValuesCase } from "./runners/field-conversion-values.runner";
+import { runTypecastWriteValuesCase } from "./runners/typecast-write-values.runner";
+import { runEmptyLinkRollupsCase } from "./runners/empty-link-rollups.runner";
+import { runButtonFormulaReferenceCase } from "./runners/button-formula-reference.runner";
+import { runSelectDefaultFollowsOptionsCase } from "./runners/select-default-follows-options.runner";
+import { runCreatedByToTextCase } from "./runners/created-by-to-text.runner";
 import { runDuplicateTableSystemFieldsCase } from "./runners/duplicate-table-system-fields.runner";
 import { runCreatedTimeConversionCase } from "./runners/created-time-conversion.runner";
 import { runDeletedLinkErrorChainCase } from "./runners/deleted-link-error-chain.runner";
@@ -386,6 +392,12 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "button-click-cap": runButtonClickCapCase,
   "lookup-inherited-display": runLookupInheritedDisplayCase,
   "link-paste-autocreate": runLinkPasteAutocreateCase,
+  "field-conversion-values": runFieldConversionValuesCase,
+  "typecast-write-values": runTypecastWriteValuesCase,
+  "empty-link-rollups": runEmptyLinkRollupsCase,
+  "button-formula-reference": runButtonFormulaReferenceCase,
+  "select-default-follows-options": runSelectDefaultFollowsOptionsCase,
+  "created-by-to-text": runCreatedByToTextCase,
 };
 
 export const executeRegisteredRunner = (

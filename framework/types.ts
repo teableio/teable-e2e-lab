@@ -192,6 +192,12 @@ export interface BugCaseConfigByRunner {
   "button-click-cap": ButtonClickCapCaseConfig;
   "lookup-inherited-display": LookupInheritedDisplayCaseConfig;
   "link-paste-autocreate": LinkPasteAutocreateCaseConfig;
+  "field-conversion-values": FieldConversionValuesCaseConfig;
+  "typecast-write-values": TypecastWriteValuesCaseConfig;
+  "empty-link-rollups": EmptyLinkRollupsCaseConfig;
+  "button-formula-reference": ButtonFormulaReferenceCaseConfig;
+  "select-default-follows-options": SelectDefaultFollowsOptionsCaseConfig;
+  "created-by-to-text": CreatedByToTextCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -2914,4 +2920,58 @@ export interface LinkPasteAutocreateCaseConfig {
   targetNames: string[];
   pastedName: string;
   expectedCode: string;
+}
+
+// One column converted from one type to another. Each row names the value it
+// is seeded with and the value the conversion must leave; null is empty.
+export interface FieldConversionValuesCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  source: { type: string; options?: Record<string, unknown> };
+  target: { type: string; options?: Record<string, unknown> };
+  rows: { name: string; before: unknown; after: unknown }[];
+}
+
+// One value written with typecast into a column of the given shape.
+export interface TypecastWriteValuesCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  field: { type: string; options?: Record<string, unknown> };
+  input: unknown;
+  expectedValue: unknown;
+  // When set, the column must gain exactly these options.
+  expectedNewChoices?: string[];
+}
+
+// Items linked and then unlinked, plus a row never linked. An odd number of
+// flagged items, so the linked exclusive-or is true.
+export interface EmptyLinkRollupsCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  items: { name: string; amount: number; flag: boolean }[];
+}
+
+// Click counts written to a button one after another; the formula over the
+// button is read after each.
+export interface ButtonFormulaReferenceCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  counts: number[];
+}
+
+// A single select defaulting to its first option, and a multi-select
+// defaulting to every option but the last.
+export interface SelectDefaultFollowsOptionsCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  singleChoices: string[];
+  multiChoices: string[];
+  renameSuffix: string;
+}
+
+export interface CreatedByToTextCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Must contain a comma.
+  secondCreatorName: string;
 }
