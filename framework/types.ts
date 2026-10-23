@@ -204,6 +204,10 @@ export interface BugCaseConfigByRunner {
   "viewer-button-click": ViewerButtonClickCaseConfig;
   "unsupported-primary-create": UnsupportedPrimaryCreateCaseConfig;
   "computed-default-names": ComputedDefaultNamesCaseConfig;
+  "empty-record-patch": EmptyRecordPatchCaseConfig;
+  "tql-empty-date": TqlEmptyDateCaseConfig;
+  "gallery-primary-visible": GalleryPrimaryVisibleCaseConfig;
+  "conditional-rollup-filter-exit": ConditionalRollupFilterExitCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -3024,4 +3028,37 @@ export interface ComputedDefaultNamesCaseConfig {
   baseId: "seed-base";
   tableNamePrefix: string;
   formulaName: string;
+}
+
+export interface EmptyRecordPatchCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  value: string;
+  expectedCode: string;
+}
+
+export interface TqlEmptyDateCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  datedRow: string;
+  undatedRow: string;
+  date: string;
+}
+
+export interface GalleryPrimaryVisibleCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+}
+
+// Node types as select options; the version expects expectedSource and
+// expectedTarget, and the source node starts (and ends) at sourceTypeOutside.
+export interface ConditionalRollupFilterExitCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  types: string[];
+  expectedSource: string;
+  expectedTarget: string;
+  sourceTypeOutside: string;
+  settleAttempts: number;
+  settleIntervalMs: number;
 }

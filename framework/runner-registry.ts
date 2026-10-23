@@ -1,3 +1,7 @@
+import { runEmptyRecordPatchCase } from "./runners/empty-record-patch.runner";
+import { runTqlEmptyDateCase } from "./runners/tql-empty-date.runner";
+import { runGalleryPrimaryVisibleCase } from "./runners/gallery-primary-visible.runner";
+import { runConditionalRollupFilterExitCase } from "./runners/conditional-rollup-filter-exit.runner";
 import { runSelectChoiceIdWriteCase } from "./runners/select-choice-id-write.runner";
 import { runEditorSelectAutocreateCase } from "./runners/editor-select-autocreate.runner";
 import { runUserFieldNotifyDefaultCase } from "./runners/user-field-notify-default.runner";
@@ -410,6 +414,10 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "viewer-button-click": runViewerButtonClickCase,
   "unsupported-primary-create": runUnsupportedPrimaryCreateCase,
   "computed-default-names": runComputedDefaultNamesCase,
+  "empty-record-patch": runEmptyRecordPatchCase,
+  "tql-empty-date": runTqlEmptyDateCase,
+  "gallery-primary-visible": runGalleryPrimaryVisibleCase,
+  "conditional-rollup-filter-exit": runConditionalRollupFilterExitCase,
 };
 
 export const executeRegisteredRunner = (

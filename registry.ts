@@ -232,11 +232,19 @@ import userFieldY2766Case from "./cases/user-field/y2766-an-api-member-column-st
 import authorityY2800Case from "./cases/authority/y2800-a-viewer-can-press-a-button.case";
 import tableY2814Case from "./cases/table/y2814-a-table-cannot-start-with-a-checkbox.case";
 import fieldY2903Case from "./cases/field/y2903-unnamed-computed-columns-keep-their-names.case";
+import recordY3329Case from "./cases/record/y3329-an-empty-update-is-refused.case";
+import filterY3332Case from "./cases/filter/y3332-a-date-compared-with-the-empty-string.case";
+import viewY3337Case from "./cases/view/y3337-a-gallery-keeps-its-primary-column.case";
+import lookupY3358Case from "./cases/lookup/y3358-a-conditional-count-follows-its-filter.case";
 
 // Every runnable case, registered explicitly. scripts/case-catalog.mjs parses
 // this file statically (imports + the array below), so the planner and the
 // checks can enumerate cases without resolving @teable/* packages.
 const cases = [
+  recordY3329Case,
+  filterY3332Case,
+  viewY3337Case,
+  lookupY3358Case,
   recordY2748Case,
   recordY2727Case,
   recordY2729Case,
