@@ -236,11 +236,17 @@ import recordY3329Case from "./cases/record/y3329-an-empty-update-is-refused.cas
 import filterY3332Case from "./cases/filter/y3332-a-date-compared-with-the-empty-string.case";
 import viewY3337Case from "./cases/view/y3337-a-gallery-keeps-its-primary-column.case";
 import lookupY3358Case from "./cases/lookup/y3358-a-conditional-count-follows-its-filter.case";
+import y249ConditionalLookupKeepsAllMatchesCase from "./cases/lookup/y249-conditional-lookup-keeps-all-matches.case";
+import y339MultiUserLookupFilterContractCase from "./cases/filter/y339-multi-user-lookup-filter-contract.case";
+import oauthY309DeviceCodeLoginCompletesCase from "./cases/oauth/y309-device-code-login-completes.case";
 
 // Every runnable case, registered explicitly. scripts/case-catalog.mjs parses
 // this file statically (imports + the array below), so the planner and the
 // checks can enumerate cases without resolving @teable/* packages.
 const cases = [
+  y249ConditionalLookupKeepsAllMatchesCase,
+  y339MultiUserLookupFilterContractCase,
+  oauthY309DeviceCodeLoginCompletesCase,
   recordY3329Case,
   filterY3332Case,
   viewY3337Case,

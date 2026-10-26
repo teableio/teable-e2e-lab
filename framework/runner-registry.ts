@@ -1,3 +1,6 @@
+import { runConditionalLookupAllMatchesCase } from "./runners/conditional-lookup-all-matches.runner";
+import { runLookupUserFilterContractCase } from "./runners/lookup-user-filter-contract.runner";
+import { runOAuthDeviceGrantCase } from "./runners/oauth-device-grant.runner";
 import { runEmptyRecordPatchCase } from "./runners/empty-record-patch.runner";
 import { runTqlEmptyDateCase } from "./runners/tql-empty-date.runner";
 import { runGalleryPrimaryVisibleCase } from "./runners/gallery-primary-visible.runner";
@@ -418,6 +421,9 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "tql-empty-date": runTqlEmptyDateCase,
   "gallery-primary-visible": runGalleryPrimaryVisibleCase,
   "conditional-rollup-filter-exit": runConditionalRollupFilterExitCase,
+  "lookup-user-filter-contract": runLookupUserFilterContractCase,
+  "conditional-lookup-all-matches": runConditionalLookupAllMatchesCase,
+  "oauth-device-grant": runOAuthDeviceGrantCase,
 };
 
 export const executeRegisteredRunner = (
