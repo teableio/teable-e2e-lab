@@ -208,6 +208,9 @@ export interface BugCaseConfigByRunner {
   "tql-empty-date": TqlEmptyDateCaseConfig;
   "gallery-primary-visible": GalleryPrimaryVisibleCaseConfig;
   "conditional-rollup-filter-exit": ConditionalRollupFilterExitCaseConfig;
+  "lookup-user-filter-contract": LookupUserFilterContractCaseConfig;
+  "conditional-lookup-all-matches": ConditionalLookupAllMatchesCaseConfig;
+  "oauth-device-grant": OAuthDeviceGrantCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -3061,4 +3064,28 @@ export interface ConditionalRollupFilterExitCaseConfig {
   sourceTypeOutside: string;
   settleAttempts: number;
   settleIntervalMs: number;
+}
+
+export interface LookupUserFilterContractCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  matchedTitle: string;
+  unmatchedTitle: string;
+}
+
+export interface ConditionalLookupAllMatchesCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  matchKey: number;
+  sourceValues: string[];
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
+}
+
+// Prove the approver session and anonymous control -> request a device code ->
+// approve it -> checkpoint: exchange it and use the bearer token as that user.
+export interface OAuthDeviceGrantCaseConfig {
+  clientId: string;
+  expectedAppName: string;
+  verificationPath: string;
 }
