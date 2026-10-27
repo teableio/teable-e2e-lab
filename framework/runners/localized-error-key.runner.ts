@@ -301,16 +301,21 @@ export const runLocalizedErrorKeyCase = async (
           async () => {
             const seen: Record<string, unknown> = {};
             for (const [locale, message] of messages) {
+              // The send-code route admits anonymous visitors only for a
+              // published app, and publishing needs a deployment target the
+              // test environment has none of. The app's owner passes the
+              // same permission check and reaches the same sign-in code and
+              // translation, which is what this case is about.
               const response =
                 config.scenario === "app-login-disabled"
-                  ? await asAnonymous(
+                  ? await rawRequest<ErrorBody>(
                       "POST",
                       `/base/${baseId}/app/${appId}/auth/send-code`,
                       {
                         email: `${config.tableNamePrefix}@example.com`,
                         environment: "production",
                       },
-                      locale,
+                      locale ? { [LOCALE_HEADER]: locale } : {},
                     )
                   : await asAnonymous(
                       "GET",
