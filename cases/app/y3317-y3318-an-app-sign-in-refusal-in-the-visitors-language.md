@@ -24,5 +24,7 @@ in only for a published app, and the test environment has no deployment
 target to publish to. The owner passes the same permission check and reaches
 the same sign-in code and translation.
 
-Observed before #4020 (`73b3cd75d`), as an anonymous request: 401
-Unauthorized for the unpublished app - which is why the owner is used.
+Observed before #4020 (`73b3cd75d`): with `Accept-Language: fr` the refusal
+was 400 "Login is not enabled for this app" - English, with no translation key.
+(An anonymous request answers 401 for the unpublished app on every revision,
+which is why the owner is used.)
