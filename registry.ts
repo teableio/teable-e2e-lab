@@ -245,11 +245,19 @@ import selectionY3352Case from "./cases/selection/y3352-paste-into-a-self-link-i
 import baseShareY3322Case from "./cases/base-share/y3322-a-share-password-refusal-in-your-language.case";
 import authY3314Case from "./cases/auth/y3314-an-unregistered-email-in-your-language.case";
 import authY3315Case from "./cases/auth/y3315-an-invalid-reset-token-in-your-language.case";
+import appY3317Case from "./cases/app/y3317-y3318-an-app-sign-in-refusal-in-the-visitors-language.case";
+import appY3319Case from "./cases/app/y3319-an-expired-app-sign-in-in-the-visitors-language.case";
+import tableY3351Case from "./cases/table/y3351-a-blank-table-name-in-your-language.case";
+import importY3353Case from "./cases/import/y3353-an-empty-worksheet-in-your-language.case";
 
 // Every runnable case, registered explicitly. scripts/case-catalog.mjs parses
 // this file statically (imports + the array below), so the planner and the
 // checks can enumerate cases without resolving @teable/* packages.
 const cases = [
+  appY3317Case,
+  appY3319Case,
+  tableY3351Case,
+  importY3353Case,
   fieldY3248Case,
   viewY3350Case,
   selectionY3352Case,
