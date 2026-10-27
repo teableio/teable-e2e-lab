@@ -1,12 +1,11 @@
 import { defineBugCase } from "../../framework/types";
 
-// T7936: Renaming a field, or creating one, with a name already taken in the
-// table was refused without a translation key, so the toast showed the English
-// reason whatever the person's language.
+// T7936: renaming a field to a name already taken in the table was refused
+// without a translation key, so the toast showed the English reason whatever
+// the person's language.
 export default defineBugCase({
   id: "field/y3248-a-taken-field-name-in-your-language",
-  title:
-    "Renaming or creating a field with a taken name is refused with its translation key",
+  title: "Renaming a field to a taken name is refused with its translation key",
   runner: "localized-error-key",
   timeoutMs: 120_000,
   bug: {

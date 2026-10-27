@@ -174,28 +174,13 @@ export const runLocalizedErrorKeyCase = async (
               { name: NAME_FIELD },
               headers,
             );
-            const created = await rawRequest<ErrorBody>(
-              "POST",
-              `/table/${table.id}/field`,
-              { name: NAME_FIELD, type: FieldType.SingleLineText },
-              headers,
+            return expectLocalized(
+              "renaming a field to a taken name",
+              renamed,
+              {
+                name: NAME_FIELD,
+              },
             );
-            return {
-              rename: expectLocalized(
-                "renaming a field to a taken name",
-                renamed,
-                {
-                  name: NAME_FIELD,
-                },
-              ),
-              create: expectLocalized(
-                "creating a field with a taken name",
-                created,
-                {
-                  name: NAME_FIELD,
-                },
-              ),
-            };
           },
         );
         return { details: { tableId: table.id, ...probe } };

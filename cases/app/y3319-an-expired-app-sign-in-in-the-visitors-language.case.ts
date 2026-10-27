@@ -20,7 +20,7 @@ export default defineBugCase({
     expectedStatus: 400,
     expectedKey: "httpErrors.app.auth.signInStateInvalid",
     messagesByLocale: {
-      ja: "ログインセッションが無効か、有効期限が切れています。もう一度ログインしてください。",
+      fr: "La session de connexion n'est pas valide ou a expiré. Veuillez vous reconnecter.",
       de: "Die Anmeldesitzung ist ungültig oder abgelaufen. Bitte melden Sie sich erneut an.",
       "": "The sign-in session is invalid or has expired. Please sign in again.",
     },

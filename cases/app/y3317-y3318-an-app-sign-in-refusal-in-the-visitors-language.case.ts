@@ -22,7 +22,7 @@ export default defineBugCase({
     expectedStatus: 400,
     expectedKey: "httpErrors.app.auth.loginDisabled",
     messagesByLocale: {
-      ja: "このアプリではログインが有効になっていません",
+      fr: "La connexion n'est pas activée pour cette application",
       de: "Die Anmeldung ist für diese App nicht aktiviert",
       "": "Login is not enabled for this app",
     },
