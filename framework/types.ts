@@ -3102,7 +3102,11 @@ export interface LocalizedErrorKeyCaseConfig {
     | "paste-self-link"
     | "share-auth-without-password"
     | "reset-email-unregistered"
-    | "reset-token-invalid";
+    | "reset-token-invalid"
+    | "table-name-blank"
+    | "excel-empty-sheet"
+    | "app-login-disabled"
+    | "app-callback-state-invalid";
   // Sent as Accept-Language, as a page in that language sends it.
   locale: string;
   expectedStatus: number;
@@ -3110,4 +3114,8 @@ export interface LocalizedErrorKeyCaseConfig {
   secondViewName?: string;
   pastedTitle?: string;
   password?: string;
+  blankName?: string;
+  // App sign-in only: the message the server must send per Accept-Language;
+  // the empty key means no language sent, which must fall back to English.
+  messagesByLocale?: Record<string, string>;
 }
