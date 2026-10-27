@@ -1,3 +1,4 @@
+import { runLocalizedErrorKeyCase } from "./runners/localized-error-key.runner";
 import { runConditionalLookupAllMatchesCase } from "./runners/conditional-lookup-all-matches.runner";
 import { runLookupUserFilterContractCase } from "./runners/lookup-user-filter-contract.runner";
 import { runOAuthDeviceGrantCase } from "./runners/oauth-device-grant.runner";
@@ -424,6 +425,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "lookup-user-filter-contract": runLookupUserFilterContractCase,
   "conditional-lookup-all-matches": runConditionalLookupAllMatchesCase,
   "oauth-device-grant": runOAuthDeviceGrantCase,
+  "localized-error-key": runLocalizedErrorKeyCase,
 };
 
 export const executeRegisteredRunner = (

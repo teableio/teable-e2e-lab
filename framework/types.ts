@@ -211,6 +211,7 @@ export interface BugCaseConfigByRunner {
   "lookup-user-filter-contract": LookupUserFilterContractCaseConfig;
   "conditional-lookup-all-matches": ConditionalLookupAllMatchesCaseConfig;
   "oauth-device-grant": OAuthDeviceGrantCaseConfig;
+  "localized-error-key": LocalizedErrorKeyCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -3088,4 +3089,25 @@ export interface OAuthDeviceGrantCaseConfig {
   clientId: string;
   expectedAppName: string;
   verificationPath: string;
+}
+
+// One refusal a person meets on a page, checked for the translation key the
+// page needs. Fields beyond the common ones are used by one scenario each.
+export interface LocalizedErrorKeyCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  scenario:
+    | "field-name-duplicate"
+    | "view-name-duplicate"
+    | "paste-self-link"
+    | "share-auth-without-password"
+    | "reset-email-unregistered"
+    | "reset-token-invalid";
+  // Sent as Accept-Language, as a page in that language sends it.
+  locale: string;
+  expectedStatus: number;
+  expectedKey: string;
+  secondViewName?: string;
+  pastedTitle?: string;
+  password?: string;
 }

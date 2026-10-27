@@ -239,11 +239,23 @@ import lookupY3358Case from "./cases/lookup/y3358-a-conditional-count-follows-it
 import y249ConditionalLookupKeepsAllMatchesCase from "./cases/lookup/y249-conditional-lookup-keeps-all-matches.case";
 import y339MultiUserLookupFilterContractCase from "./cases/filter/y339-multi-user-lookup-filter-contract.case";
 import oauthY309DeviceCodeLoginCompletesCase from "./cases/oauth/y309-device-code-login-completes.case";
+import fieldY3248Case from "./cases/field/y3248-a-taken-field-name-in-your-language.case";
+import viewY3350Case from "./cases/view/y3350-a-taken-view-name-in-your-language.case";
+import selectionY3352Case from "./cases/selection/y3352-paste-into-a-self-link-in-your-language.case";
+import baseShareY3322Case from "./cases/base-share/y3322-a-share-password-refusal-in-your-language.case";
+import authY3314Case from "./cases/auth/y3314-an-unregistered-email-in-your-language.case";
+import authY3315Case from "./cases/auth/y3315-an-invalid-reset-token-in-your-language.case";
 
 // Every runnable case, registered explicitly. scripts/case-catalog.mjs parses
 // this file statically (imports + the array below), so the planner and the
 // checks can enumerate cases without resolving @teable/* packages.
 const cases = [
+  fieldY3248Case,
+  viewY3350Case,
+  selectionY3352Case,
+  baseShareY3322Case,
+  authY3314Case,
+  authY3315Case,
   y249ConditionalLookupKeepsAllMatchesCase,
   y339MultiUserLookupFilterContractCase,
   oauthY309DeviceCodeLoginCompletesCase,
