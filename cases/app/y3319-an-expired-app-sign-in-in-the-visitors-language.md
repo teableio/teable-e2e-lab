@@ -11,7 +11,7 @@ English, whatever the app page's language.
 
 The anonymous callback request answers 400 with
 `data.localization.i18nKey = httpErrors.app.auth.signInStateInvalid`, and the
-message is the Japanese text under `ja`, the German text under `de`, and the
+message is the French text under `fr`, the German text under `de`, and the
 English text when no language is sent.
 
 ## What the fixture has to hold

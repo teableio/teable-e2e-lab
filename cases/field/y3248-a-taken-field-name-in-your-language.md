@@ -9,13 +9,17 @@ English on a Japanese (or any non-English) screen.
 
 ## What the checkpoint asserts
 
-Both the rename (PATCH) and the create (POST) answer 400 with
+The rename (PATCH) answers 400 with
 `data.localization.i18nKey = httpErrors.field.fieldNameAlreadyExists` and the
 taken name as `context.name`, alongside the English message the page falls
 back on.
 
+Observed before #4020 (`73b3cd75d`): 400 "Field names must be unique" with no
+translation key.
+
 ## What the fixture has to hold
 
-A table with two text columns; the second is renamed to the first's name,
-and a third is created with it. The request carries `Accept-Language: ja`, as
-a Japanese page sends it.
+A table with two text columns; the second is renamed to the first's name. The
+request carries `Accept-Language: ja`, as a Japanese page sends it. Creating a
+new field with a taken name is deliberately not checked: the product accepts
+that and gives the new field a free name.
