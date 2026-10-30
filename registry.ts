@@ -249,11 +249,21 @@ import appY3317Case from "./cases/app/y3317-y3318-an-app-sign-in-refusal-in-the-
 import appY3319Case from "./cases/app/y3319-an-expired-app-sign-in-in-the-visitors-language.case";
 import tableY3351Case from "./cases/table/y3351-a-blank-table-name-in-your-language.case";
 import importY3353Case from "./cases/import/y3353-an-empty-worksheet-in-your-language.case";
+import attachmentY3569Case from "./cases/attachment/y3569-a-deleted-attachment-field-stops-counting.case";
+import attachmentCellClearedCase from "./cases/attachment/a-cleared-attachment-cell-stops-counting.case";
+import attachmentRecordDeletedCase from "./cases/attachment/a-deleted-attachment-row-stops-counting.case";
+import attachmentTableDeletedCase from "./cases/attachment/a-deleted-attachment-table-stops-counting.case";
+import attachmentBaseDeletedCase from "./cases/attachment/a-deleted-attachment-base-stops-counting.case";
 
 // Every runnable case, registered explicitly. scripts/case-catalog.mjs parses
 // this file statically (imports + the array below), so the planner and the
 // checks can enumerate cases without resolving @teable/* packages.
 const cases = [
+  attachmentY3569Case,
+  attachmentCellClearedCase,
+  attachmentRecordDeletedCase,
+  attachmentTableDeletedCase,
+  attachmentBaseDeletedCase,
   appY3317Case,
   appY3319Case,
   tableY3351Case,

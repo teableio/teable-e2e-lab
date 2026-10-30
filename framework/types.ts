@@ -212,6 +212,7 @@ export interface BugCaseConfigByRunner {
   "conditional-lookup-all-matches": ConditionalLookupAllMatchesCaseConfig;
   "oauth-device-grant": OAuthDeviceGrantCaseConfig;
   "localized-error-key": LocalizedErrorKeyCaseConfig;
+  "attachment-reference-cleanup": AttachmentReferenceCleanupCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -3118,4 +3119,21 @@ export interface LocalizedErrorKeyCaseConfig {
   // App sign-in only: the message the server must send per Accept-Language;
   // the empty key means no language sent, which must fall back to English.
   messagesByLocale?: Record<string, string>;
+}
+
+// Two attachments in a space of the case's own: one removed by the scenario,
+// one kept. Sizes in bytes; they must differ.
+export interface AttachmentReferenceCleanupCaseConfig {
+  baseId: "own-space";
+  namePrefix: string;
+  scenario:
+    | "field-deleted"
+    | "cell-cleared"
+    | "record-deleted"
+    | "table-deleted"
+    | "base-deleted";
+  goneBytes: number;
+  keptBytes: number;
+  trashAttempts: number;
+  trashIntervalMs: number;
 }
