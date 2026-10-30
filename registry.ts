@@ -250,6 +250,7 @@ import appY3319Case from "./cases/app/y3319-an-expired-app-sign-in-in-the-visito
 import tableY3351Case from "./cases/table/y3351-a-blank-table-name-in-your-language.case";
 import importY3353Case from "./cases/import/y3353-an-empty-worksheet-in-your-language.case";
 import attachmentY3569Case from "./cases/attachment/y3569-a-deleted-attachment-field-stops-counting.case";
+import linkY3420Case from "./cases/link/y3420-a-viewer-cannot-add-a-column-through-a-two-way-link.case";
 import tableY3418Case from "./cases/table/y3418-a-duplicated-table-keeps-its-row-order.case";
 import attachmentY3570Case from "./cases/attachment/y3570-a-leftover-attachment-reference-stops-counting.case";
 import attachmentCellClearedCase from "./cases/attachment/a-cleared-attachment-cell-stops-counting.case";
@@ -264,6 +265,7 @@ const cases = [
   attachmentY3569Case,
   attachmentY3570Case,
   tableY3418Case,
+  linkY3420Case,
   attachmentCellClearedCase,
   attachmentRecordDeletedCase,
   attachmentTableDeletedCase,

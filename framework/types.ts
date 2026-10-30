@@ -214,6 +214,7 @@ export interface BugCaseConfigByRunner {
   "localized-error-key": LocalizedErrorKeyCaseConfig;
   "attachment-reference-cleanup": AttachmentReferenceCleanupCaseConfig;
   "duplicate-table-row-order": DuplicateTableRowOrderCaseConfig;
+  "cross-base-two-way-link-authz": CrossBaseTwoWayLinkAuthzCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -3146,4 +3147,9 @@ export interface DuplicateTableRowOrderCaseConfig {
   // Two rows inserted in order, then one inserted before the second.
   rows: [string, string];
   insertedBetween: string;
+}
+
+export interface CrossBaseTwoWayLinkAuthzCaseConfig {
+  baseId: "own-space";
+  namePrefix: string;
 }
