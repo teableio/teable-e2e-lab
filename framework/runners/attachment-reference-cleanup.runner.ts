@@ -9,6 +9,7 @@ import {
 } from "../../../utils/init-app";
 import { bugCheckpoint } from "../checkpoint";
 import { assertServedByV2 } from "../engine";
+import { fixtureDb } from "../fixture-db";
 import type {
   AttachmentReferenceCleanupCaseConfig,
   BugCaseFor,
@@ -35,6 +36,13 @@ import { describeResponse, isSuccess, rawRequest, sleep } from "./raw-api";
 // calibration of a space computes from scratch, while a later one within 30
 // minutes returns the cached figure. A cached answer means something measured
 // the space earlier, and the case stops as an error rather than judging it.
+//
+// One scenario is not a removal a person can still perform: spaces deleted
+// fields from before references were cleaned up, so their reference rows
+// outlived the field and its trash entry. That leftover row is put back with
+// the database after the field is gone - setup only - and next to it the
+// attachment that stays sits in a field that is deleted but still in the
+// trash, which has to keep counting because it can be restored.
 
 const NAME_FIELD = "Name";
 const GONE_FIELD = "Gone";
@@ -198,6 +206,74 @@ export const runAttachmentReferenceCleanupCase = async (
         await emptyTrash("table", table.id);
         break;
       }
+      case "orphaned-reference": {
+        await upload(table.id, row1, goneId, "gone");
+        await upload(table.id, row1, keptId, "kept");
+        const db = fixtureDb(context.app);
+        const references = await db.query<Record<string, unknown>[]>(
+          `SELECT id, attachment_id, name, token, table_id, record_id, field_id, created_by
+             FROM attachments_table WHERE table_id = $1 AND field_id = $2`,
+          table.id,
+          goneId,
+        );
+        if (references.length !== 1) {
+          throw new Error(
+            `expected one reference row for the gone attachment, found ${references.length}`,
+          );
+        }
+        const deleted = await rawRequest(
+          "DELETE",
+          `/table/${table.id}/field/${goneId}`,
+        );
+        if (!isSuccess(deleted)) {
+          throw new Error(
+            `deleting the field answered ${describeResponse(deleted)}`,
+          );
+        }
+        await waitForTrash(
+          tableTrash(table.id),
+          (item) =>
+            item.resourceType === "field" &&
+            (item.resourceIds ?? []).includes(goneId),
+          "the deleted field",
+        );
+        await emptyTrash("table", table.id);
+        // The field and its trash entry are gone; its reference row is put
+        // back the way an older version left it.
+        const [ref] = references;
+        await db.execute(
+          `INSERT INTO attachments_table
+             (id, attachment_id, name, token, table_id, record_id, field_id, created_by)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT (id) DO NOTHING`,
+          ref.id,
+          ref.attachment_id,
+          ref.name,
+          ref.token,
+          ref.table_id,
+          ref.record_id,
+          ref.field_id,
+          ref.created_by,
+        );
+        // The attachment that stays is in a field that is deleted but can
+        // still be restored from the trash.
+        const keptDeleted = await rawRequest(
+          "DELETE",
+          `/table/${table.id}/field/${keptId}`,
+        );
+        if (!isSuccess(keptDeleted)) {
+          throw new Error(
+            `deleting the restorable field answered ${describeResponse(keptDeleted)}`,
+          );
+        }
+        await waitForTrash(
+          tableTrash(table.id),
+          (item) =>
+            item.resourceType === "field" &&
+            (item.resourceIds ?? []).includes(keptId),
+          "the restorable field",
+        );
+        break;
+      }
       case "cell-cleared": {
         await upload(table.id, row1, goneId, "gone");
         await upload(table.id, row1, keptId, "kept");
@@ -342,11 +418,13 @@ export const runAttachmentReferenceCleanupCase = async (
       async () => {
         if (totalSize !== config.keptBytes) {
           throw new Error(
-            `after the ${config.scenario.replace("-", " ")} the space's attachment usage is ${totalSize} bytes, ` +
+            `after the ${config.scenario.replace(/-/g, " ")} the space's attachment usage is ${totalSize} bytes, ` +
               `expected ${config.keptBytes} (only the attachment that stayed)` +
               (totalSize === config.keptBytes + config.goneBytes
                 ? ` - the removed ${config.goneBytes}-byte attachment is still counted`
-                : ""),
+                : totalSize === config.goneBytes || totalSize === 0
+                  ? ` - the ${config.keptBytes}-byte attachment that stayed is not counted`
+                  : ""),
           );
         }
         return { totalSize };

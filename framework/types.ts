@@ -213,6 +213,7 @@ export interface BugCaseConfigByRunner {
   "oauth-device-grant": OAuthDeviceGrantCaseConfig;
   "localized-error-key": LocalizedErrorKeyCaseConfig;
   "attachment-reference-cleanup": AttachmentReferenceCleanupCaseConfig;
+  "duplicate-table-row-order": DuplicateTableRowOrderCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -3128,6 +3129,7 @@ export interface AttachmentReferenceCleanupCaseConfig {
   namePrefix: string;
   scenario:
     | "field-deleted"
+    | "orphaned-reference"
     | "cell-cleared"
     | "record-deleted"
     | "table-deleted"
@@ -3136,4 +3138,12 @@ export interface AttachmentReferenceCleanupCaseConfig {
   keptBytes: number;
   trashAttempts: number;
   trashIntervalMs: number;
+}
+
+export interface DuplicateTableRowOrderCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Two rows inserted in order, then one inserted before the second.
+  rows: [string, string];
+  insertedBetween: string;
 }
