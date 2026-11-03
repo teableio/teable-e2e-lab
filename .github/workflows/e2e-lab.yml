@@ -80,12 +80,24 @@ jobs:
       # load-bearing and `filter: tree:0` is what makes it cheap — a shallow
       # clone silently fails to resolve anything but its tip, which is the trap
       # perf-lab's shadow analysis walked into before writing this down.
+      # teable-ee is read with a teable-remote-ci installation token rather
+      # than a personal one; it lives an hour, and only the checkout uses it.
+      - name: Mint teable-ee read token
+        id: ee-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.RCI_APP_ID }}
+          private-key: ${{ secrets.RCI_APP_PRIVATE_KEY }}
+          owner: teableio
+          repositories: teable-ee
+          permission-contents: read
+
       - name: Checkout teable-ee commit graph
         uses: actions/checkout@v5
         with:
           repository: teableio/teable-ee
           path: teable-ee-graph
-          token: ${{ secrets.TEABLE_EE_CHECKOUT_TOKEN }}
+          token: ${{ steps.ee-token.outputs.token }}
           fetch-depth: 0
           filter: tree:0
 
@@ -151,13 +163,23 @@ jobs:
         with:
           path: e2e-lab
 
+      - name: Mint teable-ee read token
+        id: ee-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.RCI_APP_ID }}
+          private-key: ${{ secrets.RCI_APP_PRIVATE_KEY }}
+          owner: teableio
+          repositories: teable-ee
+          permission-contents: read
+
       - name: Checkout teable-ee at pinned revision
         uses: actions/checkout@v5
         with:
           repository: teableio/teable-ee
           ref: ${{ matrix.plan.sha }}
           path: teable-ee
-          token: ${{ secrets.TEABLE_EE_CHECKOUT_TOKEN }}
+          token: ${{ steps.ee-token.outputs.token }}
 
       - name: Bootstrap e2e runtime
         uses: ./e2e-lab/.github/actions/e2e-runtime
