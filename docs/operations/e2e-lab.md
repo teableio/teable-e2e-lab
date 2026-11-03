@@ -115,10 +115,10 @@ gh workflow run e2e-lab.yml \
   -f case_filter=record/y154-bulk-update-100-mixed-lands
 ```
 
-Because `teableio/teable-ee` is private, the repository needs a read-only
-access token stored as the `TEABLE_EE_CHECKOUT_TOKEN` secret (a
-fine-grained PAT with read-only Contents access to that repository is the
-tight grant).
+Because `teableio/teable-ee` is private, each checkout first mints a
+`teable-remote-ci` installation token scoped to teable-ee with read-only
+Contents (`RCI_APP_ID` / `RCI_APP_PRIVATE_KEY`, the same App that concludes
+the check run below). No personal access token is involved.
 
 ## The develop-push trigger and its check run
 
