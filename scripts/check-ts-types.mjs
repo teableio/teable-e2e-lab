@@ -35,6 +35,8 @@ const EXTERNAL_MODULES = [
   // Used by framework/realtime.ts to subscribe as a real client would.
   "sharedb/lib/client",
   "ws",
+  // Used by the bring-your-own-database case to reach its data database.
+  "pg",
 ];
 
 const VITEST_GLOBALS = [

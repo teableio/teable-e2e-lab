@@ -215,6 +215,9 @@ export interface BugCaseConfigByRunner {
   "attachment-reference-cleanup": AttachmentReferenceCleanupCaseConfig;
   "duplicate-table-row-order": DuplicateTableRowOrderCaseConfig;
   "cross-base-two-way-link-authz": CrossBaseTwoWayLinkAuthzCaseConfig;
+  "automation-legacy-reciprocal-link": AutomationLegacyReciprocalLinkCaseConfig;
+  "search-matches-scope": SearchMatchesScopeCaseConfig;
+  "byodb-migration-retry": ByodbMigrationRetryCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -3152,4 +3155,32 @@ export interface DuplicateTableRowOrderCaseConfig {
 export interface CrossBaseTwoWayLinkAuthzCaseConfig {
   baseId: "own-space";
   namePrefix: string;
+}
+
+export interface AutomationLegacyReciprocalLinkCaseConfig {
+  baseId: "own-space";
+  namePrefix: string;
+  // One order per follow-up: the control run, then the checkpoint.
+  orderRefs: string[];
+  settleTimeoutMs: number;
+}
+
+export interface SearchMatchesScopeCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  scenario: "sparse-tail" | "large-highlight-scope";
+  rowCount: number;
+  // Rows at the end of the table that carry the needle.
+  needleRows: number;
+  needle: string;
+  take: number;
+  // large-highlight-scope only: how many record ids the highlight scope names.
+  selectedRecordCount: number;
+}
+
+export interface ByodbMigrationRetryCaseConfig {
+  baseId: "own-space";
+  namePrefix: string;
+  // The data-database migration the legacy state makes pending again.
+  pendingMigrationId: string;
 }
