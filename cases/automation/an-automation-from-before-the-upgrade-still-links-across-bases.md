@@ -1,6 +1,6 @@
 # automation/an-automation-from-before-the-upgrade-still-links-across-bases
 
-**T8375** — open; introduced by `d6c5aaa97` (#4371).
+**T8375** — fixed in `127c132b0` (#4419, which rolled back the checks introduced by `d6c5aaa97`, #4371).
 
 ## What the user sees
 
