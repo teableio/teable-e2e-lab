@@ -250,6 +250,10 @@ import appY3319Case from "./cases/app/y3319-an-expired-app-sign-in-in-the-visito
 import tableY3351Case from "./cases/table/y3351-a-blank-table-name-in-your-language.case";
 import importY3353Case from "./cases/import/y3353-an-empty-worksheet-in-your-language.case";
 import attachmentY3569Case from "./cases/attachment/y3569-a-deleted-attachment-field-stops-counting.case";
+import automationLegacyReciprocalLinkCase from "./cases/automation/an-automation-from-before-the-upgrade-still-links-across-bases.case";
+import searchSparseTailCase from "./cases/search/a-search-finds-matches-after-a-long-run-of-non-matching-rows.case";
+import searchLargeScopeCase from "./cases/search/a-search-highlights-inside-a-large-selection.case";
+import byodbMigrationRetryCase from "./cases/space/a-legacy-data-database-migrates-on-retry.case";
 import linkY3420Case from "./cases/link/y3420-a-viewer-cannot-add-a-column-through-a-two-way-link.case";
 import tableY3418Case from "./cases/table/y3418-a-duplicated-table-keeps-its-row-order.case";
 import attachmentY3570Case from "./cases/attachment/y3570-a-leftover-attachment-reference-stops-counting.case";
@@ -266,6 +270,10 @@ const cases = [
   attachmentY3570Case,
   tableY3418Case,
   linkY3420Case,
+  automationLegacyReciprocalLinkCase,
+  searchSparseTailCase,
+  searchLargeScopeCase,
+  byodbMigrationRetryCase,
   attachmentCellClearedCase,
   attachmentRecordDeletedCase,
   attachmentTableDeletedCase,

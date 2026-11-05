@@ -6,6 +6,9 @@ import { runOAuthDeviceGrantCase } from "./runners/oauth-device-grant.runner";
 import { runEmptyRecordPatchCase } from "./runners/empty-record-patch.runner";
 import { runTqlEmptyDateCase } from "./runners/tql-empty-date.runner";
 import { runGalleryPrimaryVisibleCase } from "./runners/gallery-primary-visible.runner";
+import { runAutomationLegacyReciprocalLinkCase } from "./runners/automation-legacy-reciprocal-link.runner";
+import { runSearchMatchesScopeCase } from "./runners/search-matches-scope.runner";
+import { runByodbMigrationRetryCase } from "./runners/byodb-migration-retry.runner";
 import { runCrossBaseTwoWayLinkAuthzCase } from "./runners/cross-base-two-way-link-authz.runner";
 import { runDuplicateTableRowOrderCase } from "./runners/duplicate-table-row-order.runner";
 import { runConditionalRollupFilterExitCase } from "./runners/conditional-rollup-filter-exit.runner";
@@ -426,6 +429,9 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "gallery-primary-visible": runGalleryPrimaryVisibleCase,
   "duplicate-table-row-order": runDuplicateTableRowOrderCase,
   "cross-base-two-way-link-authz": runCrossBaseTwoWayLinkAuthzCase,
+  "automation-legacy-reciprocal-link": runAutomationLegacyReciprocalLinkCase,
+  "search-matches-scope": runSearchMatchesScopeCase,
+  "byodb-migration-retry": runByodbMigrationRetryCase,
   "conditional-rollup-filter-exit": runConditionalRollupFilterExitCase,
   "lookup-user-filter-contract": runLookupUserFilterContractCase,
   "conditional-lookup-all-matches": runConditionalLookupAllMatchesCase,
