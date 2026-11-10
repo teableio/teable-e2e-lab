@@ -3123,7 +3123,10 @@ export interface LocalizedErrorKeyCaseConfig {
   blankName?: string;
   // App sign-in only: the message the server must send per Accept-Language;
   // the empty key means no language sent, which must fall back to English.
-  messagesByLocale?: Record<string, string>;
+  // A list holds every wording the text has shipped with, newest first: copy
+  // gets reworded, and a revision from before the rewording still answers in
+  // its language.
+  messagesByLocale?: Record<string, string | string[]>;
 }
 
 // Two attachments in a space of the case's own: one removed by the scenario,

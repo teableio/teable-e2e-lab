@@ -13,7 +13,10 @@ The send-code request answers 400 with
 `data.localization.i18nKey = httpErrors.app.auth.loginDisabled`, and the
 message itself is the French text under `Accept-Language: fr`, the German
 text under `de`, and the English text when no language is sent. The expected
-texts are the ones in teable-ee's own `sdk.json`.
+texts are the ones in teable-ee's own `sdk.json`. The English one was reworded
+in teable-ee #4466 ("Login is not enabled for this app" became "Sign-in is not
+enabled for this app"), so the case accepts either: what it guards is that the
+refusal comes translated, not how the English reads.
 
 ## What the fixture has to hold
 
