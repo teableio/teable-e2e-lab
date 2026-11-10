@@ -107,7 +107,7 @@ export const runLocalizedErrorKeyCase = async (
     what: string,
     response: RawResponse<ErrorBody>,
     expectedContext?: Record<string, unknown>,
-    expectedMessage?: string,
+    expectedMessage?: string | string[],
   ) => {
     const localization = response.data?.data?.localization;
     const problems: string[] = [];
@@ -131,12 +131,19 @@ export const runLocalizedErrorKeyCase = async (
     if (!response.data?.message) {
       problems.push("no message to fall back on");
     }
+    // Several wordings mean the copy was reworded since the fix: any of them
+    // is the translated text, so a revision on either side of the rewording
+    // passes.
+    const acceptedMessages =
+      expectedMessage === undefined ? undefined : [expectedMessage].flat();
     if (
-      expectedMessage !== undefined &&
-      response.data?.message !== expectedMessage
+      acceptedMessages !== undefined &&
+      !acceptedMessages.includes(response.data?.message ?? "")
     ) {
       problems.push(
-        `message ${JSON.stringify(response.data?.message ?? null)}, expected ${JSON.stringify(expectedMessage)}`,
+        `message ${JSON.stringify(response.data?.message ?? null)}, expected ${acceptedMessages
+          .map((message) => JSON.stringify(message))
+          .join(" or ")}`,
       );
     }
     if (problems.length > 0) {

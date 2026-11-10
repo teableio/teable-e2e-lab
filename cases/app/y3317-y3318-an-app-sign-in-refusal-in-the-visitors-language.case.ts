@@ -3,6 +3,8 @@ import { defineBugCase } from "../../framework/types";
 // T7936: An app's own sign-in screen, which loads no Teable language files,
 // showed "Login is not enabled for this app" in English whatever the visitor's
 // language: the server sent neither a translated message nor a key.
+// teable-ee #4466 later reworded the English text to "Sign-in is not enabled
+// for this app"; both wordings are the English fallback this case is after.
 export default defineBugCase({
   id: "app/y3317-y3318-an-app-sign-in-refusal-in-the-visitors-language",
   title:
@@ -24,7 +26,10 @@ export default defineBugCase({
     messagesByLocale: {
       fr: "La connexion n'est pas activée pour cette application",
       de: "Die Anmeldung ist für diese App nicht aktiviert",
-      "": "Login is not enabled for this app",
+      "": [
+        "Sign-in is not enabled for this app",
+        "Login is not enabled for this app",
+      ],
     },
   },
 });
