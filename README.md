@@ -59,6 +59,20 @@ the report job's GitHub summary; `comparison.json` in the
 `e2e-lab-comparison-*` artifact. Local direction-finding runs follow the localrun skill, which is not published
 with this repository; ask the team for it.
 
+### Browser dependency archives
+
+Before runtime bootstrap, the workflow selects the Kernel.org Ubuntu archive
+with canonical archive/security fallbacks in the runner's APT mirror list.
+Kernel.org is a [separately operated mirror](https://mirrors.kernel.org/), not a
+Canonical host; its independent hostname avoids relying only on `ubuntu.com`
+when that domain's resolution fails. The existing Ubuntu signing keyring,
+repository suites/components and APT/TLS verification remain unchanged.
+
+This bootstrap belongs to the Lab workflow, not to a helper introduced by a
+new EE revision: historical comparison columns must remain runnable. Browser
+cases still install Chromium with `--with-deps` and execute the original case
+plan; dependency errors are never treated as a successful run.
+
 ## Adding a case
 
 Read [.agents/README.md](.agents/README.md) — the short version: one
