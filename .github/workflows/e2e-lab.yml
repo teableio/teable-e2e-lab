@@ -181,6 +181,17 @@ jobs:
           path: teable-ee
           token: ${{ steps.ee-token.outputs.token }}
 
+      - name: Select Ubuntu archive mirrors
+        run: |
+          set -euo pipefail
+          if [ -f /etc/apt/apt-mirrors.txt ]; then
+            printf '%s\tpriority:%s\n' \
+              'https://mirrors.edge.kernel.org/ubuntu/' 1 \
+              'https://archive.ubuntu.com/ubuntu/' 2 \
+              'https://security.ubuntu.com/ubuntu/' 3 |
+              sudo tee /etc/apt/apt-mirrors.txt >/dev/null
+          fi
+
       - name: Bootstrap e2e runtime
         uses: ./e2e-lab/.github/actions/e2e-runtime
         with:
