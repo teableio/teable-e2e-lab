@@ -4,12 +4,18 @@
 
 ## What the user sees
 
-An option with a very long name is accepted, and the select column then misbehaves in places far from where it was created.
+Someone pastes a very long value into a select column; it becomes a new
+option, and the select column then misbehaves in places far from the paste.
 
 ## What the checkpoint asserts
 
-Creating a single-select column whose option name is 1001 characters answers 400, the error does not repeat the whole name, and no such column exists.
+Pasting a 1001-character value into an empty single-select cell answers 400,
+the error does not repeat the whole value, no option with that name exists and
+the cell stays empty.
 
 ## What the fixture has to hold
 
-A table created for the run in the seed base and dropped afterwards. A column whose option name is exactly 1000 characters must be created first, as the control.
+A table created for the run in the seed base and dropped afterwards, with a
+single-select column that has no options and two rows. Pasting a value of
+exactly 1000 characters into the first row must create that option first, as
+the control.
