@@ -4,18 +4,19 @@
 
 ## What the user sees
 
-Someone pastes a very long value into a select column; it becomes a new
-option, and the select column then misbehaves in places far from the paste.
+Someone converts a text column with a very long value to a select; the
+value becomes an option, and the select column then misbehaves in places far
+from the conversion.
 
 ## What the checkpoint asserts
 
-Pasting a 1001-character value into an empty single-select cell answers 400,
-the error does not repeat the whole value, no option with that name exists and
-the cell stays empty.
+Converting a text column holding a 1001-character value to a single select
+answers 400, the error does not repeat the whole value, and the column is
+still text holding both of its values.
 
 ## What the fixture has to hold
 
 A table created for the run in the seed base and dropped afterwards, with a
-single-select column that has no options and two rows. Pasting a value of
-exactly 1000 characters into the first row must create that option first, as
-the control.
+text column whose two rows hold a 1000-character and a 1001-character value.
+Creating a select column with the 1000-character option directly must succeed
+first, as the control.
