@@ -1,11 +1,11 @@
 import { defineBugCase } from "../../framework/types";
 
-// T4291: Pasting a value that creates a select option over the name length
-// limit stored the option, and it broke the editor, filters and imports that
-// render it later.
+// T4291: Converting a text column whose values exceed the option-name length
+// limit to a select stored the overlong options (or failed halfway), and they
+// broke the editor, filters and imports that render them later.
 export default defineBugCase({
   id: "field/y3234-an-overlong-option-name-is-refused",
-  title: "Pasting an option name over the length limit is refused clearly",
+  title: "Converting text to a select refuses an overlong option name clearly",
   runner: "select-choice-name-limit",
   timeoutMs: 180_000,
   bug: {
