@@ -9,6 +9,15 @@ import { runGalleryPrimaryVisibleCase } from "./runners/gallery-primary-visible.
 import { runAutomationLegacyReciprocalLinkCase } from "./runners/automation-legacy-reciprocal-link.runner";
 import { runSearchMatchesScopeCase } from "./runners/search-matches-scope.runner";
 import { runByodbMigrationRetryCase } from "./runners/byodb-migration-retry.runner";
+import { runDatetimeDiffWholeDaysCase } from "./runners/datetime-diff-whole-days.runner";
+import { runLinkedFilterInvalidOperatorCase } from "./runners/linked-filter-invalid-operator.runner";
+import { runSelectChoiceNameLimitCase } from "./runners/select-choice-name-limit.runner";
+import { runUserConversionCollaboratorsOnlyCase } from "./runners/user-conversion-collaborators-only.runner";
+import { runNewFieldVisibleInUnhiddenViewCase } from "./runners/new-field-visible-in-unhidden-view.runner";
+import { runPasteRecPrefixedTextCase } from "./runners/paste-rec-prefixed-text.runner";
+import { runDuplicateBaseFilteredRollupCase } from "./runners/duplicate-base-filtered-rollup.runner";
+import { runUrlAttachmentRefusedUpstreamCase } from "./runners/url-attachment-refused-upstream.runner";
+import { runDuplicateReverseLinkFieldCase } from "./runners/duplicate-reverse-link-field.runner";
 import { runCrossBaseTwoWayLinkAuthzCase } from "./runners/cross-base-two-way-link-authz.runner";
 import { runDuplicateTableRowOrderCase } from "./runners/duplicate-table-row-order.runner";
 import { runConditionalRollupFilterExitCase } from "./runners/conditional-rollup-filter-exit.runner";
@@ -432,6 +441,15 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "automation-legacy-reciprocal-link": runAutomationLegacyReciprocalLinkCase,
   "search-matches-scope": runSearchMatchesScopeCase,
   "byodb-migration-retry": runByodbMigrationRetryCase,
+  "datetime-diff-whole-days": runDatetimeDiffWholeDaysCase,
+  "linked-filter-invalid-operator": runLinkedFilterInvalidOperatorCase,
+  "select-choice-name-limit": runSelectChoiceNameLimitCase,
+  "user-conversion-collaborators-only": runUserConversionCollaboratorsOnlyCase,
+  "new-field-visible-in-unhidden-view": runNewFieldVisibleInUnhiddenViewCase,
+  "paste-rec-prefixed-text": runPasteRecPrefixedTextCase,
+  "duplicate-base-filtered-rollup": runDuplicateBaseFilteredRollupCase,
+  "url-attachment-refused-upstream": runUrlAttachmentRefusedUpstreamCase,
+  "duplicate-reverse-link-field": runDuplicateReverseLinkFieldCase,
   "conditional-rollup-filter-exit": runConditionalRollupFilterExitCase,
   "lookup-user-filter-contract": runLookupUserFilterContractCase,
   "conditional-lookup-all-matches": runConditionalLookupAllMatchesCase,

@@ -218,6 +218,15 @@ export interface BugCaseConfigByRunner {
   "automation-legacy-reciprocal-link": AutomationLegacyReciprocalLinkCaseConfig;
   "search-matches-scope": SearchMatchesScopeCaseConfig;
   "byodb-migration-retry": ByodbMigrationRetryCaseConfig;
+  "datetime-diff-whole-days": DatetimeDiffWholeDaysCaseConfig;
+  "linked-filter-invalid-operator": LinkedFilterInvalidOperatorCaseConfig;
+  "select-choice-name-limit": SelectChoiceNameLimitCaseConfig;
+  "user-conversion-collaborators-only": UserConversionCollaboratorsOnlyCaseConfig;
+  "new-field-visible-in-unhidden-view": NewFieldVisibleInUnhiddenViewCaseConfig;
+  "paste-rec-prefixed-text": PasteRecPrefixedTextCaseConfig;
+  "duplicate-base-filtered-rollup": DuplicateBaseFilteredRollupCaseConfig;
+  "url-attachment-refused-upstream": UrlAttachmentRefusedUpstreamCaseConfig;
+  "duplicate-reverse-link-field": DuplicateReverseLinkFieldCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -3186,4 +3195,63 @@ export interface ByodbMigrationRetryCaseConfig {
   namePrefix: string;
   // The data-database migration the legacy state makes pending again.
   pendingMigrationId: string;
+}
+
+export interface DatetimeDiffWholeDaysCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  eventTimeZone: string;
+  formulaTimeZone: string;
+  start: string;
+  rows: { name: string; event: string; days: number }[];
+}
+
+export interface LinkedFilterInvalidOperatorCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // A checkbox operator the condition cannot evaluate with a value.
+  invalidOperator: string;
+}
+
+export interface SelectChoiceNameLimitCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  maxLength: number;
+}
+
+export interface UserConversionCollaboratorsOnlyCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+}
+
+export interface NewFieldVisibleInUnhiddenViewCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+}
+
+export interface PasteRecPrefixedTextCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  values: string[];
+}
+
+export interface DuplicateBaseFilteredRollupCaseConfig {
+  baseId: "own-space";
+  namePrefix: string;
+  children: { name: string; status: string; parent: string }[];
+  rollups: { name: string; operator: string; value: string | string[] }[];
+  // Parent name -> rollup name -> count, as the original base reads it.
+  expected: Record<string, Record<string, number>>;
+  settleAttempts: number;
+  settleIntervalMs: number;
+}
+
+export interface UrlAttachmentRefusedUpstreamCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+}
+
+export interface DuplicateReverseLinkFieldCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
 }
