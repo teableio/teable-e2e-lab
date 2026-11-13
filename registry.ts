@@ -254,6 +254,15 @@ import automationLegacyReciprocalLinkCase from "./cases/automation/an-automation
 import searchSparseTailCase from "./cases/search/a-search-finds-matches-after-a-long-run-of-non-matching-rows.case";
 import searchLargeScopeCase from "./cases/search/a-search-highlights-inside-a-large-selection.case";
 import byodbMigrationRetryCase from "./cases/space/a-legacy-data-database-migrates-on-retry.case";
+import formulaY3763Case from "./cases/formula/y3763-datetime-diff-counts-complete-days.case";
+import fieldY3222Case from "./cases/field/y3222-an-unevaluable-checkbox-filter-is-refused.case";
+import fieldY3234Case from "./cases/field/y3234-an-overlong-option-name-is-refused.case";
+import userFieldY3641Case from "./cases/user-field/y3641-converting-text-to-users-matches-only-collaborators.case";
+import viewY3371Case from "./cases/view/y3371-a-view-that-hides-nothing-shows-new-columns.case";
+import recordY3877Case from "./cases/record/y3877-pasted-rec-prefixed-text-stays-text.case";
+import baseShareY3215Case from "./cases/base-share/y3215-a-duplicated-base-keeps-its-filtered-rollups.case";
+import attachmentY3370Case from "./cases/attachment/y3370-a-refused-attachment-link-is-a-client-error.case";
+import linkY3638Case from "./cases/link/y3638-a-duplicated-reverse-link-keeps-its-children.case";
 import linkY3420Case from "./cases/link/y3420-a-viewer-cannot-add-a-column-through-a-two-way-link.case";
 import tableY3418Case from "./cases/table/y3418-a-duplicated-table-keeps-its-row-order.case";
 import attachmentY3570Case from "./cases/attachment/y3570-a-leftover-attachment-reference-stops-counting.case";
@@ -274,6 +283,15 @@ const cases = [
   searchSparseTailCase,
   searchLargeScopeCase,
   byodbMigrationRetryCase,
+  formulaY3763Case,
+  fieldY3222Case,
+  fieldY3234Case,
+  userFieldY3641Case,
+  viewY3371Case,
+  recordY3877Case,
+  baseShareY3215Case,
+  attachmentY3370Case,
+  linkY3638Case,
   attachmentCellClearedCase,
   attachmentRecordDeletedCase,
   attachmentTableDeletedCase,
