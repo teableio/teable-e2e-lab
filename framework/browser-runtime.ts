@@ -145,7 +145,8 @@ export const sanitizeBrowserDiagnosticText = (
           return "<REDACTED_URL>";
         }
       },
-    );
+    )
+    .replace(/(\/[^\s<>"'`?#]*)[?#][^\s<>"'`]*/g, "$1");
   for (const secret of [
     ...secrets,
     ...Object.entries(process.env)
