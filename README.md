@@ -59,6 +59,20 @@ the report job's GitHub summary; `comparison.json` in the
 `e2e-lab-comparison-*` artifact. Local direction-finding runs follow the localrun skill, which is not published
 with this repository; ask the team for it.
 
+The workflow enables Nest `error,warn` logging so backend exception stacks
+remain available in the existing Actions console output, with native Actions
+secret masking. Raw runtime logs are not added to result artifacts. This
+repository is public; result artifacts must not be treated as private storage.
+
+The T7257 user-mode-switch runner includes bounded page errors (name, message,
+stack), failed HTTP/network requests, phase timestamps, successful directions,
+normalized direction failures, and a frontend output snapshot in its failure
+evidence. Browser diagnostics remove URL credentials, queries and fragments,
+redact known secrets, and read only request-id/traceparent correlation headers.
+Network listeners never capture bodies, cookies or authorization headers.
+HTTP/network events add evidence only. Any page error still fails the original
+checkpoint, and setup failures remain case errors.
+
 ### Browser dependency archives
 
 Before runtime bootstrap, the workflow selects the Kernel.org Ubuntu archive

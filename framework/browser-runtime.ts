@@ -10,8 +10,9 @@ export type BrowserResponse = {
   url(): string;
   status(): number;
   headers(): Record<string, string>;
+  headerValue(name: string): Promise<string | null>;
   json(): Promise<unknown>;
-  request(): { method(): string };
+  request(): BrowserRequest;
 };
 
 export type BrowserWebSocketFrame = {
@@ -30,6 +31,8 @@ export type BrowserWebSocket = {
 export type BrowserRequest = {
   method(): string;
   url(): string;
+  failure(): { errorText: string } | null;
+  headerValue(name: string): Promise<string | null>;
 };
 
 export type BrowserRoute = {
@@ -65,6 +68,8 @@ export type BrowserPage = {
   locator(selector: string): BrowserLocator;
   on(event: "pageerror", handler: (error: Error) => void): void;
   on(event: "request", handler: (request: BrowserRequest) => void): void;
+  on(event: "response", handler: (response: BrowserResponse) => void): void;
+  on(event: "requestfailed", handler: (request: BrowserRequest) => void): void;
   on(event: "websocket", handler: (socket: BrowserWebSocket) => void): void;
   route(
     url: string,
@@ -119,6 +124,47 @@ type RuntimeState = {
 
 let runtime: RuntimeState | undefined;
 let runtimePromise: Promise<RuntimeState> | undefined;
+
+// Shared only by browser diagnostics and the frontend output snapshot.
+export const sanitizeBrowserDiagnosticText = (
+  text: string,
+  secrets: readonly string[] = [],
+) => {
+  let safe = text
+    .replace(/\u001b\[[0-9;]*m/g, "")
+    .replace(
+      /\b(?:https?|wss?|postgres(?:ql)?|redis):\/\/[^\s<>"'`]+/gi,
+      (raw) => {
+        try {
+          const url = new URL(raw);
+          const origin = url.origin === "null"
+            ? `${url.protocol}//${url.host}`
+            : url.origin;
+          return `${origin}${url.pathname}`;
+        } catch {
+          return "<REDACTED_URL>";
+        }
+      },
+    );
+  for (const secret of [
+    ...secrets,
+    ...Object.entries(process.env)
+      .filter(([key]) =>
+        /token|secret|password|cookie|credential|private.?key|api.?key|access.?key/i.test(key),
+      )
+      .map(([, value]) => value),
+  ]) {
+    if (secret && secret.length >= 4) safe = safe.split(secret).join("<REDACTED>");
+  }
+  return safe
+    .replace(/\bBearer\s+[^\s"',}]+/gi, "Bearer <REDACTED>")
+    .replace(
+      /(["']?(?:authorization|(?:set-)?cookie|auth_session|[\w-]*(?:token|secret|password|api[_-]?key))["']?\s*[:=]\s*)(?:"[^"\n]*"|'[^'\n]*'|[^\s,;}]+)/gi,
+      "$1<REDACTED>",
+    )
+    .replace(/\b(authorization|(?:set-)?cookie)\s*:\s*[^\r\n]+/gi, "$1: <REDACTED>")
+    .replace(/\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/g, "<REDACTED>");
+};
 
 const findTeableRoot = () => {
   const candidates = [
@@ -180,7 +226,7 @@ const waitForFrontend = async (
   while (Date.now() < deadline) {
     if (child.exitCode != null) {
       throw new Error(
-        `Next.js exited with ${child.exitCode} before becoming ready:\n${output.slice(-40).join("")}`,
+        `Next.js exited with ${child.exitCode} before becoming ready:\n${sanitizeBrowserDiagnosticText(output.slice(-40).join(""))}`,
       );
     }
     try {
@@ -192,7 +238,7 @@ const waitForFrontend = async (
     await new Promise((resolveWait) => setTimeout(resolveWait, 500));
   }
   throw new Error(
-    `Next.js did not become ready at ${frontendUrl}:\n${output.slice(-40).join("")}`,
+    `Next.js did not become ready at ${frontendUrl}:\n${sanitizeBrowserDiagnosticText(output.slice(-40).join(""))}`,
   );
 };
 
@@ -269,7 +315,7 @@ const startRuntime = async (context: BugRunContext): Promise<RuntimeState> => {
   );
 
   const collect = (chunk: unknown) => {
-    output.push(String(chunk));
+    output.push(String(chunk).slice(-16_384));
     if (output.length > 200) output.shift();
   };
   frontend.stdout?.on("data", collect);
@@ -419,6 +465,8 @@ export const openBrowserPage = async (
   return {
     page,
     frontendUrl: state.frontendUrl,
+    frontendOutput: () =>
+      sanitizeBrowserDiagnosticText(state.output.join(""), [cookie.value]).slice(-32_768),
     close: async () => {
       try {
         // Route handlers may still be fetching or delaying a response after the probe ends.
