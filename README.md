@@ -88,11 +88,12 @@ a secret are redacted together, even when that removes the entire URL.
 
 ### Browser dependency archives
 
-Before runtime bootstrap, the workflow selects the Kernel.org Ubuntu archive
-with canonical archive/security fallbacks in the runner's APT mirror list.
-Kernel.org is a [separately operated mirror](https://mirrors.kernel.org/), not a
-Canonical host; its independent hostname avoids relying only on `ubuntu.com`
-when that domain's resolution fails. The existing Ubuntu signing keyring,
+Before runtime bootstrap, the workflow selects the canonical Ubuntu archive
+in the runner's APT mirror list. A ranked Kernel.org fallback stalled package
+indexes for 30 minutes after canonical InRelease files had already loaded;
+the consumer case never started. Use one archive rather than retain the failed
+mirror for later index requests. This trades independent-DNS fallback for
+deterministic source selection. The existing Ubuntu signing keyring,
 repository suites/components and APT/TLS verification remain unchanged.
 
 This bootstrap belongs to the Lab workflow, not to a helper introduced by a

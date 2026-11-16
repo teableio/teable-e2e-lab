@@ -182,14 +182,11 @@ jobs:
           path: teable-ee
           token: ${{ steps.ee-token.outputs.token }}
 
-      - name: Select Ubuntu archive mirrors
+      - name: Select Ubuntu archive
         run: |
           set -euo pipefail
           if [ -f /etc/apt/apt-mirrors.txt ]; then
-            printf '%s\tpriority:%s\n' \
-              'https://mirrors.edge.kernel.org/ubuntu/' 1 \
-              'https://archive.ubuntu.com/ubuntu/' 2 \
-              'https://security.ubuntu.com/ubuntu/' 3 |
+            printf '%s\n' 'https://archive.ubuntu.com/ubuntu/' |
               sudo tee /etc/apt/apt-mirrors.txt >/dev/null
           fi
 
