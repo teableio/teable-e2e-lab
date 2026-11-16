@@ -291,8 +291,35 @@ export const runAuthorityUnreadableGroupCase = async (
           { waitUntil: "domcontentloaded", timeout: 300_000 },
         );
         if (!navigation || navigation.status() !== 200) {
+          const serverError = await browser!.page
+            .evaluate<string | null>(
+              `
+              (() => {
+                try {
+                  const data = document.querySelector('#__NEXT_DATA__')?.textContent;
+                  const error = data ? JSON.parse(data).err : undefined;
+                  if (!error) return null;
+                  return JSON.stringify({
+                    name: String(error.name ?? '').slice(0, 500),
+                    message: String(error.message ?? '').slice(0, 4000),
+                    stack: String(error.stack ?? '').slice(0, 8000),
+                  });
+                } catch {
+                  return null;
+                }
+              })()
+            `,
+            )
+            .catch(() => null);
+          const diagnostic = serverError
+            ?.replace(/Bearer\s+[^\s"']+/gi, "Bearer <REDACTED>")
+            .replace(
+              /((?:auth_session|access_token|refresh_token|password|secret)[=:]\s*)[^\s;,"}]+/gi,
+              "$1<REDACTED>",
+            )
+            .replace(/(\w+:\/\/[^:\s]+:)[^@\s]+@/g, "$1<REDACTED>@");
           throw new Error(
-            `the restricted grid navigation answered ${navigation?.status() ?? "without a response"}`,
+            `the restricted grid navigation answered ${navigation?.status() ?? "without a response"}; [DEBUG-T8558-SSR] ${diagnostic ?? "Next.js error details unavailable"}`,
           );
         }
 
