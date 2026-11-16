@@ -117,6 +117,15 @@ test("browser diagnostics redact secret and URL boundary overlaps", () => {
         secrets: ["https://example.com/path"],
         expected: "<REDACTED>",
       },
+      {
+        name: "normalized overlapping secrets cannot leave a longer secret suffix",
+        input: "https://user:pass@example.com/private-reset-token",
+        secrets: [
+          "https://example.com/",
+          "https://example.com/private-reset-token",
+        ],
+        expected: "<REDACTED>",
+      },
     ];
     for (const fixture of fixtures) {
       assert.equal(

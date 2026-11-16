@@ -125,18 +125,64 @@ type RuntimeState = {
 let runtime: RuntimeState | undefined;
 let runtimePromise: Promise<RuntimeState> | undefined;
 
+type BrowserDiagnosticSpan = {
+  start: number;
+  end: number;
+  replacement: string;
+  secret: boolean;
+};
+
+const collectKnownSecretSpans = (
+  text: string,
+  knownSecrets: Iterable<string | undefined>,
+  spans: BrowserDiagnosticSpan[],
+) => {
+  for (const secret of knownSecrets) {
+    if (!secret || secret.length < 4) continue;
+    let start = text.indexOf(secret);
+    while (start !== -1) {
+      spans.push({
+        start,
+        end: start + secret.length,
+        replacement: "<REDACTED>",
+        secret: true,
+      });
+      start = text.indexOf(secret, start + 1);
+    }
+  }
+};
+
+const renderDiagnosticSpans = (text: string, spans: BrowserDiagnosticSpan[]) => {
+  spans.sort((left, right) => left.start - right.start || left.end - right.end);
+  const merged: BrowserDiagnosticSpan[] = [];
+  for (const span of spans) {
+    const previous = merged[merged.length - 1];
+    if (previous && span.start < previous.end) {
+      previous.end = Math.max(previous.end, span.end);
+      // Render the entire secret union before any replacement can hide an overlap.
+      previous.secret ||= span.secret;
+      if (previous.secret) previous.replacement = "<REDACTED>";
+    } else {
+      merged.push({ ...span });
+    }
+  }
+  const parts: string[] = [];
+  let cursor = 0;
+  for (const span of merged) {
+    parts.push(text.slice(cursor, span.start), span.replacement);
+    cursor = span.end;
+  }
+  parts.push(text.slice(cursor));
+  return parts.join("");
+};
+
 // Shared only by browser diagnostics and the frontend output snapshot.
 export const sanitizeBrowserDiagnosticText = (
   text: string,
   secrets: readonly string[] = [],
 ) => {
   const original = text.replace(/\u001b\[[0-9;]*m/g, "");
-  const spans: {
-    start: number;
-    end: number;
-    replacement: string;
-    secret: boolean;
-  }[] = [];
+  const spans: BrowserDiagnosticSpan[] = [];
 
   // One scan consumes each entire URL, so absolute URLs cannot also match as routes.
   for (const match of original.matchAll(
@@ -175,42 +221,8 @@ export const sanitizeBrowserDiagnosticText = (
       )
       .map(([, value]) => value),
   ]);
-  for (const secret of knownSecrets) {
-    if (!secret || secret.length < 4) continue;
-    let start = original.indexOf(secret);
-    while (start !== -1) {
-      spans.push({
-        start,
-        end: start + secret.length,
-        replacement: "<REDACTED>",
-        secret: true,
-      });
-      start = original.indexOf(secret, start + 1);
-    }
-  }
-
-  spans.sort((left, right) => left.start - right.start || left.end - right.end);
-  const merged: typeof spans = [];
-  for (const span of spans) {
-    const previous = merged[merged.length - 1];
-    if (previous && span.start < previous.end) {
-      previous.end = Math.max(previous.end, span.end);
-      // A secret can contain a URL delimiter: redact the whole overlapping union.
-      previous.secret ||= span.secret;
-      if (previous.secret) previous.replacement = "<REDACTED>";
-    } else {
-      merged.push({ ...span });
-    }
-  }
-  const parts: string[] = [];
-  let cursor = 0;
-  for (const span of merged) {
-    parts.push(original.slice(cursor, span.start), span.replacement);
-    cursor = span.end;
-  }
-  parts.push(original.slice(cursor));
-  let safe = parts
-    .join("")
+  collectKnownSecretSpans(original, knownSecrets, spans);
+  const safe = renderDiagnosticSpans(original, spans)
     .replace(/\bBearer\s+[^\s"',}]+/gi, "Bearer <REDACTED>")
     .replace(
       /(["']?(?:authorization|(?:set-)?cookie|auth_session|[\w-]*(?:token|secret|password|api[_-]?key))["']?\s*[:=]\s*)(?:"[^"\n]*"|'[^'\n]*'|[^\s,;}]+)/gi,
@@ -219,10 +231,9 @@ export const sanitizeBrowserDiagnosticText = (
     .replace(/\b(authorization|(?:set-)?cookie)\s*:\s*[^\r\n]+/gi, "$1: <REDACTED>")
     .replace(/\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/g, "<REDACTED>");
   // URL normalization can introduce a known value absent from the original text.
-  for (const secret of knownSecrets) {
-    if (secret && secret.length >= 4) safe = safe.split(secret).join("<REDACTED>");
-  }
-  return safe;
+  const finalSpans: BrowserDiagnosticSpan[] = [];
+  collectKnownSecretSpans(safe, knownSecrets, finalSpans);
+  return renderDiagnosticSpans(safe, finalSpans);
 };
 
 const findTeableRoot = () => {
