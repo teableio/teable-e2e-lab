@@ -73,6 +73,19 @@ Network listeners never capture bodies, cookies or authorization headers.
 HTTP/network events add evidence only. Any page error still fails the original
 checkpoint, and setup failures remain case errors.
 
+Each regression workflow invocation also runs the deterministic synthetic
+redaction proof after Node setup:
+
+```bash
+node --experimental-strip-types --test framework/browser-runtime-redaction.test.js
+```
+
+The proof imports the actual sanitizer without starting a browser or server.
+It checks URL delimiters inside known secrets as well as relative auth routes,
+absolute URL credentials, and the existing credential redactions. Secret and
+URL spans are found in the same original text; overlapping regions containing
+a secret are redacted together, even when that removes the entire URL.
+
 ### Browser dependency archives
 
 Before runtime bootstrap, the workflow selects the Kernel.org Ubuntu archive

@@ -198,6 +198,10 @@ jobs:
         with:
           operation: bootstrap
 
+      - name: Verify browser diagnostic redaction
+        working-directory: e2e-lab
+        run: node --experimental-strip-types --test framework/browser-runtime-redaction.test.js
+
       # Every commit builds its own database from its own migrations. Dumps are
       # deliberately NOT shared across columns — different commits can carry
       # different Prisma migrations, which is exactly why perf-lab's seed cache

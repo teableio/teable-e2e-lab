@@ -130,33 +130,86 @@ export const sanitizeBrowserDiagnosticText = (
   text: string,
   secrets: readonly string[] = [],
 ) => {
-  let safe = text
-    .replace(/\u001b\[[0-9;]*m/g, "")
-    .replace(
-      /\b(?:https?|wss?|postgres(?:ql)?|redis):\/\/[^\s<>"'`]+/gi,
-      (raw) => {
-        try {
-          const url = new URL(raw);
-          const origin = url.origin === "null"
+  const original = text.replace(/\u001b\[[0-9;]*m/g, "");
+  const spans: {
+    start: number;
+    end: number;
+    replacement: string;
+    secret: boolean;
+  }[] = [];
+
+  // One scan consumes each entire URL, so absolute URLs cannot also match as routes.
+  for (const match of original.matchAll(
+    /\b(?:https?|wss?|postgres(?:ql)?|redis):\/\/[^\s<>"'`]+|\/[^\s<>"'`]+/gi,
+  )) {
+    const raw = match[0];
+    let replacement: string;
+    if (raw.startsWith("/") && !raw.startsWith("//")) {
+      replacement = raw.split(/[?#]/, 1)[0];
+    } else {
+      try {
+        const url = new URL(raw.startsWith("//") ? `https:${raw}` : raw);
+        const origin = raw.startsWith("//")
+          ? `//${url.host}`
+          : url.origin === "null"
             ? `${url.protocol}//${url.host}`
             : url.origin;
-          return `${origin}${url.pathname}`;
-        } catch {
-          return "<REDACTED_URL>";
-        }
-      },
-    )
-    .replace(/(\/[^\s<>"'`?#]*)[?#][^\s<>"'`]*/g, "$1");
-  for (const secret of [
+        replacement = `${origin}${url.pathname}`;
+      } catch {
+        replacement = "<REDACTED_URL>";
+      }
+    }
+    spans.push({
+      start: match.index,
+      end: match.index + raw.length,
+      replacement,
+      secret: false,
+    });
+  }
+
+  const knownSecrets = new Set([
     ...secrets,
     ...Object.entries(process.env)
       .filter(([key]) =>
         /token|secret|password|cookie|credential|private.?key|api.?key|access.?key/i.test(key),
       )
       .map(([, value]) => value),
-  ]) {
-    if (secret && secret.length >= 4) safe = safe.split(secret).join("<REDACTED>");
+  ]);
+  for (const secret of knownSecrets) {
+    if (!secret || secret.length < 4) continue;
+    let start = original.indexOf(secret);
+    while (start !== -1) {
+      spans.push({
+        start,
+        end: start + secret.length,
+        replacement: "<REDACTED>",
+        secret: true,
+      });
+      start = original.indexOf(secret, start + 1);
+    }
   }
+
+  spans.sort((left, right) => left.start - right.start || left.end - right.end);
+  const merged: typeof spans = [];
+  for (const span of spans) {
+    const previous = merged[merged.length - 1];
+    if (previous && span.start < previous.end) {
+      previous.end = Math.max(previous.end, span.end);
+      // A secret can contain a URL delimiter: redact the whole overlapping union.
+      previous.secret ||= span.secret;
+      if (previous.secret) previous.replacement = "<REDACTED>";
+    } else {
+      merged.push({ ...span });
+    }
+  }
+  const parts: string[] = [];
+  let cursor = 0;
+  for (const span of merged) {
+    parts.push(original.slice(cursor, span.start), span.replacement);
+    cursor = span.end;
+  }
+  parts.push(original.slice(cursor));
+  const safe = parts.join("");
   return safe
     .replace(/\bBearer\s+[^\s"',}]+/gi, "Bearer <REDACTED>")
     .replace(
