@@ -209,8 +209,8 @@ export const sanitizeBrowserDiagnosticText = (
     cursor = span.end;
   }
   parts.push(original.slice(cursor));
-  const safe = parts.join("");
-  return safe
+  let safe = parts
+    .join("")
     .replace(/\bBearer\s+[^\s"',}]+/gi, "Bearer <REDACTED>")
     .replace(
       /(["']?(?:authorization|(?:set-)?cookie|auth_session|[\w-]*(?:token|secret|password|api[_-]?key))["']?\s*[:=]\s*)(?:"[^"\n]*"|'[^'\n]*'|[^\s,;}]+)/gi,
@@ -218,6 +218,11 @@ export const sanitizeBrowserDiagnosticText = (
     )
     .replace(/\b(authorization|(?:set-)?cookie)\s*:\s*[^\r\n]+/gi, "$1: <REDACTED>")
     .replace(/\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/g, "<REDACTED>");
+  // URL normalization can introduce a known value absent from the original text.
+  for (const secret of knownSecrets) {
+    if (secret && secret.length >= 4) safe = safe.split(secret).join("<REDACTED>");
+  }
+  return safe;
 };
 
 const findTeableRoot = () => {

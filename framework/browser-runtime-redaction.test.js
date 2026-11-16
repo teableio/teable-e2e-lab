@@ -111,6 +111,12 @@ test("browser diagnostics redact secret and URL boundary overlaps", () => {
         secrets: [],
         expected: "<REDACTED>",
       },
+      {
+        name: "URL normalization cannot introduce an unmasked known secret",
+        input: "https://user:pass@example.com/path",
+        secrets: ["https://example.com/path"],
+        expected: "<REDACTED>",
+      },
     ];
     for (const fixture of fixtures) {
       assert.equal(
