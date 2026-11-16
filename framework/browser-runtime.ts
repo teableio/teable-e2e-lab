@@ -10,8 +10,9 @@ export type BrowserResponse = {
   url(): string;
   status(): number;
   headers(): Record<string, string>;
+  headerValue(name: string): Promise<string | null>;
   json(): Promise<unknown>;
-  request(): { method(): string };
+  request(): BrowserRequest;
 };
 
 export type BrowserWebSocketFrame = {
@@ -30,6 +31,8 @@ export type BrowserWebSocket = {
 export type BrowserRequest = {
   method(): string;
   url(): string;
+  failure(): { errorText: string } | null;
+  headerValue(name: string): Promise<string | null>;
 };
 
 export type BrowserRoute = {
@@ -65,6 +68,8 @@ export type BrowserPage = {
   locator(selector: string): BrowserLocator;
   on(event: "pageerror", handler: (error: Error) => void): void;
   on(event: "request", handler: (request: BrowserRequest) => void): void;
+  on(event: "response", handler: (response: BrowserResponse) => void): void;
+  on(event: "requestfailed", handler: (request: BrowserRequest) => void): void;
   on(event: "websocket", handler: (socket: BrowserWebSocket) => void): void;
   route(
     url: string,
@@ -119,6 +124,117 @@ type RuntimeState = {
 
 let runtime: RuntimeState | undefined;
 let runtimePromise: Promise<RuntimeState> | undefined;
+
+type BrowserDiagnosticSpan = {
+  start: number;
+  end: number;
+  replacement: string;
+  secret: boolean;
+};
+
+const collectKnownSecretSpans = (
+  text: string,
+  knownSecrets: Iterable<string | undefined>,
+  spans: BrowserDiagnosticSpan[],
+) => {
+  for (const secret of knownSecrets) {
+    if (!secret || secret.length < 4) continue;
+    let start = text.indexOf(secret);
+    while (start !== -1) {
+      spans.push({
+        start,
+        end: start + secret.length,
+        replacement: "<REDACTED>",
+        secret: true,
+      });
+      start = text.indexOf(secret, start + 1);
+    }
+  }
+};
+
+const renderDiagnosticSpans = (text: string, spans: BrowserDiagnosticSpan[]) => {
+  spans.sort((left, right) => left.start - right.start || left.end - right.end);
+  const merged: BrowserDiagnosticSpan[] = [];
+  for (const span of spans) {
+    const previous = merged[merged.length - 1];
+    if (previous && span.start < previous.end) {
+      previous.end = Math.max(previous.end, span.end);
+      // Render the entire secret union before any replacement can hide an overlap.
+      previous.secret ||= span.secret;
+      if (previous.secret) previous.replacement = "<REDACTED>";
+    } else {
+      merged.push({ ...span });
+    }
+  }
+  const parts: string[] = [];
+  let cursor = 0;
+  for (const span of merged) {
+    parts.push(text.slice(cursor, span.start), span.replacement);
+    cursor = span.end;
+  }
+  parts.push(text.slice(cursor));
+  return parts.join("");
+};
+
+// Shared only by browser diagnostics and the frontend output snapshot.
+export const sanitizeBrowserDiagnosticText = (
+  text: string,
+  secrets: readonly string[] = [],
+) => {
+  const original = text.replace(/\u001b\[[0-9;]*m/g, "");
+  const spans: BrowserDiagnosticSpan[] = [];
+
+  // One scan consumes each entire URL, so absolute URLs cannot also match as routes.
+  for (const match of original.matchAll(
+    /\b(?:https?|wss?|postgres(?:ql)?|redis):\/\/[^\s<>"'`]+|\/[^\s<>"'`]+/gi,
+  )) {
+    const raw = match[0];
+    let replacement: string;
+    if (raw.startsWith("/") && !raw.startsWith("//")) {
+      replacement = raw.split(/[?#]/, 1)[0];
+    } else {
+      try {
+        const url = new URL(raw.startsWith("//") ? `https:${raw}` : raw);
+        const origin = raw.startsWith("//")
+          ? `//${url.host}`
+          : url.origin === "null"
+            ? `${url.protocol}//${url.host}`
+            : url.origin;
+        replacement = `${origin}${url.pathname}`;
+      } catch {
+        replacement = "<REDACTED_URL>";
+      }
+    }
+    spans.push({
+      start: match.index,
+      end: match.index + raw.length,
+      replacement,
+      secret: false,
+    });
+  }
+
+  const knownSecrets = new Set([
+    ...secrets,
+    ...Object.entries(process.env)
+      .filter(([key]) =>
+        /token|secret|password|cookie|credential|private.?key|api.?key|access.?key/i.test(key),
+      )
+      .map(([, value]) => value),
+  ]);
+  collectKnownSecretSpans(original, knownSecrets, spans);
+  const safe = renderDiagnosticSpans(original, spans)
+    .replace(/\bBearer\s+[^\s"',}]+/gi, "Bearer <REDACTED>")
+    .replace(
+      /(["']?(?:authorization|(?:set-)?cookie|auth_session|[\w-]*(?:token|secret|password|api[_-]?key))["']?\s*[:=]\s*)(?:"[^"\n]*"|'[^'\n]*'|[^\s,;}]+)/gi,
+      "$1<REDACTED>",
+    )
+    .replace(/\b(authorization|(?:set-)?cookie)\s*:\s*[^\r\n]+/gi, "$1: <REDACTED>")
+    .replace(/\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/g, "<REDACTED>");
+  // URL normalization can introduce a known value absent from the original text.
+  const finalSpans: BrowserDiagnosticSpan[] = [];
+  collectKnownSecretSpans(safe, knownSecrets, finalSpans);
+  return renderDiagnosticSpans(safe, finalSpans);
+};
 
 const findTeableRoot = () => {
   const candidates = [
@@ -180,7 +296,7 @@ const waitForFrontend = async (
   while (Date.now() < deadline) {
     if (child.exitCode != null) {
       throw new Error(
-        `Next.js exited with ${child.exitCode} before becoming ready:\n${output.slice(-40).join("")}`,
+        `Next.js exited with ${child.exitCode} before becoming ready:\n${sanitizeBrowserDiagnosticText(output.slice(-40).join(""))}`,
       );
     }
     try {
@@ -192,7 +308,7 @@ const waitForFrontend = async (
     await new Promise((resolveWait) => setTimeout(resolveWait, 500));
   }
   throw new Error(
-    `Next.js did not become ready at ${frontendUrl}:\n${output.slice(-40).join("")}`,
+    `Next.js did not become ready at ${frontendUrl}:\n${sanitizeBrowserDiagnosticText(output.slice(-40).join(""))}`,
   );
 };
 
@@ -269,7 +385,7 @@ const startRuntime = async (context: BugRunContext): Promise<RuntimeState> => {
   );
 
   const collect = (chunk: unknown) => {
-    output.push(String(chunk));
+    output.push(String(chunk).slice(-16_384));
     if (output.length > 200) output.shift();
   };
   frontend.stdout?.on("data", collect);
@@ -419,6 +535,8 @@ export const openBrowserPage = async (
   return {
     page,
     frontendUrl: state.frontendUrl,
+    frontendOutput: () =>
+      sanitizeBrowserDiagnosticText(state.output.join(""), [cookie.value]).slice(-32_768),
     close: async () => {
       try {
         // Route handlers may still be fetching or delaying a response after the probe ends.

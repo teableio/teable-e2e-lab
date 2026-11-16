@@ -35,6 +35,7 @@ permissions:
 
 env:
   NODE_ENV: test
+  TEST_LOG_LEVEL: error,warn
   PRISMA_DATABASE_URL: "postgresql://teable:teable@127.0.0.1:25432/e2e_test_teable?schema=public&statement_cache_size=0&connection_limit=20"
   PRISMA_META_DATABASE_URL: "postgresql://teable:teable@127.0.0.1:25432/e2e_test_teable?schema=public&statement_cache_size=0&connection_limit=20"
   PRISMA_TRANSACTION_TIMEOUT: "30000"
@@ -181,14 +182,11 @@ jobs:
           path: teable-ee
           token: ${{ steps.ee-token.outputs.token }}
 
-      - name: Select Ubuntu archive mirrors
+      - name: Select Ubuntu archive
         run: |
           set -euo pipefail
           if [ -f /etc/apt/apt-mirrors.txt ]; then
-            printf '%s\tpriority:%s\n' \
-              'https://mirrors.edge.kernel.org/ubuntu/' 1 \
-              'https://archive.ubuntu.com/ubuntu/' 2 \
-              'https://security.ubuntu.com/ubuntu/' 3 |
+            printf '%s\n' 'https://archive.ubuntu.com/ubuntu/' |
               sudo tee /etc/apt/apt-mirrors.txt >/dev/null
           fi
 
@@ -196,6 +194,10 @@ jobs:
         uses: ./e2e-lab/.github/actions/e2e-runtime
         with:
           operation: bootstrap
+
+      - name: Verify browser diagnostic redaction
+        working-directory: e2e-lab
+        run: node --experimental-strip-types --test framework/browser-runtime-redaction.test.js
 
       # Every commit builds its own database from its own migrations. Dumps are
       # deliberately NOT shared across columns — different commits can carry

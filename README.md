@@ -59,13 +59,41 @@ the report job's GitHub summary; `comparison.json` in the
 `e2e-lab-comparison-*` artifact. Local direction-finding runs follow the localrun skill, which is not published
 with this repository; ask the team for it.
 
+The workflow enables Nest `error,warn` logging so backend exception stacks
+remain available in the existing Actions console output, with native Actions
+secret masking. Raw runtime logs are not added to result artifacts. This
+repository is public; result artifacts must not be treated as private storage.
+
+The T7257 user-mode-switch runner includes bounded page errors (name, message,
+stack), failed HTTP/network requests, phase timestamps, successful directions,
+normalized direction failures, and a frontend output snapshot in its failure
+evidence. Browser diagnostics remove URL credentials, queries and fragments,
+redact known secrets, and read only request-id/traceparent correlation headers.
+Network listeners never capture bodies, cookies or authorization headers.
+HTTP/network events add evidence only. Any page error still fails the original
+checkpoint, and setup failures remain case errors.
+
+Each regression workflow invocation also runs the deterministic synthetic
+redaction proof after Node setup:
+
+```bash
+node --experimental-strip-types --test framework/browser-runtime-redaction.test.js
+```
+
+The proof imports the actual sanitizer without starting a browser or server.
+It checks URL delimiters inside known secrets as well as relative auth routes,
+absolute URL credentials, and the existing credential redactions. Secret and
+URL spans are found in the same original text; overlapping regions containing
+a secret are redacted together, even when that removes the entire URL.
+
 ### Browser dependency archives
 
-Before runtime bootstrap, the workflow selects the Kernel.org Ubuntu archive
-with canonical archive/security fallbacks in the runner's APT mirror list.
-Kernel.org is a [separately operated mirror](https://mirrors.kernel.org/), not a
-Canonical host; its independent hostname avoids relying only on `ubuntu.com`
-when that domain's resolution fails. The existing Ubuntu signing keyring,
+Before runtime bootstrap, the workflow selects the canonical Ubuntu archive
+in the runner's APT mirror list. A ranked Kernel.org fallback stalled package
+indexes for 30 minutes after canonical InRelease files had already loaded;
+the consumer case never started. Use one archive rather than retain the failed
+mirror for later index requests. This trades independent-DNS fallback for
+deterministic source selection. The existing Ubuntu signing keyring,
 repository suites/components and APT/TLS verification remain unchanged.
 
 This bootstrap belongs to the Lab workflow, not to a helper introduced by a
