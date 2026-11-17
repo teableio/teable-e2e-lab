@@ -185,8 +185,9 @@ without downloading them. Filters in the upsert address columns by FIELD ID,
 never by name — Teable silently drops a filter naming a missing field and
 answers 200, which would turn "find my row" into "the whole table".
 
-The report job also posts one Feishu card per run (`FEISHU_E2E_WEBHOOK_URL`),
-built from the same `comparison.json` the acceptance gate judges: verdict
+The report job also posts a Feishu card (`FEISHU_E2E_WEBHOOK_URL`) for each
+run that fails acceptance; a passing run posts nothing. The card is built from
+the same `comparison.json` the acceptance gate judges: verdict
 header, per-row cell strips with transition points, and the lists that need a
 human (regressions, errors, missing cells, unexpectedly-fixed). Teable and
 Feishu are independent report steps so one outage cannot hide the other.

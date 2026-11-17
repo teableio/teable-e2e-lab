@@ -1,5 +1,10 @@
-// One Feishu card per run, built from comparison.json — the same model the
-// acceptance gate judged, so the card can never disagree with the verdict.
+// One Feishu card per failed run, built from comparison.json — the same model
+// the acceptance gate judged, so the card can never disagree with the verdict.
+//
+// A passing run sends nothing. The lab runs on every backend PR push and every
+// develop merge, and a green card for each of them buried the red ones. A
+// passing run's table is still on its run page, and its rows are still in the
+// Regression Track table.
 //
 // The card has one hard rule: nothing above the fold grows with the number of
 // cases. A run that ends before its cases start produces one "result missing"
@@ -131,8 +136,12 @@ const collapsible = (title, content) => ({
   elements: [{ tag: "markdown", content }],
 });
 
+// The card a run should send, or null when it should send none: a run that
+// passed acceptance.
 export const buildFeishuCard = ({ comparison, runUrl }) => {
-  const failed = !comparison.passed;
+  if (comparison.passed) {
+    return null;
+  }
   const { regressions, errors, missing } = comparison.failures;
   const { unexpectedlyFixed } = comparison.notices;
 
@@ -259,11 +268,9 @@ export const buildFeishuCard = ({ comparison, runUrl }) => {
       header: {
         title: {
           tag: "plain_text",
-          content: failed
-            ? "❌ e2e-lab regression check failed"
-            : "✅ e2e-lab regression check passed",
+          content: "❌ e2e-lab regression check failed",
         },
-        template: failed ? "red" : "green",
+        template: "red",
       },
       body: { elements },
     },
@@ -284,6 +291,10 @@ const main = async () => {
   const runUrl = `https://github.com/${repository}/actions/runs/${env("GITHUB_RUN_ID", "")}`;
 
   const card = buildFeishuCard({ comparison, runUrl });
+  if (!card) {
+    console.log("The run passed; Feishu gets a card only for failed runs.");
+    return;
+  }
   const res = await fetch(webhookUrl, {
     method: "POST",
     headers: { "content-type": "application/json" },

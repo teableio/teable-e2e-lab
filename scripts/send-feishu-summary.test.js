@@ -133,6 +133,7 @@ test("a missing result reads as ❓ rather than vanishing", () => {
 test("the card carries the grid inside a fenced block and links the run", () => {
   const card = buildFeishuCard({
     comparison: comparison({
+      passed: false,
       commits: twoCommits,
       rows: [
         {
@@ -157,7 +158,7 @@ test("the card carries the grid inside a fenced block and links the run", () => 
   const [summary, ...panels] = card.card.body.elements;
   assert.doesNotMatch(summary.content, /```/);
   assert.match(summary.content, /https:\/\/example\.test\/run\/1/);
-  assert.equal(card.card.header.template, "green");
+  assert.equal(card.card.header.template, "red");
 
   // The grid is present, folded away.
   const grid = panels.find((panel) =>
@@ -166,6 +167,50 @@ test("the card carries the grid inside a fenced block and links the run", () => 
   assert.equal(grid.tag, "collapsible_panel");
   assert.equal(grid.expanded, false);
   assert.match(grid.elements[0].content, /^```\n/);
+});
+
+// The card this test retires read "271 cases on 68c8d498d4 — 271 passed,
+// 0 failed", and it arrived for every PR push and develop merge until the red
+// cards were the ones nobody noticed. A fix still waiting to be confirmed does
+// not fail the run, so it does not bring the card back either.
+test("a passing run sends no card, even with a fix to confirm", () => {
+  const sha = "a".repeat(40);
+  const card = buildFeishuCard({
+    comparison: {
+      commits: [{ ref: sha, sha, short: sha.slice(0, 10) }],
+      rows: [
+        {
+          caseId: "record/x",
+          issue: "T1",
+          status: "fixed",
+          cells: [{ sha, short: sha.slice(0, 10), verdict: "pass" }],
+          transitions: [],
+        },
+        {
+          caseId: "record/y",
+          issue: "T2",
+          status: "open",
+          cells: [{ sha, short: sha.slice(0, 10), verdict: "unexpected-pass" }],
+          transitions: [],
+        },
+      ],
+      failures: {
+        regressions: [],
+        errors: [],
+        missing: [],
+        unplanned: [],
+        duplicates: [],
+        unknownVerdicts: [],
+      },
+      notices: {
+        unexpectedlyFixed: [{ caseId: "record/y", issue: "T2", sha }],
+      },
+      passed: true,
+    },
+    runUrl: "https://example.invalid/run",
+  });
+
+  assert.equal(card, null);
 });
 
 test("a single-commit run sends the counts instead of the grid", () => {
