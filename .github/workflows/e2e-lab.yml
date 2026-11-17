@@ -366,9 +366,10 @@ jobs:
           E2E_LAB_EXECUTE_PLAN: ${{ needs.resolve_inputs.outputs.execute_plan }}
         run: node e2e-lab/scripts/report-teable-track.mjs
 
-      # The run's card, built from the same comparison.json the acceptance
-      # gate judges. Independent report steps by design — a Feishu outage must
-      # not hide the Teable rows, and vice versa.
+      # A card only when the run fails, judged on the same comparison.json the
+      # acceptance gate reads; a passing run sends nothing. Independent report
+      # steps by design — a Feishu outage must not hide the Teable rows, and
+      # vice versa.
       - name: Send Feishu summary
         if: always() && env.FEISHU_E2E_WEBHOOK_URL != ''
         continue-on-error: true
