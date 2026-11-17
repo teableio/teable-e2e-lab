@@ -235,6 +235,10 @@ jobs:
         working-directory: teable-ee/enterprise/app-ee
         run: |
           set -euo pipefail
+          # Use the official archive: the runner mirror list stalled on
+          # mirrors.edge.kernel.org before any browser-driven case could run.
+          printf '%s\n' 'https://archive.ubuntu.com/ubuntu' | \
+            sudo tee /etc/apt/apt-mirrors.txt >/dev/null
           pnpm exec playwright install --with-deps chromium
 
       - name: Run bug cases through teable-ee e2e
