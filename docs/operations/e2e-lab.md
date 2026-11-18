@@ -92,6 +92,27 @@ the HTTP status and the server's own response body (truncated). The payloads
 are written before any assertion throws; they, not the vitest exit code, are
 the source of truth.
 
+## Acceptance runs
+
+Use an acceptance run to check a pull request or reproduce a problem without any
+outward effect. Push the case work to a temporary `acc/pr-<number>-<topic>`
+branch and dispatch from it. Every `acc/*` branch runs in this mode, and
+`acceptance_run=true` enables it on any other branch.
+
+```bash
+gh workflow run e2e-lab.yml --repo teableio/teable-e2e-lab \
+  --ref acc/pr-<number>-<topic> \
+  -f teable_ee_commits=refs/pull/<number>/merge \
+  -f case_filter=<case-id>
+```
+
+An acceptance run writes nothing to the result table, Feishu or a check run.
+Test and database output stays on the runner. Artifacts hold only case ids,
+commits and verdicts, and expire after one day.
+
+Run inputs, the branch and its code, setup step logs and resolved commit SHAs
+remain public. Delete the run and the branch when finished.
+
 ## Manual examples
 
 Compare three revisions, all cases:
