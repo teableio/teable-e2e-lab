@@ -9,6 +9,7 @@ import { runGalleryPrimaryVisibleCase } from "./runners/gallery-primary-visible.
 import { runAutomationLegacyReciprocalLinkCase } from "./runners/automation-legacy-reciprocal-link.runner";
 import { runSearchMatchesScopeCase } from "./runners/search-matches-scope.runner";
 import { runByodbMigrationRetryCase } from "./runners/byodb-migration-retry.runner";
+import { runAutomationScriptRuntimeCase } from "./runners/automation-script-runtime.runner";
 import { runDatetimeDiffWholeDaysCase } from "./runners/datetime-diff-whole-days.runner";
 import { runLinkedFilterInvalidOperatorCase } from "./runners/linked-filter-invalid-operator.runner";
 import { runSelectChoiceNameLimitCase } from "./runners/select-choice-name-limit.runner";
@@ -441,6 +442,7 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "automation-legacy-reciprocal-link": runAutomationLegacyReciprocalLinkCase,
   "search-matches-scope": runSearchMatchesScopeCase,
   "byodb-migration-retry": runByodbMigrationRetryCase,
+  "automation-script-runtime": runAutomationScriptRuntimeCase,
   "datetime-diff-whole-days": runDatetimeDiffWholeDaysCase,
   "linked-filter-invalid-operator": runLinkedFilterInvalidOperatorCase,
   "select-choice-name-limit": runSelectChoiceNameLimitCase,

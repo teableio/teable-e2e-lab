@@ -254,6 +254,7 @@ import automationLegacyReciprocalLinkCase from "./cases/automation/an-automation
 import searchSparseTailCase from "./cases/search/a-search-finds-matches-after-a-long-run-of-non-matching-rows.case";
 import searchLargeScopeCase from "./cases/search/a-search-highlights-inside-a-large-selection.case";
 import byodbMigrationRetryCase from "./cases/space/a-legacy-data-database-migrates-on-retry.case";
+import automationScriptRuntimeCase from "./cases/automation/a-script-can-call-the-automation-runtime.case";
 import formulaY3763Case from "./cases/formula/y3763-datetime-diff-counts-complete-days.case";
 import fieldY3222Case from "./cases/field/y3222-an-unevaluable-checkbox-filter-is-refused.case";
 import fieldY3234Case from "./cases/field/y3234-an-overlong-option-name-is-refused.case";
@@ -283,6 +284,7 @@ const cases = [
   searchSparseTailCase,
   searchLargeScopeCase,
   byodbMigrationRetryCase,
+  automationScriptRuntimeCase,
   formulaY3763Case,
   fieldY3222Case,
   fieldY3234Case,
