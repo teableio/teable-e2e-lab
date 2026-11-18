@@ -218,6 +218,7 @@ export interface BugCaseConfigByRunner {
   "automation-legacy-reciprocal-link": AutomationLegacyReciprocalLinkCaseConfig;
   "search-matches-scope": SearchMatchesScopeCaseConfig;
   "byodb-migration-retry": ByodbMigrationRetryCaseConfig;
+  "automation-script-runtime": AutomationScriptRuntimeCaseConfig;
   "datetime-diff-whole-days": DatetimeDiffWholeDaysCaseConfig;
   "linked-filter-invalid-operator": LinkedFilterInvalidOperatorCaseConfig;
   "select-choice-name-limit": SelectChoiceNameLimitCaseConfig;
@@ -3254,4 +3255,12 @@ export interface UrlAttachmentRefusedUpstreamCaseConfig {
 export interface DuplicateReverseLinkFieldCaseConfig {
   baseId: "seed-base";
   tableNamePrefix: string;
+}
+
+export interface AutomationScriptRuntimeCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  scriptTimeoutMs: number;
+  callTimeoutMs: number;
+  settleTimeoutMs: number;
 }
