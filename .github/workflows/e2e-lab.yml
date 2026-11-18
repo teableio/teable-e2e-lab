@@ -5,7 +5,8 @@ on:
     inputs:
       teable_ee_commits:
         description: >-
-          Comma-separated teable-ee commits (branch, tag, or SHA), OLDEST
+          Comma-separated teable-ee commits (branch, tag, SHA, or
+          refs/pull/<number>/merge), OLDEST
           FIRST. The LAST one is the gating column: only there does a
           reproduced fixed-status bug fail the run — on earlier columns it is
           the world before the fix. At most 8 per dispatch.
@@ -24,6 +25,14 @@ on:
         required: false
         default: ""
         type: string
+      acceptance_run:
+        description: >-
+          Run privately scoped PR acceptance: no result table, Feishu or check
+          run writes, and only pass/fail data in public logs and artifacts.
+          Always on for branches named acc/*.
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -50,8 +59,11 @@ env:
   OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: ""
   # Workflow-level so step `if:` conditions can see them — a step's own env
   # block is not visible to its own condition.
-  TEABLE_E2E_LAB_TOKEN: ${{ secrets.TEABLE_E2E_LAB_TOKEN }}
-  FEISHU_E2E_WEBHOOK_URL: ${{ secrets.FEISHU_E2E_WEBHOOK_URL }}
+  # Acceptance runs never receive the reporting credentials, so a reporting
+  # step cannot write even if its own condition is wrong.
+  E2E_LAB_ACCEPTANCE_RUN: ${{ (inputs.acceptance_run || startsWith(github.ref, 'refs/heads/acc/')) && 'true' || 'false' }}
+  TEABLE_E2E_LAB_TOKEN: ${{ !(inputs.acceptance_run || startsWith(github.ref, 'refs/heads/acc/')) && secrets.TEABLE_E2E_LAB_TOKEN || '' }}
+  FEISHU_E2E_WEBHOOK_URL: ${{ !(inputs.acceptance_run || startsWith(github.ref, 'refs/heads/acc/')) && secrets.FEISHU_E2E_WEBHOOK_URL || '' }}
 
 jobs:
   resolve_inputs:
@@ -98,7 +110,9 @@ jobs:
           repository: teableio/teable-ee
           path: teable-ee-graph
           token: ${{ steps.ee-token.outputs.token }}
-          fetch-depth: 0
+          # A full fetch lists every branch name in the log. Acceptance runs
+          # fetch the same history quietly in the next step.
+          fetch-depth: ${{ env.E2E_LAB_ACCEPTANCE_RUN == 'true' && 1 || 0 }}
           filter: tree:0
 
       - name: Resolve refs to pinned SHAs
@@ -108,11 +122,19 @@ jobs:
           TEABLE_EE_COMMITS: ${{ inputs.teable_ee_commits }}
         run: |
           set -euo pipefail
+          if [ "$E2E_LAB_ACCEPTANCE_RUN" = "true" ]; then
+            git fetch --quiet --unshallow --tags --filter=tree:0 origin \
+              "+refs/heads/*:refs/remotes/origin/*"
+          fi
           resolved="[]"
           IFS=',' read -ra refs <<< "$TEABLE_EE_COMMITS"
           for raw in "${refs[@]}"; do
             ref="$(echo "$raw" | xargs)"
             [ -z "$ref" ] && continue
+            # Pull request refs are not part of a normal clone.
+            if [[ "$ref" =~ ^refs/pull/[0-9]+/(merge|head)$ ]]; then
+              git fetch --quiet --filter=tree:0 origin "+${ref}:${ref}"
+            fi
             # A branch name exists locally only as origin/<name> after a
             # non-checkout fetch, so try both spellings before failing.
             if sha=$(git rev-parse --verify --quiet "${ref}^{commit}"); then
@@ -208,8 +230,18 @@ jobs:
           set -euo pipefail
           docker exec "$TEST_PG_CONTAINER_NAME" dropdb -U teable --if-exists e2e_test_teable
           docker exec "$TEST_PG_CONTAINER_NAME" createdb -U teable e2e_test_teable
-          make postgres.mode
-          pnpm -F @teable/db-main-prisma-ee prisma-db-seed -- --e2e
+          prepare_database() {
+            make postgres.mode
+            pnpm -F @teable/db-main-prisma-ee prisma-db-seed -- --e2e
+          }
+          if [ "$E2E_LAB_ACCEPTANCE_RUN" = "true" ]; then
+            prepare_database > "${RUNNER_TEMP}/acceptance-database.log" 2>&1 || {
+              echo "Database preparation failed; output is withheld in acceptance mode." >&2
+              exit 1
+            }
+          else
+            prepare_database
+          fi
 
       # Browser-driven cases start a real frontend and drive it with Chromium.
       # The package is already installed with teable-ee; only the browser binary
@@ -249,10 +281,21 @@ jobs:
           export E2E_LAB_COMMIT_SHA="${{ matrix.plan.sha }}"
           export E2E_LAB_GATING="${{ matrix.plan.gating }}"
 
-          pnpm -F @teable/backend-ee exec vitest run \
-            --config ./vitest-e2e-lab.config.ts \
-            ../../community/apps/nestjs-backend/test/e2e-lab/e2e-lab.e2e-spec.ts \
-            --silent=false
+          run_cases() {
+            pnpm -F @teable/backend-ee exec vitest run \
+              --config ./vitest-e2e-lab.config.ts \
+              ../../community/apps/nestjs-backend/test/e2e-lab/e2e-lab.e2e-spec.ts \
+              --silent=false
+          }
+          if [ "$E2E_LAB_ACCEPTANCE_RUN" = "true" ]; then
+            # Test output can carry SQL, stacks and server responses.
+            run_cases > "${RUNNER_TEMP}/acceptance-cases.log" 2>&1 || {
+              echo "Case run failed; output is withheld in acceptance mode." >&2
+              exit 1
+            }
+          else
+            run_cases
+          fi
 
       # Second invocation, own app process: cases declaring
       # computedUpdateMode "hybrid" need the app booted WITHOUT
@@ -276,10 +319,27 @@ jobs:
           export E2E_LAB_GATING="${{ matrix.plan.gating }}"
           export E2E_LAB_COMPUTED_UPDATE_MODE="hybrid"
 
-          pnpm -F @teable/backend-ee exec vitest run \
-            --config ./vitest-e2e-lab.config.ts \
-            ../../community/apps/nestjs-backend/test/e2e-lab/e2e-lab.e2e-spec.ts \
-            --silent=false
+          run_cases() {
+            pnpm -F @teable/backend-ee exec vitest run \
+              --config ./vitest-e2e-lab.config.ts \
+              ../../community/apps/nestjs-backend/test/e2e-lab/e2e-lab.e2e-spec.ts \
+              --silent=false
+          }
+          if [ "$E2E_LAB_ACCEPTANCE_RUN" = "true" ]; then
+            # Test output can carry SQL, stacks and server responses.
+            run_cases > "${RUNNER_TEMP}/acceptance-cases.log" 2>&1 || {
+              echo "Case run failed; output is withheld in acceptance mode." >&2
+              exit 1
+            }
+          else
+            run_cases
+          fi
+
+      - name: Reduce acceptance payloads
+        if: always() && env.E2E_LAB_ACCEPTANCE_RUN == 'true'
+        run: >-
+          node e2e-lab/scripts/sanitize-acceptance-payloads.mjs
+          "e2e-lab-artifacts/${{ matrix.plan.artifactSuffix }}"
 
       # Named without run_attempt and with overwrite, the same trick perf-lab
       # uses for seed dumps: "Re-run failed jobs" replaces only the failed
@@ -293,10 +353,10 @@ jobs:
           path: e2e-lab-artifacts/${{ matrix.plan.artifactSuffix }}
           if-no-files-found: warn
           overwrite: true
-          retention-days: 30
+          retention-days: ${{ env.E2E_LAB_ACCEPTANCE_RUN == 'true' && 1 || 30 }}
 
       - name: Publish job summary
-        if: always()
+        if: always() && env.E2E_LAB_ACCEPTANCE_RUN != 'true'
         run: |
           shopt -s nullglob
           summaries=(e2e-lab-artifacts/${{ matrix.plan.artifactSuffix }}/summary-*.md)
@@ -352,14 +412,14 @@ jobs:
           name: e2e-lab-comparison-${{ github.run_id }}-${{ github.run_attempt }}
           path: e2e-lab-report
           if-no-files-found: warn
-          retention-days: 90
+          retention-days: ${{ env.E2E_LAB_ACCEPTANCE_RUN == 'true' && 1 || 90 }}
 
       # One row per case x commit into the Regression Track table, upserted by
       # Run Key. Best-effort and independent of acceptance: the artifacts are
       # the source of truth, the table is the queryable history. Gated on the
       # secret so forks and token-less setups skip cleanly.
       - name: Report results to Teable
-        if: always() && env.TEABLE_E2E_LAB_TOKEN != ''
+        if: always() && env.E2E_LAB_ACCEPTANCE_RUN != 'true' && env.TEABLE_E2E_LAB_TOKEN != ''
         continue-on-error: true
         env:
           E2E_LAB_ARTIFACT_DIR: ${{ github.workspace }}/e2e-lab-artifacts
@@ -371,7 +431,7 @@ jobs:
       # steps by design — a Feishu outage must not hide the Teable rows, and
       # vice versa.
       - name: Send Feishu summary
-        if: always() && env.FEISHU_E2E_WEBHOOK_URL != ''
+        if: always() && env.E2E_LAB_ACCEPTANCE_RUN != 'true' && env.FEISHU_E2E_WEBHOOK_URL != ''
         continue-on-error: true
         env:
           E2E_LAB_COMPARISON_PATH: ${{ github.workspace }}/e2e-lab-report/comparison.json
@@ -396,7 +456,7 @@ jobs:
       # rather than the failure this run actually saw.
       - name: Mint teable-ee checks token
         id: checks-app
-        if: always() && inputs.teable_ee_check_run_id != ''
+        if: always() && env.E2E_LAB_ACCEPTANCE_RUN != 'true' && inputs.teable_ee_check_run_id != ''
         uses: actions/create-github-app-token@v2
         with:
           app-id: ${{ secrets.RCI_APP_ID }}
@@ -405,7 +465,7 @@ jobs:
           repositories: teable-ee
 
       - name: Conclude teable-ee check run
-        if: always() && inputs.teable_ee_check_run_id != ''
+        if: always() && env.E2E_LAB_ACCEPTANCE_RUN != 'true' && inputs.teable_ee_check_run_id != ''
         env:
           TEABLE_EE_CHECK_RUN_ID: ${{ inputs.teable_ee_check_run_id }}
           TEABLE_EE_CHECKS_TOKEN: ${{ steps.checks-app.outputs.token }}
