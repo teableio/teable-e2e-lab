@@ -228,6 +228,10 @@ export interface BugCaseConfigByRunner {
   "duplicate-base-filtered-rollup": DuplicateBaseFilteredRollupCaseConfig;
   "url-attachment-refused-upstream": UrlAttachmentRefusedUpstreamCaseConfig;
   "duplicate-reverse-link-field": DuplicateReverseLinkFieldCaseConfig;
+  "numeric-switch-matching": NumericSwitchMatchingCaseConfig;
+  "long-formula-recompute": LongFormulaRecomputeCaseConfig;
+  "required-self-link-ring-delete": RequiredSelfLinkRingDeleteCaseConfig;
+  "concurrent-base-purge": ConcurrentBasePurgeCaseConfig;
 }
 
 export type BugRunnerKind = keyof BugCaseConfigByRunner;
@@ -3263,4 +3267,54 @@ export interface AutomationScriptRuntimeCaseConfig {
   scriptTimeoutMs: number;
   callTimeoutMs: number;
   settleTimeoutMs: number;
+}
+
+export interface NumericSwitchMatchingCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Display precision of the number column. The bug compared the formatted
+  // text, so a precision that adds decimals is the fixture.
+  precision: number;
+  rows: { label: string; n: number | null }[];
+  // `{n}` is the number column and `{a}` the label column. One expected value
+  // per row, in row order.
+  formulas: {
+    name: string;
+    expression: string;
+    expected: (number | string | null)[];
+  }[];
+}
+
+export interface LongFormulaRecomputeCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Terms per nested group. Their sum is the number of terms in the formula.
+  groups: number[];
+  initialValue: string;
+  createdValue: string;
+  updatedValue: string;
+  settleTimeoutMs: number;
+  settlePollIntervalMs: number;
+}
+
+export interface RequiredSelfLinkRingDeleteCaseConfig {
+  baseId: "seed-base";
+  tableNamePrefix: string;
+  // Rows in the ring. Above the delete stream's batch size the ring spans
+  // several batches, which is where it broke.
+  ringSize: number;
+  // How the delete names its rows: every row by id, or "all records".
+  selection: "ids" | "all";
+  writeBatchSize: number;
+}
+
+export interface ConcurrentBasePurgeCaseConfig {
+  baseId: "own-space";
+  namePrefix: string;
+  concurrentPurges: number;
+  // Enough data that the purge's cleanup takes long enough to overlap.
+  tablesPerBase: number;
+  rowsPerTable: number;
+  trashAttempts: number;
+  trashIntervalMs: number;
 }

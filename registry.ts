@@ -255,6 +255,11 @@ import searchSparseTailCase from "./cases/search/a-search-finds-matches-after-a-
 import searchLargeScopeCase from "./cases/search/a-search-highlights-inside-a-large-selection.case";
 import byodbMigrationRetryCase from "./cases/space/a-legacy-data-database-migrates-on-retry.case";
 import automationScriptRuntimeCase from "./cases/automation/a-script-can-call-the-automation-runtime.case";
+import formulaNumericSwitchColumnCase from "./cases/formula/numeric-switch-matches-by-value-in-a-column.case";
+import formulaLongSingleColumnCase from "./cases/formula/a-long-single-column-formula-recomputes-on-write.case";
+import recordRequiredRing250Case from "./cases/record/a-required-self-link-ring-of-250-deletes-in-one-stream.case";
+import recordRequiredRing1000Case from "./cases/record/a-required-self-link-ring-of-1000-deletes-in-one-stream.case";
+import spaceConcurrentBasePurgeCase from "./cases/space/purging-a-base-twice-at-once-never-fails.case";
 import formulaY3763Case from "./cases/formula/y3763-datetime-diff-counts-complete-days.case";
 import fieldY3222Case from "./cases/field/y3222-an-unevaluable-checkbox-filter-is-refused.case";
 import fieldY3234Case from "./cases/field/y3234-an-overlong-option-name-is-refused.case";
@@ -285,6 +290,11 @@ const cases = [
   searchLargeScopeCase,
   byodbMigrationRetryCase,
   automationScriptRuntimeCase,
+  formulaNumericSwitchColumnCase,
+  formulaLongSingleColumnCase,
+  recordRequiredRing250Case,
+  recordRequiredRing1000Case,
+  spaceConcurrentBasePurgeCase,
   formulaY3763Case,
   fieldY3222Case,
   fieldY3234Case,
