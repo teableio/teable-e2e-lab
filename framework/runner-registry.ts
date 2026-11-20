@@ -10,6 +10,10 @@ import { runAutomationLegacyReciprocalLinkCase } from "./runners/automation-lega
 import { runSearchMatchesScopeCase } from "./runners/search-matches-scope.runner";
 import { runByodbMigrationRetryCase } from "./runners/byodb-migration-retry.runner";
 import { runAutomationScriptRuntimeCase } from "./runners/automation-script-runtime.runner";
+import { runConcurrentBasePurgeCase } from "./runners/concurrent-base-purge.runner";
+import { runLongFormulaRecomputeCase } from "./runners/long-formula-recompute.runner";
+import { runNumericSwitchMatchingCase } from "./runners/numeric-switch-matching.runner";
+import { runRequiredSelfLinkRingDeleteCase } from "./runners/required-self-link-ring-delete.runner";
 import { runDatetimeDiffWholeDaysCase } from "./runners/datetime-diff-whole-days.runner";
 import { runLinkedFilterInvalidOperatorCase } from "./runners/linked-filter-invalid-operator.runner";
 import { runSelectChoiceNameLimitCase } from "./runners/select-choice-name-limit.runner";
@@ -443,6 +447,10 @@ const runners: { [K in BugRunnerKind]: RunnerFn<K> } = {
   "search-matches-scope": runSearchMatchesScopeCase,
   "byodb-migration-retry": runByodbMigrationRetryCase,
   "automation-script-runtime": runAutomationScriptRuntimeCase,
+  "numeric-switch-matching": runNumericSwitchMatchingCase,
+  "long-formula-recompute": runLongFormulaRecomputeCase,
+  "required-self-link-ring-delete": runRequiredSelfLinkRingDeleteCase,
+  "concurrent-base-purge": runConcurrentBasePurgeCase,
   "datetime-diff-whole-days": runDatetimeDiffWholeDaysCase,
   "linked-filter-invalid-operator": runLinkedFilterInvalidOperatorCase,
   "select-choice-name-limit": runSelectChoiceNameLimitCase,
