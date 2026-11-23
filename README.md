@@ -73,6 +73,11 @@ new EE revision: historical comparison columns must remain runnable. Browser
 cases still install Chromium with `--with-deps` and execute the original case
 plan; dependency errors are never treated as a successful run.
 
+The Chromium install is bounded: APT gives up on a dead connection after 30
+seconds, each install attempt is capped at 6 minutes, and the step retries
+three times before failing. A stalled mirror now fails the job within about 25
+minutes with a clear error instead of holding it to the two-hour job timeout.
+
 ## Adding a case
 
 Read [.agents/README.md](.agents/README.md) — the short version: one

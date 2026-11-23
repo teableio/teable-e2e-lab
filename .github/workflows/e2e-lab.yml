@@ -262,12 +262,33 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-playwright-
 
+      # A healthy install takes under a minute. A stalled APT mirror used to
+      # hold this step until the 120-minute job timeout, so every case came
+      # back "missing" two hours later. Bound each attempt, let APT give up on
+      # a dead connection and fall through to the next mirror, and retry a
+      # few times before failing the job quickly and loudly.
       - name: Install Chromium for browser-driven cases
         if: hashFiles('e2e-lab/framework/browser-runtime.ts') != ''
         working-directory: teable-ee/enterprise/app-ee
+        timeout-minutes: 25
         run: |
           set -euo pipefail
-          pnpm exec playwright install --with-deps chromium
+          printf '%s\n' \
+            'Acquire::Retries "3";' \
+            'Acquire::http::Timeout "30";' \
+            'Acquire::https::Timeout "30";' |
+            sudo tee /etc/apt/apt.conf.d/80-e2e-lab-timeouts >/dev/null
+
+          for attempt in 1 2 3; do
+            if timeout --kill-after=30s 6m pnpm exec playwright install --with-deps chromium; then
+              exit 0
+            fi
+            echo "::warning::Chromium install attempt ${attempt} failed or stalled"
+            sudo dpkg --configure -a || true
+            sleep $((attempt * 15))
+          done
+          echo "::error::Chromium install failed after 3 attempts; no case ran"
+          exit 1
 
       - name: Run bug cases through teable-ee e2e
         if: needs.resolve_inputs.outputs.sync_case_filter != ''
