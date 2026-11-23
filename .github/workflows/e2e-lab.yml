@@ -416,10 +416,10 @@ jobs:
 
       # One row per case x commit into the Regression Track table, upserted by
       # Run Key. Best-effort and independent of acceptance: the artifacts are
-      # the source of truth, the table is the queryable history. Gated on the
-      # secret so forks and token-less setups skip cleanly.
+      # the source of truth. Set the repository variable
+      # E2E_LAB_REGRESSION_TRACK_ENABLED=true to resume reporting.
       - name: Report results to Teable
-        if: always() && env.E2E_LAB_ACCEPTANCE_RUN != 'true' && env.TEABLE_E2E_LAB_TOKEN != ''
+        if: always() && vars.E2E_LAB_REGRESSION_TRACK_ENABLED == 'true' && env.E2E_LAB_ACCEPTANCE_RUN != 'true' && env.TEABLE_E2E_LAB_TOKEN != ''
         continue-on-error: true
         env:
           E2E_LAB_ARTIFACT_DIR: ${{ github.workspace }}/e2e-lab-artifacts
