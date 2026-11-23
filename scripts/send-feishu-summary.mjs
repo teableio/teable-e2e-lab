@@ -94,6 +94,87 @@ const capped = (entries, render) => {
 
 const shortSha = (sha) => sha.slice(0, 10);
 
+// "No results" on its own sent people to the run page for every red card, and
+// two very different failures looked identical there: a runner stuck on a
+// stalled APT mirror until the job timeout, and a commit that did not compile.
+// The first is the lab's problem, the second the PR's. Which step of the
+// commit's job stopped already tells them apart, so the card says it.
+//
+// Only step names and conclusions are used. The case output itself stays on
+// the run page: acceptance runs withhold it on purpose, and a chat card is not
+// where a stack trace belongs.
+const CASE_STEP = /^Run (bug|hybrid computed-update bug) cases\b/;
+const CHROMIUM_STEP = "Install Chromium for browser-driven cases";
+
+const minutesBetween = (start, end) =>
+  start && end
+    ? Math.round((Date.parse(end) - Date.parse(start)) / 60000)
+    : null;
+
+export const explainColumnFailure = (job) => {
+  if (!job) {
+    return null;
+  }
+  const steps = job.steps ?? [];
+  const stopped =
+    steps.find((step) => step.conclusion === "cancelled") ??
+    steps.find((step) => step.conclusion === "failure");
+  const minutes = minutesBetween(job.started_at, job.completed_at);
+  const log = job.html_url ? ` [Job log](${job.html_url})` : "";
+
+  if (job.conclusion === "cancelled" || stopped?.conclusion === "cancelled") {
+    const where = stopped ? ` in "${stopped.name}"` : "";
+    const after = minutes !== null ? ` after ${minutes} min` : "";
+    return `Cause: the job was cancelled${where}${after} (timeout or manual cancel). No case ran.${log}`;
+  }
+  if (!stopped) {
+    return job.conclusion === "success"
+      ? `Cause: the job passed but uploaded no results.${log}`
+      : null;
+  }
+  if (stopped.name === CHROMIUM_STEP) {
+    return `Cause: Chromium could not be installed (APT mirror or download problem). No case ran; this is a runner problem, not the commit.${log}`;
+  }
+  if (CASE_STEP.test(stopped.name)) {
+    return `Cause: the case runner failed before any case reported. This usually means the commit does not build or start; the job log has the error.${log}`;
+  }
+  return `Cause: setup step "${stopped.name}" failed. No case ran.${log}`;
+};
+
+// Job names carry the short sha of the commit they ran: "Run cases (c1-<sha>)".
+const jobForSha = (jobs, sha) =>
+  jobs.find((job) => {
+    const match = /^Run cases \(c\d+-([0-9a-f]+)\)/.exec(job.name ?? "");
+    return match !== null && sha.startsWith(match[1]);
+  });
+
+// One line per commit that produced no result at all. It sits above the fold:
+// "why" is the first thing a reader of an all-missing card needs, and it grows
+// with the number of commits in the run, never with the number of cases.
+const describeEmptyColumns = (comparison, jobs) => {
+  const total = comparison.rows.length;
+  if (total === 0) {
+    return [];
+  }
+  const perColumn = new Map();
+  for (const entry of comparison.failures.missing) {
+    perColumn.set(entry.sha, (perColumn.get(entry.sha) ?? 0) + 1);
+  }
+  const lines = [];
+  for (const [sha, count] of perColumn) {
+    if (count !== total) {
+      continue;
+    }
+    const cause = explainColumnFailure(jobForSha(jobs, sha));
+    if (cause) {
+      lines.push(
+        comparison.commits.length > 1 ? `\`${shortSha(sha)}\` ${cause}` : cause,
+      );
+    }
+  }
+  return lines;
+};
+
 // A run that dies before its cases start reports every case as missing on that
 // column. Saying so once is the whole content of that report; saying it 106
 // times is not 106 times as informative.
@@ -138,7 +219,7 @@ const collapsible = (title, content) => ({
 
 // The card a run should send, or null when it should send none: a run that
 // passed acceptance.
-export const buildFeishuCard = ({ comparison, runUrl }) => {
+export const buildFeishuCard = ({ comparison, runUrl, jobs = [] }) => {
   if (comparison.passed) {
     return null;
   }
@@ -205,6 +286,7 @@ export const buildFeishuCard = ({ comparison, runUrl }) => {
       content: [
         headline,
         needsHuman.length > 0 ? needsHuman.join("  ·  ") : null,
+        ...describeEmptyColumns(comparison, jobs),
         reference,
         `[Open the run and the full comparison table](${runUrl})`,
       ]
@@ -277,6 +359,37 @@ export const buildFeishuCard = ({ comparison, runUrl }) => {
   };
 };
 
+// The jobs of this run attempt, for the failure causes. Best-effort: if the API
+// is unreachable the card still goes out, just without the cause lines.
+const fetchRunJobs = async (repository) => {
+  const runId = env("GITHUB_RUN_ID");
+  const token = env("GITHUB_TOKEN");
+  if (!runId || !token) {
+    return [];
+  }
+  const attempt = env("GITHUB_RUN_ATTEMPT", "1");
+  try {
+    const res = await fetch(
+      `https://api.github.com/repos/${repository}/actions/runs/${runId}/attempts/${attempt}/jobs?per_page=100`,
+      {
+        headers: {
+          accept: "application/vnd.github+json",
+          authorization: `Bearer ${token}`,
+        },
+      },
+    );
+    if (!res.ok) {
+      console.log(`Could not list run jobs (HTTP ${res.status}); no causes.`);
+      return [];
+    }
+    const body = await res.json();
+    return Array.isArray(body.jobs) ? body.jobs : [];
+  } catch (error) {
+    console.log(`Could not list run jobs: ${String(error)}; no causes.`);
+    return [];
+  }
+};
+
 const main = async () => {
   const webhookUrl = env("FEISHU_E2E_WEBHOOK_URL");
   if (!webhookUrl) {
@@ -290,7 +403,11 @@ const main = async () => {
   const repository = env("GITHUB_REPOSITORY", "teableio/teable-e2e-lab");
   const runUrl = `https://github.com/${repository}/actions/runs/${env("GITHUB_RUN_ID", "")}`;
 
-  const card = buildFeishuCard({ comparison, runUrl });
+  const card = buildFeishuCard({
+    comparison,
+    runUrl,
+    jobs: await fetchRunJobs(repository),
+  });
   if (!card) {
     console.log("The run passed; Feishu gets a card only for failed runs.");
     return;

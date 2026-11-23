@@ -334,3 +334,109 @@ test("a long failure list is capped rather than printed in full", () => {
   assert.equal(detail.length, 21);
   assert.match(detail.at(-1), /…and 30 more/);
 });
+
+// The card that prompted these: a column with no results, and nothing on the
+// card to say whether the runner was stuck or the commit did not compile.
+const allMissingCard = (jobs) => {
+  const sha = "4c44fd1e3e".padEnd(40, "0");
+  const caseIds = ["pack/a", "pack/b", "pack/c"];
+  return buildFeishuCard({
+    comparison: {
+      commits: [{ ref: sha, sha, short: sha.slice(0, 10) }],
+      rows: caseIds.map((caseId) => ({
+        caseId,
+        issue: "T1",
+        status: "fixed",
+        cells: [{ sha, short: sha.slice(0, 10), missing: true }],
+        transitions: [],
+      })),
+      failures: {
+        regressions: [],
+        errors: [],
+        missing: caseIds.map((caseId) => ({ caseId, sha })),
+        unplanned: [],
+        duplicates: [],
+        unknownVerdicts: [],
+      },
+      notices: { unexpectedlyFixed: [] },
+      passed: false,
+    },
+    runUrl: "https://example.invalid/run",
+    jobs,
+  }).card.body.elements[0].content;
+};
+
+const job = (steps, extra = {}) => ({
+  name: "Run cases (c1-4c44fd1e3e)",
+  conclusion: "failure",
+  started_at: "2026-11-23T11:24:32Z",
+  completed_at: "2026-11-23T11:31:48Z",
+  html_url: "https://example.invalid/job/1",
+  steps: [{ name: "Bootstrap e2e runtime", conclusion: "success" }, ...steps],
+  ...extra,
+});
+
+test("a commit that fails in the case runner is blamed on the commit, above the fold", () => {
+  const summary = allMissingCard([
+    job([
+      {
+        name: "Install Chromium for browser-driven cases",
+        conclusion: "success",
+      },
+      { name: "Run bug cases through teable-ee e2e", conclusion: "failure" },
+    ]),
+  ]);
+  assert.match(summary, /case runner failed before any case reported/);
+  assert.match(summary, /does not build or start/);
+  assert.match(summary, /\[Job log\]\(https:\/\/example\.invalid\/job\/1\)/);
+});
+
+test("a Chromium install failure is called a runner problem", () => {
+  const summary = allMissingCard([
+    job([
+      {
+        name: "Install Chromium for browser-driven cases",
+        conclusion: "failure",
+      },
+      { name: "Run bug cases through teable-ee e2e", conclusion: "skipped" },
+    ]),
+  ]);
+  assert.match(summary, /Chromium could not be installed/);
+  assert.match(summary, /runner problem, not the commit/);
+});
+
+test("a timed-out job names the step and how long it ran", () => {
+  const summary = allMissingCard([
+    job(
+      [
+        {
+          name: "Install Chromium for browser-driven cases",
+          conclusion: "cancelled",
+        },
+        { name: "Run bug cases through teable-ee e2e", conclusion: "skipped" },
+      ],
+      {
+        conclusion: "cancelled",
+        started_at: "2026-11-23T05:44:32Z",
+        completed_at: "2026-11-23T07:44:50Z",
+      },
+    ),
+  ]);
+  assert.match(
+    summary,
+    /cancelled in "Install Chromium for browser-driven cases" after 120 min/,
+  );
+});
+
+test("a setup step failure is named", () => {
+  const summary = allMissingCard([
+    job([{ name: "Prepare e2e database", conclusion: "failure" }]),
+  ]);
+  assert.match(summary, /setup step "Prepare e2e database" failed/);
+});
+
+test("without job data the card still goes out, just without a cause", () => {
+  const summary = allMissingCard([]);
+  assert.doesNotMatch(summary, /Cause:/);
+  assert.match(summary, /❓ 3 missing/);
+});

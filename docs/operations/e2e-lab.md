@@ -210,5 +210,12 @@ The report job also posts a Feishu card (`FEISHU_E2E_WEBHOOK_URL`) for each
 run that fails acceptance; a passing run posts nothing. The card is built from
 the same `comparison.json` the acceptance gate judges: verdict
 header, per-row cell strips with transition points, and the lists that need a
-human (regressions, errors, missing cells, unexpectedly-fixed). Teable and
-Feishu are independent report steps so one outage cannot hide the other.
+human (regressions, errors, missing cells, unexpectedly-fixed). When a commit
+produced no result at all, the card also says why, from the step where that
+commit's job stopped: a timeout or cancel (with the step and the minutes), a
+Chromium install failure (a runner problem), a case runner that failed before
+any case reported (usually the commit does not build or start), or a named
+setup step. It links that job's log. Only step names and conclusions are read,
+through the run's jobs API (`actions: read` on the report job); the case output
+stays on the run page. Teable and Feishu are independent report steps so one
+outage cannot hide the other.

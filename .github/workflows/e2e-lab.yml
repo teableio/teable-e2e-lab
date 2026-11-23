@@ -404,6 +404,11 @@ jobs:
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # actions: read lets the Feishu card name the step where a commit's job
+    # stopped, so "no results" comes with its cause.
+    permissions:
+      contents: read
+      actions: read
 
     steps:
       - name: Checkout e2e-lab
@@ -456,6 +461,7 @@ jobs:
         continue-on-error: true
         env:
           E2E_LAB_COMPARISON_PATH: ${{ github.workspace }}/e2e-lab-report/comparison.json
+          GITHUB_TOKEN: ${{ github.token }}
         run: node e2e-lab/scripts/send-feishu-summary.mjs
 
       # The fail-closed gate, and the only step that turns this job red:
