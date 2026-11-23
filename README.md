@@ -61,12 +61,11 @@ with this repository; ask the team for it.
 
 ### Browser dependency archives
 
-Before runtime bootstrap, the workflow selects the Kernel.org Ubuntu archive
-with canonical archive/security fallbacks in the runner's APT mirror list.
-Kernel.org is a [separately operated mirror](https://mirrors.kernel.org/), not a
-Canonical host; its independent hostname avoids relying only on `ubuntu.com`
-when that domain's resolution fails. The existing Ubuntu signing keyring,
-repository suites/components and APT/TLS verification remain unchanged.
+Before runtime bootstrap, the workflow selects official Ubuntu archive/security
+hosts before the independent [Kernel.org mirror](https://mirrors.kernel.org/).
+This avoids prioritizing the mirror that stalled browser dependency downloads,
+while retaining a fallback when `ubuntu.com` resolution fails. Ubuntu signing
+keys, repository suites/components, and APT/TLS verification are unchanged.
 
 This bootstrap belongs to the Lab workflow, not to a helper introduced by a
 new EE revision: historical comparison columns must remain runnable. Browser
